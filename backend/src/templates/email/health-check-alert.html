@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+	</head>
+	<body
+		style="
+			font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+			line-height: 1.6;
+			color: #333;
+			max-width: 600px;
+			margin: 0 auto;
+			padding: 20px;
+		">
+		<div
+			style="background-color: {{severityBgColor}}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
+			<h2 style="margin: 0; font-size: 18px">[{{severityLabel}}] Health Check Alert</h2>
+		</div>
+		<div
+			style="
+				border: 1px solid #e5e7eb;
+				border-top: none;
+				padding: 20px;
+				border-radius: 0 0 8px 8px;
+			">
+			<table style="width: 100%; border-collapse: collapse">
+				<tr>
+					<td style="padding: 8px 0; font-weight: bold; width: 120px">Check Type:</td>
+					<td style="padding: 8px 0">{{checkType}}</td>
+				</tr>
+				<tr>
+					<td style="padding: 8px 0; font-weight: bold">Severity:</td>
+					<td style="padding: 8px 0">
+						<span
+							style="background-color: {{severityBgColor}}; color: {{severityColor}}; padding: 2px 8px; border-radius: 4px; font-size: 14px;">
+							{{severityLabel}}
+						</span>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding: 8px 0; font-weight: bold">Message:</td>
+					<td style="padding: 8px 0">{{message}}</td>
+				</tr>
+				<tr>
+					<td style="padding: 8px 0; font-weight: bold">Timestamp:</td>
+					<td style="padding: 8px 0">{{timestamp}}</td>
+				</tr>
+			</table>
+			<p style="text-align: center; margin: 24px 0 16px">
+				<a
+					href="{{healthUrl}}"
+					style="
+						display: inline-block;
+						background-color: #0f172a;
+						color: #ffffff;
+						text-decoration: none;
+						padding: 12px 24px;
+						border-radius: 6px;
+						font-weight: 500;
+					"
+					>View System Health</a
+				>
+			</p>
+		</div>
+		<p style="font-size: 12px; color: #999; margin-top: 20px; text-align: center">
+			This is an automated alert from {{appName}}. Do not reply to this email.
+		</p>
+	</body>
+</html>

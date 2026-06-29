@@ -1,0 +1,22 @@
+# CODEOWNERS for spernakit
+#
+# GitHub uses the last-matching rule: later entries override earlier ones.
+# The owner listed here is auto-requested for review on any PR that touches
+# a matching path. See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Spernakit is the upstream template for your downstream apps. Paths under
+# the "Template contract" block are inherited by every downstream app, so changes
+# to them must be reviewed by the template maintainer.
+
+# Default owner for everything
+*                           @NomadicDaddy
+
+# Template contract — downstream apps depend on these
+/docs/template/             @NomadicDaddy
+/scripts/                   @NomadicDaddy
+/.github/workflows/         @NomadicDaddy
+/Dockerfile                 @NomadicDaddy
+/docker/                    @NomadicDaddy
+/docker-compose*.yml        @NomadicDaddy
+/backend/src/config/        @NomadicDaddy
+/backend/src/db/schema/     @NomadicDaddy

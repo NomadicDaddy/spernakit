@@ -1,0 +1,36 @@
+{
+	"$schema": "https://unpkg.com/knip@latest/schema.json",
+	"ignore": ["scripts/spernakit-browser/**"],
+	"ignoreExportsUsedInFile": true,
+	"paths": {
+		"@/*": ["frontend/src/*"]
+	},
+	"rules": {
+		"enumMembers": "off",
+		"exports": "warn",
+		"types": "warn"
+	},
+	"workspaces": {
+		".": {
+			"entry": ["scripts/*.ts"],
+			"project": ["scripts/**/*.ts"]
+		},
+		"backend": {
+			"entry": ["src/create-api-app.ts"],
+			"ignoreDependencies": ["pino-roll"],
+			"project": ["src/**/*.ts"]
+		},
+		"frontend": {
+			"entry": ["src/App.tsx", "src/routes.tsx"],
+			"ignore": ["src/components/ui/*.tsx"],
+			"ignoreDependencies": [
+				"@fontsource-variable/inter",
+				"@fontsource-variable/manrope",
+				"tailwindcss",
+				"tw-animate-css"
+			],
+			"project": ["src/**/*.{ts,tsx}"]
+		},
+		"shared": {}
+	}
+}

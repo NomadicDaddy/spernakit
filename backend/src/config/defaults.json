@@ -1,0 +1,253 @@
+{
+	"alerting": {
+		"cooldownMinutes": 15,
+		"email": {
+			"enabled": false,
+			"recipients": []
+		},
+		"inApp": {
+			"enabled": true
+		},
+		"webhook": {
+			"enabled": false,
+			"headers": {},
+			"secret": "",
+			"timeoutMs": 5000,
+			"url": ""
+		}
+	},
+	"apiKeys": {
+		"maxPerUser": 10
+	},
+	"app": {
+		"description": "Self-Hosted Multi-User Application Template",
+		"name": "Spernakit v3",
+		"slug": "spernakit"
+	},
+	"audit": {
+		"enabled": true,
+		"ipWhitelist": []
+	},
+	"cors": {
+		"allowNoOrigin": false,
+		"allowedOrigins": [],
+		"frontendDevOrigins": ["http://localhost:3330"],
+		"inheritFrontendUrl": false
+	},
+	"dashboards": {
+		"enabled": true,
+		"maxPerUser": 10,
+		"sharingEnabled": true
+	},
+	"database": {
+		"allowDbPush": false,
+		"backup": {
+			"compress": false,
+			"enabled": true,
+			"encrypt": true,
+			"intervalHours": 24,
+			"location": "./backups",
+			"retentionDays": 30
+		},
+		"busyTimeoutMs": 5000,
+		"dialect": "sqlite",
+		"integrityCheck": {
+			"enabled": true,
+			"intervalHours": 6,
+			"mode": "quick"
+		},
+		"ssl": {
+			"enabled": false,
+			"rejectUnauthorized": true
+		},
+		"url": "file:./data/spernakit.db",
+		"vacuum": {
+			"enabled": true,
+			"intervalHours": 24
+		}
+	},
+	"databaseAdmin": {
+		"enabled": false
+	},
+	"email": {
+		"retryAttempts": 2,
+		"retryDelayMs": 1000
+	},
+	"healthCheck": {
+		"enabled": true,
+		"interval": 300,
+		"retentionDays": 30,
+		"thresholds": {
+			"auth": {
+				"critical": 500,
+				"warn": 100
+			},
+			"db": {
+				"critical": 500,
+				"warn": 100
+			},
+			"fs": {
+				"critical": 200,
+				"warn": 50
+			},
+			"memory": {
+				"critical": 95,
+				"warn": 90
+			}
+		}
+	},
+	"logging": {
+		"file": {
+			"enabled": true,
+			"maxFiles": 10,
+			"maxSize": "10M",
+			"path": "./logs/app.log"
+		},
+		"level": "info"
+	},
+	"metrics": {
+		"collectionIntervalMs": 60000
+	},
+	"oauth": {
+		"github": {
+			"callbackUrl": "",
+			"clientId": "",
+			"clientSecret": "",
+			"enabled": false
+		},
+		"google": {
+			"callbackUrl": "",
+			"clientId": "",
+			"clientSecret": "",
+			"enabled": false
+		},
+		"microsoft": {
+			"callbackUrl": "",
+			"clientId": "",
+			"clientSecret": "",
+			"enabled": false,
+			"tenantId": "common"
+		}
+	},
+	"rateLimit": {
+		"authEnabled": true,
+		"backend": "memory",
+		"enabled": true,
+		"maxRequests": 600,
+		"windowMs": 900000
+	},
+	"retention": {
+		"auditLogsDays": 90,
+		"businessEventsDays": 365,
+		"healthCheckAlertsDays": 30,
+		"healthCheckLogsDays": 30,
+		"notificationsDays": 30,
+		"scheduledTaskExecutionsDays": 30,
+		"softDeletedFilesDays": 30,
+		"systemMetricsDays": 30
+	},
+	"roles": {
+		"ADMIN": {
+			"description": "Application administration, user management",
+			"label": "Administrator"
+		},
+		"MANAGER": {
+			"description": "Team and workspace member management",
+			"label": "Manager"
+		},
+		"OPERATOR": {
+			"description": "Standard operations, data entry and modification",
+			"label": "Operator"
+		},
+		"SYSOP": {
+			"description": "System administration, cross-workspace access",
+			"label": "System Operator"
+		},
+		"VIEWER": {
+			"description": "Read-only access to permitted resources",
+			"label": "Viewer"
+		}
+	},
+	"security": {
+		"applicationApiKey": "PRODUCTION_CHANGE_REQUIRED-SECURE_API_KEY_MIN_32_CHARS",
+		"authCookieName": "spernakit_auth",
+		"backupEncryptionKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_64_HEX_CHARS_FOR_AES_256_GCM_KEY",
+		"bcryptRounds": 12,
+		"cookieMaxAge": 900000,
+		"cookieSecret": "PRODUCTION_CHANGE_REQUIRED-SECURE_COOKIE_SECRET_MIN_32_CHARS",
+		"cookieSecure": true,
+		"crossOriginEmbedderPolicy": false,
+		"csrfCookieName": "spernakit_csrf",
+		"csrfTokenTtlMs": 14400000,
+		"emailChangeTokenExpiryMs": 3600000,
+		"emailVerificationTokenExpiryMs": 86400000,
+		"encryptionKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_64_HEX_CHARS_FOR_AES_256_GCM_KEY",
+		"jwtExpiresIn": "15m",
+		"jwtPrivateKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",
+		"jwtPublicKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",
+		"jwtRefreshExpiresIn": "7d",
+		"jwtRefreshPrivateKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",
+		"jwtRefreshPublicKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",
+		"maxTokenSize": 4096,
+		"mfaChallengeExpiresIn": "5m",
+		"mfaPrivateKey": "",
+		"mfaPublicKey": "",
+		"passwordResetTokenExpiryMs": 900000,
+		"refreshCookieName": "spernakit_refresh",
+		"strictCsp": true
+	},
+	"server": {
+		"backendPort": 3331,
+		"backendUrl": "http://localhost:3331",
+		"frontendPort": 3330,
+		"frontendUrl": "http://localhost:3330",
+		"host": "0.0.0.0",
+		"maxRequestBodySize": 10485760,
+		"nodeEnv": "development",
+		"timezone": "UTC",
+		"trustProxy": false,
+		"trustedProxies": []
+	},
+	"storage": {
+		"adapter": "local",
+		"allowedMimeTypes": [
+			"image/jpeg",
+			"image/png",
+			"image/gif",
+			"image/webp",
+			"application/pdf",
+			"text/plain",
+			"text/csv",
+			"application/json"
+		],
+		"maxFileSize": 10485760,
+		"s3": {
+			"accessKeyId": "",
+			"bucket": "",
+			"endpoint": "",
+			"region": "",
+			"secretAccessKey": ""
+		}
+	},
+	"testing": {
+		"crawlContentMinLength": 50,
+		"crawlInteractionDelay": 400,
+		"crawlLoginEmail": "",
+		"crawlLoginPassword": "",
+		"crawlMaxDepth": 6,
+		"crawlPageSettleDelay": 500,
+		"crawlSeedRoutes": [],
+		"crawlTimeout": 30000
+	},
+	"tokenCleanup": {
+		"enabled": true,
+		"intervalHours": 6,
+		"minimumIntervalHours": 1
+	},
+	"websocket": {
+		"maxConnectionsPerIp": 50,
+		"maxConnectionsPerUser": 10,
+		"maxPayload": 1048576,
+		"rateLimitWindow": 60000
+	}
+}

@@ -1,0 +1,33 @@
+# Spernakit fleet manifest (example)
+#
+# Copy this file to spernakit.psd1 and register your apps. The real
+# spernakit.psd1 is gitignored so your fleet roster stays local.
+#
+# Each entry declares a spernakit-based application in d:/applications/{slug}/.
+# Used by reset.ps1, CLI aliases, and other orchestration scripts.
+#
+# Field semantics:
+#   frontendPort        — Vite dev-server port owned by this app
+#   backendPort         — Elysia API server port owned by this app
+#   appName             — Human-readable display name
+#   description         — One-line purpose statement
+#   version             — App-owned semver (independent of the template version)
+#   spernakit_version   — Template version this app has been synced to. Special value
+#                         'latest' means the app is in pending-rebuild status — its
+#                         active codebase is archived (as {slug}.old/) and has not yet
+#                         been ported to the current spernakit template, but WILL be
+#                         rebuilt in a future session. Concrete versions (e.g.
+#                         '3.1.29') indicate the app is active and synced to that tag.
+#
+@{
+	ExpectedConfigs = @{
+		'myapp' = @{
+			frontendPort      = 3300
+			backendPort       = 3301
+			appName           = 'My App'
+			description       = 'A Spernakit-derived application'
+			version           = '0.1.0'
+			spernakit_version = 'latest'
+		}
+	}
+}

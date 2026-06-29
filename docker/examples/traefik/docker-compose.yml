@@ -1,0 +1,138 @@
+# Traefik Docker Compose Configuration for Spernakit
+#
+# Prerequisites:
+# 1. Install Docker and Docker Compose
+# 2. Ensure your domain DNS points to this server
+# 3. Ports 80 and 443 are open and accessible
+# 4. Create a Docker network: docker network create web
+#
+# Usage:
+# 1. Copy this file to your deployment directory
+# 2. Replace 'your-domain.com' with your actual domain
+# 3. Replace 'your-email@example.com' with your email for Let's Encrypt
+# 4. Run: docker-compose up -d
+#
+# Note: This runs Traefik alongside the Spernakit container.
+# If Spernakit is already running in another container, remove the
+# spernakit service section and configure Traefik to point to it.
+
+networks:
+    web:
+        external: true
+
+services:
+    traefik:
+        image: traefik:v3.4
+        container_name: traefik
+        restart: unless-stopped
+        security_opt:
+            - no-new-privileges:true
+        networks:
+            - web
+        ports:
+            - '80:80'
+            - '443:443'
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./letsencrypt:/letsencrypt
+        command:
+            - '--api.dashboard=true'
+            - '--api.insecure=false'
+            - '--providers.docker=true'
+            - '--providers.docker.exposedbydefault=false'
+            - '--entrypoints.web.address=:80'
+            - '--entrypoints.websecure.address=:443'
+            - '--certificatesresolvers.myresolver.acme.tlschallenge=true'
+            - '--certificatesresolvers.myresolver.acme.email=your-email@example.com'
+            - '--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json'
+            - '--accesslog=true'
+            - '--accesslog.filepath=/var/log/traefik/access.log'
+            - '--accesslog.format=json'
+        labels:
+            - 'traefik.enable=true'
+            - 'traefik.http.routers.traefik.rule=Host(`traefik.your-domain.com`)'
+            - 'traefik.http.routers.traefik.entrypoints=websecure'
+            - 'traefik.http.routers.traefik.tls.certresolver=myresolver'
+            - 'traefik.http.routers.traefik.service=api@internal'
+            - 'traefik.http.services.traefik.loadbalancer.server.port=8080'
+            # Dashboard authentication — REQUIRED: generate credentials with:
+            #   htpasswd -nB admin | sed -e 's/\$/\$\$/g'
+            # Replace the placeholder below with your generated hash.
+            - 'traefik.http.middlewares.traefik-auth.basicauth.users=admin:$$2y$$05$$REPLACE_WITH_HTPASSWD_HASH'
+            - 'traefik.http.routers.traefik.middlewares=traefik-auth'
+
+    # Spernakit Application
+    # Remove this section if Spernakit is already running in another container
+    spernakit:
+        # Set APP_VERSION to an explicit tag for deterministic rollback. Floating :latest breaks rollback.
+        image: ghcr.io/nomadicdaddy/${APP_SLUG:-spernakit}:${APP_VERSION:-3.1.6}
+        container_name: spernakit
+        restart: unless-stopped
+        stop_grace_period: 30s
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        read_only: true
+        tmpfs:
+            - /tmp:uid=1000,gid=1000
+            - /var/log/nginx:uid=1000,gid=1000
+            - /var/log/supervisor:uid=1000,gid=1000
+            - /run/nginx:uid=1000,gid=1000
+            - /var/lib/nginx:uid=1000,gid=1000
+        networks:
+            - web
+        environment:
+            - APP_SLUG=spernakit
+            - APPDATA_ROOT=/appdata
+            - BACKUPS_ROOT=/backups
+        volumes:
+            - ./config:/app/config:ro
+            - ./data:/app/data
+            - ./backups:/backups
+        logging:
+            driver: json-file
+            options:
+                max-file: '5'
+                max-size: 10m
+        labels:
+            - 'traefik.enable=true'
+            - 'traefik.http.routers.spernakit.rule=Host(`your-domain.com`)'
+            - 'traefik.http.routers.spernakit.entrypoints=websecure'
+            - 'traefik.http.routers.spernakit.tls.certresolver=myresolver'
+            - 'traefik.http.services.spernakit.loadbalancer.server.port=3330'
+            # WebSocket support
+            - 'traefik.http.services.spernakit.loadbalancer.sticky.cookie=true'
+            - 'traefik.http.services.spernakit.loadbalancer.sticky.cookie.name=spernakit_sticky'
+            # Edge-only security headers.
+            #
+            # CSP is owned by the container nginx (docker/nginx.conf, via the $csp_policy map).
+            # Do NOT inject a Content-Security-Policy header here — it would override the
+            # strict in-container policy (which permits only 'self' + a sha256 inline-script
+            # hash) with a looser edge value and silently re-enable 'unsafe-inline' /
+            # 'unsafe-eval' XSS vectors.
+            - 'traefik.http.middlewares.spernakit-headers.headers.customrequestheaders.X-Forwarded-Proto=https'
+            - 'traefik.http.middlewares.spernakit-headers.headers.customresponseheaders.X-Content-Type-Options=nosniff'
+            - 'traefik.http.middlewares.spernakit-headers.headers.customresponseheaders.X-Frame-Options=DENY'
+            - 'traefik.http.middlewares.spernakit-headers.headers.customresponseheaders.X-XSS-Protection=0'
+            - 'traefik.http.middlewares.spernakit-headers.headers.customresponseheaders.Referrer-Policy=strict-origin-when-cross-origin'
+            - 'traefik.http.middlewares.spernakit-headers.headers.customresponseheaders.Strict-Transport-Security=max-age=31536000; includeSubDomains; preload'
+            - 'traefik.http.routers.spernakit.middlewares=spernakit-headers'
+
+    # Optional: Redirect www to non-www
+    www-redirect:
+        image: traefik/whoami
+        container_name: www-redirect
+        networks:
+            - web
+        labels:
+            - 'traefik.enable=true'
+            - 'traefik.http.routers.www-redirect.rule=Host(`www.your-domain.com`)'
+            - 'traefik.http.routers.www-redirect.entrypoints=websecure'
+            - 'traefik.http.routers.www-redirect.tls.certresolver=myresolver'
+            - "traefik.http.middlewares.www-redirect.redirectregex.regex=^https://www\\.(.+)"
+            - 'traefik.http.middlewares.www-redirect.redirectregex.replacement=https://$${1}'
+            - 'traefik.http.routers.www-redirect.middlewares=www-redirect'
+
+# Create the external network before running:
+# docker network create web

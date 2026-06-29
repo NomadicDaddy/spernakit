@@ -1,0 +1,47 @@
+# Local integration testing only — builds full production image.
+# For iterative development, use: bun scripts/start.ts
+services:
+    spernakit:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: spernakit-dev
+        ports:
+            - '127.0.0.1:3330:3330'
+        volumes:
+            - ./data:/app/data
+            - ./config:/app/config
+            - ./logs:/app/logs
+            - ./backups:/app/backups
+        environment:
+            - BACKEND_PORT=3331
+            - FRONTEND_PORT=3330
+        restart: unless-stopped
+        stop_grace_period: 30s
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        read_only: true
+        tmpfs:
+            - /tmp:uid=1000,gid=1000
+            - /var/log/nginx:uid=1000,gid=1000
+            - /var/log/supervisor:uid=1000,gid=1000
+            - /run/nginx:uid=1000,gid=1000
+            - /var/lib/nginx:uid=1000,gid=1000
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                    cpus: '1.0'
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:3330/api/v1/health']
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 45s
+        logging:
+            driver: json-file
+            options:
+                max-file: '5'
+                max-size: 10m
