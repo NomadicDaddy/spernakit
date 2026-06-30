@@ -1,0 +1,3339 @@
+{
+	"clickedElements": [
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"Last 30 days\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:41.399Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"Select a user…\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:42.368Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:43.333Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:44.333Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:45.569Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:47.498Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:48.484Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:49.717Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"1h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:50.652Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"6h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:52.169Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"12h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:53.085Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"24h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:54.584Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:56.767Z",
+			"url": "http://localhost:3330/dashboards"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:57.729Z",
+			"url": "http://localhost:3330/dashboards"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:25:58.967Z",
+			"url": "http://localhost:3330/dashboards"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:00.592Z",
+			"url": "http://localhost:3330/files"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:01.567Z",
+			"url": "http://localhost:3330/files"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:02.799Z",
+			"url": "http://localhost:3330/files"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"All\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:04.399Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"All types\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:05.366Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"20 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:06.331Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:07.324Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:08.303Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:09.535Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Columns\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:10.433Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:12.068Z",
+			"url": "http://localhost:3330/onboarding"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:13.052Z",
+			"url": "http://localhost:3330/onboarding"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:14.300Z",
+			"url": "http://localhost:3330/onboarding"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Reset Onboarding\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:15.250Z",
+			"url": "http://localhost:3330/onboarding"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"workspaces\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:17.145Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Collapse\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:18.099Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:19.112Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:20.352Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Sidebar\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:21.287Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Top Bar\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:22.233Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"DefaultStandard modern web interface\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:23.147Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"TerminalCLI-in-browser, monospace, utilitarian\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:24.080Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"BBSRetro BBS aesthetic with ANSI flair\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:25.004Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"workspaces\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:26.330Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:27.295Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:28.551Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:29.783Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Sidebar\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:30.710Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Top Bar\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:31.673Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"DefaultStandard modern web interface\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:32.599Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"TerminalCLI-in-browser, monospace, utilitarian\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:33.533Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"BBSRetro BBS aesthetic with ANSI flair\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:34.484Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"20 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:36.096Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:37.050Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:38.347Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:39.584Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Search\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:40.501Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Columns\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:41.414Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Next\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:42.363Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"enableAccountLocking\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:44.231Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:45.183Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:46.461Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:47.683Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Re-encrypt backups under current key\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:48.640Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:50.532Z",
+			"url": "http://localhost:3330/settings/backup"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:51.821Z",
+			"url": "http://localhost:3330/settings/backup"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:53.049Z",
+			"url": "http://localhost:3330/settings/backup"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Restore\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:53.994Z",
+			"url": "http://localhost:3330/settings/backup"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"20 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:55.931Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:56.887Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:58.159Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:26:59.416Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Columns\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:00.347Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:03.990Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:05.282Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:06.513Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Schema\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:07.415Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"ERD\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:08.322Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Data\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:09.809Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SQL\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:11.314Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"api_key_nonces4 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:12.811Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"api_keys12 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:14.332Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"audit_logs9 cols69 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:15.865Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"bug_reports10 cols1 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:17.356Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"business_events7 cols6 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:18.862Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"dashboard_configs13 cols2 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:20.343Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"dashboard_widgets19 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:21.858Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"email_change_tokens7 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:23.346Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"file_uploads15 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:24.856Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"health_check_alerts8 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:26.349Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"health_check_logs6 cols21 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:27.865Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"mfa_settings9 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:29.354Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"notifications13 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:30.850Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"oauth_accounts19 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:32.364Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"password_history4 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:33.874Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"pkce_verifiers5 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:35.381Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"rate_limit_entries6 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:36.912Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"scheduled_task_configs5 cols1 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:38.404Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"scheduled_task_executions9 cols28 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:39.882Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"settings12 cols23 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:41.365Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"system_metrics12 cols9 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:42.863Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"token_blacklist5 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:44.354Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"user_notification_preferences7 cols0 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:45.836Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"users25 cols5 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:47.346Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"workspace_members9 cols5 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:48.843Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"workspaces14 cols1 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:50.368Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"secure\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:55.874Z",
+			"url": "http://localhost:3330/settings/email"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:56.816Z",
+			"url": "http://localhost:3330/settings/email"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:58.099Z",
+			"url": "http://localhost:3330/settings/email"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:27:59.328Z",
+			"url": "http://localhost:3330/settings/email"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"emailEnabled\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:00.679Z",
+			"url": "http://localhost:3330/settings/notifications"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:01.639Z",
+			"url": "http://localhost:3330/settings/notifications"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:02.910Z",
+			"url": "http://localhost:3330/settings/notifications"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:04.149Z",
+			"url": "http://localhost:3330/settings/notifications"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:05.747Z",
+			"url": "http://localhost:3330/settings/roles"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:07.033Z",
+			"url": "http://localhost:3330/settings/roles"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:08.251Z",
+			"url": "http://localhost:3330/settings/roles"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"Toggle token-cleanup\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:09.559Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:10.513Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:11.799Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:13.030Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"6h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:13.947Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"1d\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:14.879Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"5m\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:15.813Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"7d\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:16.744Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"1m\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:17.715Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"action": "switch-toggle",
+			"error": null,
+			"selector": "switch \"check-database\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:19.626Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:20.612Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:21.897Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:23.147Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Refresh\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:24.085Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Run\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:25.006Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"1h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:25.997Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"6h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:27.011Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"12h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:28.045Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"24h\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:29.062Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"All roles\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:30.643Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "select-open",
+			"error": null,
+			"selector": "select \"20 rows\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:31.627Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:32.566Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:33.862Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:35.079Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Columns\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:35.996Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Menu\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:37.595Z",
+			"url": "http://localhost:3330/workspaces"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Search…Ctrl K\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:38.895Z",
+			"url": "http://localhost:3330/workspaces"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"SY\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:40.144Z",
+			"url": "http://localhost:3330/workspaces"
+		},
+		{
+			"action": "dialog-trigger",
+			"error": null,
+			"selector": "button \"Members\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:41.124Z",
+			"url": "http://localhost:3330/workspaces"
+		},
+		{
+			"action": "click",
+			"error": null,
+			"selector": "button \"Settings\"",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:42.382Z",
+			"url": "http://localhost:3330/workspaces"
+		},
+		{
+			"action": "bug-report",
+			"error": null,
+			"selector": "bug report submit",
+			"success": true,
+			"timestamp": "2026-05-04T20:28:48.526Z",
+			"url": "http://localhost:3330/dashboard"
+		}
+	],
+	"consoleErrors": [],
+	"consoleWarnings": [],
+	"contentAssertions": [
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 325,
+			"timestamp": "2026-05-04T20:25:40.736Z",
+			"url": "http://localhost:3330/analytics"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 424,
+			"timestamp": "2026-05-04T20:25:46.858Z",
+			"url": "http://localhost:3330/dashboard"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 222,
+			"timestamp": "2026-05-04T20:25:56.142Z",
+			"url": "http://localhost:3330/dashboards"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 170,
+			"timestamp": "2026-05-04T20:25:59.969Z",
+			"url": "http://localhost:3330/files"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 261,
+			"timestamp": "2026-05-04T20:26:03.791Z",
+			"url": "http://localhost:3330/notifications"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 927,
+			"timestamp": "2026-05-04T20:26:11.437Z",
+			"url": "http://localhost:3330/onboarding"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1089,
+			"timestamp": "2026-05-04T20:26:16.782Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1529,
+			"timestamp": "2026-05-04T20:26:26.003Z",
+			"url": "http://localhost:3330/settings/application"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 2317,
+			"timestamp": "2026-05-04T20:26:35.473Z",
+			"url": "http://localhost:3330/settings/audit-logs"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 2317,
+			"timestamp": "2026-05-04T20:26:43.934Z",
+			"url": "http://localhost:3330/settings/authentication"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 888,
+			"timestamp": "2026-05-04T20:26:49.919Z",
+			"url": "http://localhost:3330/settings/backup"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 875,
+			"timestamp": "2026-05-04T20:26:55.305Z",
+			"url": "http://localhost:3330/settings/bugs"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1487,
+			"timestamp": "2026-05-04T20:27:01.350Z",
+			"url": "http://localhost:3330/settings/database"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1119,
+			"timestamp": "2026-05-04T20:27:55.585Z",
+			"url": "http://localhost:3330/settings/email"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1532,
+			"timestamp": "2026-05-04T20:28:00.322Z",
+			"url": "http://localhost:3330/settings/notifications"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1818,
+			"timestamp": "2026-05-04T20:28:05.148Z",
+			"url": "http://localhost:3330/settings/roles"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1556,
+			"timestamp": "2026-05-04T20:28:09.233Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 2893,
+			"timestamp": "2026-05-04T20:28:19.103Z",
+			"url": "http://localhost:3330/settings/system-health"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 1044,
+			"timestamp": "2026-05-04T20:28:30.032Z",
+			"url": "http://localhost:3330/settings/users"
+		},
+		{
+			"hasContent": true,
+			"hasHeading": true,
+			"is404Page": false,
+			"isErrorPage": false,
+			"textLength": 562,
+			"timestamp": "2026-05-04T20:28:37.003Z",
+			"url": "http://localhost:3330/workspaces"
+		}
+	],
+	"errors": [],
+	"networkErrors": [],
+	"summary": {
+		"consoleErrors": 0,
+		"consoleWarnings": 0,
+		"contentAssertions": 20,
+		"contentFailures": 0,
+		"dialogsTested": 37,
+		"duration": "242.49s",
+		"elementsClicked": 143,
+		"failedClicks": 0,
+		"networkErrors": 0,
+		"routesDiscovered": 20,
+		"screenshotsTaken": 26,
+		"selectsTested": 9,
+		"success": true,
+		"switchesTested": 7,
+		"totalErrors": 0,
+		"urlsVisited": 22,
+		"webVitalsCount": 245
+	},
+	"visitedUrls": [
+		"http://localhost:3330/login",
+		"http://localhost:3330/analytics",
+		"http://localhost:3330/dashboard",
+		"http://localhost:3330/dashboards",
+		"http://localhost:3330/files",
+		"http://localhost:3330/notifications",
+		"http://localhost:3330/onboarding",
+		"http://localhost:3330/settings/application",
+		"http://localhost:3330/settings",
+		"http://localhost:3330/settings/audit-logs",
+		"http://localhost:3330/settings/authentication",
+		"http://localhost:3330/settings/backup",
+		"http://localhost:3330/settings/bugs",
+		"http://localhost:3330/settings/database",
+		"http://localhost:3330/settings/email",
+		"http://localhost:3330/settings/notifications",
+		"http://localhost:3330/settings/roles",
+		"http://localhost:3330/settings/scheduled-tasks",
+		"http://localhost:3330/settings/system-health",
+		"http://localhost:3330/settings/users",
+		"http://localhost:3330/workspaces",
+		"http://localhost:3330/__crawltest-nonexistent-route-404"
+	],
+	"webVitals": [
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:47.439Z",
+			"url": "http://localhost:3330/register",
+			"value": 8.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:47.918Z",
+			"url": "http://localhost:3330/register",
+			"value": 648
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:47.919Z",
+			"url": "http://localhost:3330/register",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:49.139Z",
+			"url": "http://localhost:3330/login",
+			"value": 4.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:49.472Z",
+			"url": "http://localhost:3330/login",
+			"value": 412
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:49.472Z",
+			"url": "http://localhost:3330/login",
+			"value": 0
+		},
+		{
+			"name": "LCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:50.201Z",
+			"url": "http://localhost:3330/login",
+			"value": 412
+		},
+		{
+			"name": "INP",
+			"navigationType": "navigate",
+			"rating": "poor",
+			"timestamp": "2026-05-04T20:24:50.951Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 656
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:51.447Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 3.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:51.505Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 108
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:51.513Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.061Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.121Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 104
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.121Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.641Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 5.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.704Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 76
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:54.704Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:57.208Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 6.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:57.284Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 132
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:57.284Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:59.808Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 4.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:59.869Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:24:59.873Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:02.395Z",
+			"url": "http://localhost:3330/settings",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:02.450Z",
+			"url": "http://localhost:3330/settings",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:02.455Z",
+			"url": "http://localhost:3330/settings",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:02.957Z",
+			"url": "http://localhost:3330/files",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:03.013Z",
+			"url": "http://localhost:3330/files",
+			"value": 76
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:03.017Z",
+			"url": "http://localhost:3330/files",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:05.522Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:05.577Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:05.581Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:08.109Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:08.188Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 124
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:08.188Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:10.696Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:10.787Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 144
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:10.787Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:13.285Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 4.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:13.340Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:13.346Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:15.881Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:15.938Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:15.943Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:18.480Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 4.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:18.535Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:18.536Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:21.063Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:21.118Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:21.119Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:23.663Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:23.718Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:23.724Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:26.264Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:26.316Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:26.323Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:28.853Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 3.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:28.909Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:28.914Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:31.434Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:31.493Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:31.498Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:34.030Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:34.088Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:34.093Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:37.631Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:37.689Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 1100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:37.689Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:40.224Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 4.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:40.299Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 128
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:40.300Z",
+			"url": "http://localhost:3330/analytics",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:46.071Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 6.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:46.137Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:46.145Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:50.726Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 4.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:50.781Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:50.785Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:53.159Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 4.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:53.216Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:53.221Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:54.658Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 5.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:54.712Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:54.717Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:55.647Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 5.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:55.703Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:55.709Z",
+			"url": "http://localhost:3330/dashboards",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:59.461Z",
+			"url": "http://localhost:3330/files",
+			"value": 4.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:59.517Z",
+			"url": "http://localhost:3330/files",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:25:59.522Z",
+			"url": "http://localhost:3330/files",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:03.285Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:03.341Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:03.347Z",
+			"url": "http://localhost:3330/notifications",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:10.928Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 3.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:10.989Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:10.989Z",
+			"url": "http://localhost:3330/onboarding",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:16.063Z",
+			"url": "http://localhost:3330/settings",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:16.118Z",
+			"url": "http://localhost:3330/settings",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:16.124Z",
+			"url": "http://localhost:3330/settings",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:25.501Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:25.536Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:25.536Z",
+			"url": "http://localhost:3330/settings/application",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:34.974Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 4.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:35.024Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 104
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:35.024Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:42.444Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:42.495Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:42.495Z",
+			"url": "http://localhost:3330/settings/audit-logs",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:43.418Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 4.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:43.450Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:43.451Z",
+			"url": "http://localhost:3330/settings/authentication",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:49.428Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 3.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:49.479Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:49.479Z",
+			"url": "http://localhost:3330/settings/backup",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:54.791Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:54.843Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:26:54.843Z",
+			"url": "http://localhost:3330/settings/bugs",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:00.834Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:00.878Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:00.878Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:08.395Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:08.444Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:08.444Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:09.880Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:09.918Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:09.918Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:11.387Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:11.417Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:11.418Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:12.882Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:12.929Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:12.929Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:14.405Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:14.451Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:14.451Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:15.934Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:15.975Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:15.980Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:17.427Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:17.473Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:17.473Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:18.933Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:18.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:18.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:20.424Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:20.474Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 104
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:20.474Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:21.932Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.7
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:21.966Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:21.966Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:23.417Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.2
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:23.450Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:23.450Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:24.927Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:24.978Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:24.979Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:26.422Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:26.473Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:26.473Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:27.937Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.7
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:27.968Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:27.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:29.423Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:29.470Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:29.470Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:30.921Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:30.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:30.970Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:32.437Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:32.470Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:32.470Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:33.944Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:33.994Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:33.996Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:35.455Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:35.501Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:35.501Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:36.985Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:37.018Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:37.019Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:38.476Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.2
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:38.521Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:38.521Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:39.953Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:39.983Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:39.984Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:41.437Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 5.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:41.482Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:41.482Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:42.936Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:42.967Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:42.967Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:44.425Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 4.1
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:44.476Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:44.476Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:45.910Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:45.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:45.969Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:47.419Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:47.450Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:47.450Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:48.921Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:48.949Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:48.950Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:50.448Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 3.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:50.483Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:50.484Z",
+			"url": "http://localhost:3330/settings/database",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:52.245Z",
+			"url": "http://localhost:3330/login",
+			"value": 4.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:52.730Z",
+			"url": "http://localhost:3330/login",
+			"value": 648
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:52.730Z",
+			"url": "http://localhost:3330/login",
+			"value": 0
+		},
+		{
+			"name": "LCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:53.296Z",
+			"url": "http://localhost:3330/login",
+			"value": 648
+		},
+		{
+			"name": "INP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:53.396Z",
+			"url": "http://localhost:3330/login",
+			"value": 72
+		},
+		{
+			"name": "INP",
+			"navigationType": "navigate",
+			"rating": "poor",
+			"timestamp": "2026-05-04T20:27:54.007Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 648
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:54.532Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 3.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:54.562Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:54.562Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "reload",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:55.085Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 4.7
+		},
+		{
+			"name": "FCP",
+			"navigationType": "reload",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:55.118Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "reload",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:55.118Z",
+			"url": "http://localhost:3330/settings/email",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:59.810Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 3.6
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:59.875Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 116
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:27:59.875Z",
+			"url": "http://localhost:3330/settings/notifications",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:04.634Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 4
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:04.665Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:04.665Z",
+			"url": "http://localhost:3330/settings/roles",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:08.737Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 5
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:08.785Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 96
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:08.785Z",
+			"url": "http://localhost:3330/settings/scheduled-tasks",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:18.201Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 3.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:18.231Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 80
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:18.231Z",
+			"url": "http://localhost:3330/settings/system-health",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:29.534Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 4.3
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:29.583Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 100
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:29.583Z",
+			"url": "http://localhost:3330/settings/users",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:36.483Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 3.2
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:36.514Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 84
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:36.514Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:42.454Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 4.2
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:42.503Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 92
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:42.503Z",
+			"url": "http://localhost:3330/workspaces",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:43.434Z",
+			"url": "http://localhost:3330/__crawltest-nonexistent-route-404",
+			"value": 4.8
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:43.778Z",
+			"url": "http://localhost:3330/__crawltest-nonexistent-route-404",
+			"value": 396
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:43.779Z",
+			"url": "http://localhost:3330/__crawltest-nonexistent-route-404",
+			"value": 0
+		},
+		{
+			"name": "TTFB",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:44.090Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 2.9
+		},
+		{
+			"name": "FCP",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:44.128Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 88
+		},
+		{
+			"name": "CLS",
+			"navigationType": "navigate",
+			"rating": "good",
+			"timestamp": "2026-05-04T20:28:44.128Z",
+			"url": "http://localhost:3330/dashboard",
+			"value": 0
+		}
+	]
+}

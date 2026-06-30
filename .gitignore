@@ -94,5 +94,9 @@ Thumbs.db
 
 # --- public release excludes (Model A) ---
 /.aidd/
-docs/lts-baseline/
+# Ship the LTS surface-freeze baselines in docs/lts-baseline/ (CI guards compare
+# bun.lock.sha256, openapi.json, template-manifest, config-schema, env-shape against
+# them). Exclude only the private artifacts:
+docs/lts-baseline/feature-inventory.json
+docs/lts-baseline/triage-dance-followups.md
 docs/internal/

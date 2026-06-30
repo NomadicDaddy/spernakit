@@ -1,0 +1,1172 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"additionalProperties": false,
+	"description": "Configuration schema for Spernakit v3 applications. Generated from backend Zod schemas via \"bun run config:schema\".",
+	"properties": {
+		"alerting": {
+			"additionalProperties": false,
+			"properties": {
+				"cooldownMinutes": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"email": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						},
+						"recipients": {
+							"default": [],
+							"items": {
+								"format": "email",
+								"pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+								"type": "string"
+							},
+							"type": "array"
+						}
+					},
+					"required": ["enabled", "recipients"],
+					"type": "object"
+				},
+				"inApp": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": true,
+							"type": "boolean"
+						}
+					},
+					"required": ["enabled"],
+					"type": "object"
+				},
+				"webhook": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						},
+						"headers": {
+							"additionalProperties": {
+								"type": "string"
+							},
+							"default": {},
+							"propertyNames": {
+								"type": "string"
+							},
+							"type": "object"
+						},
+						"secret": {
+							"default": "",
+							"type": "string"
+						},
+						"timeoutMs": {
+							"maximum": 9007199254740991,
+							"minimum": -9007199254740991,
+							"type": "integer"
+						},
+						"url": {
+							"anyOf": [
+								{
+									"format": "uri",
+									"type": "string"
+								},
+								{
+									"const": "",
+									"type": "string"
+								}
+							],
+							"default": ""
+						}
+					},
+					"required": ["enabled", "headers", "secret", "timeoutMs", "url"],
+					"type": "object"
+				}
+			},
+			"required": ["cooldownMinutes", "email", "inApp", "webhook"],
+			"type": "object"
+		},
+		"apiKeys": {
+			"additionalProperties": false,
+			"properties": {
+				"maxPerUser": {
+					"default": 10,
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				}
+			},
+			"required": ["maxPerUser"],
+			"type": "object"
+		},
+		"app": {
+			"additionalProperties": false,
+			"properties": {
+				"description": {
+					"type": "string"
+				},
+				"name": {
+					"type": "string"
+				},
+				"slug": {
+					"type": "string"
+				}
+			},
+			"required": ["description", "name", "slug"],
+			"type": "object"
+		},
+		"audit": {
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"ipWhitelist": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				}
+			},
+			"required": ["enabled", "ipWhitelist"],
+			"type": "object"
+		},
+		"cors": {
+			"additionalProperties": false,
+			"properties": {
+				"allowNoOrigin": {
+					"default": false,
+					"type": "boolean"
+				},
+				"allowedOrigins": {
+					"default": [],
+					"description": "Explicit list of allowed origins for production deployments with trustProxy enabled",
+					"items": {
+						"pattern": "^https?:\\/\\/[a-zA-Z0-9._-]+(:\\d+)?$",
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"frontendDevOrigins": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"inheritFrontendUrl": {
+					"default": false,
+					"description": "When true and allowedOrigins is empty, server.frontendUrl is appended at config-load. Lets staging configs run in NODE_ENV=production without manually duplicating the host into cors.allowedOrigins. Off by default — real production should set allowedOrigins explicitly.",
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"allowedOrigins",
+				"allowNoOrigin",
+				"frontendDevOrigins",
+				"inheritFrontendUrl"
+			],
+			"type": "object"
+		},
+		"dashboards": {
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"maxPerUser": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"sharingEnabled": {
+					"type": "boolean"
+				}
+			},
+			"required": ["enabled", "maxPerUser", "sharingEnabled"],
+			"type": "object"
+		},
+		"database": {
+			"additionalProperties": false,
+			"properties": {
+				"allowDbPush": {
+					"default": false,
+					"type": "boolean"
+				},
+				"backup": {
+					"additionalProperties": false,
+					"properties": {
+						"compress": {
+							"default": false,
+							"type": "boolean"
+						},
+						"enabled": {
+							"default": true,
+							"type": "boolean"
+						},
+						"encrypt": {
+							"default": true,
+							"type": "boolean"
+						},
+						"intervalHours": {
+							"maximum": 9007199254740991,
+							"minimum": 1,
+							"type": "integer"
+						},
+						"location": {
+							"default": "./backups",
+							"type": "string"
+						},
+						"retentionDays": {
+							"maximum": 9007199254740991,
+							"minimum": 1,
+							"type": "integer"
+						}
+					},
+					"required": [
+						"compress",
+						"enabled",
+						"encrypt",
+						"intervalHours",
+						"location",
+						"retentionDays"
+					],
+					"type": "object"
+				},
+				"busyTimeoutMs": {
+					"default": 5000,
+					"maximum": 9007199254740991,
+					"minimum": 0,
+					"type": "integer"
+				},
+				"dialect": {
+					"default": "sqlite",
+					"enum": ["sqlite", "postgres"],
+					"type": "string"
+				},
+				"integrityCheck": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": true,
+							"type": "boolean"
+						},
+						"intervalHours": {
+							"maximum": 9007199254740991,
+							"minimum": 1,
+							"type": "integer"
+						},
+						"mode": {
+							"default": "quick",
+							"enum": ["quick", "full"],
+							"type": "string"
+						}
+					},
+					"required": ["enabled", "intervalHours", "mode"],
+					"type": "object"
+				},
+				"ssl": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						},
+						"rejectUnauthorized": {
+							"default": true,
+							"type": "boolean"
+						}
+					},
+					"required": ["enabled", "rejectUnauthorized"],
+					"type": "object"
+				},
+				"url": {
+					"type": "string"
+				},
+				"vacuum": {
+					"additionalProperties": false,
+					"properties": {
+						"enabled": {
+							"default": true,
+							"type": "boolean"
+						},
+						"intervalHours": {
+							"maximum": 9007199254740991,
+							"minimum": 1,
+							"type": "integer"
+						}
+					},
+					"required": ["enabled", "intervalHours"],
+					"type": "object"
+				}
+			},
+			"required": [
+				"allowDbPush",
+				"backup",
+				"busyTimeoutMs",
+				"dialect",
+				"integrityCheck",
+				"ssl",
+				"url",
+				"vacuum"
+			],
+			"type": "object"
+		},
+		"databaseAdmin": {
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"default": false,
+					"type": "boolean"
+				}
+			},
+			"required": ["enabled"],
+			"type": "object"
+		},
+		"email": {
+			"additionalProperties": false,
+			"properties": {
+				"retryAttempts": {
+					"default": 2,
+					"maximum": 10,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"retryDelayMs": {
+					"default": 1000,
+					"maximum": 60000,
+					"minimum": 0,
+					"type": "integer"
+				}
+			},
+			"required": ["retryAttempts", "retryDelayMs"],
+			"type": "object"
+		},
+		"healthCheck": {
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"interval": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"retentionDays": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"thresholds": {
+					"additionalProperties": false,
+					"properties": {
+						"auth": {
+							"additionalProperties": false,
+							"properties": {
+								"critical": {
+									"type": "number"
+								},
+								"warn": {
+									"type": "number"
+								}
+							},
+							"required": ["critical", "warn"],
+							"type": "object"
+						},
+						"db": {
+							"additionalProperties": false,
+							"properties": {
+								"critical": {
+									"type": "number"
+								},
+								"warn": {
+									"type": "number"
+								}
+							},
+							"required": ["critical", "warn"],
+							"type": "object"
+						},
+						"fs": {
+							"additionalProperties": false,
+							"properties": {
+								"critical": {
+									"type": "number"
+								},
+								"warn": {
+									"type": "number"
+								}
+							},
+							"required": ["critical", "warn"],
+							"type": "object"
+						},
+						"memory": {
+							"additionalProperties": false,
+							"properties": {
+								"critical": {
+									"type": "number"
+								},
+								"warn": {
+									"type": "number"
+								}
+							},
+							"required": ["critical", "warn"],
+							"type": "object"
+						}
+					},
+					"required": ["auth", "db", "fs", "memory"],
+					"type": "object"
+				}
+			},
+			"required": ["enabled", "interval", "retentionDays", "thresholds"],
+			"type": "object"
+		},
+		"logging": {
+			"additionalProperties": false,
+			"properties": {
+				"file": {
+					"additionalProperties": false,
+					"default": {
+						"enabled": false,
+						"maxFiles": 10,
+						"maxSize": "10M",
+						"path": "./logs/app.log"
+					},
+					"properties": {
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						},
+						"maxFiles": {
+							"default": 10,
+							"exclusiveMinimum": 0,
+							"maximum": 9007199254740991,
+							"type": "integer"
+						},
+						"maxSize": {
+							"default": "10M",
+							"type": "string"
+						},
+						"path": {
+							"default": "./logs/app.log",
+							"type": "string"
+						}
+					},
+					"required": ["enabled", "maxFiles", "maxSize", "path"],
+					"type": "object"
+				},
+				"level": {
+					"default": "info",
+					"enum": ["debug", "info", "warn", "error"],
+					"type": "string"
+				}
+			},
+			"required": ["file", "level"],
+			"type": "object"
+		},
+		"metrics": {
+			"additionalProperties": false,
+			"properties": {
+				"collectionIntervalMs": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				}
+			},
+			"required": ["collectionIntervalMs"],
+			"type": "object"
+		},
+		"oauth": {
+			"additionalProperties": false,
+			"properties": {
+				"github": {
+					"additionalProperties": false,
+					"properties": {
+						"callbackUrl": {
+							"default": "",
+							"type": "string"
+						},
+						"clientId": {
+							"default": "",
+							"type": "string"
+						},
+						"clientSecret": {
+							"default": "",
+							"type": "string"
+						},
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						}
+					},
+					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"type": "object"
+				},
+				"google": {
+					"additionalProperties": false,
+					"properties": {
+						"callbackUrl": {
+							"default": "",
+							"type": "string"
+						},
+						"clientId": {
+							"default": "",
+							"type": "string"
+						},
+						"clientSecret": {
+							"default": "",
+							"type": "string"
+						},
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						}
+					},
+					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"type": "object"
+				},
+				"microsoft": {
+					"additionalProperties": false,
+					"properties": {
+						"callbackUrl": {
+							"default": "",
+							"type": "string"
+						},
+						"clientId": {
+							"default": "",
+							"type": "string"
+						},
+						"clientSecret": {
+							"default": "",
+							"type": "string"
+						},
+						"enabled": {
+							"default": false,
+							"type": "boolean"
+						},
+						"tenantId": {
+							"default": "common",
+							"type": "string"
+						}
+					},
+					"required": ["callbackUrl", "clientId", "clientSecret", "enabled", "tenantId"],
+					"type": "object"
+				}
+			},
+			"required": ["github", "google", "microsoft"],
+			"type": "object"
+		},
+		"rateLimit": {
+			"additionalProperties": false,
+			"properties": {
+				"authEnabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"backend": {
+					"enum": ["memory", "database"],
+					"type": "string"
+				},
+				"enabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"maxRequests": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"windowMs": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				}
+			},
+			"required": ["authEnabled", "backend", "enabled", "maxRequests", "windowMs"],
+			"type": "object"
+		},
+		"retention": {
+			"additionalProperties": false,
+			"properties": {
+				"auditLogsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"businessEventsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"healthCheckAlertsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"healthCheckLogsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"notificationsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"scheduledTaskExecutionsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"softDeletedFilesDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"systemMetricsDays": {
+					"maximum": 9007199254740991,
+					"minimum": 1,
+					"type": "integer"
+				}
+			},
+			"required": [
+				"auditLogsDays",
+				"businessEventsDays",
+				"healthCheckAlertsDays",
+				"healthCheckLogsDays",
+				"notificationsDays",
+				"scheduledTaskExecutionsDays",
+				"softDeletedFilesDays",
+				"systemMetricsDays"
+			],
+			"type": "object"
+		},
+		"roles": {
+			"additionalProperties": false,
+			"properties": {
+				"ADMIN": {
+					"additionalProperties": false,
+					"default": {
+						"description": "Application administration, user management",
+						"label": "Administrator"
+					},
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "label"],
+					"type": "object"
+				},
+				"MANAGER": {
+					"additionalProperties": false,
+					"default": {
+						"description": "Team and workspace member management",
+						"label": "Manager"
+					},
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "label"],
+					"type": "object"
+				},
+				"OPERATOR": {
+					"additionalProperties": false,
+					"default": {
+						"description": "Standard operations, data entry and modification",
+						"label": "Operator"
+					},
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "label"],
+					"type": "object"
+				},
+				"SYSOP": {
+					"additionalProperties": false,
+					"default": {
+						"description": "System administration, cross-workspace access",
+						"label": "System Operator"
+					},
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "label"],
+					"type": "object"
+				},
+				"VIEWER": {
+					"additionalProperties": false,
+					"default": {
+						"description": "Read-only access to permitted resources",
+						"label": "Viewer"
+					},
+					"properties": {
+						"description": {
+							"type": "string"
+						},
+						"label": {
+							"type": "string"
+						}
+					},
+					"required": ["description", "label"],
+					"type": "object"
+				}
+			},
+			"required": ["ADMIN", "MANAGER", "OPERATOR", "SYSOP", "VIEWER"],
+			"type": "object"
+		},
+		"security": {
+			"additionalProperties": false,
+			"properties": {
+				"applicationApiKey": {
+					"default": "",
+					"type": "string"
+				},
+				"authCookieName": {
+					"type": "string"
+				},
+				"backupEncryptionKey": {
+					"minLength": 64,
+					"type": "string"
+				},
+				"backupEncryptionKeyPrevious": {
+					"type": "string"
+				},
+				"bcryptRounds": {
+					"default": 12,
+					"maximum": 31,
+					"minimum": 10,
+					"type": "integer"
+				},
+				"cookieMaxAge": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"cookieSecret": {
+					"minLength": 32,
+					"type": "string"
+				},
+				"cookieSecure": {
+					"default": true,
+					"type": "boolean"
+				},
+				"crossOriginEmbedderPolicy": {
+					"default": false,
+					"type": "boolean"
+				},
+				"csrfCookieName": {
+					"type": "string"
+				},
+				"csrfTokenTtlMs": {
+					"default": 14400000,
+					"maximum": 9007199254740991,
+					"minimum": 60000,
+					"type": "integer"
+				},
+				"emailChangeTokenExpiryMs": {
+					"default": 3600000,
+					"maximum": 86400000,
+					"minimum": 300000,
+					"type": "integer"
+				},
+				"emailVerificationTokenExpiryMs": {
+					"default": 86400000,
+					"maximum": 604800000,
+					"minimum": 3600000,
+					"type": "integer"
+				},
+				"encryptionKey": {
+					"minLength": 64,
+					"type": "string"
+				},
+				"jwtExpiresIn": {
+					"default": "15m",
+					"type": "string"
+				},
+				"jwtPrivateKey": {
+					"minLength": 16,
+					"type": "string"
+				},
+				"jwtPrivateKeyPrevious": {
+					"type": "string"
+				},
+				"jwtPublicKey": {
+					"minLength": 16,
+					"type": "string"
+				},
+				"jwtPublicKeyPrevious": {
+					"type": "string"
+				},
+				"jwtRefreshExpiresIn": {
+					"default": "7d",
+					"type": "string"
+				},
+				"jwtRefreshPrivateKey": {
+					"minLength": 16,
+					"type": "string"
+				},
+				"jwtRefreshPrivateKeyPrevious": {
+					"type": "string"
+				},
+				"jwtRefreshPublicKey": {
+					"minLength": 16,
+					"type": "string"
+				},
+				"jwtRefreshPublicKeyPrevious": {
+					"type": "string"
+				},
+				"maxTokenSize": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"mfaChallengeExpiresIn": {
+					"default": "5m",
+					"type": "string"
+				},
+				"mfaPrivateKey": {
+					"default": "",
+					"description": "Dedicated ES256 private key for short-lived MFA challenge tokens. Generate with `bun run generate-keys`; required in production.",
+					"type": "string"
+				},
+				"mfaPublicKey": {
+					"default": "",
+					"description": "Dedicated ES256 public key for verifying MFA challenge tokens. Must match security.mfaPrivateKey; required in production.",
+					"type": "string"
+				},
+				"oauthStateSecret": {
+					"minLength": 32,
+					"type": "string"
+				},
+				"passwordResetTokenExpiryMs": {
+					"maximum": 86400000,
+					"minimum": 300000,
+					"type": "integer"
+				},
+				"refreshCookieName": {
+					"type": "string"
+				},
+				"strictCsp": {
+					"default": true,
+					"type": "boolean"
+				}
+			},
+			"required": [
+				"applicationApiKey",
+				"authCookieName",
+				"backupEncryptionKey",
+				"bcryptRounds",
+				"cookieMaxAge",
+				"cookieSecret",
+				"cookieSecure",
+				"crossOriginEmbedderPolicy",
+				"csrfCookieName",
+				"csrfTokenTtlMs",
+				"emailChangeTokenExpiryMs",
+				"emailVerificationTokenExpiryMs",
+				"encryptionKey",
+				"jwtExpiresIn",
+				"jwtPrivateKey",
+				"jwtPublicKey",
+				"jwtRefreshExpiresIn",
+				"jwtRefreshPrivateKey",
+				"jwtRefreshPublicKey",
+				"maxTokenSize",
+				"mfaChallengeExpiresIn",
+				"mfaPrivateKey",
+				"mfaPublicKey",
+				"passwordResetTokenExpiryMs",
+				"refreshCookieName",
+				"strictCsp"
+			],
+			"type": "object"
+		},
+		"server": {
+			"additionalProperties": false,
+			"properties": {
+				"backendPort": {
+					"maximum": 65535,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"backendUrl": {
+					"format": "uri",
+					"type": "string"
+				},
+				"frontendPort": {
+					"maximum": 65535,
+					"minimum": 1,
+					"type": "integer"
+				},
+				"frontendUrl": {
+					"format": "uri",
+					"type": "string"
+				},
+				"host": {
+					"default": "0.0.0.0",
+					"type": "string"
+				},
+				"maxRequestBodySize": {
+					"default": 10485760,
+					"maximum": 9007199254740991,
+					"minimum": 1024,
+					"type": "integer"
+				},
+				"nodeEnv": {
+					"default": "development",
+					"enum": ["development", "production", "preview", "test"],
+					"type": "string"
+				},
+				"timezone": {
+					"default": "UTC",
+					"type": "string"
+				},
+				"trustProxy": {
+					"default": false,
+					"type": "boolean"
+				},
+				"trustedProxies": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				}
+			},
+			"required": [
+				"backendPort",
+				"backendUrl",
+				"frontendPort",
+				"frontendUrl",
+				"host",
+				"maxRequestBodySize",
+				"nodeEnv",
+				"timezone",
+				"trustedProxies",
+				"trustProxy"
+			],
+			"type": "object"
+		},
+		"storage": {
+			"additionalProperties": false,
+			"properties": {
+				"adapter": {
+					"default": "local",
+					"enum": ["local", "s3"],
+					"type": "string"
+				},
+				"allowedMimeTypes": {
+					"default": [
+						"image/jpeg",
+						"image/png",
+						"image/gif",
+						"image/webp",
+						"application/pdf",
+						"text/plain",
+						"text/csv",
+						"application/json"
+					],
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"maxFileSize": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"s3": {
+					"additionalProperties": false,
+					"properties": {
+						"accessKeyId": {
+							"default": "",
+							"type": "string"
+						},
+						"bucket": {
+							"default": "",
+							"type": "string"
+						},
+						"endpoint": {
+							"default": "",
+							"type": "string"
+						},
+						"region": {
+							"default": "",
+							"type": "string"
+						},
+						"secretAccessKey": {
+							"default": "",
+							"type": "string"
+						}
+					},
+					"required": ["accessKeyId", "bucket", "endpoint", "region", "secretAccessKey"],
+					"type": "object"
+				}
+			},
+			"required": ["adapter", "allowedMimeTypes", "maxFileSize", "s3"],
+			"type": "object"
+		},
+		"testing": {
+			"additionalProperties": false,
+			"properties": {
+				"crawlContentMinLength": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"crawlInteractionDelay": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"crawlLoginEmail": {
+					"default": "",
+					"type": "string"
+				},
+				"crawlLoginPassword": {
+					"default": "",
+					"type": "string"
+				},
+				"crawlMaxDepth": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"crawlPageSettleDelay": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"crawlSeedRoutes": {
+					"default": [],
+					"items": {
+						"type": "string"
+					},
+					"type": "array"
+				},
+				"crawlTimeout": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				}
+			},
+			"required": [
+				"crawlContentMinLength",
+				"crawlInteractionDelay",
+				"crawlLoginEmail",
+				"crawlLoginPassword",
+				"crawlMaxDepth",
+				"crawlPageSettleDelay",
+				"crawlSeedRoutes",
+				"crawlTimeout"
+			],
+			"type": "object"
+		},
+		"tokenCleanup": {
+			"additionalProperties": false,
+			"properties": {
+				"enabled": {
+					"default": true,
+					"type": "boolean"
+				},
+				"intervalHours": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"minimumIntervalHours": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				}
+			},
+			"required": ["enabled", "intervalHours", "minimumIntervalHours"],
+			"type": "object"
+		},
+		"websocket": {
+			"additionalProperties": false,
+			"properties": {
+				"maxConnectionsPerIp": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"maxConnectionsPerUser": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"maxPayload": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				},
+				"rateLimitWindow": {
+					"maximum": 9007199254740991,
+					"minimum": -9007199254740991,
+					"type": "integer"
+				}
+			},
+			"required": [
+				"maxConnectionsPerIp",
+				"maxConnectionsPerUser",
+				"maxPayload",
+				"rateLimitWindow"
+			],
+			"type": "object"
+		}
+	},
+	"required": [
+		"alerting",
+		"apiKeys",
+		"app",
+		"audit",
+		"cors",
+		"dashboards",
+		"database",
+		"databaseAdmin",
+		"email",
+		"healthCheck",
+		"logging",
+		"metrics",
+		"oauth",
+		"rateLimit",
+		"retention",
+		"roles",
+		"security",
+		"server",
+		"storage",
+		"testing",
+		"tokenCleanup",
+		"websocket"
+	],
+	"title": "Spernakit Application Configuration",
+	"type": "object"
+}

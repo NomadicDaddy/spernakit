@@ -1,0 +1,494 @@
+Don't Panic.
+Running smoke tests for mode: qc
+[FORCE] Bypassing cache, running all steps
+
+==> Template drift check
+    bun run check:drift
+$ bun scripts/check-template-drift.ts
+Checking template drift...
+
+   Template drift check is not applicable to spernakit itself.
+[OK] Template drift check
+
+==> Config invariants check
+    bun run check:config
+$ bun scripts/check-config-invariants.ts
+[OK] Config invariants passed.
+[OK] Config invariants check
+
+==> Config schema artifact drift check
+    bun run check:schema-drift
+$ bun scripts/check-config-schema-drift.ts
+[OK] Config schema artifact is in sync with Zod source.
+[OK] Config schema artifact drift check
+
+==> Config schema validation (defaults + example + instance)
+    bun run config:validate
+$ bun scripts/validate-config.ts
+
+Config Validation
+
+DEFAULTS: backend\src\config\defaults.json
+  SCHEMA
+    [PASS] All sections valid
+
+EXAMPLE: config\example.json
+  SCHEMA
+    [PASS] All sections valid
+
+INSTANCE: config\spernakit.json
+  SCHEMA
+    [PASS] All sections valid
+  SECURITY
+    [WARN ] rateLimit.enabled: rate limiting disabled (acceptable in development)
+    [WARN ] rateLimit.authEnabled: auth rate limiting disabled (acceptable in development)
+
+SUMMARY
+  Errors: 0 | Warnings: 2
+  Status: PASS (warnings only)
+
+[OK] Config schema validation (defaults + example + instance)
+
+==> Secrets file shape parity
+    bun run check:secrets-shape
+$ bun scripts/check-secrets-shape.ts
+[OK] No secrets files found — nothing to check.
+[OK] Secrets file shape parity
+
+==> Process environment access check
+    bun run check:process-env
+$ bun scripts/check-process-env.ts
+[OK] Process environment access check passed.
+[OK] Process environment access check
+
+==> Application check
+    bun run check-application
+$ bun scripts/check-application.ts
+Checking application configuration...
+
+   Checking config consistency...
+   APP_SLUG: spernakit
+   BACKEND_PORT: 3331
+   FRONTEND_PORT: 3330
+
+   Checking package.json files...
+
+   Checking for unauthorized database files...
+   No unauthorized database files found.
+
+   Checking for rogue data/ or backup/ folders...
+   No rogue data/ or backup/ folders found.
+
+Checking for .env files (JSON-only config policy)...
+   No .env files found.
+
+Checking tracked config files for committed secrets...
+   No committed secrets found in tracked config files.
+
+   Checking CSP inline script hash consistency...
+   CSP hash consistent: sha256-Iv7srDSoOnDH3hHGa4+d2uupeV5QEc+dDe2mrrrUZZc=
+
+Application checks passed.
+[OK] Application check
+
+==> Destructive mutation confirmation check
+    bun run check:destructive-confirmation
+$ bun scripts/check-destructive-confirmation.ts
+[OK] Destructive confirmation check passed.
+[OK] Destructive mutation confirmation check
+
+==> Typecheck
+    bun run typecheck
+$ bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json
+$ bunx tsc
+$ bunx tsc
+$ bunx tsc -p tsconfig.build.json
+[OK] Typecheck
+
+==> Lint
+    bun run lint
+$ bun run --cwd shared lint && bun run --cwd backend lint && bun run --cwd frontend lint && bun run lint:scripts
+$ bunx eslint src --report-unused-disable-directives --max-warnings 0
+$ bunx eslint src --report-unused-disable-directives --max-warnings 0
+$ bunx eslint . --report-unused-disable-directives --max-warnings 0
+$ bunx eslint scripts --report-unused-disable-directives --max-warnings 0
+[OK] Lint
+
+==> Build
+    bun run build
+$ bun run build:backend && bun run build:frontend
+$ bun run --cwd backend build
+$ bunx tsc
+$ bun run --cwd frontend build
+$ bunx tsc -p tsconfig.build.json && bunx vite build
+[36mvite v8.0.10 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 2859 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/assets/SettingsLayout-DAtJiE8i.js.br                         0.42 kB
+dist/assets/grid-layout-kzrx2K5g.css.br                           0.45 kB
+dist/assets/AuthPageLayout-DCQAd7FY.js.br                         0.48 kB
+dist/assets/ConfirmEmailChangePage-DVyMrDrS.js.br                 0.48 kB
+dist/assets/SettingsLayout-DAtJiE8i.js.gz                         0.49 kB
+dist/assets/FormInputDialog-CO-KwyDo.js.br                        0.53 kB
+dist/assets/PasswordStrengthIndicator-DkqqP2n1.js.br              0.55 kB
+dist/assets/wifi-DFQXDhtZ.js.br                                   0.56 kB
+dist/assets/grid-layout-kzrx2K5g.css.gz                           0.56 kB
+dist/assets/TerminalShell-CmrHHbTc.js.br                          0.57 kB
+dist/assets/AuthPageLayout-DCQAd7FY.js.gz                         0.57 kB
+dist/assets/ConfirmEmailChangePage-DVyMrDrS.js.gz                 0.59 kB
+dist/assets/wifi-DFQXDhtZ.js.gz                                   0.60 kB
+dist/assets/FormInputDialog-CO-KwyDo.js.gz                        0.61 kB
+dist/assets/LineChartWidget-DkubsPvy.js.br                        0.62 kB
+dist/assets/PasswordStrengthIndicator-DkqqP2n1.js.gz              0.64 kB
+dist/assets/TerminalShell-CmrHHbTc.js.gz                          0.67 kB
+dist/assets/ResetPasswordPage-Bn5oGppY.js.br                      0.68 kB
+dist/assets/LineChartWidget-DkubsPvy.js.gz                        0.69 kB
+dist/assets/HealthTimeline-DcEw0auy.js.br                         0.73 kB
+dist/assets/SharedDashboardPage-CpczCcaf.js.br                    0.76 kB
+dist/assets/useShellContext-BvDpToMj.js.br                        0.78 kB
+dist/assets/BugsTab-BYhtT-zB.js.br                                0.78 kB
+dist/assets/ResetPasswordPage-Bn5oGppY.js.gz                      0.81 kB
+dist/assets/TabLayout-BY_UmTtN.js.br                              0.82 kB
+dist/assets/HealthTimeline-DcEw0auy.js.gz                         0.83 kB
+dist/assets/useShellContext-BvDpToMj.js.gz                        0.86 kB
+dist/assets/OAuthCallbackPage-DyyQnhSk.js.br                      0.87 kB
+dist/assets/useHealthChecks-Ce1QZdN2.js.br                        0.87 kB
+dist/assets/SharedDashboardPage-CpczCcaf.js.gz                    0.87 kB
+dist/assets/BbsShell-DdILsrM0.css.br                              0.89 kB
+dist/assets/BugsTab-BYhtT-zB.js.gz                                0.90 kB
+dist/assets/StatCardSkeleton-B16Yu0ie.js.br                       0.91 kB
+dist/assets/useWidgetData-MA107PG8.js.br                          0.94 kB
+dist/assets/TabLayout-BY_UmTtN.js.gz                              0.95 kB
+dist/assets/ResetPasswordConfirmPage-DlqfQ6Ih.js.br               0.97 kB
+dist/assets/ConfirmAlertDialog-Cq_crrDR.js.br                     0.98 kB
+dist/assets/BbsShell-Ch-KSmy7.js.br                               0.98 kB
+dist/assets/useHealthChecks-Ce1QZdN2.js.gz                        0.98 kB
+dist/assets/MetricChart-Da_alTPT.js.br                            0.99 kB
+dist/assets/OAuthCallbackPage-DyyQnhSk.js.gz                      1.01 kB
+dist/assets/StatCardSkeleton-B16Yu0ie.js.gz                       1.02 kB
+dist/assets/BbsShell-DdILsrM0.css.gz                              1.05 kB
+dist/assets/useWidgetData-MA107PG8.js.gz                          1.07 kB
+dist/assets/MfaVerifyPage-CnbsVdDt.js.br                          1.07 kB
+dist/assets/MetricChart-Da_alTPT.js.gz                            1.09 kB
+dist/assets/BbsShell-Ch-KSmy7.js.gz                               1.11 kB
+dist/assets/ResetPasswordConfirmPage-DlqfQ6Ih.js.gz               1.11 kB
+dist/assets/ConfirmAlertDialog-Cq_crrDR.js.gz                     1.12 kB
+dist/assets/ForcePasswordChangePage-CmURQixS.js.br                1.16 kB
+dist/assets/MfaVerifyPage-CnbsVdDt.js.gz                          1.22 kB
+dist/assets/ErdPanel-9iSD2fIz.js.br                               1.24 kB
+dist/assets/select-fn6viXHj.js.br                                 1.25 kB
+dist/assets/SchemaExplorerPanel-CDyfOVkN.js.br                    1.30 kB
+dist/assets/ForcePasswordChangePage-CmURQixS.js.gz                1.31 kB
+dist/index.html.br                                                1.39 kB
+dist/assets/ErdPanel-9iSD2fIz.js.gz                               1.39 kB
+dist/assets/select-fn6viXHj.js.gz                                 1.41 kB
+dist/assets/FileUpload-CRfYD4db.js.br                             1.43 kB
+dist/assets/AuditLogsTab-ClC1PFKb.js.br                           1.47 kB
+dist/assets/SchemaExplorerPanel-CDyfOVkN.js.gz                    1.47 kB
+dist/assets/FilesPage-L5KIp1zn.js.br                              1.52 kB
+dist/assets/DatabaseTab-BjQqNeY6.js.br                            1.54 kB
+dist/assets/RegisterPage-Cfv2u004.js.br                           1.55 kB
+dist/assets/FileUpload-CRfYD4db.js.gz                             1.60 kB
+dist/assets/RolesTab-Dc6dhwEW.js.br                               1.65 kB
+dist/assets/DashboardWidgetRenderer-Embh3gyT.js.br                1.66 kB
+dist/assets/AuditLogsTab-ClC1PFKb.js.gz                           1.67 kB
+dist/assets/FilesPage-L5KIp1zn.js.gz                              1.68 kB
+dist/assets/DatabaseTab-BjQqNeY6.js.gz                            1.70 kB
+dist/index.html.gz                                                1.75 kB
+dist/assets/RegisterPage-Cfv2u004.js.gz                           1.76 kB
+dist/assets/ApplicationTab-B-Yi669S.js.br                         1.77 kB
+dist/assets/BusinessMetricsPage-B-wcYBGD.js.br                    1.77 kB
+dist/assets/DashboardPage-Bg7U4LDr.js.br                          1.78 kB
+dist/assets/BackupTab-DAWastjE.js.br                              1.79 kB
+dist/assets/SqlSandboxPanel-Cx5JTiTH.js.br                        1.81 kB
+dist/assets/DashboardWidgetRenderer-Embh3gyT.js.gz                1.83 kB
+dist/assets/RolesTab-Dc6dhwEW.js.gz                               1.89 kB
+dist/assets/NotificationSettingsTab-IKmVQxCY.js.br                1.91 kB
+dist/assets/DataTable-D9SdAdo6.js.br                              1.95 kB
+dist/assets/BusinessMetricsPage-B-wcYBGD.js.gz                    2.00 kB
+dist/assets/ApplicationTab-B-Yi669S.js.gz                         2.00 kB
+dist/assets/DashboardPage-Bg7U4LDr.js.gz                          2.01 kB
+dist/assets/BackupTab-DAWastjE.js.gz                              2.02 kB
+dist/assets/SqlSandboxPanel-Cx5JTiTH.js.gz                        2.03 kB
+dist/assets/web-vitals-_o01oJHA.js.br                             2.10 kB
+dist/assets/LoginPage-8GT3lVrG.js.br                              2.12 kB
+dist/assets/NotificationSettingsTab-IKmVQxCY.js.gz                2.17 kB
+dist/assets/DataTable-D9SdAdo6.js.gz                              2.17 kB
+dist/assets/EmailTab-B3S6aVyb.js.br                               2.21 kB
+dist/assets/OnboardingPage-COu42Mo_.js.br                         2.32 kB
+dist/assets/web-vitals-_o01oJHA.js.gz                             2.33 kB
+dist/assets/LoginPage-8GT3lVrG.js.gz                              2.43 kB
+dist/assets/DashboardListPage-Dww6siHD.js.br                      2.47 kB
+dist/assets/EmailTab-B3S6aVyb.js.gz                               2.49 kB
+dist/assets/SecurityTab-6fcYDxJ3.js.br                            2.51 kB
+dist/assets/ApiKeysTab-8UrFrZ3T.js.br                             2.57 kB
+dist/assets/PersonalInfoTab-BsZp0YuP.js.br                        2.59 kB
+dist/assets/OnboardingPage-COu42Mo_.js.gz                         2.61 kB
+dist/assets/WorkspaceSettingsPage-CX-SlF7l.js.br                  2.72 kB
+dist/assets/DashboardListPage-Dww6siHD.js.gz                      2.80 kB
+dist/assets/PreferencesTab-D718K3xZ.js.br                         2.84 kB
+dist/assets/SecurityTab-6fcYDxJ3.js.gz                            2.85 kB
+dist/assets/ApiKeysTab-8UrFrZ3T.js.gz                             2.89 kB
+dist/assets/PersonalInfoTab-BsZp0YuP.js.gz                        2.95 kB
+dist/assets/WorkspaceSettingsPage-CX-SlF7l.js.gz                  3.08 kB
+dist/assets/DataViewerPanel-DmUi7ecl.js.br                        3.13 kB
+dist/assets/NotificationsPage-Bom130ea.js.br                      3.19 kB
+dist/assets/PreferencesTab-D718K3xZ.js.gz                         3.30 kB
+dist/assets/DataViewerPanel-DmUi7ecl.js.gz                        3.47 kB
+dist/assets/SystemHealthTab-CG560wGL.js.br                        3.47 kB
+dist/assets/NotificationsPage-Bom130ea.js.gz                      3.50 kB
+dist/assets/SystemHealthTab-CG560wGL.js.gz                        3.90 kB
+dist/assets/AuthenticationTab-_ya-J7l3.js.br                      3.92 kB
+dist/assets/CustomDashboardPage-BKayxj-d.js.br                    4.14 kB
+dist/assets/jetbrains-mono-greek-400-normal-C190GLew.woff2        4.22 kB
+dist/assets/jetbrains-mono-greek-700-normal-C6CZE3T8.woff2        4.30 kB
+dist/assets/AuthenticationTab-_ya-J7l3.js.gz                      4.47 kB
+dist/assets/CustomDashboardPage-BKayxj-d.js.gz                    4.57 kB
+dist/index.html                                                   4.65 kB │ gzip:   1.76 kB
+dist/assets/vt323-vietnamese-400-normal-D_5Q7Vcv.woff             4.71 kB
+dist/assets/WorkspaceManagementPage-LMnUB4kE.js.br                4.81 kB
+dist/assets/UsersTab-Dq4VaDvp.js.br                               4.98 kB
+dist/assets/jetbrains-mono-cyrillic-400-normal-BEIGL1Tu.woff2     5.32 kB
+dist/assets/jetbrains-mono-cyrillic-700-normal-BWTpRfYl.woff2     5.33 kB
+dist/assets/WorkspaceManagementPage-LMnUB4kE.js.gz                5.34 kB
+dist/assets/jetbrains-mono-vietnamese-400-normal-CqNFfHCs.woff    5.37 kB
+dist/assets/jetbrains-mono-vietnamese-700-normal-BDLVIk2r.woff    5.45 kB
+dist/assets/UsersTab-Dq4VaDvp.js.gz                               5.60 kB
+dist/assets/jetbrains-mono-greek-400-normal-B9oWc5Lo.woff         5.66 kB
+dist/assets/jetbrains-mono-greek-700-normal-DEigVDxa.woff         5.69 kB
+dist/assets/jetbrains-mono-cyrillic-400-normal-ugxPyKxw.woff      6.97 kB
+dist/assets/jetbrains-mono-cyrillic-700-normal-CEoEElIJ.woff      7.01 kB
+dist/assets/jetbrains-mono-latin-ext-400-normal-Bc8Ftmh3.woff2    7.33 kB
+dist/assets/jetbrains-mono-latin-ext-700-normal-CZipNAKV.woff2    7.47 kB
+dist/assets/browser-B2RY9_-P.js.br                                7.72 kB
+dist/assets/vt323-vietnamese-400-normal-D0VnvwZ9.woff2            7.93 kB
+dist/assets/manrope-vietnamese-wght-normal-usUDDRr7.woff2         8.52 kB
+dist/assets/browser-B2RY9_-P.js.gz                                8.79 kB
+dist/assets/manrope-greek-wght-normal-DL7QRZyv.woff2              9.44 kB
+dist/assets/vt323-latin-ext-400-normal-DqOq58ri.woff              9.63 kB
+dist/assets/vt323-latin-400-normal-Dqn9ZSPj.woff                  9.75 kB
+dist/assets/jetbrains-mono-latin-ext-400-normal-fXTG6kC5.woff    10.12 kB
+dist/assets/inter-vietnamese-wght-normal-CBcvBZtf.woff2          10.25 kB
+dist/assets/jetbrains-mono-latin-ext-700-normal-CxPITLHs.woff    10.30 kB
+dist/assets/inter-greek-ext-wght-normal-DlzME5K_.woff2           11.23 kB
+dist/assets/TerminalShell-CALb38L7.css.br                        14.14 kB
+dist/assets/manrope-cyrillic-wght-normal-Dvxsihut.woff2          14.50 kB
+dist/assets/TerminalShell-CALb38L7.css.gz                        14.59 kB
+dist/assets/index-C_nlQOhs.css.br                                14.71 kB
+dist/assets/manrope-latin-ext-wght-normal-Ch3YOpNY.woff2         15.12 kB
+dist/assets/vt323-latin-ext-400-normal-iUdYUaX4.woff2            16.37 kB
+dist/assets/react-tanstack-DR6Phtuu.js.br                        17.28 kB
+dist/assets/index-C_nlQOhs.css.gz                                17.55 kB
+dist/assets/vt323-latin-400-normal-wDgJuOC9.woff2                17.93 kB
+dist/assets/grid-layout-nEm7CIW7.js.br                           18.62 kB
+dist/assets/inter-cyrillic-wght-normal-DqGufNeO.woff2            18.74 kB
+dist/assets/inter-greek-wght-normal-CkhJZR-_.woff2               18.99 kB
+dist/assets/react-tanstack-DR6Phtuu.js.gz                        19.34 kB
+dist/assets/index-CC9gF_I-.js.br                                 20.74 kB
+dist/assets/grid-layout-nEm7CIW7.js.gz                           21.03 kB
+dist/assets/jetbrains-mono-latin-400-normal-V6pRDFza.woff2       21.16 kB
+dist/assets/jetbrains-mono-latin-700-normal-BYuf6tUa.woff2       21.90 kB
+dist/assets/index-CC9gF_I-.js.gz                                 24.64 kB
+dist/assets/manrope-latin-wght-normal-DHIcAJRg.woff2             24.83 kB
+dist/assets/inter-cyrillic-ext-wght-normal-BOeWTOD4.woff2        25.96 kB
+dist/assets/react-routing-DRlY2Cya.js.br                         27.17 kB
+dist/assets/jetbrains-mono-latin-400-normal-6-qcROiO.woff        27.49 kB
+dist/assets/jetbrains-mono-latin-700-normal-D3wTyLJW.woff        28.20 kB
+dist/assets/react-routing-DRlY2Cya.js.gz                         30.81 kB
+dist/assets/inter-latin-wght-normal-Dx4kXJAl.woff2               48.25 kB
+dist/assets/inter-latin-ext-wght-normal-DO1Apj_S.woff2           85.06 kB
+dist/assets/recharts-DFSXP1vC.js.br                              86.06 kB
+dist/assets/recharts-DFSXP1vC.js.gz                             101.35 kB
+dist/assets/react-core-C0Bnst6E.js.br                           116.73 kB
+dist/assets/react-core-C0Bnst6E.js.gz                           136.96 kB
+dist/assets/grid-layout-kzrx2K5g.css                              2.31 kB │ gzip:   0.56 kB
+dist/assets/BbsShell-DdILsrM0.css                                 3.11 kB │ gzip:   1.05 kB
+dist/assets/TerminalShell-CALb38L7.css                           24.35 kB │ gzip:  14.62 kB
+dist/assets/index-C_nlQOhs.css                                   84.28 kB │ gzip:  17.70 kB
+dist/assets/chevron-down-CnS7tsr1.js                              0.12 kB │ gzip:   0.13 kB │ map:     0.80 kB
+dist/assets/plus-NuRHgHsQ.js                                      0.14 kB │ gzip:   0.14 kB │ map:     0.85 kB
+dist/assets/arrow-left-C7T0SQrv.js                                0.16 kB │ gzip:   0.15 kB │ map:     0.89 kB
+dist/assets/validation-B-Ki6SFY.js                                0.18 kB │ gzip:   0.15 kB │ map:     1.88 kB
+dist/assets/download-Bujz1DQZ.js                                  0.22 kB │ gzip:   0.18 kB │ map:     1.01 kB
+dist/assets/activity-CLky3YHr.js                                  0.22 kB │ gzip:   0.19 kB │ map:     0.92 kB
+dist/assets/copy-Dp9NbdwA.js                                      0.23 kB │ gzip:   0.20 kB │ map:     1.00 kB
+dist/assets/AuthFormError-Df8GceuJ.js                             0.23 kB │ gzip:   0.20 kB │ map:     0.64 kB
+dist/assets/useChartData-AIalCDvz.js                              0.25 kB │ gzip:   0.19 kB │ map:     1.22 kB
+dist/assets/eye-XPRxLrCc.js                                       0.25 kB │ gzip:   0.19 kB │ map:     1.01 kB
+dist/assets/download-SWmIkK1_.js                                  0.26 kB │ gzip:   0.20 kB │ map:     1.15 kB
+dist/assets/users-vnNILdNR.js                                     0.30 kB │ gzip:   0.22 kB │ map:     1.17 kB
+dist/assets/TableSkeleton-DQmYQPN1.js                             0.31 kB │ gzip:   0.24 kB │ map:     0.87 kB
+dist/assets/save-C0ftvTp8.js                                      0.32 kB │ gzip:   0.22 kB │ map:     1.12 kB
+dist/assets/trash-2-BmqbLmMN.js                                   0.32 kB │ gzip:   0.21 kB │ map:     1.23 kB
+dist/assets/megaphone-C01NlOVs.js                                 0.34 kB │ gzip:   0.24 kB │ map:     1.17 kB
+dist/assets/shield-alert-B5nrGtOQ.js                              0.34 kB │ gzip:   0.25 kB │ map:     1.18 kB
+dist/assets/ProfileLayout-Cvkro65p.js                             0.40 kB │ gzip:   0.26 kB │ map:     0.92 kB
+dist/assets/useSettingsHooks-BcXa2_OG.js                          0.40 kB │ gzip:   0.27 kB │ map:     1.52 kB
+dist/assets/ContentListSkeleton-Dw1mS8hw.js                       0.41 kB │ gzip:   0.29 kB │ map:     1.53 kB
+dist/assets/useUnsavedChanges-C9sLyliR.js                         0.41 kB │ gzip:   0.27 kB │ map:     1.81 kB
+dist/assets/chartConstants-DCOYQP0t.js                            0.43 kB │ gzip:   0.29 kB │ map:     1.12 kB
+dist/assets/useUrlFilters-z-F9Iv4U.js                             0.44 kB │ gzip:   0.29 kB │ map:     2.34 kB
+dist/assets/CardSkeleton-BZAckrsr.js                              0.46 kB │ gzip:   0.30 kB │ map:     1.35 kB
+dist/assets/RoleSelector-Bfo0KxrV.js                              0.50 kB │ gzip:   0.31 kB │ map:     1.67 kB
+dist/assets/AuthFooterLink-DWBCIvcW.js                            0.51 kB │ gzip:   0.30 kB │ map:     1.06 kB
+dist/assets/progress-DBdlRoo_.js                                  0.51 kB │ gzip:   0.34 kB │ map:     1.14 kB
+dist/assets/useContainerWidth-BpwndFTH.js                         0.53 kB │ gzip:   0.34 kB │ map:     2.29 kB
+dist/assets/AuthStatusMessage-Bb_c9XzN.js                         0.55 kB │ gzip:   0.31 kB │ map:     1.19 kB
+dist/assets/DashboardCardSkeleton-C7L9zyzD.js                     0.56 kB │ gzip:   0.32 kB │ map:     1.65 kB
+dist/assets/mutationHelpers-BoPOI60g.js                           0.57 kB │ gzip:   0.29 kB │ map:     3.96 kB
+dist/assets/useTokenVerification-BiUmJRi1.js                      0.65 kB │ gzip:   0.41 kB │ map:     2.13 kB
+dist/assets/ChartSkeleton-C4RwEe7f.js                             0.67 kB │ gzip:   0.39 kB │ map:     2.48 kB
+dist/assets/CopyButton-DyhTMjHS.js                                0.67 kB │ gzip:   0.42 kB │ map:     1.60 kB
+dist/assets/rolldown-runtime-S-ySWqyJ.js                          0.69 kB │ gzip:   0.42 kB
+dist/assets/tableExport-MONjaP6E.js                               0.72 kB │ gzip:   0.43 kB │ map:     3.10 kB
+dist/assets/usePagination-C3DBqvCN.js                             0.74 kB │ gzip:   0.41 kB │ map:     3.13 kB
+dist/assets/dashboards-BM9WPoIJ.js                                0.76 kB │ gzip:   0.29 kB │ map:     6.00 kB
+dist/assets/databaseAdmin-BmLsrJT5.js                             0.80 kB │ gzip:   0.31 kB │ map:     5.49 kB
+dist/assets/EmptyState-D1NoCTWx.js                                0.85 kB │ gzip:   0.45 kB │ map:     2.11 kB
+dist/assets/BarChartWidget-c7jb1MiH.js                            0.85 kB │ gzip:   0.51 kB │ map:     2.27 kB
+dist/assets/NotFoundPage-8bf-ZYzd.js                              0.89 kB │ gzip:   0.47 kB │ map:     1.55 kB
+dist/assets/panel-top-oQTTly46.js                                 0.92 kB │ gzip:   0.46 kB │ map:     4.19 kB
+dist/assets/PageHeader-DA6mdWBf.js                                0.93 kB │ gzip:   0.45 kB │ map:     2.28 kB
+dist/assets/checkbox-Bopfs7M_.js                                  0.94 kB │ gzip:   0.48 kB │ map:     1.59 kB
+dist/assets/mfa-MX4XUCfW.js                                       1.01 kB │ gzip:   0.46 kB │ map:     4.28 kB
+dist/assets/VerifyEmailPage-BoyS1ke6.js                           1.01 kB │ gzip:   0.54 kB │ map:     2.20 kB
+dist/assets/SettingsLayout-DAtJiE8i.js                            1.05 kB │ gzip:   0.49 kB │ map:     2.42 kB
+dist/assets/FormInputDialog-CO-KwyDo.js                           1.11 kB │ gzip:   0.61 kB │ map:     3.43 kB
+dist/assets/ConfirmEmailChangePage-DVyMrDrS.js                    1.11 kB │ gzip:   0.59 kB │ map:     2.34 kB
+dist/assets/PasswordStrengthIndicator-DkqqP2n1.js                 1.27 kB │ gzip:   0.64 kB │ map:     3.62 kB
+dist/assets/AuthPageLayout-DCQAd7FY.js                            1.28 kB │ gzip:   0.57 kB │ map:     2.73 kB
+dist/assets/LineChartWidget-DkubsPvy.js                           1.32 kB │ gzip:   0.69 kB │ map:     3.36 kB
+dist/assets/wifi-DFQXDhtZ.js                                      1.52 kB │ gzip:   0.61 kB │ map:     5.70 kB
+dist/assets/ResetPasswordPage-Bn5oGppY.js                         1.57 kB │ gzip:   0.81 kB │ map:     3.95 kB
+dist/assets/HealthTimeline-DcEw0auy.js                            1.58 kB │ gzip:   0.83 kB │ map:     4.36 kB
+dist/assets/TerminalShell-CmrHHbTc.js                             1.58 kB │ gzip:   0.67 kB │ map:     3.77 kB
+dist/assets/useShellContext-BvDpToMj.js                           1.80 kB │ gzip:   0.86 kB │ map:     6.33 kB
+dist/assets/TabLayout-BY_UmTtN.js                                 1.93 kB │ gzip:   0.95 kB │ map:     5.44 kB
+dist/assets/OAuthCallbackPage-DyyQnhSk.js                         2.02 kB │ gzip:   1.01 kB │ map:     5.27 kB
+dist/assets/SharedDashboardPage-CpczCcaf.js                       2.03 kB │ gzip:   0.87 kB │ map:     4.91 kB
+dist/assets/BugsTab-BYhtT-zB.js                                   2.06 kB │ gzip:   0.90 kB │ map:     5.24 kB
+dist/assets/MetricChart-Da_alTPT.js                               2.25 kB │ gzip:   1.10 kB │ map:     7.15 kB
+dist/assets/useWidgetData-MA107PG8.js                             2.42 kB │ gzip:   1.07 kB │ map:     7.93 kB
+dist/assets/StatCardSkeleton-B16Yu0ie.js                          2.48 kB │ gzip:   1.02 kB │ map:     7.84 kB
+dist/assets/MfaVerifyPage-CnbsVdDt.js                             2.51 kB │ gzip:   1.23 kB │ map:     6.90 kB
+dist/assets/ResetPasswordConfirmPage-DlqfQ6Ih.js                  2.53 kB │ gzip:   1.11 kB │ map:     6.58 kB
+dist/assets/useHealthChecks-Ce1QZdN2.js                           2.74 kB │ gzip:   0.98 kB │ map:    11.95 kB
+dist/assets/BbsShell-Ch-KSmy7.js                                  2.91 kB │ gzip:   1.11 kB │ map:     7.01 kB
+dist/assets/ErdPanel-9iSD2fIz.js                                  3.10 kB │ gzip:   1.40 kB │ map:    10.47 kB
+dist/assets/ForcePasswordChangePage-CmURQixS.js                   3.20 kB │ gzip:   1.31 kB │ map:     9.42 kB
+dist/assets/ConfirmAlertDialog-Cq_crrDR.js                        3.47 kB │ gzip:   1.12 kB │ map:    10.02 kB
+dist/assets/FileUpload-CRfYD4db.js                                3.49 kB │ gzip:   1.60 kB │ map:    11.61 kB
+dist/assets/FilesPage-L5KIp1zn.js                                 3.74 kB │ gzip:   1.68 kB │ map:     9.62 kB
+dist/assets/SchemaExplorerPanel-CDyfOVkN.js                       3.80 kB │ gzip:   1.47 kB │ map:     9.52 kB
+dist/assets/select-fn6viXHj.js                                    3.89 kB │ gzip:   1.41 kB │ map:     8.63 kB
+dist/assets/DatabaseTab-BjQqNeY6.js                               3.91 kB │ gzip:   1.70 kB │ map:     7.15 kB
+dist/assets/AuditLogsTab-ClC1PFKb.js                              3.98 kB │ gzip:   1.67 kB │ map:    11.79 kB
+dist/assets/RegisterPage-Cfv2u004.js                              4.68 kB │ gzip:   1.76 kB │ map:    13.00 kB
+dist/assets/RolesTab-Dc6dhwEW.js                                  4.77 kB │ gzip:   1.89 kB │ map:    11.94 kB
+dist/assets/SqlSandboxPanel-Cx5JTiTH.js                           5.07 kB │ gzip:   2.03 kB │ map:    15.16 kB
+dist/assets/BackupTab-DAWastjE.js                                 5.22 kB │ gzip:   2.02 kB │ map:    15.24 kB
+dist/assets/LoginPage-8GT3lVrG.js                                 5.24 kB │ gzip:   2.43 kB │ map:    15.54 kB
+dist/assets/web-vitals-_o01oJHA.js                                5.58 kB │ gzip:   2.34 kB │ map:    13.09 kB
+dist/assets/ApplicationTab-B-Yi669S.js                            5.81 kB │ gzip:   2.01 kB │ map:    17.52 kB
+dist/assets/DataTable-D9SdAdo6.js                                 5.91 kB │ gzip:   2.17 kB │ map:    23.53 kB
+dist/assets/DashboardPage-Bg7U4LDr.js                             5.94 kB │ gzip:   2.01 kB │ map:    14.62 kB
+dist/assets/DashboardWidgetRenderer-Embh3gyT.js                   6.15 kB │ gzip:   1.83 kB │ map:    14.09 kB
+dist/assets/NotificationSettingsTab-IKmVQxCY.js                   7.14 kB │ gzip:   2.17 kB │ map:    18.65 kB
+dist/assets/OnboardingPage-COu42Mo_.js                            7.35 kB │ gzip:   2.61 kB │ map:    19.48 kB
+dist/assets/BusinessMetricsPage-B-wcYBGD.js                       7.39 kB │ gzip:   2.01 kB │ map:    19.94 kB
+dist/assets/DashboardListPage-Dww6siHD.js                         7.50 kB │ gzip:   2.81 kB │ map:    21.69 kB
+dist/assets/EmailTab-B3S6aVyb.js                                  7.76 kB │ gzip:   2.50 kB │ map:    23.77 kB
+dist/assets/ApiKeysTab-8UrFrZ3T.js                                8.10 kB │ gzip:   2.90 kB │ map:    22.46 kB
+dist/assets/PersonalInfoTab-BsZp0YuP.js                           8.72 kB │ gzip:   2.95 kB │ map:    27.41 kB
+dist/assets/SecurityTab-6fcYDxJ3.js                               8.84 kB │ gzip:   2.86 kB │ map:    22.37 kB
+dist/assets/DataViewerPanel-DmUi7ecl.js                           9.40 kB │ gzip:   3.48 kB │ map:    29.81 kB
+dist/assets/WorkspaceSettingsPage-CX-SlF7l.js                     9.68 kB │ gzip:   3.10 kB │ map:    26.32 kB
+dist/assets/NotificationsPage-Bom130ea.js                         9.96 kB │ gzip:   3.52 kB │ map:    32.29 kB
+dist/assets/PreferencesTab-D718K3xZ.js                           11.87 kB │ gzip:   3.31 kB │ map:    36.04 kB
+dist/assets/CustomDashboardPage-BKayxj-d.js                      14.22 kB │ gzip:   4.58 kB │ map:    47.56 kB
+dist/assets/SystemHealthTab-CG560wGL.js                          15.24 kB │ gzip:   3.91 kB │ map:    38.63 kB
+dist/assets/AuthenticationTab-_ya-J7l3.js                        16.94 kB │ gzip:   4.49 kB │ map:    49.69 kB
+dist/assets/UsersTab-Dq4VaDvp.js                                 18.20 kB │ gzip:   5.61 kB │ map:    61.47 kB
+dist/assets/WorkspaceManagementPage-LMnUB4kE.js                  18.98 kB │ gzip:   5.38 kB │ map:    62.36 kB
+dist/assets/browser-B2RY9_-P.js                                  23.47 kB │ gzip:   8.85 kB │ map:   114.35 kB
+dist/assets/grid-layout-nEm7CIW7.js                              69.43 kB │ gzip:  21.23 kB │ map:   293.91 kB
+dist/assets/react-tanstack-DR6Phtuu.js                           72.70 kB │ gzip:  19.54 kB │ map:   254.72 kB
+dist/assets/index-CC9gF_I-.js                                    87.87 kB │ gzip:  24.85 kB │ map:   277.42 kB
+dist/assets/react-routing-DRlY2Cya.js                            94.22 kB │ gzip:  31.13 kB │ map:   518.32 kB
+dist/assets/recharts-DFSXP1vC.js                                355.82 kB │ gzip: 102.36 kB │ map: 1,767.30 kB
+dist/assets/react-core-C0Bnst6E.js                              444.77 kB │ gzip: 138.50 kB │ map: 1,925.07 kB
+
+[32m✓ built in 1.38s[39m
+
+[OK] Build
+
+==> API type contract validation
+    bun run check:api-types
+$ bun scripts/validate-api-types.ts
+
+API Type Contract Validation
+
+SPEC EXTRACTION
+  [PASS] OpenAPI spec extracted (137 endpoints)
+
+ENUM VALIDATION
+  [PASS] All enum types consistent between backend and frontend
+
+SUMMARY
+  Errors: 0 | Warnings: 0
+  Status: PASS
+
+[16:39:59] [33mWARN[39m: [36mrate limiting disabled (acceptable in development)[39m
+[16:39:59] [33mWARN[39m: [36mauth rate limiting disabled (acceptable in development)[39m
+[OK] API type contract validation
+
+==> Feature integration check
+    bun run check:feature-integration
+$ bun scripts/check-feature-integration.ts
+[OK] Feature integration check passed.
+[OK] Feature integration check
+
+==> SQLite/PG schema parity check
+    bun run check:schema-parity
+$ bun scripts/check-schema-parity.ts
+[OK] Schema parity check passed.
+[OK] SQLite/PG schema parity check
+
+==> Format check
+    bun run format:check
+$ bunx prettier --check .
+Checking formatting...
+All matched files use Prettier code style!
+[OK] Format check
+
+==> Check dependency versions
+    bun run check-deps
+$ bun scripts/check-dependency-versions.ts
+Checking for unpinned critical dependencies...
+
+✅ backend: All dependencies are pinned to exact versions
+✅ frontend: All dependencies are pinned to exact versions
+
+✅ All critical dependencies are properly pinned
+[OK] Check dependency versions
+
+==> LTS lockfile freeze guard
+    bun run check:lockfile-frozen
+$ bun scripts/check-lockfile-frozen.ts
+bun.lock unchanged — lockfile freeze respected.
+[OK] LTS lockfile freeze guard
+
+==> LTS surface freeze guard
+    bun run check:lts-surface
+$ bun scripts/check-lts-surface.ts
+Checking LTS surface against v3.8.0-lts baselines...
+
+   ✅ template-manifest    identical to v3.8.0-lts baseline
+   ✅ config-schema        identical to v3.8.0-lts baseline
+   ✅ env-shape            identical to v3.8.0-lts baseline
+
+LTS surface intact.
+[OK] LTS surface freeze guard
+
+All smoke tests for mode 'qc' completed successfully.

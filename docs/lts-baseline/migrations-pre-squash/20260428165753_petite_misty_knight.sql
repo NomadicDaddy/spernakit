@@ -1,0 +1,1 @@
+DROP INDEX `idx_mfa_settings_user_id`;

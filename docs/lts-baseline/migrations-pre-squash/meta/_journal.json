@@ -1,0 +1,34 @@
+{
+	"dialect": "sqlite",
+	"entries": [
+		{
+			"breakpoints": true,
+			"idx": 0,
+			"tag": "20260427214052_fast_killraven",
+			"version": "6",
+			"when": 1777326052734
+		},
+		{
+			"breakpoints": true,
+			"idx": 1,
+			"tag": "20260428165753_petite_misty_knight",
+			"version": "6",
+			"when": 1777395473960
+		},
+		{
+			"breakpoints": true,
+			"idx": 2,
+			"tag": "20260430135026_breezy_spacker_dave",
+			"version": "6",
+			"when": 1777557026211
+		},
+		{
+			"breakpoints": true,
+			"idx": 3,
+			"tag": "20260501220608_pkce_verifiers_state_named_unique_index",
+			"version": "6",
+			"when": 1777673168239
+		}
+	],
+	"version": "7"
+}
