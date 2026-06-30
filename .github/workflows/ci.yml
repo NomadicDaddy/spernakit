@@ -186,6 +186,14 @@ jobs:
             - name: Runtime crawl + compression (docker-local)
               run: bun run smoke:docker-local
 
+            # The wait-for-http output alone doesn't show why the app crash-looped;
+            # surface the container's own logs so runtime failures are diagnosable.
+            - name: Dump container logs on failure
+              if: failure()
+              run: |
+                  docker ps -a
+                  docker logs spernakit-dev 2>&1 | tail -200 || true
+
             # Tear down the stack even if the crawl fails so a hung container never
             # masks the real failure. The base compose alone shares the same default
             # project name, so `down` removes the stack without the test override's
