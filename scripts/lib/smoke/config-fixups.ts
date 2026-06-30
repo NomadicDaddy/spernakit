@@ -98,6 +98,9 @@ export function ensureDockerTestDirs(projectRoot: string): void {
 		join(appdataRoot, appSlug, 'config'),
 		join(appdataRoot, appSlug, 'data'),
 		join(appdataRoot, appSlug, 'logs'),
+		// docker-compose.test.yml mounts ${APPDATA_ROOT}/${APP_SLUG}/backups; production uses
+		// ${BACKUPS_ROOT}/${APP_SLUG}. Create both layouts so the bind mount is writable either way.
+		join(appdataRoot, appSlug, 'backups'),
 		join(backupsRoot || appdataRoot, appSlug),
 	];
 
