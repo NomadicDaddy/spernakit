@@ -5,6 +5,7 @@
  * preparation for docker-local / docker-prod runs.
  */
 import {
+	chmodSync,
 	copyFileSync,
 	existsSync,
 	mkdirSync,
@@ -103,6 +104,16 @@ export function ensureDockerTestDirs(projectRoot: string): void {
 	for (const dir of dirs) {
 		if (!existsSync(dir)) {
 			mkdirSync(dir, { recursive: true });
+		}
+		// The container runs as the non-root `bun` user, whose uid differs from the host
+		// process that created these dirs. Make them world-writable so the bind-mounted
+		// SQLite DB, logs, and backups are writable inside the container — without this,
+		// Linux CI leaves fresh mount points root-owned and the container crash-loops with
+		// "unable to open database file". chmod is a no-op on Windows bind mounts.
+		try {
+			chmodSync(dir, 0o777);
+		} catch {
+			// best-effort: a pre-existing dir owned by another user can't be re-chmod'd here
 		}
 	}
 
