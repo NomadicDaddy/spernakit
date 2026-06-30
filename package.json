@@ -9,6 +9,20 @@
 		"url": "https://github.com/NomadicDaddy/spernakit/issues"
 	},
 	"description": "Self-Hosted Multi-User Application Template",
+	"keywords": [
+		"bun",
+		"drizzle-orm",
+		"elysia",
+		"full-stack",
+		"react",
+		"self-hosted",
+		"shadcn-ui",
+		"sqlite",
+		"tanstack-query",
+		"template",
+		"typescript",
+		"vite"
+	],
 	"devDependencies": {
 		"@eslint/js": "10.0.1",
 		"@types/bun": "1.3.14",
