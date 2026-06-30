@@ -180,6 +180,12 @@ jobs:
             - name: Install Puppeteer browser
               run: bunx puppeteer browsers install chrome
 
+            # verify-compression (run by smoke:docker-local) checks the host's
+            # frontend/dist for precompressed assets. The docker image builds the
+            # frontend internally, so build it on the runner too for that check.
+            - name: Build frontend (for compression check)
+              run: bun run build:frontend
+
             # smoke.ts resolves APP_SLUG / FRONTEND_PORT / BACKEND_PORT / APPDATA_ROOT
             # from config defaults and exports them to the compose commands, so the
             # docker-local stack needs no extra environment here.
