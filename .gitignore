@@ -40,7 +40,9 @@ testResults.xml
 upgrade-review/
 
 # generated
-backend/drizzle/meta/
+# NOTE: backend/drizzle/meta/ is intentionally NOT ignored — the migration
+# journal must ship alongside the tracked drizzle/*.sql so a fresh clone can
+# migrate (the runner drift-checks journal vs .sql and refuses to start otherwise).
 backups/
 data/.seeded
 data/*.bak
