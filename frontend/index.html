@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+
+		<!-- Browser hints -->
+		<meta content="IE=edge" http-equiv="X-UA-Compatible" />
+		<meta content="light dark" name="color-scheme" />
+		<!-- theme-color split by prefers-color-scheme so pre-script (FOIT) paint matches the OS setting; the inline script below collapses these to the persisted Zustand choice once JS runs. -->
+		<meta content="#09090b" media="(prefers-color-scheme: dark)" name="theme-color" />
+		<meta content="#f9fafb" media="(prefers-color-scheme: light)" name="theme-color" />
+
+		<!-- SEO Meta Tags -->
+		<meta
+			content="Spernakit v3 - Self-Hosted Multi-User Application Template"
+			name="description" />
+		<meta
+			content="admin template, self-hosted, RBAC, multi-tenancy, authentication, audit logging, React, TypeScript"
+			name="keywords" />
+		<meta content="Spernakit v3" name="author" />
+		<meta content="index, follow" name="robots" />
+
+		<!-- Open Graph / Facebook -->
+		<meta content="website" property="og:type" />
+		<meta content="Spernakit v3" property="og:title" />
+		<meta content="Self-Hosted Multi-User Application Template" property="og:description" />
+		<meta content="/og-image.svg" property="og:image" />
+		<meta content="Spernakit v3" property="og:site_name" />
+
+		<!-- Twitter Card -->
+		<meta content="summary_large_image" name="twitter:card" />
+		<meta content="Spernakit v3" name="twitter:title" />
+		<meta content="Self-Hosted Multi-User Application Template" name="twitter:description" />
+		<meta content="/og-image.svg" name="twitter:image" />
+
+		<!-- Favicon -->
+		<link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+		<link href="/apple-touch-icon.svg" rel="apple-touch-icon" />
+
+		<!-- Inter font self-hosted via @fontsource-variable/inter (imported in tailwind.css) -->
+
+		<!-- Mobile web app hints -->
+		<meta content="yes" name="mobile-web-app-capable" />
+		<meta content="yes" name="apple-mobile-web-app-capable" />
+		<meta content="default" name="apple-mobile-web-app-status-bar-style" />
+		<meta content="Spernakit v3" name="apple-mobile-web-app-title" />
+		<meta content="Spernakit v3" name="application-name" />
+
+		<title>Spernakit v3</title>
+
+		<!-- Structured Data (JSON-LD) -->
+		<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "WebApplication",
+				"applicationCategory": "AdminSoftware",
+				"description": "Self-Hosted Multi-User Application Template",
+				"name": "Spernakit v3",
+				"operatingSystem": "Any"
+			}
+		</script>
+	</head>
+	<body>
+		<script>
+			// Prevent flash of incorrect theme (FOIT) by applying dark mode class
+			// synchronously before React renders. The useTheme hook handles runtime changes.
+			try {
+				var k,
+					i,
+					keys = Object.keys(localStorage);
+				for (i = 0; i < keys.length; i++) {
+					if (keys[i].indexOf('-theme:v') !== -1) {
+						k = keys[i];
+						break;
+					}
+				}
+				if (k) {
+					var d = JSON.parse(localStorage.getItem(k));
+					var m = d && d.state && d.state.mode;
+					var t = d && d.state && d.state.appTheme;
+					var dark =
+						m === 'dark' ||
+						(m === 'system' &&
+							window.matchMedia('(prefers-color-scheme: dark)').matches);
+					if (dark) {
+						document.documentElement.classList.add('dark');
+						document
+							.querySelector('meta[name="color-scheme"]')
+							.setAttribute('content', 'dark');
+					} else {
+						document
+							.querySelector('meta[name="color-scheme"]')
+							.setAttribute('content', 'light');
+					}
+					// Collapse the media-gated theme-color pair so an explicit Zustand
+					// choice overrides prefers-color-scheme. Strip media so both tags
+					// apply unconditionally and useTheme's querySelector still resolves.
+					var tcs = document.querySelectorAll('meta[name="theme-color"]');
+					for (var j = 0; j < tcs.length; j++) {
+						tcs[j].setAttribute('content', dark ? '#09090b' : '#f9fafb');
+						tcs[j].removeAttribute('media');
+					}
+					if (t && t !== 'default') document.documentElement.classList.add('theme-' + t);
+				}
+			} catch (e) {}
+		</script>
+		<div id="root"></div>
+		<script src="/src/main.tsx" type="module"></script>
+	</body>
+</html>

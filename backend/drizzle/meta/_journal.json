@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1782848843201,
+      "tag": "20260630194723_bizarre_argent",
+      "breakpoints": true
+    }
+  ]
+}

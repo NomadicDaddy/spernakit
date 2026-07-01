@@ -1,0 +1,97 @@
+.env
+
+# tooling/caches
+.worktrees/
+node_modules/
+ps_modules/
+
+# aidd / agent-generated artifacts
+.aidd/_common/
+.aidd/.artifacts-check.json
+.aidd/.completion_state_cache
+.aidd/*-prompt.md
+.aidd/active-runs/
+.aidd/audit-reports/
+.aidd/audits/
+.aidd/directive.md
+.aidd/iterations/
+.aidd/reports/
+.aidd/session-reports/
+.claude/
+.windsurf/
+AGENTS.md
+CLAUDE.md
+opencode.json
+
+# aidd-adjacent run/test outputs
+*.pre-crawl-bak
+*.tsbuildinfo
+archive/
+artifacts/
+crawltest.json
+devdocs/
+dogfood-output/
+screenshots/
+scripts/*-error.png
+scripts/smoke-cache.json
+test-html-report/
+test-results/
+testResults.xml
+upgrade-review/
+
+# generated
+# NOTE: backend/drizzle/meta/ is intentionally NOT ignored — the migration
+# journal must ship alongside the tracked drizzle/*.sql so a fresh clone can
+# migrate (the runner drift-checks journal vs .sql and refuses to start otherwise).
+backups/
+data/.seeded
+data/*.bak
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+data/*.db.lock
+data/coordinator/
+data/exports/
+data/migration-history.json
+data/run-logs/
+data/uploads/
+dist/
+frontend/dist/
+
+# logs/temp
+*.bak
+*.log
+*.tmp
+/tmp/
+logs/
+nul/
+
+# local config
+/spernakit.psd1
+/config/*.json
+/config/*.json.backup.*
+/config/testing.local.json
+!/config/config-schema.json
+!/config/example.json
+
+# mock/test data
+.lighthouseci/
+*.test.log
+benchmarks/manifest.*-20*.json
+benchmarks/results/
+benchmarks/workspaces/
+coverage/
+
+# os/ide
+.DS_Store
+.idea/
+.vscode/
+*.swo
+*.swp
+*~
+Thumbs.db
+
+# release excludes
+/.aidd/
+docs/internal/

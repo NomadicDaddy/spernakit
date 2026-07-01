@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Fast pre-commit gate: format:check + lint + typecheck
+#
+# Runs the subset of `bun run smoke:qc` that completes in <30s.
+# The full smoke:qc (includes build, feature-integration, schema-parity,
+# check-deps) still runs in CI — this hook catches the usual class of
+# regressions locally without slowing down contributor iteration.
+#
+# Bypass with `git commit --no-verify` only for WIP/experimental commits.
+set -euo pipefail
+
+echo "pre-commit: leak-guard"
+bash .githooks/leak-guard.sh
+
+echo "pre-commit: format:check"
+bun run format:check
+
+echo "pre-commit: lint"
+bun run lint
+
+echo "pre-commit: typecheck"
+bun run typecheck
+
+echo "pre-commit: passed"

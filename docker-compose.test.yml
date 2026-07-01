@@ -1,0 +1,12 @@
+# Override docker-compose.yml volume mounts to isolate test data under APPDATA_ROOT.
+# Used by smoke:docker-local so test runs don't touch DEV's working data/ directory.
+# Layout matches docker-compose.production.yml: ${APPDATA_ROOT}/${APP_SLUG}/{data,config,logs,backups}.
+#
+# Apply: docker compose -f docker-compose.yml -f docker-compose.test.yml up -d
+services:
+    spernakit:
+        volumes:
+            - ${APPDATA_ROOT:?APPDATA_ROOT is required}/${APP_SLUG:?APP_SLUG is required}/config:/app/config
+            - ${APPDATA_ROOT}/${APP_SLUG}/data:/app/data
+            - ${APPDATA_ROOT}/${APP_SLUG}/logs:/app/logs
+            - ${APPDATA_ROOT}/${APP_SLUG}/backups:/app/backups
