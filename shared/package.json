@@ -1,0 +1,14 @@
+{
+	"name": "spernakit-shared",
+	"private": true,
+	"type": "module",
+	"sideEffects": false,
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"lint": "bunx eslint src --report-unused-disable-directives --max-warnings 0",
+		"lint:fix": "bunx eslint src --report-unused-disable-directives --max-warnings 0 --fix",
+		"typecheck": "bunx tsc"
+	}
+}

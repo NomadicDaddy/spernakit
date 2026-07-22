@@ -1,0 +1,84 @@
+name: Release
+
+# A version tag starts publication. The job verifies that CI passed for the tagged commit before
+# creating the GitHub release.
+on:
+    push:
+        tags: ['v*.*.*']
+
+# All actions use Node.js 24 natively (checkout v7, setup-bun v2.2).
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+    # Reading `actions/runs` to confirm CI passed for this commit.
+    actions: read
+
+jobs:
+    github-release:
+        name: Create GitHub Release
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+
+        steps:
+            # Full history supports comparisons for releases that have a predecessor.
+            - name: Checkout
+              uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Bun
+              uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+              with:
+                  bun-version-file: package.json
+
+            # The tag is usually pushed alongside the commit it points at, so CI may still be
+            # running. Wait for it rather than assuming, and refuse to publish if it is not green.
+            # A tag on a commit that never reached main has no CI run at all and times out here,
+            # which is the intended outcome: no release without a passing build.
+            - name: Require a green CI run for this commit
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  SHA: ${{ github.sha }}
+              run: |
+                  for attempt in $(seq 1 20); do
+                      read -r status conclusion <<<"$(gh api \
+                          "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${SHA}&per_page=50" \
+                          --jq '[.workflow_runs[] | select(.name == "CI")][0] | "\(.status // "absent") \(.conclusion // "none")"')"
+                      case "${status}:${conclusion}" in
+                          completed:success)
+                              echo "CI passed for ${SHA}."
+                              exit 0
+                              ;;
+                          completed:*)
+                              echo "::error::CI concluded '${conclusion}' for ${SHA}. Refusing to release."
+                              exit 1
+                              ;;
+                          absent:*)
+                              echo "No CI run recorded for ${SHA} yet (attempt ${attempt}/20)."
+                              ;;
+                          *)
+                              echo "CI is ${status} for ${SHA} (attempt ${attempt}/20)."
+                              ;;
+                      esac
+                      sleep 30
+                  done
+                  echo "::error::Timed out after 10 minutes waiting for CI on ${SHA}."
+                  echo "::error::If no CI run was ever recorded, this commit's run history may have been"
+                  echo "::error::deleted. Re-run CI on the commit before tagging it."
+                  exit 1
+
+            # The first release uses the complete changelog baseline. Later releases use the
+            # conventional-commit range since the preceding tag.
+            - name: Build release notes
+              env:
+                  TAG_NAME: ${{ github.ref_name }}
+              run: bun scripts/release-notes.ts "${TAG_NAME}" --out release-notes.md
+
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TAG_NAME: ${{ github.ref_name }}
+              run: gh release create "${TAG_NAME}" --notes-file release-notes.md --verify-tag

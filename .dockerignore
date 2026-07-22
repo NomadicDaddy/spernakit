@@ -1,0 +1,22 @@
+node_modules/
+.aidd/
+.claude/
+.git/
+data/
+logs/
+backups/
+config/*.json
+config/*.backup.*
+frontend/dist
+backend/dist
+drizzle/snapshots/
+**/test/
+**/*.test.ts
+**/*.spec.ts
+*.md
+*.map
+!README.md
+# The image includes Bun with LGPL-linked components and GPL/LGPL Alpine packages. Excluding
+# their notices or downstream guidance here would silently defeat the production-stage COPY.
+!THIRD_PARTY_LICENSES.md
+!THIRD_PARTY_NOTICES.md

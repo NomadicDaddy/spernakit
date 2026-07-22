@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1" name="viewport" />
+		<title>Spernakit: the self-hosted application template for real admin apps</title>
+		<meta
+			content="Spernakit is a Bun-native, full-stack, self-hosted admin application template with auth, RBAC, workspaces, audit logs, notifications, dashboards, uploads, health checks, Docker deployment, and a strict quality gate."
+			name="description" />
+		<meta
+			content="Spernakit: the self-hosted application template for real admin apps"
+			property="og:title" />
+		<meta
+			content="Start with the parts every serious admin app needs: Elysia, Drizzle, React 19, shadcn/ui, workspaces, RBAC, config, OpenAPI contract checks, and smoke:qc."
+			property="og:description" />
+		<meta content="https://nomadicdaddy.github.io/spernakit/og-image.png" property="og:image" />
+		<meta content="website" property="og:type" />
+		<meta content="https://nomadicdaddy.github.io/spernakit/" property="og:url" />
+		<meta content="summary_large_image" name="twitter:card" />
+		<link as="image" href="og-image.png" rel="preload" />
+		<style>
+			:root {
+				--ink: #07111f;
+				--muted: #526071;
+				--panel: #ffffff;
+				--wash: #f5f8fb;
+				--line: #d7dee8;
+				--cyan: #0891b2;
+				--teal: #0f766e;
+				--green: #10b981;
+				--amber: #f59e0b;
+				--coral: #f9735b;
+				--violet: #7c3aed;
+				--night: #06111f;
+				--night-2: #0b1a2e;
+				--night-line: rgba(169, 213, 229, 0.24);
+				--night-text: #e9f6ff;
+				--night-muted: #9db6c9;
+				--radius: 8px;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			html {
+				scroll-behavior: smooth;
+			}
+			body {
+				margin: 0;
+				background: var(--wash);
+				color: var(--ink);
+				font:
+					16px/1.55 Inter,
+					ui-sans-serif,
+					system-ui,
+					-apple-system,
+					'Segoe UI',
+					sans-serif;
+			}
+			a {
+				color: inherit;
+			}
+			a:focus-visible,
+			button:focus-visible {
+				outline: 3px solid var(--amber);
+				outline-offset: 4px;
+			}
+			.site-header {
+				position: absolute;
+				z-index: 5;
+				top: 0;
+				right: 0;
+				left: 0;
+				border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+				color: var(--night-text);
+			}
+			.site-header-inner,
+			.section-inner,
+			.hero-inner {
+				width: min(1120px, calc(100% - 40px));
+				margin: 0 auto;
+			}
+			.site-header-inner {
+				display: flex;
+				min-height: 72px;
+				align-items: center;
+				justify-content: space-between;
+				gap: 20px;
+			}
+			.brand {
+				display: inline-flex;
+				align-items: center;
+				gap: 12px;
+				color: var(--night-text);
+				text-decoration: none;
+			}
+			.brand-mark {
+				position: relative;
+				display: grid;
+				width: 36px;
+				height: 36px;
+				border: 1px solid rgba(255, 255, 255, 0.26);
+				border-radius: 8px;
+				background:
+					linear-gradient(135deg, rgba(20, 184, 166, 0.28), rgba(245, 158, 11, 0.22)),
+					rgba(8, 17, 31, 0.55);
+				box-shadow: 0 0 28px rgba(20, 184, 166, 0.25);
+				place-items: center;
+			}
+			.brand-mark::before,
+			.brand-mark::after {
+				position: absolute;
+				width: 17px;
+				height: 11px;
+				border: 2px solid #7dd3fc;
+				border-radius: 4px;
+				content: '';
+			}
+			.brand-mark::before {
+				transform: translateY(-4px);
+			}
+			.brand-mark::after {
+				border-color: #fbbf24;
+				transform: translateY(5px);
+			}
+			.brand-name {
+				font-size: 18px;
+				font-weight: 850;
+				letter-spacing: 0.08em;
+			}
+			nav {
+				display: flex;
+				align-items: center;
+				justify-content: flex-end;
+				gap: 6px;
+				flex-wrap: wrap;
+			}
+			nav a {
+				border: 1px solid transparent;
+				border-radius: 999px;
+				color: rgba(233, 246, 255, 0.78);
+				font-size: 14px;
+				font-weight: 750;
+				padding: 8px 12px;
+				text-decoration: none;
+			}
+			nav a:hover {
+				border-color: rgba(255, 255, 255, 0.2);
+				background: rgba(255, 255, 255, 0.08);
+				color: #ffffff;
+			}
+			.hero {
+				position: relative;
+				overflow: hidden;
+				min-height: min(720px, 82svh);
+				padding: 142px 0 70px;
+				background:
+					linear-gradient(
+						90deg,
+						rgba(6, 17, 31, 0.98) 0%,
+						rgba(6, 17, 31, 0.86) 40%,
+						rgba(6, 17, 31, 0.16) 100%
+					),
+					linear-gradient(
+						0deg,
+						rgba(6, 17, 31, 0.9) 0%,
+						rgba(6, 17, 31, 0.18) 48%,
+						rgba(6, 17, 31, 0.78) 100%
+					),
+					url('og-image.png') center / cover;
+				color: var(--night-text);
+			}
+			.hero::after {
+				position: absolute;
+				inset: auto 0 0;
+				height: 180px;
+				background: linear-gradient(0deg, var(--night) 0%, rgba(6, 17, 31, 0) 100%);
+				content: '';
+				pointer-events: none;
+			}
+			.hero-inner {
+				position: relative;
+				z-index: 1;
+				display: grid;
+				gap: 28px;
+			}
+			.eyebrow {
+				display: inline-flex;
+				width: fit-content;
+				align-items: center;
+				gap: 10px;
+				margin: 0;
+				border: 1px solid rgba(125, 211, 252, 0.34);
+				border-radius: 999px;
+				background: rgba(6, 17, 31, 0.5);
+				color: #acecff;
+				font-size: 13px;
+				font-weight: 850;
+				letter-spacing: 0.11em;
+				padding: 7px 12px;
+				text-transform: uppercase;
+			}
+			.eyebrow::before {
+				width: 8px;
+				height: 8px;
+				border-radius: 999px;
+				background: var(--green);
+				box-shadow: 0 0 18px var(--green);
+				content: '';
+			}
+			h1 {
+				max-width: 10ch;
+				margin: 0;
+				font-size: clamp(58px, 13vw, 150px);
+				font-weight: 900;
+				letter-spacing: 0;
+				line-height: 0.86;
+			}
+			.lede {
+				max-width: 740px;
+				margin: 0;
+				color: rgba(233, 246, 255, 0.88);
+				font-size: clamp(20px, 2.4vw, 30px);
+				font-weight: 750;
+				line-height: 1.18;
+			}
+			.hero-copy {
+				max-width: 690px;
+				margin: 0;
+				color: var(--night-muted);
+				font-size: 17px;
+			}
+			.actions {
+				display: flex;
+				gap: 12px;
+				flex-wrap: wrap;
+			}
+			.button {
+				display: inline-flex;
+				min-height: 46px;
+				align-items: center;
+				justify-content: center;
+				border-radius: 8px;
+				font-weight: 850;
+				padding: 11px 18px;
+				text-decoration: none;
+				transition:
+					transform 150ms ease,
+					border-color 150ms ease,
+					background 150ms ease;
+			}
+			.button:hover {
+				transform: translateY(-1px);
+			}
+			.button-primary {
+				background: #ecfeff;
+				color: #06202a;
+				box-shadow: 0 18px 40px rgba(34, 211, 238, 0.2);
+			}
+			.button-secondary {
+				border: 1px solid rgba(255, 255, 255, 0.28);
+				background: rgba(255, 255, 255, 0.08);
+				color: #ffffff;
+			}
+			.signal-grid {
+				display: grid;
+				width: min(840px, 100%);
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+				margin: 8px 0 0;
+				border: 1px solid rgba(255, 255, 255, 0.16);
+				background: rgba(6, 17, 31, 0.56);
+				backdrop-filter: blur(10px);
+			}
+			.signal-grid div {
+				min-width: 0;
+				padding: 15px 16px;
+			}
+			.signal-grid div + div {
+				border-left: 1px solid rgba(255, 255, 255, 0.13);
+			}
+			.signal-grid dt {
+				color: var(--night-muted);
+				font-size: 12px;
+				font-weight: 850;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+			.signal-grid dd {
+				margin: 5px 0 0;
+				color: #ffffff;
+				font-size: 18px;
+				font-weight: 850;
+			}
+			.proofbar {
+				border-top: 1px solid var(--night-line);
+				border-bottom: 1px solid var(--night-line);
+				background: var(--night);
+				color: var(--night-text);
+			}
+			.proofbar .section-inner {
+				display: grid;
+				grid-template-columns: 1fr auto;
+				align-items: center;
+				gap: 22px;
+				padding: 22px 0;
+			}
+			.proofbar p {
+				margin: 0;
+				color: var(--night-muted);
+				font-weight: 650;
+			}
+			.proofbar strong {
+				color: #ffffff;
+			}
+			.proof-links {
+				display: flex;
+				justify-content: flex-end;
+				gap: 10px;
+				flex-wrap: wrap;
+			}
+			.proof-links a {
+				border: 1px solid var(--night-line);
+				border-radius: 999px;
+				color: #b8edff;
+				font-size: 13px;
+				font-weight: 850;
+				padding: 8px 12px;
+				text-decoration: none;
+			}
+			.section-block {
+				padding: 76px 0;
+			}
+			.section-alt {
+				background: #ffffff;
+			}
+			.section-kicker {
+				margin: 0 0 10px;
+				color: var(--cyan);
+				font-size: 13px;
+				font-weight: 900;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+			}
+			h2 {
+				max-width: 780px;
+				margin: 0;
+				color: var(--ink);
+				font-size: clamp(34px, 5vw, 58px);
+				font-weight: 900;
+				letter-spacing: 0;
+				line-height: 1;
+			}
+			.section-lede {
+				max-width: 740px;
+				margin: 16px 0 0;
+				color: var(--muted);
+				font-size: 18px;
+			}
+			.card-grid,
+			.trust-grid,
+			.feature-grid {
+				display: grid;
+				gap: 14px;
+				margin-top: 34px;
+			}
+			.card-grid {
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+			}
+			.feature-grid {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+			.trust-grid {
+				grid-template-columns: repeat(4, minmax(0, 1fr));
+			}
+			.stack-card,
+			.feature-card,
+			.trust-card,
+			.release-panel,
+			.link-panel {
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				background: var(--panel);
+				box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06);
+			}
+			.stack-card {
+				position: relative;
+				min-height: 230px;
+				overflow: hidden;
+				padding: 18px;
+			}
+			.stack-card::before {
+				position: absolute;
+				inset: 0 0 auto;
+				height: 4px;
+				background: var(--accent, var(--cyan));
+				content: '';
+			}
+			.stack-card:nth-child(1) {
+				--accent: var(--cyan);
+			}
+			.stack-card:nth-child(2) {
+				--accent: var(--amber);
+			}
+			.stack-card:nth-child(3) {
+				--accent: var(--green);
+			}
+			.stack-card:nth-child(4) {
+				--accent: var(--coral);
+			}
+			.card-index {
+				display: inline-grid;
+				width: 34px;
+				height: 34px;
+				margin-bottom: 18px;
+				border-radius: 8px;
+				background: color-mix(in srgb, var(--accent) 16%, #ffffff);
+				color: color-mix(in srgb, var(--accent) 80%, #08111f);
+				font-size: 13px;
+				font-weight: 900;
+				place-items: center;
+			}
+			.stack-card h3,
+			.feature-card h3,
+			.trust-card h3,
+			.release-panel h3,
+			.link-panel h3 {
+				margin: 0 0 10px;
+				font-size: 19px;
+				line-height: 1.14;
+			}
+			.stack-card p,
+			.feature-card p,
+			.trust-card p,
+			.link-panel p {
+				margin: 0;
+				color: var(--muted);
+				font-size: 14px;
+			}
+			.feature-card,
+			.trust-card {
+				min-height: 204px;
+				padding: 20px;
+			}
+			.feature-label,
+			.trust-label {
+				display: inline-flex;
+				margin-bottom: 20px;
+				border-radius: 999px;
+				background: #d9f7fb;
+				color: var(--teal);
+				font-size: 12px;
+				font-weight: 900;
+				letter-spacing: 0.08em;
+				padding: 6px 9px;
+				text-transform: uppercase;
+			}
+			.table-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+				align-items: start;
+				gap: 26px;
+				margin-top: 34px;
+			}
+			.side-copy {
+				border-left: 4px solid var(--cyan);
+				padding-left: 18px;
+			}
+			.side-copy p {
+				margin: 0 0 16px;
+				color: var(--muted);
+				font-size: 17px;
+			}
+			.side-copy a,
+			.link-panel a,
+			.release-panel a {
+				color: #0369a1;
+				font-weight: 850;
+				text-decoration-thickness: 2px;
+				text-underline-offset: 3px;
+			}
+			.tablewrap {
+				min-width: 0;
+				overflow-x: auto;
+				border: 1px solid var(--line);
+				border-radius: var(--radius);
+				background: #ffffff;
+				box-shadow: 0 18px 48px rgba(15, 23, 42, 0.06);
+			}
+			table {
+				width: 100%;
+				min-width: 620px;
+				border-collapse: collapse;
+				font-size: 14px;
+			}
+			th,
+			td {
+				border-bottom: 1px solid var(--line);
+				padding: 15px 16px;
+				text-align: left;
+				vertical-align: top;
+			}
+			tr:last-child td {
+				border-bottom: 0;
+			}
+			th {
+				background: #f7fafc;
+				color: #526071;
+				font-size: 12px;
+				font-weight: 900;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+			td:first-child {
+				color: var(--teal);
+				font-weight: 850;
+			}
+			code.inline {
+				border: 1px solid var(--line);
+				border-radius: 6px;
+				background: #eef4f7;
+				color: #092033;
+				font:
+					0.92em/1.2 ui-monospace,
+					Consolas,
+					monospace;
+				padding: 2px 5px;
+			}
+			.download-layout {
+				display: grid;
+				grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+				gap: 18px;
+				margin-top: 34px;
+			}
+			.release-panel,
+			.link-panel {
+				min-width: 0;
+				padding: 22px;
+			}
+			pre {
+				overflow-x: auto;
+				margin: 18px 0 0;
+				border-radius: var(--radius);
+				background:
+					linear-gradient(90deg, rgba(34, 211, 238, 0.1), transparent 36%), var(--night-2);
+				color: #dbf5ff;
+				font:
+					13px/1.65 ui-monospace,
+					Consolas,
+					monospace;
+				padding: 18px;
+			}
+			.link-panel {
+				display: grid;
+				gap: 12px;
+			}
+			.resource-link {
+				display: block;
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				background: #f8fbfd;
+				padding: 14px;
+				text-decoration: none;
+			}
+			.resource-link strong {
+				display: block;
+				color: var(--ink);
+				font-size: 15px;
+			}
+			.resource-link span {
+				color: var(--muted);
+				font-size: 13px;
+			}
+			.license-note {
+				margin-top: 28px;
+				border-top: 1px solid var(--line);
+				color: var(--muted);
+				padding-top: 24px;
+			}
+			.license-note p {
+				max-width: 860px;
+				margin: 0 0 12px;
+			}
+			.site-footer {
+				background: var(--night);
+				color: var(--night-muted);
+			}
+			.footer-inner {
+				display: flex;
+				width: min(1120px, calc(100% - 40px));
+				align-items: center;
+				justify-content: space-between;
+				gap: 20px;
+				margin: 0 auto;
+				padding: 28px 0;
+				flex-wrap: wrap;
+				font-size: 14px;
+			}
+			.footer-links {
+				display: flex;
+				gap: 14px;
+				flex-wrap: wrap;
+			}
+			.footer-links a {
+				color: var(--night-muted);
+				text-decoration: none;
+			}
+			.footer-links a:hover {
+				color: #ffffff;
+			}
+			@media (prefers-reduced-motion: no-preference) {
+				.brand-mark,
+				.eyebrow::before {
+					animation: pulse 3.2s ease-in-out infinite;
+				}
+				@keyframes pulse {
+					0%,
+					100% {
+						filter: brightness(1);
+					}
+					50% {
+						filter: brightness(1.24);
+					}
+				}
+			}
+			@media (max-width: 960px) {
+				.hero {
+					background-position: center top;
+				}
+				.signal-grid,
+				.card-grid,
+				.trust-grid,
+				.download-layout,
+				.table-layout {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+				}
+				.feature-grid,
+				.download-layout,
+				.table-layout {
+					grid-template-columns: 1fr;
+				}
+			}
+			@media (max-width: 680px) {
+				.site-header {
+					position: relative;
+					background: var(--night);
+				}
+				.site-header-inner,
+				.section-inner,
+				.hero-inner,
+				.footer-inner {
+					width: min(100% - 28px, 1120px);
+				}
+				.site-header-inner {
+					align-items: flex-start;
+					flex-direction: column;
+					justify-content: center;
+					padding: 14px 0;
+				}
+				nav {
+					justify-content: flex-start;
+				}
+				nav a {
+					padding: 7px 9px;
+				}
+				.hero {
+					min-height: auto;
+					padding: 38px 0 34px;
+				}
+				.hero-inner {
+					gap: 18px;
+				}
+				h1 {
+					font-size: clamp(52px, 19vw, 82px);
+				}
+				.lede {
+					font-size: 20px;
+				}
+				.hero-copy {
+					font-size: 15px;
+				}
+				.button {
+					min-height: 42px;
+					padding: 9px 13px;
+				}
+				.card-grid,
+				.trust-grid,
+				.signal-grid {
+					grid-template-columns: 1fr;
+				}
+				.signal-grid {
+					display: none;
+				}
+				.signal-grid div + div {
+					border-top: 1px solid rgba(255, 255, 255, 0.13);
+					border-left: 0;
+				}
+				.proofbar .section-inner {
+					grid-template-columns: 1fr;
+				}
+				.proof-links {
+					justify-content: flex-start;
+				}
+				.section-block {
+					padding: 54px 0;
+				}
+				.stack-card,
+				.feature-card,
+				.trust-card {
+					min-height: auto;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<header class="site-header">
+			<div class="site-header-inner">
+				<a class="brand" aria-label="Spernakit home" href="#top">
+					<span class="brand-mark" aria-hidden="true"></span>
+					<span class="brand-name">Spernakit</span>
+				</a>
+				<nav aria-label="Primary navigation">
+					<a href="#template">Template</a>
+					<a href="https://github.com/NomadicDaddy/spernakit">GitHub</a>
+					<a href="https://github.com/NomadicDaddy/spernakit/tree/main/docs/template"
+						>Docs</a
+					>
+					<a
+						href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/CHANGELOG.md"
+						>Changelog</a
+					>
+					<a href="#start">Start</a>
+				</nav>
+			</div>
+		</header>
+
+		<main id="top">
+			<section class="hero" aria-labelledby="hero-title">
+				<div class="hero-inner">
+					<p class="eyebrow">Spernakit v3</p>
+					<h1 id="hero-title">Spernakit</h1>
+					<p class="lede">
+						A self-hosted admin application template with the hard parts already wired.
+					</p>
+					<p class="hero-copy">
+						Start from Bun, Elysia, Drizzle, React 19, shadcn/ui, TanStack Query,
+						Zustand, and a template contract that expects real verification. Auth, RBAC,
+						workspaces, audit logs, notifications, dashboards, uploads, health checks,
+						settings, Docker deployment, and OpenAPI contract checks are part of the
+						baseline.
+					</p>
+					<div class="actions">
+						<a
+							class="button button-primary"
+							href="https://github.com/NomadicDaddy/spernakit"
+							>View source</a
+						>
+						<a
+							class="button button-secondary"
+							href="https://github.com/NomadicDaddy/spernakit/tree/main/docs/template"
+							>Read template docs</a
+						>
+					</div>
+					<dl class="signal-grid" aria-label="Spernakit operating signals">
+						<div>
+							<dt>Runtime</dt>
+							<dd>Bun + Elysia</dd>
+						</div>
+						<div>
+							<dt>Frontend</dt>
+							<dd>React 19 + Vite</dd>
+						</div>
+						<div>
+							<dt>Data</dt>
+							<dd>Drizzle + SQLite/PG</dd>
+						</div>
+						<div>
+							<dt>Gate</dt>
+							<dd>smoke:qc</dd>
+						</div>
+					</dl>
+				</div>
+			</section>
+
+			<section class="proofbar" aria-label="template proof">
+				<div class="section-inner">
+					<p>
+						Spernakit is the source template for derived apps, with
+						<strong
+							>drift checks, exact dependency policy, route/page integration guards,
+							and a full quality pipeline</strong
+						>.
+					</p>
+					<div class="proof-links">
+						<a href="#gate">See the gate</a>
+						<a
+							href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/STACK.md"
+							>Read stack reference</a
+						>
+					</div>
+				</div>
+			</section>
+
+			<section class="section-block" id="template">
+				<div class="section-inner">
+					<p class="section-kicker">The template</p>
+					<h2>Build the product layer. Keep the foundation boring.</h2>
+					<p class="section-lede">
+						Spernakit is for side projects, internal tools, homelab apps, and small
+						SaaS-style admin surfaces where the baseline should already include
+						security, configuration, observability, and deployment structure.
+					</p>
+					<div class="card-grid">
+						<article class="stack-card">
+							<span class="card-index">01</span>
+							<h3>Full-stack skeleton</h3>
+							<p>
+								Monorepo workspaces for backend, frontend, and shared contracts. Bun
+								drives installs, scripts, builds, and local services.
+							</p>
+						</article>
+						<article class="stack-card">
+							<span class="card-index">02</span>
+							<h3>Admin-grade security</h3>
+							<p>
+								JWT cookies, CSRF, account lockout, password reset policy, TOTP MFA,
+								OAuth account linking, API keys, and a 5-tier RBAC hierarchy.
+							</p>
+						</article>
+						<article class="stack-card">
+							<span class="card-index">03</span>
+							<h3>Operational features</h3>
+							<p>
+								Workspaces, audit logs, real-time notifications, scheduled tasks,
+								health alerts, backups, uploads, dashboards, and settings.
+							</p>
+						</article>
+						<article class="stack-card">
+							<span class="card-index">04</span>
+							<h3>Verification built in</h3>
+							<p>
+								The template expects drift checks, config checks, typecheck, lint,
+								build, OpenAPI parity, route/page reachability, format, and deps.
+							</p>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section class="section-block section-alt" id="included">
+				<div class="section-inner">
+					<p class="section-kicker">Included systems</p>
+					<h2>The features every admin app ends up needing.</h2>
+					<p class="section-lede">
+						The template is intentionally broad. Derived apps can turn features off or
+						extend them, but they start from a working application surface instead of a
+						pile of future TODOs.
+					</p>
+					<div class="feature-grid">
+						<article class="feature-card">
+							<span class="feature-label">Identity</span>
+							<h3>Users, roles, sessions</h3>
+							<p>
+								User CRUD, soft delete, workspace membership, SYSOP bypass,
+								password-change enforcement, token revocation, and role-aware UI.
+							</p>
+						</article>
+						<article class="feature-card">
+							<span class="feature-label">Data</span>
+							<h3>Drizzle schema discipline</h3>
+							<p>
+								SQLite by default, PostgreSQL support, generated migrations,
+								auto-migrate for SQLite, schema parity checks, and safe DB admin
+								tools.
+							</p>
+						</article>
+						<article class="feature-card">
+							<span class="feature-label">UI</span>
+							<h3>Ready admin shell</h3>
+							<p>
+								shadcn/ui, theme modes, responsive shell variants, command palette,
+								global shortcuts, route splitting, skeletons, and error boundaries.
+							</p>
+						</article>
+						<article class="feature-card">
+							<span class="feature-label">Ops</span>
+							<h3>Health and background work</h3>
+							<p>
+								Health checks, health alerts, system metrics, scheduled task
+								history, pino logs, backups, restore flows, and Docker deployment.
+							</p>
+						</article>
+						<article class="feature-card">
+							<span class="feature-label">Contracts</span>
+							<h3>One type contract</h3>
+							<p>
+								Shared pure types live in <code class="inline">shared/</code>. The
+								OpenAPI spec at
+								<code class="inline">/api/v1/docs/json</code> anchors frontend API
+								parity.
+							</p>
+						</article>
+						<article class="feature-card">
+							<span class="feature-label">Fleet</span>
+							<h3>Built for derived apps</h3>
+							<p>
+								Template drift checks and a fleet manifest help derived apps consume
+								template improvements without losing app-specific behavior.
+							</p>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section class="section-block" id="gate">
+				<div class="section-inner">
+					<p class="section-kicker">Quality gate</p>
+					<h2>Every change runs the same checks.</h2>
+					<div class="table-layout">
+						<div class="side-copy">
+							<p>
+								Spernakit treats quality gates as part of the template surface. A
+								change that adds a route must register it, pages have to be
+								reachable, and config and schema artifacts must stay aligned.
+								Dependency versions are exact.
+							</p>
+							<p>
+								The main gate is <code class="inline">bun run smoke:qc</code>. UI
+								work also gets crawl-tested against affected routes.
+							</p>
+						</div>
+						<div class="tablewrap">
+							<table>
+								<thead>
+									<tr>
+										<th>Layer</th>
+										<th>Guard</th>
+										<th>What it catches</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>Template</td>
+										<td>check:drift</td>
+										<td>
+											Unexpected divergence from the template-managed
+											baseline.
+										</td>
+									</tr>
+									<tr>
+										<td>Config</td>
+										<td>check:config, config:validate, schema drift</td>
+										<td>
+											Invalid JSON config, stale schemas, and unsupported env
+											spread.
+										</td>
+									</tr>
+									<tr>
+										<td>Code</td>
+										<td>typecheck, lint, build, max-lines</td>
+										<td>
+											Type errors, lint warnings, oversized files, and broken
+											builds.
+										</td>
+									</tr>
+									<tr>
+										<td>API</td>
+										<td>check:api-types</td>
+										<td>
+											Frontend type drift from backend TypeBox/OpenAPI
+											contracts.
+										</td>
+									</tr>
+									<tr>
+										<td>Reachability</td>
+										<td>check:feature-integration</td>
+										<td>
+											Route plugins and pages that exist but are not wired.
+										</td>
+									</tr>
+									<tr>
+										<td>Database</td>
+										<td>check:db-location, schema parity</td>
+										<td>
+											Wrong database placement and SQLite/PostgreSQL schema
+											mismatch.
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="section-block section-alt" id="trust">
+				<div class="section-inner">
+					<p class="section-kicker">Trust model</p>
+					<h2>Security ships in the baseline.</h2>
+					<p class="section-lede">
+						Spernakit ships security-sensitive flows as working template code, documents
+						the boundaries, and keeps derived-app exceptions explicit.
+					</p>
+					<div class="trust-grid">
+						<article class="trust-card">
+							<span class="trust-label">Auth</span>
+							<h3>Protected by default</h3>
+							<p>
+								Route guards, component-level authorization, CSRF, CSP, rate
+								limiting, token blacklist, password policy, and MFA live in the
+								baseline.
+							</p>
+						</article>
+						<article class="trust-card">
+							<span class="trust-label">Tenancy</span>
+							<h3>Workspace isolation</h3>
+							<p>
+								Non-SYSOP users act only inside member workspaces. SYSOP
+								cross-workspace access is deliberate and represented in shared role
+								utilities.
+							</p>
+						</article>
+						<article class="trust-card">
+							<span class="trust-label">Config</span>
+							<h3>JSON-only surface</h3>
+							<p>
+								Static config is JSON and schema-validated.
+								<code class="inline">bunfig.toml</code> sets
+								<code class="inline">env = false</code>; secret injection is
+								narrowly documented.
+							</p>
+						</article>
+						<article class="trust-card">
+							<span class="trust-label">Open</span>
+							<h3>Public policy docs</h3>
+							<p>
+								Review the
+								<a
+									href="https://github.com/NomadicDaddy/spernakit/blob/main/SECURITY.md"
+									>security policy</a
+								>,
+								<a
+									href="https://github.com/NomadicDaddy/spernakit/blob/main/LICENSE"
+									>license</a
+								>, and template docs before shipping a derived app.
+							</p>
+						</article>
+					</div>
+				</div>
+			</section>
+
+			<section class="section-block" id="start">
+				<div class="section-inner">
+					<p class="section-kicker">Start</p>
+					<h2>Get it running locally.</h2>
+					<p class="section-lede">
+						Spernakit expects Bun 1.3.14+ and Node 24.x compatibility tooling. SQLite is
+						the default database, with PostgreSQL supported through
+						<code class="inline">config.database.dialect</code>.
+					</p>
+					<div class="download-layout">
+						<article class="release-panel">
+							<h3>Local setup</h3>
+							<pre><code>git clone https://github.com/NomadicDaddy/spernakit.git
+cd spernakit
+
+# Install dependencies and initialize config/database state
+bun run setup
+
+# Or for an existing checkout
+bun install
+bun run db:setup
+
+# Start both services with log aggregation
+bun run dev
+
+# Prove the template before committing
+bun run smoke:qc</code></pre>
+						</article>
+						<aside class="link-panel" aria-label="setup resources">
+							<h3>Bring the rules</h3>
+							<a
+								class="resource-link"
+								href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/STACK.md">
+								<strong>Stack reference</strong>
+								<span
+									>Canonical architecture, commands, config, and
+									verification.</span
+								>
+							</a>
+							<a
+								class="resource-link"
+								href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/DEVELOPMENT.md">
+								<strong>Development guide</strong>
+								<span>Patterns for backend, frontend, database, and UI work.</span>
+							</a>
+							<a
+								class="resource-link"
+								href="https://github.com/NomadicDaddy/spernakit/blob/main/README.md">
+								<strong>README</strong>
+								<span>Feature map, prerequisites, and project structure.</span>
+							</a>
+						</aside>
+					</div>
+					<div class="license-note">
+						<p>
+							Spernakit is
+							<a href="https://github.com/NomadicDaddy/spernakit/blob/main/LICENSE"
+								>MIT</a
+							>. The template is intended to be copied, extended, deployed, and kept
+							aligned through deliberate sync work.
+						</p>
+						<p>
+							For AI-assisted work across derived apps, Spernakit pairs with
+							<a href="https://github.com/NomadicDaddy/aidd">aidd</a>, which tracks
+							the feature contract and verifies work against real gates.
+						</p>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<div class="footer-inner">
+				<strong>Spernakit - a self-hosted admin application template.</strong>
+				<div class="footer-links">
+					<a href="https://github.com/NomadicDaddy/spernakit">GitHub</a>
+					<a href="https://github.com/NomadicDaddy/spernakit/tree/main/docs/template"
+						>Docs</a
+					>
+					<a
+						href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/CHANGELOG.md"
+						>Changelog</a
+					>
+					<a href="https://github.com/NomadicDaddy/spernakit/blob/main/SECURITY.md"
+						>Security</a
+					>
+					<a href="https://github.com/NomadicDaddy/spernakit/blob/main/LICENSE"
+						>License</a
+					>
+				</div>
+			</div>
+		</footer>
+	</body>
+</html>

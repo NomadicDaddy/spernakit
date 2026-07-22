@@ -1,0 +1,314 @@
+{
+	"modes": {
+		"dev": {
+			"steps": [
+				{
+					"command": "bun run stop",
+					"description": "Stop any running processes"
+				},
+				{
+					"command": "bun scripts/clear-logs.ts",
+					"description": "Clear logs"
+				},
+				{
+					"command": "bun run start",
+					"description": "Start services in background"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{BACKEND_PORT}}/api/v1/health --timeoutMs 30000",
+					"description": "Wait for backend to be ready"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000",
+					"description": "Wait for frontend to be ready"
+				},
+				{
+					"command": "bun scripts/crawltest.ts --mode dev",
+					"description": "Crawl test (dev)",
+					"logFile": "logs/crawltest.log"
+				},
+				{
+					"command": "bun run verify-compression --mode dev",
+					"description": "Verify gzip compression on backend responses (warn-only in dev)"
+				},
+				{
+					"command": "bun run stop",
+					"description": "Stop services"
+				}
+			]
+		},
+		"docker-local": {
+			"steps": [
+				{
+					"command": "bun run docker:up:test",
+					"description": "Docker up (local build, TST mounts under APPDATA_ROOT)"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}}/api/v1/health --timeoutMs 60000 --container {{APP_SLUG}}-dev",
+					"description": "Wait for docker-local stack to be ready"
+				},
+				{
+					"command": "bun scripts/crawltest.ts --mode docker-local",
+					"description": "Crawl test (docker-local)",
+					"logFile": "logs/crawltest-docker-local.log"
+				},
+				{
+					"command": "bun run verify-compression --mode docker-local",
+					"description": "Verify gzip compression on backend responses (required)"
+				},
+				{
+					"command": "bun run docker:down:test",
+					"description": "Docker down (local)"
+				}
+			]
+		},
+		"docker-prod": {
+			"steps": [
+				{
+					"command": "bun run docker:image:build",
+					"description": "Build the production image"
+				},
+				{
+					"command": "bun run check:image-licenses",
+					"description": "License notices present in the built image; base-image inventory current"
+				},
+				{
+					"command": "bun scripts/reset-database.ts --force",
+					"description": "Reset database for clean Docker state"
+				},
+				{
+					"command": "docker compose -f docker-compose.production.yml up -d",
+					"description": "docker compose up (prod)"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}}/api/v1/health --timeoutMs 60000 --container {{APP_SLUG}}",
+					"description": "Wait for docker-prod stack to be ready"
+				},
+				{
+					"command": "bun scripts/crawltest.ts --mode docker-prod",
+					"description": "Crawl test (docker-prod)",
+					"logFile": "logs/crawltest-docker-prod.log"
+				},
+				{
+					"command": "bun run verify-compression --mode docker-prod",
+					"description": "Verify gzip compression on backend responses (required)"
+				},
+				{
+					"command": "docker compose -f docker-compose.production.yml down",
+					"description": "docker compose down (prod)"
+				}
+			]
+		},
+		"preview": {
+			"steps": [
+				{
+					"command": "bun run check-auth-reset-ui-preview",
+					"description": "Check auth reset UI (preview)"
+				},
+				{
+					"command": "bun scripts/crawltest.ts --mode preview",
+					"description": "Crawl test (preview)",
+					"logFile": "logs/crawltest-preview.log"
+				}
+			]
+		},
+		"qc": {
+			"steps": [
+				{
+					"command": "bun run check:drift",
+					"description": "Template drift check"
+				},
+				{
+					"command": "bun run check:fresh-release",
+					"description": "Fresh public baseline content check",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:config",
+					"description": "Config invariants check"
+				},
+				{
+					"command": "bun run check:schema-drift",
+					"description": "Config schema artifact drift check"
+				},
+				{
+					"command": "bun run config:validate",
+					"description": "Config schema validation (defaults + example + instance)"
+				},
+				{
+					"command": "bun run check:db-location",
+					"description": "Database location guard (ASSERT-010: DB files only under data/)"
+				},
+				{
+					"command": "bun run check:no-inline-references",
+					"description": "Inline .references() ban (ASSERT-012)"
+				},
+				{
+					"command": "bun run check:secrets-shape",
+					"description": "Secrets file shape parity"
+				},
+				{
+					"command": "bun run check:leak-guard",
+					"description": "Leak-guard hook self-test (synthetic fixtures)",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:licenses",
+					"description": "Third-party license inventory matches the installed graph"
+				},
+				{
+					"command": "bun run licenses:sync-core:check",
+					"description": "License core copies in sibling repositories match Spernakit (when present)",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:fleet-manifest",
+					"description": "spernakit.psd1 per-app versions match each app's package.json",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:image-publication",
+					"description": "Template image publication guard",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:process-env",
+					"description": "Process environment access check"
+				},
+				{
+					"command": "bun run check:max-lines",
+					"description": "300-line max-lines gate"
+				},
+				{
+					"command": "bun run check-application",
+					"description": "Application check"
+				},
+				{
+					"command": "bun run check:destructive-confirmation",
+					"description": "Destructive mutation confirmation check"
+				},
+				{
+					"command": "bun run verify-mutation-denylist",
+					"description": "Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users)"
+				},
+				{
+					"command": "bun run check-docs",
+					"description": "Documentation consistency check"
+				},
+				{
+					"command": "bun run check:smoke-docs",
+					"description": "Smoke runbook matches scripts/smoke.json"
+				},
+				{
+					"command": "bun run typecheck",
+					"description": "Typecheck"
+				},
+				{
+					"command": "bun run lint",
+					"description": "Lint"
+				},
+				{
+					"command": "bun run build",
+					"description": "Build"
+				},
+				{
+					"command": "bun run verify-minification",
+					"description": "Verify bundle minification and total size budget"
+				},
+				{
+					"command": "bun run check:critical-path",
+					"description": "Verify critical-path size, React runtime placement, and no preload waterfall"
+				},
+				{
+					"command": "bun run check:api-types",
+					"description": "API type contract validation"
+				},
+				{
+					"command": "bun run check:feature-integration",
+					"description": "Feature integration check"
+				},
+				{
+					"command": "bun run check:schema-parity",
+					"description": "SQLite/PG schema parity check"
+				},
+				{
+					"command": "bun run format:check",
+					"description": "Format check"
+				},
+				{
+					"command": "bun run check-deps",
+					"description": "Check dependency versions"
+				},
+				{
+					"command": "bun run check:dead-code",
+					"description": "Dead code detection (knip)"
+				}
+			]
+		},
+		"reset": {
+			"steps": [
+				{
+					"command": "bun run stop",
+					"description": "Stop any running processes"
+				},
+				{
+					"command": "bun scripts/clear-logs.ts",
+					"description": "Clear logs"
+				},
+				{
+					"command": "bun scripts/reset-database.ts --force",
+					"description": "Reset database"
+				},
+				{
+					"command": "bun run reset-packages",
+					"description": "Reset packages"
+				},
+				{
+					"command": "bun run --cwd backend db:migrate && bun run --cwd backend db:seed",
+					"description": "Setup database (migrate schema + seed)"
+				},
+				{
+					"command": "bun run smoke:qc",
+					"description": "Smoke test QC"
+				},
+				{
+					"command": "bun run docker:build && bun run docker:image:build",
+					"description": "Docker build (local and prod)"
+				}
+			]
+		},
+		"screenshots": {
+			"steps": [
+				{
+					"command": "bun run stop",
+					"description": "Stop any running processes"
+				},
+				{
+					"command": "bun scripts/clear-logs.ts",
+					"description": "Clear logs"
+				},
+				{
+					"command": "bun run start",
+					"description": "Start services in background"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{BACKEND_PORT}}/api/v1/health --timeoutMs 30000",
+					"description": "Wait for backend to be ready"
+				},
+				{
+					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000",
+					"description": "Wait for frontend to be ready"
+				},
+				{
+					"command": "bun scripts/crawltest.ts --mode dev --screenshot-pages --404 --bug",
+					"description": "Crawl test with screenshots",
+					"logFile": "logs/crawltest-screenshots.log"
+				},
+				{
+					"command": "bun run stop",
+					"description": "Stop services"
+				}
+			]
+		}
+	}
+}

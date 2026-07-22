@@ -1,0 +1,81 @@
+# Caddyfile for Spernakit with automatic TLS
+# 
+# Prerequisites:
+# 1. Install Caddy: https://caddyserver.com/docs/install
+# 2. Ensure your domain DNS points to this server
+# 3. Ports 80 and 443 are open and accessible
+# 4. Spernakit container is running on port 3330
+#
+# Usage:
+# 1. Copy this file to /etc/caddy/Caddyfile
+# 2. Replace 'your-domain.com' with your actual domain
+# 3. Run: sudo systemctl reload caddy
+# 4. Check logs: sudo journalctl -u caddy -f
+
+your-domain.com {
+	# Automatic HTTPS with Let's Encrypt
+	# Caddy will automatically provision and renew certificates
+	
+	# Proxy to Spernakit container
+	reverse_proxy localhost:3330 {
+		# Preserve client IP for rate limiting and logging
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		
+		# WebSocket support
+		header_up Upgrade {http.upgrade.header}
+		header_up Connection {http.upgrade.connection}
+		
+		# Timeouts
+		read_timeout 300s
+		write_timeout 300s
+	}
+	
+	# Logging
+	log {
+		output file /var/log/caddy/spernakit-access.log
+		format json
+	}
+	
+	# Edge-only security headers (additional to backend headers)
+	#
+	# CSP is owned by the container nginx (docker/nginx.conf, via the $csp_policy map).
+	# Do NOT add Content-Security-Policy here — it would override the strict in-container
+	# policy (which permits only 'self' + a sha256 inline-script hash) with a looser edge
+	# value and silently re-enable 'unsafe-inline' / 'unsafe-eval' XSS vectors.
+	#
+	# X-XSS-Protection is intentionally NOT set here — the container emits
+	# `X-XSS-Protection "0"` (docker/nginx.conf) because modern browsers treat the legacy
+	# header as harmful. Setting `1; mode=block` at the edge would re-introduce the
+	# harmful behaviour on every response proxied through Caddy.
+	header {
+		# Remove server identification
+		-Server
+
+		# Prevent MIME type sniffing
+		X-Content-Type-Options nosniff
+
+		# Prevent clickjacking
+		X-Frame-Options DENY
+
+		# Referrer policy
+		Referrer-Policy strict-origin-when-cross-origin
+
+		# Permissions-Policy: lock down access to powerful browser APIs
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+		# HSTS (1 year, include subdomains, preload-ready)
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+	}
+}
+
+# Optional: www redirect
+www.your-domain.com {
+	redir https://your-domain.com{uri} permanent
+}
+
+# Health check endpoint (optional)
+# your-domain.com/health {
+#     respond "OK" 200
+# }

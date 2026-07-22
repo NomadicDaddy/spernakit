@@ -1,0 +1,53 @@
+# Required environment variables (set with --env-file compose.vars or export before running):
+#   APP_SLUG        - Application identifier, e.g. "myapp" (required)
+#   APP_IMAGE       - Exact local or explicitly configured image reference (required)
+#   APP_VERSION     - Application version recorded alongside the deployment (required)
+#   FRONTEND_PORT   - Nginx listen port, e.g. 3330 (default: 3330)
+#   BACKEND_PORT    - Elysia backend port, e.g. 3331 (default: 3331)
+#   APPDATA_ROOT    - Host path for persistent data, e.g. /opt/appdata (required)
+#   BACKUPS_ROOT    - Host path for backup storage, e.g. /opt/backups (required)
+# For production secret injection via environment variables, see docs/template/DEPLOYMENT.md 'Environment Variables for Secrets'
+services:
+    spernakit:
+        image: '${APP_IMAGE:?APP_IMAGE is required}'
+        container_name: ${APP_SLUG:?APP_SLUG is required}
+        ports:
+            - '127.0.0.1:${FRONTEND_PORT:-3330}:${FRONTEND_PORT:-3330}'
+        volumes:
+            - ${APPDATA_ROOT:?APPDATA_ROOT is required}/${APP_SLUG}/config:/app/config
+            - ${APPDATA_ROOT}/${APP_SLUG}/data:/app/data
+            - ${APPDATA_ROOT}/${APP_SLUG}/logs:/app/logs
+            - ${BACKUPS_ROOT:?BACKUPS_ROOT is required}/${APP_SLUG}:/app/backups
+        environment:
+            - BACKEND_PORT=${BACKEND_PORT:-3331}
+            - FRONTEND_PORT=${FRONTEND_PORT:-3330}
+            - NODE_ENV=${NODE_ENV:-production}
+        restart: unless-stopped
+        stop_grace_period: 30s
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        read_only: true
+        tmpfs:
+            - /tmp:uid=1000,gid=1000
+            - /var/log/nginx:uid=1000,gid=1000
+            - /var/log/supervisor:uid=1000,gid=1000
+            - /run/nginx:uid=1000,gid=1000
+            - /var/lib/nginx:uid=1000,gid=1000
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:${FRONTEND_PORT:-3330}/api/v1/health']
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 45s
+        deploy:
+            resources:
+                limits:
+                    memory: 512M
+                    cpus: '1.0'
+        logging:
+            driver: json-file
+            options:
+                max-file: '5'
+                max-size: 10m
