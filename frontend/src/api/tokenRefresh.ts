@@ -1,5 +1,4 @@
-import { toast } from 'sonner';
-
+import { lazyToast } from '@/lib/lazyToast';
 import { WebSocketManager } from '@/lib/websocket/manager';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -114,7 +113,7 @@ async function fetchWithRefresh(
 		res = await fetchWithRetry(url, options, shouldRetry, timeoutMs);
 	} catch (err) {
 		if (err instanceof TypeError) {
-			toast.error('Network error - check your connection');
+			lazyToast.error('Network error - check your connection');
 		}
 		throw err;
 	}

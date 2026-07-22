@@ -1,8 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 
-import { toast } from 'sonner';
-
 import { getSafeErrorMessage } from '@/api/errorHandling';
+import { lazyToast } from '@/lib/lazyToast';
 
 /**
  * Build standard onError/onSuccess callbacks for useMutation.
@@ -36,10 +35,10 @@ function stdCallbacks(
 ) {
 	return {
 		onError: (err: Error) => {
-			toast.error(getSafeErrorMessage(err, opts.errorMessage));
+			lazyToast.error(getSafeErrorMessage(err, opts.errorMessage));
 		},
 		onSuccess: () => {
-			toast.success(opts.successMessage);
+			lazyToast.success(opts.successMessage);
 			if (opts.invalidateKeys) {
 				for (const key of opts.invalidateKeys) {
 					void queryClient.invalidateQueries({ queryKey: [...key] });
@@ -83,14 +82,16 @@ function bulkCallbacks(
 ) {
 	return {
 		onError: (err: Error) => {
-			toast.error(getSafeErrorMessage(err, opts.errorMessage));
+			lazyToast.error(getSafeErrorMessage(err, opts.errorMessage));
 		},
 		onSuccess: (response: { data: { failed: number; succeeded: number } }) => {
 			const { failed, succeeded } = response.data;
 			if (failed > 0) {
-				toast.warning(`${opts.action} ${succeeded} ${opts.itemLabel}, ${failed} failed`);
+				lazyToast.warning(
+					`${opts.action} ${succeeded} ${opts.itemLabel}, ${failed} failed`
+				);
 			} else {
-				toast.success(`${opts.action} ${succeeded} ${opts.itemLabel}`);
+				lazyToast.success(`${opts.action} ${succeeded} ${opts.itemLabel}`);
 			}
 			for (const key of opts.invalidateKeys) {
 				void queryClient.invalidateQueries({ queryKey: [...key] });

@@ -105,8 +105,10 @@ Chosen alternative: migrate to rolldown's native manual-chunking API and enforce
 Constraints worth knowing when editing `frontend/vite.config.ts`:
 
 - **One group per chunk name.** Two groups sharing a `name` emit two separate chunks.
-- Radix, `sonner` and `cmdk` deliberately stay in `react-core` (see Alternative 2). Revisit only
-  after `AppShell` is lazy.
+- Radix primitives used only by the eagerly-imported AppShell stay in `react-core` (see
+  Alternative 2). Page-only Radix (react-select, react-checkbox, react-switch, react-tabs,
+  react-popover) is excluded from the `react-core` regex so the bundler places it in lazy page
+  chunks. sonner and cmdk have their own explicit chunks and are lazy-loaded.
 
 ## Consequences
 
@@ -126,9 +128,13 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
   reverse proxy), so it assumes the operator's edge speaks HTTP/2 or better.
 - The budget carries 10% headroom to avoid hash-churn flapping, so it will not catch slow creep. The
   structural checks have no such tolerance.
-- Critical-path JS remains 194.3 KB gzip against the 170 KB target inherited from
-  `frontend-bundle-optimization`. Closing that gap requires making `AppShell` lazy so Radix leaves
-  the unauthenticated path; it is not reachable by chunk tuning.
+- Critical-path JS fell from 194.3 KB to 169 KB gzip, meeting the 170 KB target from
+  `frontend-bundle-optimization`. The gap was closed not by chunk tuning but by lazy-loading
+  the consumers that forced sonner, cmdk, and page-only Radix primitives onto the critical
+  path: the `Toaster` (React.lazy in `App.tsx`), `CommandPalette` (React.lazy in `AppShell`),
+  `NotificationBell`, `BackendUnreachableBanner`, `ImpersonationBanner`, and `ShortcutsHelp`.
+  API-layer toast calls go through a dynamic-import adapter (`lib/lazyToast.ts`) so the
+  `queryClient` error cache and `tokenRefresh` no longer pull sonner into the entry chunk.
 
 ## Related ADRs
 

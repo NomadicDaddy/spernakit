@@ -1,11 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
-import { toast } from 'sonner';
 
 import type { DataResponse, Notification, NotificationType, PaginatedResponse } from '@/api/types';
 import type { WsMessageHandler } from '@/stores/wsStore';
 
 import { notificationKeys, RECENT_NOTIFICATIONS_LIMIT } from '@/api/notifications';
+import { lazyToast } from '@/lib/lazyToast';
 import { useAuthStore } from '@/stores/authStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 import { useWsStore } from '@/stores/wsStore';
@@ -88,7 +88,7 @@ function useNotificationSocket(): void {
 			});
 
 			// Show a toast for the new notification
-			toast(notification.title, {
+			lazyToast(notification.title, {
 				description: notification.message,
 			});
 		};

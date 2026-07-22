@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { lazy, Suspense } from 'react';
+
 import type { BugReport } from '@/lib/bugReport';
 
 import { BugReportButton } from '@/components/layout/BugReportButton';
@@ -7,9 +9,17 @@ import {
 	CommandPaletteLauncher,
 	CommandPaletteLauncherMobile,
 } from '@/components/layout/CommandPaletteLauncher';
-import { NotificationBell } from '@/components/layout/NotificationBell';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { useAppFeatures } from '@/hooks/useAppFeatures';
+
+// Lazy-load NotificationBell so @radix-ui/react-popover (~3 KB gzip) stays off
+// the critical path. The bell icon renders immediately via the Suspense
+// fallback; the popover content only appears on click.
+const LazyNotificationBell = lazy(() =>
+	import('@/components/layout/NotificationBell').then((m) => ({
+		default: m.NotificationBell,
+	}))
+);
 
 interface HeaderBarActionsProps {
 	extraContent?: ReactNode;
@@ -41,7 +51,9 @@ function HeaderBarActions({ extraContent, layoutActions }: HeaderBarActionsProps
 			<CommandPaletteLauncher />
 			<CommandPaletteLauncherMobile />
 			{bugReportEnabled && <BugReportButton onSubmit={layoutActions.handleBugReport} />}
-			<NotificationBell />
+			<Suspense fallback={null}>
+				<LazyNotificationBell />
+			</Suspense>
 			<UserMenu onLogout={layoutActions.handleLogout} />
 		</>
 	);

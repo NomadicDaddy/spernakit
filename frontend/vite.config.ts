@@ -96,18 +96,29 @@ export default defineConfig({
 				// statically import ./grid-layout-*.js and that react-core owns react/*.
 				codeSplitting: {
 					groups: [
-						// Core React runtime + zustand + radix (co-located to avoid circular
-						// chunks). prop-types/fast-equals are transitive CJS deps of
-						// react-grid-layout that are also reachable from the entry; keeping
-						// them here stops shared runtime code landing in the grid-layout chunk.
-						// Radix and its sidecar/positioning deps ride along because they are
-						// reachable from the eagerly-imported AppShell -- splitting them into
-						// their own chunk only adds a preload without removing any bytes.
+						// Core React runtime + zustand. prop-types/fast-equals are transitive
+						// CJS deps of react-grid-layout that are also reachable from the entry;
+						// keeping them here stops shared runtime code landing in the grid-layout
+						// chunk. The radix primitives AND positioning/sidecar deps used by the
+						// eagerly-imported AppShell (react-slot via Button, react-tooltip,
+						// react-dropdown-menu, react-dialog via Sheet, react-separator,
+						// react-avatar) ride along because they are statically
+						// imported from the entry. Page-only radix (react-select,
+						// react-checkbox, react-switch, react-tabs, react-popover via the
+						// lazy NotificationBell, etc.) is NOT listed here, so the bundler
+						// places it in the lazy page chunks that use it.
 						// One group per chunk name: two groups sharing a name emit two chunks.
+						//
+						// sonner and cmdk were previously co-located here. Both are now
+						// lazy-loaded (Toaster via React.lazy in App.tsx, CommandPalette via
+						// React.lazy in AppShell, and API-layer toast calls via the
+						// dynamic-import adapter in lib/lazyToast.ts), so removing them from
+						// this group lets the bundler place each in its own lazy chunk instead
+						// of forcing ~27 KB gzip of rendering code onto the critical path.
 						{
 							name: 'react-core',
 							priority: 100,
-							test: /node_modules[\\/](?:react|react-dom|scheduler|use-sync-external-store|zustand|prop-types|fast-equals|@radix-ui|radix-ui|@floating-ui|sonner|cmdk|aria-hidden|react-remove-scroll|react-remove-scroll-bar|react-style-singleton|use-sidecar|use-callback-ref|get-nonce)[\\/]/,
+							test: /node_modules[\\/](?:react|react-dom|scheduler|use-sync-external-store|zustand|prop-types|fast-equals|@radix-ui[\\/](?:react-slot|react-tooltip|react-dropdown-menu|react-dialog|react-separator|react-avatar)|radix-ui|@floating-ui|aria-hidden|react-remove-scroll|react-remove-scroll-bar|react-style-singleton|use-sidecar|use-callback-ref|get-nonce)[\\/]/,
 						},
 						// React Router - split from core to allow parallel loading
 						{
@@ -128,12 +139,26 @@ export default defineConfig({
 							priority: 88,
 							test: /node_modules[\\/]@tanstack[\\/](?:react-)?(?:table|virtual)/,
 						},
-						// UI utilities - small but commonly used (pure utilities only,
-						// no React-dependent libs like sonner/cmdk which belong in react-core)
+						// UI utilities - small but commonly used (pure utilities only)
 						{
 							name: 'ui-utils',
 							priority: 70,
 							test: /node_modules[\\/](?:class-variance-authority|clsx|tailwind-merge)[\\/]/,
+						},
+						// Sonner toast library — lazy-loaded (Toaster via React.lazy in
+						// App.tsx, toast calls via the dynamic-import adapter in
+						// lib/lazyToast.ts). Explicit chunk prevents rolldown from merging
+						// the shared dynamic-import target back into the entry.
+						{
+							name: 'sonner-vendor',
+							priority: 65,
+							test: /node_modules[\\/]sonner[\\/]/,
+						},
+						// cmdk command palette — lazy-loaded via React.lazy in AppShell.
+						{
+							name: 'cmdk-vendor',
+							priority: 64,
+							test: /node_modules[\\/](?:cmdk|command-score)[\\/]/,
 						},
 						// Charting data layer - d3 math/scale/shape libs (recharts dependency)
 						{

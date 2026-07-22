@@ -1,4 +1,4 @@
-import { toast } from 'sonner';
+import { lazyToast } from '@/lib/lazyToast';
 
 import type { ErrorCode } from './types';
 
@@ -86,7 +86,7 @@ function resetPasswordChangeToast(): void {
 
 function showRateLimitToast(details?: Record<string, unknown>): void {
 	const retryAfter = details?.retryAfter as number | undefined;
-	toast.error(
+	lazyToast.error(
 		retryAfter
 			? `Too many requests. Try again in ${retryAfter} seconds.`
 			: 'Too many requests. Please try again later.'
@@ -101,7 +101,7 @@ function showErrorToast(status: number, code?: ErrorCode, details?: Record<strin
 	if (code === 'AUTH_PASSWORD_CHANGE_REQUIRED') {
 		if (!passwordChangeToastShown) {
 			passwordChangeToastShown = true;
-			toast.error(ERROR_CODE_MESSAGES.AUTH_PASSWORD_CHANGE_REQUIRED);
+			lazyToast.error(ERROR_CODE_MESSAGES.AUTH_PASSWORD_CHANGE_REQUIRED ?? '');
 		}
 		return;
 	}
@@ -109,7 +109,7 @@ function showErrorToast(status: number, code?: ErrorCode, details?: Record<strin
 	if (code) {
 		const message = ERROR_CODE_MESSAGES[code];
 		if (message) {
-			toast.error(message);
+			lazyToast.error(message);
 			return;
 		}
 		if (RATE_LIMIT_CODES.includes(code)) {
@@ -120,9 +120,9 @@ function showErrorToast(status: number, code?: ErrorCode, details?: Record<strin
 
 	const statusMessage = STATUS_MESSAGES.get(status);
 	if (statusMessage) {
-		toast.error(statusMessage);
+		lazyToast.error(statusMessage);
 	} else if (status >= 500) {
-		toast.error('A server error occurred. Please try again later.');
+		lazyToast.error('A server error occurred. Please try again later.');
 	}
 }
 

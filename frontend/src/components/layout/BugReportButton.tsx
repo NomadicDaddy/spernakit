@@ -1,6 +1,5 @@
 import { Bug, MessageSquarePlus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import type { BugReport, BugReportKind } from '@/lib/bugReport';
 
@@ -20,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { captureBugMetadata } from '@/lib/bugReport';
+import { lazyToast } from '@/lib/lazyToast';
 
 interface BugReportButtonProps {
 	onSubmit: (report: BugReport) => Promise<void>;
@@ -90,7 +90,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 
 	const handleSubmit = async () => {
 		if (!description.trim()) {
-			toast.error(kind === 'bug' ? 'Description required' : 'Request required', {
+			lazyToast.error(kind === 'bug' ? 'Description required' : 'Request required', {
 				description:
 					kind === 'bug'
 						? 'Please provide a brief description of the bug.'
@@ -116,12 +116,12 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 
 			await onSubmit(report);
 
-			toast.success(copy.successTitle, { description: copy.successDescription });
+			lazyToast.success(copy.successTitle, { description: copy.successDescription });
 
 			resetForm();
 			setOpen(false);
 		} catch {
-			toast.error('Submission failed', {
+			lazyToast.error('Submission failed', {
 				description: 'Could not submit. Please try again later.',
 			});
 		} finally {

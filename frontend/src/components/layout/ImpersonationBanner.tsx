@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { getMe } from '@/api/auth';
 import { stopImpersonating } from '@/api/users';
 import { Button } from '@/components/ui/button';
+import { lazyToast } from '@/lib/lazyToast';
 import { useAuthStore } from '@/stores/authStore';
 
 /**
@@ -25,10 +25,10 @@ function ImpersonationBanner() {
 			if (me) {
 				setUser(me);
 			}
-			toast.success('Original session restored');
+			lazyToast.success('Original session restored');
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Failed to stop impersonation';
-			toast.error('Stop Impersonation Failed', { description: message });
+			lazyToast.error('Stop Impersonation Failed', { description: message });
 		} finally {
 			setIsStopping(false);
 		}
