@@ -92,6 +92,7 @@
 		"db:migrate:baseline": "bun run --cwd backend db:migrate:baseline",
 		"db:migrate:status": "bun run --cwd backend db:migrate:status",
 		"db:setup": "bun run --cwd backend db:migrate && bun run --cwd backend db:seed",
+		"deploy": "bun scripts/deploy-local-prod.ts --up",
 		"deploy:local-prod": "bun scripts/deploy-local-prod.ts",
 		"docker:build": "docker compose build",
 		"docker:down": "docker compose down",
