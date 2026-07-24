@@ -35,27 +35,27 @@ by license family, and it does not inventory the Alpine base system.
 | -------------------------------------------------------------------------------------------- | ------- | ---------- |
 | [@fontsource-variable/inter](https://www.npmjs.com/package/@fontsource-variable/inter)       | 5.3.0   | OFL-1.1    |
 | [@fontsource-variable/manrope](https://www.npmjs.com/package/@fontsource-variable/manrope)   | 5.3.0   | OFL-1.1    |
-| [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog)   | 1.1.20  | MIT        |
-| [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar)               | 1.2.3   | MIT        |
-| [@radix-ui/react-checkbox](https://www.npmjs.com/package/@radix-ui/react-checkbox)           | 1.3.8   | MIT        |
+| [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog)   | 1.1.21  | MIT        |
+| [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar)               | 1.2.4   | MIT        |
+| [@radix-ui/react-checkbox](https://www.npmjs.com/package/@radix-ui/react-checkbox)           | 1.3.9   | MIT        |
 | [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog)               | 1.1.20  | MIT        |
-| [@radix-ui/react-dropdown-menu](https://www.npmjs.com/package/@radix-ui/react-dropdown-menu) | 2.1.21  | MIT        |
-| [@radix-ui/react-label](https://www.npmjs.com/package/@radix-ui/react-label)                 | 2.1.12  | MIT        |
-| [@radix-ui/react-popover](https://www.npmjs.com/package/@radix-ui/react-popover)             | 1.1.20  | MIT        |
-| [@radix-ui/react-progress](https://www.npmjs.com/package/@radix-ui/react-progress)           | 1.1.13  | MIT        |
-| [@radix-ui/react-select](https://www.npmjs.com/package/@radix-ui/react-select)               | 2.3.4   | MIT        |
-| [@radix-ui/react-separator](https://www.npmjs.com/package/@radix-ui/react-separator)         | 1.1.12  | MIT        |
-| [@radix-ui/react-slot](https://www.npmjs.com/package/@radix-ui/react-slot)                   | 1.3.0   | MIT        |
-| [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.3.4   | MIT        |
-| [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.18  | MIT        |
-| [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.13  | MIT        |
+| [@radix-ui/react-dropdown-menu](https://www.npmjs.com/package/@radix-ui/react-dropdown-menu) | 2.1.22  | MIT        |
+| [@radix-ui/react-label](https://www.npmjs.com/package/@radix-ui/react-label)                 | 2.1.13  | MIT        |
+| [@radix-ui/react-popover](https://www.npmjs.com/package/@radix-ui/react-popover)             | 1.1.21  | MIT        |
+| [@radix-ui/react-progress](https://www.npmjs.com/package/@radix-ui/react-progress)           | 1.1.14  | MIT        |
+| [@radix-ui/react-select](https://www.npmjs.com/package/@radix-ui/react-select)               | 2.3.5   | MIT        |
+| [@radix-ui/react-separator](https://www.npmjs.com/package/@radix-ui/react-separator)         | 1.1.13  | MIT        |
+| [@radix-ui/react-slot](https://www.npmjs.com/package/@radix-ui/react-slot)                   | 1.3.1   | MIT        |
+| [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.3.5   | MIT        |
+| [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.19  | MIT        |
+| [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.14  | MIT        |
 | [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.101.4 | MIT        |
 | [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 8.21.3  | MIT        |
-| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.7  | MIT        |
+| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.8  | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.25.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.26.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
@@ -156,7 +156,7 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **224**
+closure follows everything they pull in transitively and covers **239**
 third-party package versions (221 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
@@ -165,7 +165,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 189      |
+| MIT              | 204      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
