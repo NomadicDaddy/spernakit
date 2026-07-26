@@ -71,8 +71,72 @@ const staleChangelog = validateFreshRelease({
 	packageVersion: FRESH_RELEASE_VERSION,
 });
 assert.ok(
-	staleChangelog.some((issue) => issue.includes('must contain only')),
-	'changelog history must be rejected',
+	staleChangelog.some((issue) => issue.includes('predating')),
+	'pre-baseline changelog history must be rejected',
+);
+
+// The baseline is a floor, not a pin: releases cut after it accumulate changelog entries above
+// the baseline, and both the version and the leading heading move with them.
+assert.deepEqual(
+	validateFreshRelease({
+		files: [
+			{
+				path: 'docs/template/CHANGELOG.md',
+				text: '# Changelog\n\n## [3.30.0] - 2026-07-26\n\nLater.\n\n## [3.29.0] - 2026-07-26\n\nBaseline.\n',
+			},
+		],
+		packageVersion: '3.30.0',
+	}),
+	[],
+	'releases above the baseline must be accepted',
+);
+assert.ok(
+	validateFreshRelease({
+		files: [
+			{
+				path: 'docs/template/CHANGELOG.md',
+				text: '# Changelog\n\n## [3.30.0]\n\nLater.\n\n## [3.29.0]\n\nBaseline.\n',
+			},
+		],
+		packageVersion: FRESH_RELEASE_VERSION,
+	}).some((issue) => issue.includes('must lead with')),
+	'a changelog ahead of package.json must be rejected',
+);
+assert.ok(
+	validateFreshRelease({
+		files: [
+			{
+				path: 'docs/template/CHANGELOG.md',
+				text: '# Changelog\n\n## [3.30.0]\n\nLater.\n',
+			},
+		],
+		packageVersion: '3.30.0',
+	}).some((issue) => issue.includes('must retain')),
+	'dropping the baseline entry must be rejected',
+);
+assert.ok(
+	validateFreshRelease({
+		files: [
+			{
+				path: 'docs/template/CHANGELOG.md',
+				text: '# Changelog\n\n## [3.29.0]\n\nBaseline.\n',
+			},
+		],
+		packageVersion: '3.28.2',
+	}).some((issue) => issue.includes('at least the')),
+	'a version below the baseline must be rejected',
+);
+assert.ok(
+	validateFreshRelease({
+		files: [
+			{
+				path: 'docs/template/CHANGELOG.md',
+				text: '# Changelog\n\n## [3.29.0]\n\nBaseline.\n\n## [3.30.0]\n\nOut of order.\n',
+			},
+		],
+		packageVersion: FRESH_RELEASE_VERSION,
+	}).some((issue) => issue.includes('newest first')),
+	'out-of-order changelog headings must be rejected',
 );
 assert.equal(MIN_SUPPORTED_TEMPLATE_VERSION, FRESH_RELEASE_VERSION);
 assert.match(
