@@ -102,7 +102,9 @@ function AuditLogsTab() {
 					{expandedRow !== null && (
 						<div className="rounded-md border bg-muted p-4">
 							<p className="mb-2 text-sm font-medium">Details</p>
-							<pre className="overflow-x-auto text-xs text-muted-foreground">
+							<pre
+								className="overflow-x-auto text-xs text-muted-foreground"
+								translate="no">
 								{JSON.stringify(
 									data?.data.find((d) => d.id === expandedRow)?.details ??
 										'No details available',
