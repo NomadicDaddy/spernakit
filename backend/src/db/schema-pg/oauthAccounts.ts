@@ -68,7 +68,7 @@ const oauthAccounts = pgTable(
 	(table) => [
 		check(
 			'chk_oauth_accounts_provider',
-			sql`${table.provider} in (${sql.raw(OAUTH_PROVIDER_IN_LIST)})`
+			sql`${table.provider} in (${sql.raw(OAUTH_PROVIDER_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -94,10 +94,10 @@ const oauthAccounts = pgTable(
 		index('idx_oauth_accounts_is_deleted').on(table.isDeleted),
 		uniqueIndex('idx_oauth_accounts_provider_account').on(
 			table.provider,
-			table.providerAccountId
+			table.providerAccountId,
 		),
 		uniqueIndex('idx_oauth_accounts_user_provider').on(table.userId, table.provider),
-	]
+	],
 );
 
 const oauthAccountsRelations = relations(oauthAccounts, ({ one }) => ({

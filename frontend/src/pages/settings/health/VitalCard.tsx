@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
 function vitalRatingBadgeVariant(
-	rating: null | string
+	rating: null | string,
 ): 'default' | 'destructive' | 'outline' | 'secondary' {
 	if (!rating) return 'outline';
 	if (rating === 'good') return 'default';

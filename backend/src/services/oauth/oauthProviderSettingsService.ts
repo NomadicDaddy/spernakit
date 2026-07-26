@@ -32,7 +32,7 @@ async function resolveClientSecretLast4(stored: null | StoredSettingsRow): Promi
 	} catch (err) {
 		logger.warn(
 			{ err, source: 'resolveClientSecretLast4' },
-			'Failed to decrypt OAuth client secret - last-4 display will be null'
+			'Failed to decrypt OAuth client secret - last-4 display will be null',
 		);
 		return null;
 	}
@@ -55,7 +55,7 @@ async function getOAuthProviderSettingsAsync(): Promise<OAuthProviderSettingsRes
 				enabled: stored?.settings.enabled ?? false,
 				provider,
 			};
-		})
+		}),
 	);
 }
 
@@ -76,7 +76,7 @@ interface UpdateOAuthProviderPayload {
 async function updateOAuthProviderSettings(
 	provider: OAuthProviderName,
 	payload: UpdateOAuthProviderPayload,
-	updatedBy: number
+	updatedBy: number,
 ): Promise<void> {
 	const existing = getStoredSettings(provider);
 
@@ -121,11 +121,6 @@ function isProviderEnabled(provider: OAuthProviderName): boolean {
 }
 
 export { resolveLiveProviderConfig } from './oauthProviderConfigResolver.ts';
-export { OAUTH_PROVIDER_NAMES } from './oauthProviderSettingsStore.ts';
-export type {
-	OAuthProviderName,
-	OAuthProviderSettingsInternal,
-	OAuthProviderSettingsResponseInternal,
-} from './oauthProviderSettingsStore.ts';
+export type { OAuthProviderName } from './oauthProviderSettingsStore.ts';
 
 export { getOAuthProviderSettingsAsync, isProviderEnabled, updateOAuthProviderSettings };

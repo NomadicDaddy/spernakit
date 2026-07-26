@@ -88,10 +88,10 @@ function DashboardListPage() {
 					<CardContent className="flex flex-col items-center justify-center py-12">
 						<LayoutGrid
 							aria-hidden="true"
-							className="text-muted-foreground mb-4 size-12"
+							className="mb-4 size-12 text-muted-foreground"
 						/>
 						<h2 className="text-lg font-semibold">No custom dashboards yet</h2>
-						<p className="text-muted-foreground mt-1 text-sm">
+						<p className="mt-1 text-sm text-muted-foreground">
 							{canMutate
 								? 'Create a dashboard from scratch or use a template to get started.'
 								: 'No dashboards have been shared with you yet.'}

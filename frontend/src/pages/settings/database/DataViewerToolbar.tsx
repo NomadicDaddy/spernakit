@@ -104,7 +104,7 @@ function DataViewerToolbar({
 			</div>
 
 			{safeMode && isSysop && (
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					Safe mode is enabled. Disable safe mode to create, edit, or delete rows.
 				</p>
 			)}

@@ -33,13 +33,13 @@ function useUrlFilters(pageSize = 20) {
 				next.delete('page');
 				return next;
 			},
-			{ replace: true }
+			{ replace: true },
 		);
 	};
 
 	const setFilters = (
 		update: (params: URLSearchParams) => void,
-		options: { replace?: boolean } = { replace: true }
+		options: { replace?: boolean } = { replace: true },
 	) => {
 		setSearchParams(
 			(prev) => {
@@ -47,7 +47,7 @@ function useUrlFilters(pageSize = 20) {
 				update(next);
 				return next;
 			},
-			{ replace: options.replace ?? true }
+			{ replace: options.replace ?? true },
 		);
 	};
 

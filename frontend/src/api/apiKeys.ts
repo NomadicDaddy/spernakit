@@ -31,7 +31,7 @@ function listApiKeys(userId: number): Promise<DataResponse<ApiKey[]>> {
  */
 function generateApiKey(
 	userId: number,
-	input: GenerateApiKeyInput
+	input: GenerateApiKeyInput,
 ): Promise<DataResponse<ApiKeyCreateResponse>> {
 	return apiClient.post<DataResponse<ApiKeyCreateResponse>>(`/users/${userId}/api-keys`, {
 		body: input,

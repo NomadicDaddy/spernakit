@@ -19,7 +19,7 @@ const authStore = createRateLimitStore();
 const AUTH_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** Auth login paths that include an account identifier in the request body. */
-const AUTH_ACCOUNT_PATHS = new Set(['/api/v1/auth/login', '/api/v1/auth/forgot-password']);
+const AUTH_ACCOUNT_PATHS = new Set(['/api/v1/auth/forgot-password', '/api/v1/auth/login']);
 
 /**
  * Check account-level rate limit for login/password-reset to prevent distributed brute-force.
@@ -31,7 +31,7 @@ const AUTH_ACCOUNT_PATHS = new Set(['/api/v1/auth/login', '/api/v1/auth/forgot-p
  */
 async function checkAccountRateLimit(
 	request: Request,
-	backend: RateLimitBackend
+	backend: RateLimitBackend,
 ): Promise<null | RateLimitCheckResult> {
 	try {
 		const cloned = request.clone();
@@ -50,7 +50,7 @@ async function checkAccountRateLimit(
 			authStore,
 			`auth:account:${account}`,
 			AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
-			AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS
+			AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS,
 		);
 		return result.limited ? result : null;
 	} catch {
@@ -90,7 +90,7 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onBeforeHand
 			authStore,
 			`auth:${ip}`,
 			authMaxRequests,
-			authWindowMs
+			authWindowMs,
 		);
 
 		if (ipResult.limited) {
@@ -98,13 +98,13 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onBeforeHand
 			set.headers['Retry-After'] = String(ipResult.retryAfter || 0);
 			return rateLimitError(
 				ipResult.retryAfter || 0,
-				RATE_ERROR_CODES.RATE_LOGIN_LIMIT_EXCEEDED
+				RATE_ERROR_CODES.RATE_LOGIN_LIMIT_EXCEEDED,
 			);
 		}
 
 		set.headers['X-RateLimit-Limit'] = String(authMaxRequests);
 		set.headers['X-RateLimit-Remaining'] = String(
-			Math.max(0, authMaxRequests - ipResult.count)
+			Math.max(0, authMaxRequests - ipResult.count),
 		);
 		set.headers['X-RateLimit-Reset'] = String(Math.ceil(ipResult.resetAt.getTime() / 1000));
 
@@ -116,13 +116,13 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onBeforeHand
 				set.headers['Retry-After'] = String(accountResult.retryAfter || 0);
 				return rateLimitError(
 					accountResult.retryAfter || 0,
-					RATE_ERROR_CODES.RATE_LOGIN_LIMIT_EXCEEDED
+					RATE_ERROR_CODES.RATE_LOGIN_LIMIT_EXCEEDED,
 				);
 			}
 		}
 
 		return undefined;
-	}
+	},
 );
 
 export { authRateLimitPlugin, authStore };

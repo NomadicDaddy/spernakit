@@ -28,7 +28,7 @@ export function validatePreMigration(db: Database): ValidationResult {
 		try {
 			const result = db
 				.query<{ count: number }, []>(
-					`SELECT COUNT(*) as count FROM \`${check.table}\` WHERE \`${check.column}\` IS NULL`
+					`SELECT COUNT(*) as count FROM \`${check.table}\` WHERE \`${check.column}\` IS NULL`,
 				)
 				.get();
 			if (result && result.count > 0) {
@@ -54,12 +54,12 @@ export function validatePreMigration(db: Database): ValidationResult {
 						WHERE \`${check.column}\` IS NOT NULL
 						GROUP BY \`${check.column}\`
 						HAVING COUNT(*) > 1
-					)`
+					)`,
 				)
 				.get();
 			if (result && result.count > 0) {
 				issues.push(
-					`${check.table}.${check.column}: ${result.count} duplicate values found`
+					`${check.table}.${check.column}: ${result.count} duplicate values found`,
 				);
 			}
 		} catch {

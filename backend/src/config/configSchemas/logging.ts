@@ -1,4 +1,4 @@
-import { Type, enumString, withDefault } from '../configSchemaHelpers';
+import { enumString, Type, withDefault } from '../configSchemaHelpers';
 
 export const loggingFileSchema = Type.Object({
 	enabled: Type.Boolean({ default: false }),

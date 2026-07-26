@@ -1,7 +1,6 @@
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import {
-	WS_MESSAGE_TYPES,
 	cleanupConnection,
 	getConnection,
 	handleSubscribe,
@@ -10,6 +9,7 @@ import {
 	preprocessMessage,
 	registerConnection,
 	type TrackedConnection,
+	WS_MESSAGE_TYPES,
 } from '../../services/websocketService.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import { logger } from '../../utils/logger.ts';
@@ -49,7 +49,7 @@ function handleMessage(
 		subscribe: (channel: string) => void;
 		unsubscribe: (channel: string) => void;
 	},
-	rawMessage: string
+	rawMessage: string,
 ): void {
 	const ctx = getWsContext(ws);
 	const { connId } = ctx;
@@ -115,14 +115,14 @@ function handleOpen(ws: {
 		() => {
 			const stillValid = revalidateConnection(
 				{ close: (code, reason) => rawWs.close(code, reason) },
-				wsContext
+				wsContext,
 			);
 			if (!stillValid) {
 				clearInterval(revalTimer);
 				delete wsContext.revalTimer;
 			}
 		},
-		WS_REVALIDATION_INTERVAL_MS - Math.floor(Math.random() * WS_REVALIDATION_JITTER_MS)
+		WS_REVALIDATION_INTERVAL_MS - Math.floor(Math.random() * WS_REVALIDATION_JITTER_MS),
 	);
 	wsContext.revalTimer = revalTimer;
 
@@ -141,7 +141,7 @@ function handleOpen(ws: {
 				userId: user.id,
 			},
 			type: 'connected',
-		})
+		}),
 	);
 }
 

@@ -89,7 +89,7 @@ function showRateLimitToast(details?: Record<string, unknown>): void {
 	lazyToast.error(
 		retryAfter
 			? `Too many requests. Try again in ${retryAfter} seconds.`
-			: 'Too many requests. Please try again later.'
+			: 'Too many requests. Please try again later.',
 	);
 }
 

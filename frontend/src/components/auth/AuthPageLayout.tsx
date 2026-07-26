@@ -11,7 +11,7 @@ interface AuthPageLayoutProps {
 
 function AuthPageLayout({ children, description, title }: AuthPageLayoutProps) {
 	return (
-		<div className="bg-background relative flex min-h-screen items-center justify-center overflow-hidden px-4">
+		<div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
 			{/* Ambient brand wash: two blurred radial blobs behind the card. */}
 			<div
 				aria-hidden="true"

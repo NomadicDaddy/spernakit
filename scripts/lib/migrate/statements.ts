@@ -46,7 +46,7 @@ function makeStatementIdempotent(statement: string): string {
 	if (/^CREATE\s+UNIQUE\s+INDEX\s+/i.test(statement)) {
 		return statement.replace(
 			/^CREATE\s+UNIQUE\s+INDEX\s+/i,
-			'CREATE UNIQUE INDEX IF NOT EXISTS '
+			'CREATE UNIQUE INDEX IF NOT EXISTS ',
 		);
 	}
 
@@ -74,7 +74,7 @@ function makeStatementIdempotent(statement: string): string {
  */
 function alterColumnExists(db: Database, statement: string): boolean {
 	const match = statement.match(
-		/^ALTER\s+TABLE\s+[`"']?(\w+)[`"']?\s+ADD\s+(?:COLUMN\s+)?[`"']?(\w+)[`"']?/i
+		/^ALTER\s+TABLE\s+[`"']?(\w+)[`"']?\s+ADD\s+(?:COLUMN\s+)?[`"']?(\w+)[`"']?/i,
 	);
 	if (!match) {
 		return false;
@@ -150,7 +150,7 @@ export function assertPostMigrationIntegrity(db: Database, tag: string): void {
 	} | null;
 	if (integrityResult?.integrity_check !== 'ok') {
 		console.error(
-			`    ❌ Integrity check failed after migration ${tag}: ${integrityResult?.integrity_check ?? 'unknown'}`
+			`    ❌ Integrity check failed after migration ${tag}: ${integrityResult?.integrity_check ?? 'unknown'}`,
 		);
 		throw new Error(`Database integrity check failed after migration ${tag}`);
 	}

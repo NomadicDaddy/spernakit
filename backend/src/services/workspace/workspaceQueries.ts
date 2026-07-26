@@ -63,7 +63,7 @@ function list(options: ListOptions): {
 					.select({ count: count() })
 					.from(workspaces)
 					.where(eq(workspaces.isDeleted, false))
-					.get()
+					.get(),
 		);
 	}
 
@@ -88,7 +88,7 @@ function list(options: ListOptions): {
 				.from(workspaces)
 				.innerJoin(workspaceMembers, eq(workspaceMembers.workspaceId, workspaces.id))
 				.where(where)
-				.get()
+				.get(),
 	);
 }
 
@@ -113,7 +113,7 @@ function findActive(id: number): { id: number } | undefined {
 
 function toRecord(
 	row: typeof workspaces.$inferSelect,
-	ownerUsername: null | string
+	ownerUsername: null | string,
 ): WorkspaceRecord {
 	return {
 		createdAt: row.createdAt.toISOString(),

@@ -4,7 +4,7 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser, requireAuth } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
-import { authPlugin, type AuthPayload } from '../../plugins/auth.ts';
+import { type AuthPayload, authPlugin } from '../../plugins/auth.ts';
 import { log as logAudit } from '../../services/auditService.ts';
 import { broadcastCrudToWorkspace } from '../../services/websocketService.ts';
 import {
@@ -88,7 +88,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: listWorkspaceMembersDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post(
 		'/:id/members',
@@ -133,7 +133,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 			}),
 			detail: addWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.delete(
 		'/:id/members/:userId',
@@ -167,7 +167,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: removeWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }), userId: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.put('/:id/members/:userId/role', handleUpdateMemberRole, {
 		beforeHandle: requireAuth,

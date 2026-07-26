@@ -52,7 +52,7 @@ function main(): void {
 		console.error('This migration script is for SQLite only.');
 		console.error("For PostgreSQL, use 'bunx drizzle-kit migrate' or 'bunx drizzle-kit push'.");
 		console.error(
-			'Drizzle Kit reads the dialect from backend/drizzle.config.ts automatically.'
+			'Drizzle Kit reads the dialect from backend/drizzle.config.ts automatically.',
 		);
 		process.exit(1);
 	}

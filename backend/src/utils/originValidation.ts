@@ -25,7 +25,7 @@ function isBackendSameOrigin(origin: string, config: ReturnType<typeof getConfig
 	if (!host || port === undefined) return false;
 	if (port !== String(config.server.backendPort)) return false;
 	// Accept any host the backend could be reached on (localhost, 127.0.0.1, configured host).
-	const acceptedHosts = new Set(['localhost', '127.0.0.1']);
+	const acceptedHosts = new Set(['127.0.0.1', 'localhost']);
 	if (config.server.host && config.server.host !== '0.0.0.0') {
 		acceptedHosts.add(config.server.host);
 	}
@@ -73,9 +73,9 @@ function isOriginAllowed(origin: null | string, config: ReturnType<typeof getCon
 		const port = match?.[1];
 		if (port !== undefined) {
 			const devPorts = new Set([
-				String(config.server.frontendPort),
-				String(config.server.backendPort),
 				'5173',
+				String(config.server.backendPort),
+				String(config.server.frontendPort),
 			]);
 			if (devPorts.has(port)) {
 				return true;
@@ -88,7 +88,7 @@ function isOriginAllowed(origin: null | string, config: ReturnType<typeof getCon
 	if (config.server.trustProxy && config.cors.allowedOrigins.length === 0) {
 		logger.warn(
 			{ category: 'security', origin },
-			'CORS: trustProxy is enabled but cors.allowedOrigins is empty. Configure allowed origins explicitly.'
+			'CORS: trustProxy is enabled but cors.allowedOrigins is empty. Configure allowed origins explicitly.',
 		);
 	}
 
@@ -99,7 +99,7 @@ function isOriginAllowed(origin: null | string, config: ReturnType<typeof getCon
 			frontendUrl: config.server.frontendUrl,
 			origin,
 		},
-		'CORS: origin rejected'
+		'CORS: origin rejected',
 	);
 
 	return false;

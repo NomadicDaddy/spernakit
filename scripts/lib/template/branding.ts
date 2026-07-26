@@ -18,7 +18,7 @@ import { escapeRegex, normalizeLineEndings } from './text.ts';
 export function normalizeBranding(
 	content: string,
 	values: BrandingValues,
-	filePath: string
+	filePath: string,
 ): string {
 	const isTemplate = values.slug === 'spernakit';
 
@@ -48,7 +48,7 @@ export function normalizeBranding(
 	if (filePath === 'backend/src/test/health.test.ts') {
 		return normalizeLineEndings(content).replace(
 			new RegExp(`\\.toBe\\('${escapeRegex(values.slug)}'\\)`, 'g'),
-			".toBe('{{SLUG}}')"
+			".toBe('{{SLUG}}')",
 		);
 	}
 
@@ -72,11 +72,11 @@ export function normalizeBranding(
 	// would consume slug values in slug-specific contexts (service names, container names)
 	result = result.replace(
 		new RegExp(`container_name: ${escapeRegex(values.slug)}`, 'g'),
-		'container_name: {{SLUG}}'
+		'container_name: {{SLUG}}',
 	);
 	result = result.replace(
 		new RegExp(`APP_SLUG:-${escapeRegex(values.slug)}`, 'g'),
-		'APP_SLUG:-{{SLUG}}'
+		'APP_SLUG:-{{SLUG}}',
 	);
 	result = result.replace(new RegExp(`^(\\s+)${escapeRegex(values.slug)}:`, 'gm'), '$1{{SLUG}}:');
 
@@ -86,43 +86,43 @@ export function normalizeBranding(
 	// Port replacements — only in known contexts to avoid false positives
 	result = result.replace(
 		new RegExp(`EXPOSE ${escapeRegex(values.frontendPort)}`, 'g'),
-		'EXPOSE {{FRONTEND_PORT}}'
+		'EXPOSE {{FRONTEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(`localhost:${escapeRegex(values.frontendPort)}`, 'g'),
-		'localhost:{{FRONTEND_PORT}}'
+		'localhost:{{FRONTEND_PORT}}',
 	);
 	// Docker port mapping: 127.0.0.1:HOST_PORT:CONTAINER_PORT (must come before simpler pattern)
 	result = result.replace(
 		new RegExp(
 			`127\\.0\\.0\\.1:${escapeRegex(values.frontendPort)}:${escapeRegex(values.frontendPort)}`,
-			'g'
+			'g',
 		),
-		'127.0.0.1:{{FRONTEND_PORT}}:{{FRONTEND_PORT}}'
+		'127.0.0.1:{{FRONTEND_PORT}}:{{FRONTEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(`127\\.0\\.0\\.1:${escapeRegex(values.frontendPort)}`, 'g'),
-		'127.0.0.1:{{FRONTEND_PORT}}'
+		'127.0.0.1:{{FRONTEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(
 			`'${escapeRegex(values.frontendPort)}:${escapeRegex(values.frontendPort)}'`,
-			'g'
+			'g',
 		),
-		"'{{FRONTEND_PORT}}:{{FRONTEND_PORT}}'"
+		"'{{FRONTEND_PORT}}:{{FRONTEND_PORT}}'",
 	);
 	result = result.replace(
 		new RegExp(`FRONTEND_PORT[=:-]+${escapeRegex(values.frontendPort)}`, 'g'),
-		(match) => match.replace(values.frontendPort, '{{FRONTEND_PORT}}')
+		(match) => match.replace(values.frontendPort, '{{FRONTEND_PORT}}'),
 	);
 	result = result.replace(
 		new RegExp(`BACKEND_PORT[=:-]+${escapeRegex(values.backendPort)}`, 'g'),
-		(match) => match.replace(values.backendPort, '{{BACKEND_PORT}}')
+		(match) => match.replace(values.backendPort, '{{BACKEND_PORT}}'),
 	);
 	// Port in Dockerfile comment: "falls back to NNNN" pattern
 	result = result.replace(
 		new RegExp(`falls back to ${escapeRegex(values.frontendPort)}`, 'g'),
-		'falls back to {{FRONTEND_PORT}}'
+		'falls back to {{FRONTEND_PORT}}',
 	);
 
 	return result;

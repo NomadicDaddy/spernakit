@@ -40,15 +40,15 @@ function ScalarValue({ value }: { value: boolean | number | string }) {
 		);
 	}
 	if (value === NOT_SET || value === '') {
-		return <span className="text-muted-foreground text-sm italic">Not set</span>;
+		return <span className="text-sm text-muted-foreground italic">Not set</span>;
 	}
-	return <span className="text-foreground font-mono text-sm break-all">{String(value)}</span>;
+	return <span className="font-mono text-sm break-all text-foreground">{String(value)}</span>;
 }
 
 /** Render an array value as a list of badges, or an empty-state hint. */
 function ArrayValue({ values }: { values: SnapshotValue[] }) {
 	if (values.length === 0) {
-		return <span className="text-muted-foreground text-sm italic">None</span>;
+		return <span className="text-sm text-muted-foreground italic">None</span>;
 	}
 	if (values.every((v) => typeof v !== 'object')) {
 		return (
@@ -64,7 +64,7 @@ function ArrayValue({ values }: { values: SnapshotValue[] }) {
 	return (
 		<div className="space-y-2">
 			{values.map((v, i) => (
-				<div className="border-border/60 rounded-md border p-2" key={i}>
+				<div className="rounded-md border border-border/60 p-2" key={i}>
 					{isPlainObject(v) ? (
 						<FieldList fields={v} />
 					) : (
@@ -81,10 +81,10 @@ function Field({ label, value }: { label: string; value: SnapshotValue }) {
 	if (isPlainObject(value)) {
 		return (
 			<div className="space-y-1">
-				<p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+				<p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
 					{label}
 				</p>
-				<div className="border-border/60 ml-1 border-l pl-3">
+				<div className="ml-1 border-l border-border/60 pl-3">
 					<FieldList fields={value} />
 				</div>
 			</div>
@@ -92,7 +92,7 @@ function Field({ label, value }: { label: string; value: SnapshotValue }) {
 	}
 	return (
 		<div className="flex items-start justify-between gap-4 py-1.5">
-			<span className="text-muted-foreground text-sm">{label}</span>
+			<span className="text-sm text-muted-foreground">{label}</span>
 			<div className="text-right">
 				{Array.isArray(value) ? (
 					<ArrayValue values={value} />
@@ -108,7 +108,7 @@ function Field({ label, value }: { label: string; value: SnapshotValue }) {
 function FieldList({ fields }: { fields: ConfigSection | Record<string, SnapshotValue> }) {
 	const entries = Object.entries(fields).sort(([a], [b]) => a.localeCompare(b));
 	return (
-		<div className="divide-border/40 divide-y">
+		<div className="divide-y divide-border/40">
 			{entries.map(([key, value]) => (
 				<Field key={key} label={formatLabel(key)} value={value} />
 			))}

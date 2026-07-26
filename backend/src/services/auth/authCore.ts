@@ -54,7 +54,7 @@ async function isPasswordInHistory(userId: number, newPassword: string): Promise
 		.all();
 
 	const matches = await Promise.all(
-		recentHashes.map((entry) => verifyPassword(newPassword, entry.passwordHash))
+		recentHashes.map((entry) => verifyPassword(newPassword, entry.passwordHash)),
 	);
 	return matches.some(Boolean);
 }
@@ -99,8 +99,8 @@ function recordPasswordHistory(userId: number, hash: string, tx?: DbTransaction)
 			.where(
 				sql`${passwordHistory.userId} = ${userId} AND ${passwordHistory.id} NOT IN (${sql.join(
 					keepIds.map((id) => sql`${id}`),
-					sql`, `
-				)})`
+					sql`, `,
+				)})`,
 			)
 			.run();
 	}
@@ -119,7 +119,7 @@ function recordPasswordHistory(userId: number, hash: string, tx?: DbTransaction)
 async function changeUserPassword(
 	userId: number,
 	currentPassword: string,
-	newPassword: string
+	newPassword: string,
 ): Promise<{ error?: string; success: boolean }> {
 	const db = getDb();
 	const user = db.select().from(users).where(eq(users.id, userId)).get();

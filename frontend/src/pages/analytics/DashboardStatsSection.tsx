@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, TrendingUp, Users } from 'lucide-react';
 
-import { getDashboardStats, type DashboardStats } from '@/api/businessMetrics';
+import { type DashboardStats, getDashboardStats } from '@/api/businessMetrics';
 import { StatCard } from '@/components/shared/charts/StatCard';
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
 import { StatCardSkeleton } from '@/components/shared/skeletons/StatCardSkeleton';
@@ -38,24 +38,24 @@ export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
 		<>
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 				<StatCard
-					icon={<Users aria-hidden="true" className="text-muted-foreground size-5" />}
+					icon={<Users aria-hidden="true" className="size-5 text-muted-foreground" />}
 					title="Daily Active Users"
 					value={dashboardData?.dailyActiveUsers ?? 0}
 				/>
 				<StatCard
-					icon={<Users aria-hidden="true" className="text-muted-foreground size-5" />}
+					icon={<Users aria-hidden="true" className="size-5 text-muted-foreground" />}
 					title="Monthly Active Users"
 					value={dashboardData?.monthlyActiveUsers ?? 0}
 				/>
 				<StatCard
 					icon={
-						<TrendingUp aria-hidden="true" className="text-muted-foreground size-5" />
+						<TrendingUp aria-hidden="true" className="size-5 text-muted-foreground" />
 					}
 					title="Total Events"
 					value={dashboardData?.totalEvents ?? 0}
 				/>
 				<StatCard
-					icon={<BarChart3 aria-hidden="true" className="text-muted-foreground size-5" />}
+					icon={<BarChart3 aria-hidden="true" className="size-5 text-muted-foreground" />}
 					title="Conversions"
 					value={
 						dashboardData
@@ -69,7 +69,7 @@ export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
 
 			<div className="mt-6">
 				<h2 className="text-lg font-semibold">Top Features</h2>
-				<p className="text-muted-foreground mt-1 text-sm">Most used features</p>
+				<p className="mt-1 text-sm text-muted-foreground">Most used features</p>
 			</div>
 
 			<Card>
@@ -86,7 +86,7 @@ export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
 							</div>
 						))}
 						{dashboardData?.topFeatures.length === 0 && (
-							<p className="text-muted-foreground text-center">
+							<p className="text-center text-muted-foreground">
 								No feature data available
 							</p>
 						)}

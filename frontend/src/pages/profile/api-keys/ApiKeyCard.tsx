@@ -32,7 +32,7 @@ function ApiKeyCard({ keyItem, onRevoke }: ApiKeyCardProps) {
 					<Badge variant={scopeBadgeVariant(keyItem.keyScope)}>{keyItem.keyScope}</Badge>
 					{!keyItem.isActive && <Badge variant="outline">Revoked</Badge>}
 				</div>
-				<div className="text-muted-foreground mt-1 text-xs">
+				<div className="mt-1 text-xs text-muted-foreground">
 					Created {formatDate(keyItem.createdAt)}
 					{keyItem.lastUsedAt && (
 						<> &middot; Last used {formatDate(keyItem.lastUsedAt)}</>

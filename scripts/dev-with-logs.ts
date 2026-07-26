@@ -70,13 +70,13 @@ async function rotateExistingLog(filename: string): Promise<void> {
 
 			renameSync(logPath, rotatedPath);
 			console.log(
-				`${colors['dim']}Rotated existing log: ${filename} → ${rotatedName} (${fileSizeMB.toFixed(2)}MB)${colors['reset']}`
+				`${colors['dim']}Rotated existing log: ${filename} → ${rotatedName} (${fileSizeMB.toFixed(2)}MB)${colors['reset']}`,
 			);
 		}
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));
 		console.error(
-			`${colors['red']}Failed to rotate ${filename}: ${typedErr.message}${colors['reset']}`
+			`${colors['red']}Failed to rotate ${filename}: ${typedErr.message}${colors['reset']}`,
 		);
 	}
 }
@@ -122,7 +122,7 @@ function log(prefix: string, message: string, color = colors['reset'] ?? ''): vo
 		.filter((line) => line.trim());
 	lines.forEach((line) => {
 		console.log(
-			`${colors['dim']}[${getTimestamp()}]${colors['reset']} ${color}[${prefix}]${colors['reset']} ${line}`
+			`${colors['dim']}[${getTimestamp()}]${colors['reset']} ${color}[${prefix}]${colors['reset']} ${line}`,
 		);
 	});
 }
@@ -215,7 +215,7 @@ function startServer(name: string, command: string, args: string[], color: strin
 
 // Start servers
 console.log(
-	`${colors['bright']}${colors['cyan']}🚀 Starting Development Servers${colors['reset']}`
+	`${colors['bright']}${colors['cyan']}🚀 Starting Development Servers${colors['reset']}`,
 );
 console.log(`${colors['dim']}Logs directory: ${logsDir}${colors['reset']}\n`);
 
@@ -223,19 +223,19 @@ const backend = startServer(
 	'backend',
 	'bun',
 	['run', '--cwd', 'backend', 'dev'],
-	colors['blue'] ?? ''
+	colors['blue'] ?? '',
 );
 const frontend = startServer(
 	'frontend',
 	'bun',
 	['run', '--cwd', 'frontend', 'dev'],
-	colors['magenta'] ?? ''
+	colors['magenta'] ?? '',
 );
 
 // Handle graceful shutdown
 const shutdown = (signal: string): void => {
 	console.log(
-		`\n${colors['yellow']}Received ${signal}, shutting down gracefully...${colors['reset']}`
+		`\n${colors['yellow']}Received ${signal}, shutting down gracefully...${colors['reset']}`,
 	);
 
 	backend.kill('SIGTERM');

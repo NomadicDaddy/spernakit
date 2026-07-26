@@ -15,7 +15,7 @@ import { HEALTH_ALERT_SEVERITIES, HEALTH_STATUSES } from 'spernakit-shared';
 import { users } from './users.ts';
 
 const HEALTH_ALERT_SEVERITY_IN_LIST = HEALTH_ALERT_SEVERITIES.map(
-	(severity) => `'${severity}'`
+	(severity) => `'${severity}'`,
 ).join(', ');
 const HEALTH_STATUS_IN_LIST = HEALTH_STATUSES.map((status) => `'${status}'`).join(', ');
 
@@ -47,12 +47,12 @@ const healthCheckLogs = pgTable(
 	(table) => [
 		check(
 			'chk_health_check_logs_status',
-			sql`${table.status} in (${sql.raw(HEALTH_STATUS_IN_LIST)})`
+			sql`${table.status} in (${sql.raw(HEALTH_STATUS_IN_LIST)})`,
 		),
 		index('idx_health_check_logs_check_type').on(table.checkType),
 		index('idx_health_check_logs_status').on(table.status),
 		index('idx_health_check_logs_created_at').on(table.createdAt),
-	]
+	],
 );
 
 /**
@@ -85,7 +85,7 @@ const healthCheckAlerts = pgTable(
 	(table) => [
 		check(
 			'chk_health_check_alerts_severity',
-			sql`${table.severity} in (${sql.raw(HEALTH_ALERT_SEVERITY_IN_LIST)})`
+			sql`${table.severity} in (${sql.raw(HEALTH_ALERT_SEVERITY_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.acknowledgedBy],
@@ -99,9 +99,9 @@ const healthCheckAlerts = pgTable(
 		index('idx_health_check_alerts_check_resolved_created').on(
 			table.checkType,
 			table.resolvedAt,
-			table.createdAt
+			table.createdAt,
 		),
-	]
+	],
 );
 
 export { healthCheckAlerts, healthCheckLogs };

@@ -68,8 +68,8 @@ const useAuthStore = create<AuthState>()(
 			// This prevents token leakage via sessionStorage if an XSS vulnerability exists.
 			storage: debouncedSessionStorage<Pick<AuthState, 'isAuthenticated' | 'user'>>(),
 			version: 2,
-		}
-	)
+		},
+	),
 );
 
 export { useAuthStore };

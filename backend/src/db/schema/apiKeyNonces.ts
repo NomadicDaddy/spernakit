@@ -15,5 +15,5 @@ export const apiKeyNonces = sqliteTable(
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		nonce: text('nonce').notNull().unique(),
 	},
-	(table) => [index('idx_api_key_nonces_expires_at').on(table.expiresAt)]
+	(table) => [index('idx_api_key_nonces_expires_at').on(table.expiresAt)],
 );

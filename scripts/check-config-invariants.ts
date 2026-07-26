@@ -62,7 +62,7 @@ function checkDefaultsInvariants(): string[] {
 	const failures = invariants.filter((i) => i.actual !== i.expected);
 	return failures.map(
 		(f) =>
-			`defaults.json ${f.name}: expected ${String(f.expected)}, got ${String(f.actual)}\n    ${f.message}`
+			`defaults.json ${f.name}: expected ${String(f.expected)}, got ${String(f.actual)}\n    ${f.message}`,
 	);
 }
 
@@ -82,7 +82,7 @@ function checkPackageJsonInvariants(): string[] {
 			`package.json version: "${String(version)}" matches spernakit_version ("${String(spernakitVersion)}"). ` +
 				"This is the contamination signature from template-upgrade: the template's own version " +
 				"was copied into the app's version field. Restore the app's real version (check git " +
-				'history or config/*.json) and keep spernakit_version as the tracker.'
+				'history or config/*.json) and keep spernakit_version as the tracker.',
 		);
 	}
 

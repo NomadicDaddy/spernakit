@@ -42,7 +42,7 @@ async function deriveAesGcmKey(salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey
 		baseKey,
 		{ length: KEY_LENGTH, name: ENCRYPTION_ALGORITHM },
 		false,
-		['encrypt', 'decrypt']
+		['encrypt', 'decrypt'],
 	);
 }
 
@@ -106,7 +106,7 @@ export async function decrypt(encrypted: string): Promise<string> {
 		const decrypted = await crypto.subtle.decrypt(
 			{ iv, name: ENCRYPTION_ALGORITHM },
 			key,
-			ciphertext
+			ciphertext,
 		);
 
 		const decoder = new TextDecoder();
@@ -114,7 +114,7 @@ export async function decrypt(encrypted: string): Promise<string> {
 	} catch (err) {
 		throw new Error(
 			`Decryption failed: ${err instanceof Error ? err.message : 'Invalid or corrupted encrypted data'}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }

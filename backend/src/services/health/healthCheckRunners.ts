@@ -43,7 +43,7 @@ function getDataDirectory(): string {
 		const dbPath = dbUrl.startsWith('file:') ? dbUrl.substring(5) : dbUrl;
 		const absoluteDbPath = resolve(
 			healthProjectRoot,
-			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath
+			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath,
 		);
 		return dirname(absoluteDbPath);
 	}

@@ -47,7 +47,7 @@ function findInlineReferences(file: string): Finding[] {
 
 function main(): number {
 	const findings = SCHEMA_DIRECTORIES.flatMap((directory) =>
-		collectTypeScriptFiles(directory).flatMap(findInlineReferences)
+		collectTypeScriptFiles(directory).flatMap(findInlineReferences),
 	);
 
 	if (findings.length === 0) {

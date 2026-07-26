@@ -3,7 +3,7 @@ import type { MfaMethod } from 'spernakit-shared';
 import type { UserData } from '@/api/auth';
 import type { DataResponse, ErrorResponse } from '@/api/types';
 
-import { ApiError, apiClient } from '@/api/client';
+import { apiClient, ApiError } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
 
 interface MfaStatus {
@@ -41,7 +41,7 @@ async function setupMfa(currentPassword: string): Promise<MfaSetupResult> {
 async function verifyMfaSetup(code: string): Promise<MfaVerifySetupResult> {
 	const body = await apiClient.post<DataResponse<MfaVerifySetupResult>>(
 		'/auth/mfa/verify-setup',
-		{ body: { code } }
+		{ body: { code } },
 	);
 	return body.data;
 }
@@ -53,7 +53,7 @@ async function disableMfa(code: string): Promise<void> {
 async function regenerateRecoveryCodes(code: string): Promise<RecoveryCodesResult> {
 	const body = await apiClient.post<DataResponse<RecoveryCodesResult>>(
 		'/auth/mfa/recovery-codes',
-		{ body: { code } }
+		{ body: { code } },
 	);
 	return body.data;
 }

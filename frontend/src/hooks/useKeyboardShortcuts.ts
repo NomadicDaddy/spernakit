@@ -136,7 +136,7 @@ function tryModifierShortcut(e: KeyboardEvent): boolean {
 function trySequenceShortcut(
 	e: KeyboardEvent,
 	pendingKey: React.RefObject<null | string>,
-	pendingTimer: React.RefObject<null | ReturnType<typeof setTimeout>>
+	pendingTimer: React.RefObject<null | ReturnType<typeof setTimeout>>,
 ): boolean {
 	if (!pendingKey.current) return false;
 
@@ -158,7 +158,7 @@ function trySequenceShortcut(
 function tryStartSequenceOrSingleKey(
 	e: KeyboardEvent,
 	pendingKey: React.RefObject<null | string>,
-	pendingTimer: React.RefObject<null | ReturnType<typeof setTimeout>>
+	pendingTimer: React.RefObject<null | ReturnType<typeof setTimeout>>,
 ): void {
 	const possiblePrefix = sequencePrefixKeys.has(e.key);
 	if (possiblePrefix && !e.metaKey && !e.ctrlKey && !e.altKey) {

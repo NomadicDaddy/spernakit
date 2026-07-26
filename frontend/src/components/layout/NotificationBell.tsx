@@ -23,7 +23,7 @@ export function NotificationBell() {
 		setPrevUnreadCount(unreadCount);
 		if (unreadCount > prevUnreadCount) {
 			setAnnouncement(
-				unreadCount === 1 ? '1 unread notification' : `${unreadCount} unread notifications`
+				unreadCount === 1 ? '1 unread notification' : `${unreadCount} unread notifications`,
 			);
 		}
 	}
@@ -59,14 +59,14 @@ export function NotificationBell() {
 					<div className="border-b px-4 py-3">
 						<p className="text-sm font-medium">Notifications</p>
 						{unreadCount > 0 && (
-							<p className="text-muted-foreground text-xs">{unreadCount} unread</p>
+							<p className="text-xs text-muted-foreground">{unreadCount} unread</p>
 						)}
 					</div>
 					<div className="max-h-64 overflow-y-auto">
 						{recentNotifications?.data && recentNotifications.data.length > 0 ? (
 							recentNotifications.data.map((notification) => (
 								<Link
-									className="hover:bg-muted flex w-full items-start gap-3 px-4 py-3 text-left"
+									className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-muted"
 									key={notification.id}
 									to="/notifications">
 									<span
@@ -83,10 +83,10 @@ export function NotificationBell() {
 											}`}>
 											{notification.title}
 										</p>
-										<p className="text-muted-foreground truncate text-xs">
+										<p className="truncate text-xs text-muted-foreground">
 											{notification.message}
 										</p>
-										<p className="text-muted-foreground mt-0.5 text-xs">
+										<p className="mt-0.5 text-xs text-muted-foreground">
 											{formatTimestamp(notification.createdAt)}
 										</p>
 									</div>
@@ -94,7 +94,7 @@ export function NotificationBell() {
 							))
 						) : (
 							<div className="px-4 py-6 text-center">
-								<p className="text-muted-foreground text-sm">No notifications</p>
+								<p className="text-sm text-muted-foreground">No notifications</p>
 							</div>
 						)}
 					</div>

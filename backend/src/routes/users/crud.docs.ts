@@ -39,7 +39,7 @@ const listUsersDocs = {
 									username: 'viewer1',
 								},
 							],
-							42
+							42,
 						),
 					},
 				},

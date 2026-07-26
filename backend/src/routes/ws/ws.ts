@@ -52,7 +52,7 @@ function validateWsMaxPayload(): void {
 		logger.error(
 			{ configValue: configMaxPayload, hardcoded: WS_MAX_PAYLOAD_BYTES },
 			'WebSocket maxPayload config mismatch: config.websocket.maxPayload differs from ' +
-				'the hardcoded transport limit. Update WS_MAX_PAYLOAD_BYTES in constants/websocket.ts to match.'
+				'the hardcoded transport limit. Update WS_MAX_PAYLOAD_BYTES in constants/websocket.ts to match.',
 		);
 	}
 }

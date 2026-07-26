@@ -1,10 +1,10 @@
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import { TimeRangeSelector } from '@/components/shared/charts/TimeRangeSelector';
 import { ChartSkeleton } from '@/components/shared/skeletons/ChartSkeleton';
 
 const MetricChart = lazy(() =>
-	import('@/components/shared/charts/MetricChart').then((m) => ({ default: m.MetricChart }))
+	import('@/components/shared/charts/MetricChart').then((m) => ({ default: m.MetricChart })),
 );
 
 interface ChartDataPoint {
@@ -30,7 +30,7 @@ function HistoricalTrends({
 			<div className="flex items-center justify-between">
 				<div>
 					<h2 className="text-lg font-semibold">Historical Trends</h2>
-					<p className="text-muted-foreground mt-1 text-sm">Resource usage over time</p>
+					<p className="mt-1 text-sm text-muted-foreground">Resource usage over time</p>
 				</div>
 				<TimeRangeSelector onChange={onMetricsHoursChange} value={metricsHours} />
 			</div>

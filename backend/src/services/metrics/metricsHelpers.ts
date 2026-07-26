@@ -81,7 +81,7 @@ function getDiskUsagePercent(): null | number {
 		const dbPath = dbUrl.startsWith('file:') ? dbUrl.substring(5) : dbUrl;
 		const absoluteDbPath = resolve(
 			metricsProjectRoot,
-			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath
+			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath,
 		);
 		const dataDir = dirname(absoluteDbPath);
 		const stats = statfsSync(dataDir);

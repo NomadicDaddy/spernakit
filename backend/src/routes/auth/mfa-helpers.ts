@@ -17,7 +17,7 @@ import { unauthorizedError } from '../../utils/errorResponse.ts';
 async function issueAuthTokensForUser(
 	userId: number,
 	request: Request,
-	set: { headers: Record<string, number | string>; status?: number | string }
+	set: { headers: Record<string, number | string>; status?: number | string },
 ) {
 	const config = getConfig();
 	const dbUser = getUserById(userId);

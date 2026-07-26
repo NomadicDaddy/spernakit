@@ -9,8 +9,8 @@ function NotFoundPage() {
 		<div className="flex min-h-screen flex-col items-center justify-center gap-6 p-6">
 			<div className="text-center">
 				<h1 className="text-6xl font-bold tracking-tight">404</h1>
-				<h2 className="text-muted-foreground mt-2 text-xl">Page not found</h2>
-				<p className="text-muted-foreground mt-4 max-w-md text-sm">
+				<h2 className="mt-2 text-xl text-muted-foreground">Page not found</h2>
+				<p className="mt-4 max-w-md text-sm text-muted-foreground">
 					The page you are looking for does not exist or has been moved.
 				</p>
 			</div>

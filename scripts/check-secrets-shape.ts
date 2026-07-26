@@ -73,7 +73,7 @@ function loadJson(path: string): unknown {
 	} catch (err) {
 		throw new Error(
 			`Failed to parse ${path}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }
@@ -146,12 +146,12 @@ function main(): void {
 		console.log(`[${tag}] ${r.slug}.secrets.json — ${r.message}`);
 		if (r.extraInLive.length > 0) {
 			console.log(
-				`       keys in live but missing from .example: ${r.extraInLive.join(', ')}`
+				`       keys in live but missing from .example: ${r.extraInLive.join(', ')}`,
 			);
 		}
 		if (r.extraInExample.length > 0) {
 			console.log(
-				`       keys in .example but missing from live: ${r.extraInExample.join(', ')}`
+				`       keys in .example but missing from live: ${r.extraInExample.join(', ')}`,
 			);
 		}
 	}
@@ -161,7 +161,7 @@ function main(): void {
 			'\nFix: make the two files have matching nested key structure. ' +
 				'Values can (and should) differ — the example holds placeholders and ' +
 				'the live file holds real secrets — but the keys must match so ' +
-				'operators can discover every secret path from the example alone.'
+				'operators can discover every secret path from the example alone.',
 		);
 		process.exit(1);
 	}

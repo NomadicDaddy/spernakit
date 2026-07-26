@@ -90,7 +90,7 @@ async function run(): Promise<void> {
 	if (mode !== 'dev' && servedBuild === 'dev') {
 		console.error(
 			`--mode ${mode} was requested but ${baseUrl} is serving a Vite dev server.\n` +
-				'Build and serve a production build on that URL first.'
+				'Build and serve a production build on that URL first.',
 		);
 		process.exit(1);
 	}
@@ -108,7 +108,7 @@ async function run(): Promise<void> {
 			'⚠️  Serving a production build: Web Vitals will NOT be captured.\n' +
 				'   Console capture is dev-only (webVitals.ts gates it on import.meta.env.DEV).\n' +
 				'   This run validates crawl correctness only. For production vitals, read the\n' +
-				'   field metrics the app POSTs to /api/v1/system/web-vitals.\n'
+				'   field metrics the app POSTs to /api/v1/system/web-vitals.\n',
 		);
 	}
 	const loginEmail = config.testing?.crawlLoginEmail;

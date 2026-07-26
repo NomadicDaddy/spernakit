@@ -15,9 +15,9 @@ function AuthFooterLink({
 }: AuthFooterLinkProps) {
 	return (
 		<div className={className}>
-			{label && <span className="text-muted-foreground text-sm">{label} </span>}
+			{label && <span className="text-sm text-muted-foreground">{label} </span>}
 			<Link
-				className="text-primary focus-visible:ring-ring rounded-sm text-sm hover:underline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+				className="rounded-sm text-sm text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
 				to={to}>
 				{linkText}
 			</Link>

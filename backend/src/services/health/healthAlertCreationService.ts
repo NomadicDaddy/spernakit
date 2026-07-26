@@ -25,8 +25,8 @@ function hasRecentUnresolvedAlert(checkType: string): boolean {
 				and(
 					eq(healthCheckAlerts.checkType, checkType),
 					isNull(healthCheckAlerts.resolvedAt),
-					gte(healthCheckAlerts.createdAt, cutoff)
-				)
+					gte(healthCheckAlerts.createdAt, cutoff),
+				),
 			)
 			.orderBy(desc(healthCheckAlerts.createdAt))
 			.limit(1)
@@ -50,7 +50,7 @@ function shouldCreateAlert(check: HealthCheckInput): boolean {
 				checkType: check.checkType,
 				status: check.status,
 			},
-			'Skipping alert: severity below threshold'
+			'Skipping alert: severity below threshold',
 		);
 		return false;
 	}
@@ -58,7 +58,7 @@ function shouldCreateAlert(check: HealthCheckInput): boolean {
 	if (hasRecentUnresolvedAlert(check.checkType)) {
 		logger.debug(
 			{ checkType: check.checkType },
-			'Skipping alert: recent unresolved alert exists'
+			'Skipping alert: recent unresolved alert exists',
 		);
 		return false;
 	}
@@ -88,12 +88,12 @@ async function dispatchAlertNotifications(alert: {
 					failedChannels: failed.map((result) => result.channel),
 					totalChannels: results.length,
 				},
-				'Alert notification completed with some failures'
+				'Alert notification completed with some failures',
 			);
 		} else if (results.length > 0) {
 			logger.info(
 				{ alertId: alert.id, channels: results.map((result) => result.channel) },
-				'Alert notifications sent successfully'
+				'Alert notifications sent successfully',
 			);
 		}
 	} catch (err) {
@@ -102,7 +102,7 @@ async function dispatchAlertNotifications(alert: {
 				alertId: alert.id,
 				error: err instanceof Error ? err.message : 'Unknown error',
 			},
-			'Alert notification failed'
+			'Alert notification failed',
 		);
 	}
 }

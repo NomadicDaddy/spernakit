@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import type { HealthHistoryEntry } from '@/api/health';
 
@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 
 const HealthTimeline = lazy(() =>
-	import('./HealthTimeline').then((m) => ({ default: m.HealthTimeline }))
+	import('./HealthTimeline').then((m) => ({ default: m.HealthTimeline })),
 );
 
 interface HealthTimelineSectionProps {
@@ -29,7 +29,7 @@ export function HealthTimelineSection({ historyData, historyLoading }: HealthTim
 						<HealthTimeline history={historyData.history} />
 					</Suspense>
 				) : (
-					<p className="text-muted-foreground text-sm">No timeline data available.</p>
+					<p className="text-sm text-muted-foreground">No timeline data available.</p>
 				)}
 			</CardContent>
 		</Card>

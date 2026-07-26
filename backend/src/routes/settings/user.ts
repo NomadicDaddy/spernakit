@@ -54,7 +54,7 @@ const settingsUserRoutes = new Elysia({
 				},
 				summary: 'Get user UI settings',
 			},
-		}
+		},
 	)
 	.put(
 		'/user',
@@ -68,17 +68,17 @@ const settingsUserRoutes = new Elysia({
 			body: t.Object({
 				appTheme: t.Optional(t.String({ maxLength: 50 })),
 				containerWidth: t.Optional(
-					t.Union([t.Literal('centered'), t.Literal('full-width')])
+					t.Union([t.Literal('centered'), t.Literal('full-width')]),
 				),
 				dateFormat: t.Optional(t.String({ maxLength: 50 })),
 				density: t.Optional(
-					t.Union([t.Literal('compact'), t.Literal('comfortable'), t.Literal('relaxed')])
+					t.Union([t.Literal('compact'), t.Literal('comfortable'), t.Literal('relaxed')]),
 				),
 				language: t.Optional(t.String({ maxLength: 10 })),
 				layoutMode: t.Optional(t.Union([t.Literal('sidebar'), t.Literal('topbar')])),
 				sidebarCollapsed: t.Optional(t.Boolean()),
 				theme: t.Optional(
-					t.Union([t.Literal('system'), t.Literal('light'), t.Literal('dark')])
+					t.Union([t.Literal('system'), t.Literal('light'), t.Literal('dark')]),
 				),
 				timeFormat: t.Optional(t.String({ maxLength: 20 })),
 				timezone: t.Optional(t.String({ maxLength: 100 })),
@@ -114,7 +114,7 @@ const settingsUserRoutes = new Elysia({
 				},
 				summary: 'Update user UI settings',
 			},
-		}
+		},
 	);
 
 export { settingsUserRoutes };

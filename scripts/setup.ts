@@ -62,7 +62,7 @@ for (let i = 0; i < args.length; i++) {
 			console.log('  --name <value>           Application name');
 			console.log('  --description <value>    Application description');
 			console.log(
-				'  --version <value>        Application version (default: keep current version)'
+				'  --version <value>        Application version (default: keep current version)',
 			);
 			console.log('  --frontend-port <value>  Frontend port (default: 3330)');
 			console.log('  --backend-port <value>   Backend port (default: 3331)');

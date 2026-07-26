@@ -9,7 +9,7 @@ import {
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
 import { requireAuth } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { type SeedDefaultEntry, getByKeys, seedDefaults } from '../../services/settingsService.ts';
+import { getByKeys, type SeedDefaultEntry, seedDefaults } from '../../services/settingsService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import { logger } from '../../utils/logger.ts';
@@ -102,12 +102,12 @@ const ALL_SETTING_DEFAULTS: SeedDefaultEntry[] = [
 function parseBoolSetting(
 	raw: null | string | undefined,
 	failClosed: boolean,
-	key: string
+	key: string,
 ): boolean {
 	if (!raw) {
 		logger.warn(
 			{ key, reason: 'missing' },
-			'App feature setting row missing - using fail-closed default'
+			'App feature setting row missing - using fail-closed default',
 		);
 		return failClosed;
 	}
@@ -116,7 +116,7 @@ function parseBoolSetting(
 	} catch {
 		logger.warn(
 			{ key, raw, reason: 'malformed' },
-			'App feature setting malformed - using fail-closed default'
+			'App feature setting malformed - using fail-closed default',
 		);
 		return failClosed;
 	}
@@ -127,7 +127,7 @@ function parseStringSetting<T extends string>(
 	raw: null | string | undefined,
 	key: string,
 	fallback: T,
-	allowedValues: readonly T[]
+	allowedValues: readonly T[],
 ): T {
 	if (!raw) {
 		logger.warn({ key, reason: 'missing' }, 'String setting row missing - using fallback');
@@ -167,37 +167,37 @@ function getAppFeatures(): {
 	const analyticsEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.analyticsEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.analyticsEnabled
+		APP_FEATURES_KEYS.analyticsEnabled,
 	);
 	const bugReportEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.bugReportEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.bugReportEnabled
+		APP_FEATURES_KEYS.bugReportEnabled,
 	);
 	const dashboardsEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.dashboardsEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.dashboardsEnabled
+		APP_FEATURES_KEYS.dashboardsEnabled,
 	);
 	const filesEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.filesEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.filesEnabled
+		APP_FEATURES_KEYS.filesEnabled,
 	);
 	const notificationsEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.notificationsEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.notificationsEnabled
+		APP_FEATURES_KEYS.notificationsEnabled,
 	);
 	const onboardingEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.onboardingEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.onboardingEnabled
+		APP_FEATURES_KEYS.onboardingEnabled,
 	);
 	const workspacesEnabled = parseBoolSetting(
 		settingsMap.get(APP_FEATURES_KEYS.workspacesEnabled)?.value,
 		false,
-		APP_FEATURES_KEYS.workspacesEnabled
+		APP_FEATURES_KEYS.workspacesEnabled,
 	);
 
 	const layoutRaw = settingsMap.get(APP_FEATURES_KEYS.defaultLayoutMode)?.value;
@@ -205,7 +205,7 @@ function getAppFeatures(): {
 		layoutRaw,
 		APP_FEATURES_KEYS.defaultLayoutMode,
 		'sidebar',
-		['sidebar', 'topbar']
+		['sidebar', 'topbar'],
 	);
 
 	return {
@@ -256,7 +256,7 @@ const settingsAppFeaturesRoutes = new Elysia({
 				},
 				summary: 'Get app feature flags',
 			},
-		}
+		},
 	);
 
 export { getAppFeatures, seedAppFeatureDefaults, settingsAppFeaturesRoutes };

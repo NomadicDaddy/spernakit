@@ -56,7 +56,7 @@ function recordApiKeyUsage(keyId: number): void {
 }
 
 /** Validated API key data enriched with the owner's current role. */
-type ValidatedApiKey = ApiKeyValidationData & { ownerRole: UserRole };
+type ValidatedApiKey = { ownerRole: UserRole } & ApiKeyValidationData;
 
 /**
  * Validate an API key and return key data if valid.
@@ -67,7 +67,7 @@ type ValidatedApiKey = ApiKeyValidationData & { ownerRole: UserRole };
  * @returns API key data (with owner's current role) or null if invalid
  */
 async function validateApiKey(
-	input: string | ValidateApiKeyInput
+	input: string | ValidateApiKeyInput,
 ): Promise<null | ValidatedApiKey> {
 	const plainApiKey = typeof input === 'string' ? input : input.apiKey;
 	const keyIndexHash = generateKeyIndexHash(plainApiKey);
@@ -146,8 +146,8 @@ async function hasActiveApiKeyWithName(input: HasActiveApiKeyWithNameInput): Pro
 			and(
 				eq(apiKeys.createdBy, input.userId),
 				eq(apiKeys.keyName, input.keyName),
-				eq(apiKeys.isActive, true)
-			)
+				eq(apiKeys.isActive, true),
+			),
 		)
 		.get();
 	return Boolean(existing);

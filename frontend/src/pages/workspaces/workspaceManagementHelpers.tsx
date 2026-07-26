@@ -4,7 +4,7 @@ import { type DialogState } from './WorkspaceConfirmDialogs';
 
 function withWorkspaceId<A extends unknown[]>(
 	workspaceId: null | number,
-	fn: (id: number, ...args: A) => void
+	fn: (id: number, ...args: A) => void,
 ): (...args: A) => void {
 	return (...args: A) => {
 		if (workspaceId !== null) fn(workspaceId, ...args);

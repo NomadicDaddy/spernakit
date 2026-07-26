@@ -12,7 +12,7 @@ const DEMO_PASSWORDS = ['sysop123', 'admin123', 'manager123', 'operator123', 'vi
 const JWT_EXPIRY_PATTERN = /^\d+[dhms]$/;
 function checkDemoCredentials(
 	isDevOrTest: boolean,
-	testing: AppConfig['testing']
+	testing: AppConfig['testing'],
 ): ValidationIssue[] {
 	if (isDevOrTest) return [];
 	const issues: ValidationIssue[] = [];
@@ -72,7 +72,7 @@ function checkInsecureCookies(isDevOrTest: boolean, cookieSecure: boolean): Vali
 
 function checkHstsWithInsecureCookies(
 	isDevOrTest: boolean,
-	cookieSecure: boolean
+	cookieSecure: boolean,
 ): ValidationIssue[] {
 	if (cookieSecure || isDevOrTest) return [];
 	return [

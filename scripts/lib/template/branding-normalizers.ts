@@ -9,7 +9,7 @@ export function normalizePackageJson(
 	content: string,
 	_values: BrandingValues,
 	_isTemplate: boolean,
-	_filePath: string
+	_filePath: string,
 ): string {
 	try {
 		const pkg = JSON.parse(content) as Record<string, unknown>;
@@ -38,7 +38,7 @@ export function normalizePackageJson(
 export function normalizeDefaultsJson(
 	content: string,
 	_values: BrandingValues,
-	_isTemplate: boolean
+	_isTemplate: boolean,
 ): string {
 	try {
 		const config = JSON.parse(content) as Record<string, unknown>;
@@ -89,7 +89,7 @@ export function normalizeDefaultsJson(
 export function normalizeReadme(
 	content: string,
 	values: BrandingValues,
-	isTemplate: boolean
+	isTemplate: boolean,
 ): string {
 	let result = content;
 
@@ -105,7 +105,7 @@ export function normalizeReadme(
 	result = result.replace(/config\/spernakit\.json/g, 'config/{{SLUG}}.json');
 	result = result.replace(
 		new RegExp(`config\\/${escapeRegex(values.slug)}\\.json`, 'g'),
-		'config/{{SLUG}}.json'
+		'config/{{SLUG}}.json',
 	);
 
 	// Normalize directory references - handle both template slug and app slug
@@ -118,26 +118,26 @@ export function normalizeReadme(
 	} else {
 		result = result.replace(
 			new RegExp(`${escapeRegex(values.name)} is a`, 'gm'),
-			'{{NAME}} is a'
+			'{{NAME}} is a',
 		);
 	}
 
 	// Normalize port references in README
 	result = result.replace(
 		new RegExp(`localhost:${escapeRegex(values.backendPort)}`, 'g'),
-		'localhost:{{BACKEND_PORT}}'
+		'localhost:{{BACKEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(`localhost:${escapeRegex(values.frontendPort)}`, 'g'),
-		'localhost:{{FRONTEND_PORT}}'
+		'localhost:{{FRONTEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(`default: ${escapeRegex(values.backendPort)}`, 'g'),
-		'default: {{BACKEND_PORT}}'
+		'default: {{BACKEND_PORT}}',
 	);
 	result = result.replace(
 		new RegExp(`default: ${escapeRegex(values.frontendPort)}`, 'g'),
-		'default: {{FRONTEND_PORT}}'
+		'default: {{FRONTEND_PORT}}',
 	);
 
 	// Normalize sub-README heading variants (backend/README.md, frontend/README.md)
@@ -146,28 +146,28 @@ export function normalizeReadme(
 		result = result.replace(/# Frontend - Spernakit v3/g, '# Frontend - {{NAME}}');
 		result = result.replace(
 			/The Elysia-based REST API backend for Spernakit v3/g,
-			'The Elysia-based REST API backend for {{NAME}}'
+			'The Elysia-based REST API backend for {{NAME}}',
 		);
 		result = result.replace(
 			/The React-based frontend application for Spernakit v3/g,
-			'The React-based frontend application for {{NAME}}'
+			'The React-based frontend application for {{NAME}}',
 		);
 	} else {
 		result = result.replace(
 			new RegExp(`# Backend - ${escapeRegex(values.name)}`, 'g'),
-			'# Backend - {{NAME}}'
+			'# Backend - {{NAME}}',
 		);
 		result = result.replace(
 			new RegExp(`# Frontend - ${escapeRegex(values.name)}`, 'g'),
-			'# Frontend - {{NAME}}'
+			'# Frontend - {{NAME}}',
 		);
 		result = result.replace(
 			new RegExp(`The Elysia-based REST API backend for ${escapeRegex(values.name)}`, 'g'),
-			'The Elysia-based REST API backend for {{NAME}}'
+			'The Elysia-based REST API backend for {{NAME}}',
 		);
 		result = result.replace(
 			new RegExp(`The React-based frontend application for ${escapeRegex(values.name)}`, 'g'),
-			'The React-based frontend application for {{NAME}}'
+			'The React-based frontend application for {{NAME}}',
 		);
 	}
 
@@ -177,7 +177,7 @@ export function normalizeReadme(
 export function normalizeSettingsSmtp(
 	content: string,
 	values: BrandingValues,
-	isTemplate: boolean
+	isTemplate: boolean,
 ): string {
 	if (isTemplate) {
 		return content.replace(/Spernakit v3/g, '{{NAME}}');
@@ -188,7 +188,7 @@ export function normalizeSettingsSmtp(
 export function normalizeIndexHtml(
 	content: string,
 	values: BrandingValues,
-	isTemplate: boolean
+	isTemplate: boolean,
 ): string {
 	let result = normalizeLineEndings(content);
 
@@ -203,14 +203,14 @@ export function normalizeIndexHtml(
 	// Normalize keywords meta tag (app-specific content, not structural)
 	result = result.replace(
 		/<meta content="[^"]*" name="keywords" ?\/?>/g,
-		'<meta content="{{KEYWORDS}}" name="keywords" />'
+		'<meta content="{{KEYWORDS}}" name="keywords" />',
 	);
 
 	// Normalize meta description - template has "Spernakit v3 - Self-Hosted Multi-User Application Template"
 	// and derived apps have "AppName - AppDescription" format
 	result = result.replace(
 		/Spernakit v3 - Self-Hosted Multi-User Application Template/g,
-		'{{NAME}} - {{DESCRIPTION}}'
+		'{{NAME}} - {{DESCRIPTION}}',
 	);
 
 	// Normalize og/twitter description - template has "Self-Hosted Multi-User Application Template"

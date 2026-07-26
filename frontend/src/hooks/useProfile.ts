@@ -43,7 +43,7 @@ export function useUsernameCheck(currentUsername: string) {
 			clientStatus === 'idle',
 		queryFn: () =>
 			apiClient.get<DataResponse<{ available: boolean }>>(
-				`/users/check-username/${encodeURIComponent(debouncedValue)}`
+				`/users/check-username/${encodeURIComponent(debouncedValue)}`,
 			),
 		queryKey,
 		retry: false,

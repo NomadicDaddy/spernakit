@@ -11,7 +11,7 @@ interface SelfRegistrationActions {
 	onSelfRegistrationEnabledChange: (checked: boolean) => void;
 }
 
-type SelfRegistrationSectionProps = SelfRegistrationState & SelfRegistrationActions;
+type SelfRegistrationSectionProps = SelfRegistrationActions & SelfRegistrationState;
 
 function SelfRegistrationSection({
 	onSelfRegistrationEnabledChange,
@@ -21,7 +21,7 @@ function SelfRegistrationSection({
 		<div className="flex flex-row items-center justify-between rounded-lg border p-4">
 			<div className="space-y-0.5">
 				<Label htmlFor="selfRegistrationEnabled">Self-Registration</Label>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					{selfRegistrationEnabled
 						? 'New users can create their own accounts via the registration page'
 						: 'Registration page is disabled - only admins can create accounts'}

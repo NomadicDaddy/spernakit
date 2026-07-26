@@ -16,7 +16,7 @@ const alertVariants = cva(
 					'bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 [&>svg]:text-current',
 			},
 		},
-	}
+	},
 );
 
 function Alert({
@@ -48,8 +48,8 @@ function AlertDescription({ className, ...props }: React.ComponentProps<'div'>) 
 	return (
 		<div
 			className={cn(
-				'text-muted-foreground col-start-2 grid justify-items-start gap-1 text-sm [&_p]:leading-relaxed',
-				className
+				'col-start-2 grid justify-items-start gap-1 text-sm text-muted-foreground [&_p]:leading-relaxed',
+				className,
 			)}
 			data-slot="alert-description"
 			{...props}

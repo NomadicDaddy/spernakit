@@ -14,7 +14,7 @@ import { logger } from './logger.ts';
  */
 async function sendEmailWithRetry(
 	label: string,
-	send: () => Promise<SendEmailResult>
+	send: () => Promise<SendEmailResult>,
 ): Promise<void> {
 	try {
 		const config = getConfig();

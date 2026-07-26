@@ -164,7 +164,7 @@ function debouncedSetItem<T>(
 	state: DebouncedStorageState,
 	name: string,
 	value: StorageValue<T>,
-	debounceMs: number
+	debounceMs: number,
 ): void {
 	const serialized = JSON.stringify(value);
 	state.pendingWrites.set(name, serialized);
@@ -191,7 +191,7 @@ function debouncedSetItem<T>(
  */
 function createDebouncedStorage<T>(
 	storageApi: Storage,
-	debounceMs: number = DEFAULT_DEBOUNCE_MS
+	debounceMs: number = DEFAULT_DEBOUNCE_MS,
 ): PersistStorage<T> {
 	const state: DebouncedStorageState = {
 		pendingWrites: new Map(),

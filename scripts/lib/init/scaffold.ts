@@ -24,7 +24,7 @@ export function log(message: string): void {
 export function run(
 	cmd: string[],
 	cwd: string,
-	opts: { allowFailure?: boolean; env?: Record<string, string> } = {}
+	opts: { allowFailure?: boolean; env?: Record<string, string> } = {},
 ): void {
 	log(`  → ${cmd.join(' ')}`);
 	const base = { cwd, stderr: 'inherit', stdin: 'inherit', stdout: 'inherit' } as const;
@@ -32,7 +32,7 @@ export function run(
 		cmd,
 		opts.env
 			? { ...base, env: { ...(process.env as Record<string, string>), ...opts.env } }
-			: base
+			: base,
 	);
 	if (proc.exitCode !== 0 && !opts.allowFailure) {
 		throw new Error(`Command failed (exit ${proc.exitCode}): ${cmd.join(' ')}`);
@@ -45,7 +45,7 @@ export function defaultAppName(slug: string): string {
 		.split(/[-_]/)
 		.filter(Boolean)
 		.map((part) =>
-			part.length <= 1 ? part.toUpperCase() : part[0]!.toUpperCase() + part.slice(1)
+			part.length <= 1 ? part.toUpperCase() : part[0]!.toUpperCase() + part.slice(1),
 		)
 		.join(' ');
 }

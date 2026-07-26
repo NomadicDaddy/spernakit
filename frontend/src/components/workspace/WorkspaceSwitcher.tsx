@@ -46,7 +46,7 @@ function WorkspaceSwitcher() {
 							aria-hidden="true"
 							className={cn(
 								'mr-2 size-4',
-								ws.id === activeWorkspaceId ? 'opacity-100' : 'opacity-0'
+								ws.id === activeWorkspaceId ? 'opacity-100' : 'opacity-0',
 							)}
 						/>
 						<span className="min-w-0 truncate">{ws.name}</span>

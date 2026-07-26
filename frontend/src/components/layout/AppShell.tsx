@@ -32,7 +32,7 @@ import { TopBar } from './TopBar';
 const LazyCommandPalette = lazy(() =>
 	import('@/components/layout/CommandPalette').then((m) => ({
 		default: m.CommandPalette,
-	}))
+	})),
 );
 
 // Lazy-load ShortcutsHelp — it only renders when the user presses `?`, so
@@ -41,7 +41,7 @@ const LazyCommandPalette = lazy(() =>
 const LazyShortcutsHelp = lazy(() =>
 	import('@/components/layout/ShortcutsHelp').then((m) => ({
 		default: m.ShortcutsHelp,
-	}))
+	})),
 );
 
 // Lazy-load BackendUnreachableBanner — it renders nothing until the liveness
@@ -50,7 +50,7 @@ const LazyShortcutsHelp = lazy(() =>
 const LazyBackendUnreachableBanner = lazy(() =>
 	import('@/components/shared/BackendUnreachableBanner').then((m) => ({
 		default: m.BackendUnreachableBanner,
-	}))
+	})),
 );
 
 // Lazy-load ImpersonationBanner — it renders nothing unless the current user
@@ -59,7 +59,7 @@ const LazyBackendUnreachableBanner = lazy(() =>
 const LazyImpersonationBanner = lazy(() =>
 	import('@/components/layout/ImpersonationBanner').then((m) => ({
 		default: m.ImpersonationBanner,
-	}))
+	})),
 );
 
 // ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ function SidebarLayout({ mainClasses }: { mainClasses: string }) {
 			className={cn(
 				'grid h-screen grid-rows-1 overflow-hidden transition-[grid-template-columns] duration-200',
 				'grid-cols-[1fr]',
-				sidebarCollapsed ? 'md:grid-cols-[4rem_1fr]' : 'md:grid-cols-[15rem_1fr]'
+				sidebarCollapsed ? 'md:grid-cols-[4rem_1fr]' : 'md:grid-cols-[15rem_1fr]',
 			)}>
 			<div className="hidden md:flex">
 				<Sidebar />
@@ -204,7 +204,7 @@ function AppShellContent() {
 
 	const mainClasses = cn(
 		'flex-1 overflow-y-auto',
-		containerWidth === 'centered' && 'mx-auto w-full max-w-[95rem]'
+		containerWidth === 'centered' && 'mx-auto w-full max-w-[95rem]',
 	);
 
 	const layout = resolveLayout({ layoutMode }, mainClasses);

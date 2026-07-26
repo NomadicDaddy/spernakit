@@ -23,7 +23,7 @@ function readJournal(journalPath: string): DrizzleJournal | null {
 	} catch (err) {
 		throw new Error(
 			`Failed to parse migration journal at ${journalPath}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }

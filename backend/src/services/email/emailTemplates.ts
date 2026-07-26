@@ -74,13 +74,13 @@ If you did not request this password reset, please ignore this email.`;
  */
 async function sendVerificationEmail(
 	to: string,
-	verificationToken: string
+	verificationToken: string,
 ): Promise<SendEmailResult> {
 	const config = getConfig();
 	const verifyUrl = `${config.server.frontendUrl}/verify-email?token=${encodeURIComponent(verificationToken)}`;
 	const safeVerifyUrl = escapeHtml(verifyUrl);
 	const expiryDuration = escapeHtml(
-		formatDuration(config.security.emailVerificationTokenExpiryMs)
+		formatDuration(config.security.emailVerificationTokenExpiryMs),
 	);
 
 	const subject = 'Verify Your Email Address';

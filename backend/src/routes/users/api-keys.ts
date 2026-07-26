@@ -165,7 +165,7 @@ const usersApiKeysRoutes = new Elysia({
 			beforeHandle: requireRoleFresh('VIEWER'),
 			detail: listApiKeysDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post('/:id/api-keys', handleCreateApiKey, {
 		beforeHandle: requireRoleFresh('VIEWER'),
@@ -203,7 +203,7 @@ const usersApiKeysRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 				keyId: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	);
 
 export { usersApiKeysRoutes };

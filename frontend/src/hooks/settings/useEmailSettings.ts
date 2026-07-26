@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { getSmtpConfig, getEmailStatus, sendSmtpTestEmail, updateSmtpConfig } from '@/api/smtp';
+import { getEmailStatus, getSmtpConfig, sendSmtpTestEmail, updateSmtpConfig } from '@/api/smtp';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { stdCallbacks } from '@/lib/mutationHelpers';
 

@@ -47,7 +47,7 @@ function useNotificationSocket(): void {
 				notificationKeys.unreadCount(activeWorkspaceId),
 				(oldData) => ({
 					data: { count: (oldData?.data?.count ?? 0) + 1 },
-				})
+				}),
 			);
 
 			// Add new notification to recent list
@@ -75,11 +75,11 @@ function useNotificationSocket(): void {
 						...oldData,
 						data: [newNotification, ...oldData.data].slice(
 							0,
-							RECENT_NOTIFICATIONS_LIMIT
+							RECENT_NOTIFICATIONS_LIMIT,
 						),
 						total: oldData.total + 1,
 					};
-				}
+				},
 			);
 
 			// Invalidate statistics for pages that display them

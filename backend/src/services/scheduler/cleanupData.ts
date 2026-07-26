@@ -49,8 +49,8 @@ function systemMetricsCleanupTask(): {
 						metricType === 'system'
 							? eq(systemMetrics.metricType, 'system')
 							: like(systemMetrics.metricType, 'web-vital-%'),
-						lt(systemMetrics.createdAt, cutoff)
-					)
+						lt(systemMetrics.createdAt, cutoff),
+					),
 				)
 				.limit(MAX_CLEANUP_BATCH_SIZE)
 				.all()
@@ -80,7 +80,7 @@ function systemMetricsCleanupTask(): {
 
 	cleanupMetricType(
 		'system',
-		config.retention.systemMetricsDays ?? SYSTEM_METRICS_RETENTION_DAYS
+		config.retention.systemMetricsDays ?? SYSTEM_METRICS_RETENTION_DAYS,
 	);
 	cleanupMetricType('web-vital', WEB_VITALS_RETENTION_DAYS);
 

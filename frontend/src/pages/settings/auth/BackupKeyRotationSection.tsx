@@ -22,7 +22,7 @@ function BackupKeyRotationSection() {
 			const { failed, processed } = response.data;
 			if (failed > 0) {
 				toast.warning(
-					`Re-encrypted ${processed} backup(s); ${failed} failed. Check server logs.`
+					`Re-encrypted ${processed} backup(s); ${failed} failed. Check server logs.`,
 				);
 			} else {
 				toast.success(`Re-encrypted ${processed} backup(s) under the current key.`);

@@ -22,7 +22,7 @@ export function UsernameHint({ status }: UsernameHintProps) {
 			break;
 		case 'checking':
 			content = (
-				<p className="text-muted-foreground flex items-center gap-1 text-xs">
+				<p className="flex items-center gap-1 text-xs text-muted-foreground">
 					<Spinner size={12} />
 					Checking availability…
 				</p>
@@ -30,7 +30,7 @@ export function UsernameHint({ status }: UsernameHintProps) {
 			break;
 		case 'invalid':
 			content = (
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					2-50 characters, letters, numbers, _ . - only
 				</p>
 			);

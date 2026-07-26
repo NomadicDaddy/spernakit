@@ -53,8 +53,8 @@ function buildOptimisticCallbacks<TVariable>(
 	workspaceId: null | number,
 	transform: (
 		old: PaginatedResponse<Notification>,
-		variable: TVariable
-	) => PaginatedResponse<Notification>
+		variable: TVariable,
+	) => PaginatedResponse<Notification>,
 ) {
 	return {
 		onError: (_err: Error, _variable: TVariable, context: MutationContext | undefined) => {
@@ -67,7 +67,7 @@ function buildOptimisticCallbacks<TVariable>(
 			const previousData =
 				queryClient.getQueryData<PaginatedResponse<Notification>>(queryKey);
 			queryClient.setQueryData<PaginatedResponse<Notification>>(queryKey, (old) =>
-				old ? transform(old, variable) : old
+				old ? transform(old, variable) : old,
 			);
 			return { previousData };
 		},
@@ -110,9 +110,9 @@ export function useNotifications({ limit, page, readFilter, typeFilter }: UseNot
 			(old, id) => ({
 				...old,
 				data: old.data.map((n) =>
-					n.id === id ? { ...n, readAt: new Date().toISOString() } : n
+					n.id === id ? { ...n, readAt: new Date().toISOString() } : n,
 				),
-			})
+			}),
 		),
 		onSuccess: () => {
 			toast.success('Notification marked as read');
@@ -146,7 +146,7 @@ export function useNotifications({ limit, page, readFilter, typeFilter }: UseNot
 				...old,
 				data: old.data.filter((n) => n.id !== id),
 				total: old.total - 1,
-			})
+			}),
 		),
 		onSuccess: () => {
 			toast.success('Notification deleted');
@@ -171,7 +171,7 @@ export function useNotifications({ limit, page, readFilter, typeFilter }: UseNot
 					data: old.data.filter((n) => !idSet.has(n.id)),
 					total: old.total - ids.length,
 				};
-			}
+			},
 		),
 		onSettled: () => {
 			void queryClient.invalidateQueries({

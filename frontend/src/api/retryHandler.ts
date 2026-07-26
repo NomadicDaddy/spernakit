@@ -39,7 +39,7 @@ async function fetchWithRetry(
 	url: string,
 	options: RequestInit,
 	shouldRetry: boolean,
-	timeoutMs: number
+	timeoutMs: number,
 ): Promise<Response> {
 	let res = await fetch(url, options);
 

@@ -31,7 +31,7 @@ function generateApiKeySignature(
 	method: string,
 	path: string,
 	body: string,
-	keySecret: string
+	keySecret: string,
 ): string {
 	// Newline delimiters prevent ambiguous concatenations (e.g., timestamp
 	// digits bleeding into the method). Payload = timestamp\nmethod\npath\nbody.
@@ -59,7 +59,7 @@ function validateSignature(input: SignatureValidationInput, keySecret: string): 
 		input.method,
 		input.path,
 		input.body,
-		keySecret
+		keySecret,
 	);
 	const expectedBuf = Buffer.from(expected);
 	const signatureBuf = Buffer.from(input.signature);

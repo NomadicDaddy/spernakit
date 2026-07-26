@@ -21,9 +21,9 @@ function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
 				<CardDescription>
 					{completedCount} of {totalCount} steps completed ({progressPercent}%)
 				</CardDescription>
-				<div className="bg-muted mt-2 h-2 w-full overflow-hidden rounded-full">
+				<div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
 					<div
-						className="bg-primary h-full w-full origin-left rounded-full transition-transform duration-500"
+						className="h-full w-full origin-left rounded-full bg-primary transition-transform duration-500"
 						style={{ transform: `scaleX(${progressPercent / 100})` }}
 					/>
 				</div>
@@ -35,12 +35,12 @@ function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
 							{step.completed ? (
 								<CheckCircle2
 									aria-hidden="true"
-									className="text-primary mt-0.5 h-5 w-5 shrink-0"
+									className="mt-0.5 h-5 w-5 shrink-0 text-primary"
 								/>
 							) : (
 								<Circle
 									aria-hidden="true"
-									className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0"
+									className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
 								/>
 							)}
 							<div className="min-w-0 flex-1">
@@ -48,21 +48,21 @@ function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
 									<span
 										className={
 											step.completed
-												? 'text-muted-foreground font-medium line-through'
+												? 'font-medium text-muted-foreground line-through'
 												: 'font-medium'
 										}>
 										{step.title}
 									</span>
 									{!step.completed && (
 										<Link
-											className="text-primary inline-flex items-center gap-1 text-sm hover:underline"
+											className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
 											to={step.link}>
 											Go
 											<ExternalLink aria-hidden="true" className="h-3 w-3" />
 										</Link>
 									)}
 								</div>
-								<p className="text-muted-foreground text-sm">{step.description}</p>
+								<p className="text-sm text-muted-foreground">{step.description}</p>
 							</div>
 						</li>
 					))}

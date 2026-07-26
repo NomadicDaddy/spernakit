@@ -21,5 +21,5 @@ export const apiKeyNonces = pgTable(
 		id: serial('id').primaryKey(),
 		nonce: text('nonce').notNull().unique(),
 	},
-	(table) => [index('idx_api_key_nonces_expires_at').on(table.expiresAt)]
+	(table) => [index('idx_api_key_nonces_expires_at').on(table.expiresAt)],
 );

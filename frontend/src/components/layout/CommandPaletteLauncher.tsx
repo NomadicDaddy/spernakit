@@ -32,8 +32,8 @@ function CommandPaletteLauncher() {
 			onClick={open}
 			variant="outline">
 			<Search aria-hidden="true" className="size-4" />
-			<span className="text-muted-foreground text-sm">Search…</span>
-			<kbd className="bg-muted text-muted-foreground ml-2 inline-flex h-5 items-center rounded border px-1.5 font-mono text-[10px]">
+			<span className="text-sm text-muted-foreground">Search…</span>
+			<kbd className="ml-2 inline-flex h-5 items-center rounded border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
 				{modifier} K
 			</kbd>
 		</Button>

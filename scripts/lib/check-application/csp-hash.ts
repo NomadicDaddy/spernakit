@@ -50,7 +50,7 @@ export function checkCspHashConsistency(repoRoot: string): void {
 				`CSP hash mismatch in securityHeaders.ts.\n` +
 					`     Inline script hash: ${actualHash}\n` +
 					`     securityHeaders.ts has: ${hashMatch.join(', ')}\n` +
-					`     Update the CSP hash in securityHeaders.ts to match.`
+					`     Update the CSP hash in securityHeaders.ts to match.`,
 			);
 		}
 	}
@@ -65,7 +65,7 @@ export function checkCspHashConsistency(repoRoot: string): void {
 				`CSP hash mismatch in docker/nginx.conf.\n` +
 					`     Inline script hash: ${actualHash}\n` +
 					`     nginx.conf has: ${hashMatch.join(', ')}\n` +
-					`     Update the CSP hash in nginx.conf to match.`
+					`     Update the CSP hash in nginx.conf to match.`,
 			);
 		}
 	}

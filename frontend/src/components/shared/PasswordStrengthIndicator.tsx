@@ -11,7 +11,7 @@ interface PasswordStrengthIndicatorProps {
 
 /** Shared character-class rules (lowercase, uppercase, digit, special) — mirrors backend. */
 const CHARACTER_RULES = PASSWORD_RULES.filter(
-	(rule) => rule.id !== 'maxLength' && rule.id !== 'minLength'
+	(rule) => rule.id !== 'maxLength' && rule.id !== 'minLength',
 );
 
 function calculateStrength(password: string): { level: StrengthLevel; score: number } {
@@ -62,11 +62,11 @@ function PasswordStrengthIndicator({ className, password }: PasswordStrengthIndi
 
 	return (
 		<div aria-live="polite" className={cn('space-y-1', className)}>
-			<div className="bg-muted flex h-1.5 w-full overflow-hidden rounded-full">
+			<div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
 				<div
 					className={cn(
 						'w-full origin-left transition-[transform,background-color] duration-300',
-						config.barClass
+						config.barClass,
 					)}
 					style={{ transform: `scaleX(${percentage / 100})` }}
 				/>

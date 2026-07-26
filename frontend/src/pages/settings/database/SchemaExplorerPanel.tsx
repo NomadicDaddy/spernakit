@@ -52,7 +52,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 					<div className="relative">
 						<Search
 							aria-hidden="true"
-							className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4"
+							className="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground"
 						/>
 						<Input
 							aria-label="Filter tables"
@@ -78,7 +78,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 						))
 					)}
 					{!isLoadingSchema && filteredTables.length === 0 && (
-						<p className="text-muted-foreground py-4 text-center text-sm">
+						<p className="py-4 text-center text-sm text-muted-foreground">
 							No tables found
 						</p>
 					)}
@@ -94,7 +94,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 				</CardHeader>
 				<CardContent className="max-h-[500px] overflow-y-auto">
 					{!selectedTable && (
-						<p className="text-muted-foreground py-8 text-center text-sm">
+						<p className="py-8 text-center text-sm text-muted-foreground">
 							Click a table to view its columns
 						</p>
 					)}
@@ -163,10 +163,10 @@ function ColumnRow({
 		<div className="flex items-center justify-between rounded-md border px-3 py-2">
 			<div className="flex items-center gap-2">
 				{column.isPrimaryKey && (
-					<Key aria-hidden="true" className="text-primary h-3.5 w-3.5" />
+					<Key aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
 				)}
 				<span className="text-sm font-medium">{column.name}</span>
-				<span className="text-muted-foreground text-xs">{column.type}</span>
+				<span className="text-xs text-muted-foreground">{column.type}</span>
 			</div>
 			<div className="flex items-center gap-1.5">
 				{column.notnull && (

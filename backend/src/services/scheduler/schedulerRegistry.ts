@@ -36,7 +36,7 @@ const tasks = new Map<string, TaskDefinition>();
 function registerTask(definition: TaskDefinition): void {
 	if (tasks.has(definition.name)) {
 		throw new Error(
-			`Scheduled task "${definition.name}" is already registered. Duplicate task names are not allowed.`
+			`Scheduled task "${definition.name}" is already registered. Duplicate task names are not allowed.`,
 		);
 	}
 	tasks.set(definition.name, definition);
@@ -71,7 +71,7 @@ function getTaskList(): TaskInfo[] {
 					FROM ${scheduledTaskExecutions}
 					WHERE ${scheduledTaskExecutions.taskName} IN ${taskNames}
 				) WHERE rn = 1
-			)`
+			)`,
 		)
 		.all();
 
@@ -133,7 +133,7 @@ function parseInterval(expression: string): number {
 		result = Number(expression.trim());
 	} else {
 		throw new Error(
-			`Invalid scheduler interval expression: "${expression}". Expected format: "6h", "30m", "10s", "5000ms", "1d", or a raw millisecond number.`
+			`Invalid scheduler interval expression: "${expression}". Expected format: "6h", "30m", "10s", "5000ms", "1d", or a raw millisecond number.`,
 		);
 	}
 
@@ -150,7 +150,7 @@ function parseInterval(expression: string): number {
  * @param overrides - Map of task name to config override
  */
 function applyConfigOverrides(
-	overrides: Map<string, { cronExpression: string; enabled: boolean }>
+	overrides: Map<string, { cronExpression: string; enabled: boolean }>,
 ): void {
 	for (const [name, override] of overrides) {
 		const task = tasks.get(name);
@@ -176,7 +176,7 @@ function applyConfigOverrides(
  */
 function updateTaskConfig(
 	name: string,
-	updates: { cronExpression?: string; enabled?: boolean }
+	updates: { cronExpression?: string; enabled?: boolean },
 ): null | TaskDefinition {
 	const task = tasks.get(name);
 	if (!task) return null;

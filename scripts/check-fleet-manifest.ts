@@ -79,7 +79,7 @@ function main(): void {
 		}
 		if (actual !== entry.manifestVersion) {
 			problems.push(
-				`  - ${entry.slug}: manifest says ${entry.manifestVersion}, package.json says ${actual}`
+				`  - ${entry.slug}: manifest says ${entry.manifestVersion}, package.json says ${actual}`,
 			);
 		}
 	}
@@ -92,7 +92,7 @@ function main(): void {
 		console.error('spernakit.psd1 disagrees with the apps it describes:');
 		for (const problem of problems) console.error(problem);
 		console.error(
-			'package.json is tracked and is the authority. Update the manifest to match.'
+			'package.json is tracked and is the authority. Update the manifest to match.',
 		);
 		exit(1);
 	}

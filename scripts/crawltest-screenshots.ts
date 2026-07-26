@@ -17,7 +17,7 @@ import { SKIP_PATTERNS } from './crawltest-types';
 export async function ensureScreenshotDir(
 	opts: CrawlerOpts,
 	state: CrawlerState,
-	rootDir: string
+	rootDir: string,
 ): Promise<null | string> {
 	if (!opts.screenshotDir) return null;
 	const dir = path.resolve(rootDir, opts.screenshotDir);
@@ -41,7 +41,7 @@ export async function screenshotPage(
 	opts: CrawlerOpts,
 	state: CrawlerState,
 	rootDir: string,
-	url: string
+	url: string,
 ): Promise<null | string> {
 	const dir = await ensureScreenshotDir(opts, state, rootDir);
 	if (!dir) return null;
@@ -95,7 +95,7 @@ export async function screenshotPage(
 // ---------------------------------------------------------------------------
 
 async function detectSubTabs(
-	page: Page
+	page: Page,
 ): Promise<{ tabs: { index: number; isActive: boolean; text: string }[] }[]> {
 	return page.evaluate(() => {
 		const groups: {
@@ -126,7 +126,7 @@ async function detectSubTabs(
 
 		// Pattern 1 & 3: Buttons/Badges in flex containers with variant toggle.
 		for (const container of document.querySelectorAll(
-			'div.flex.gap-2, div.flex.flex-wrap.gap-2'
+			'div.flex.gap-2, div.flex.flex-wrap.gap-2',
 		)) {
 			const children = [...container.children].filter((el) => {
 				if (seen.has(el)) return false;
@@ -167,7 +167,7 @@ export async function screenshotSubTabs(
 	results: TestResults,
 	opts: CrawlerOpts,
 	rootDir: string,
-	pageUrl: string
+	pageUrl: string,
 ): Promise<number> {
 	if (!opts.screenshotDir) return 0;
 
@@ -175,7 +175,7 @@ export async function screenshotSubTabs(
 
 	// Filter out groups that contain action buttons (not real tabs).
 	const groups = allGroups.filter(
-		(group) => !group.tabs.some((tab) => SKIP_PATTERNS.some((p) => p.test(tab.text)))
+		(group) => !group.tabs.some((tab) => SKIP_PATTERNS.some((p) => p.test(tab.text))),
 	);
 	if (groups.length === 0) return 0;
 
@@ -190,7 +190,7 @@ export async function screenshotSubTabs(
 		if (inactiveTabs.length === 0) continue;
 
 		console.log(
-			`   📑 Sub-tabs${groups.length > 1 ? ` [group ${groupIdx + 1}]` : ''}: ${group.tabs.map((t) => (t.isActive ? `[${t.text}]` : t.text)).join(' · ')}`
+			`   📑 Sub-tabs${groups.length > 1 ? ` [group ${groupIdx + 1}]` : ''}: ${group.tabs.map((t) => (t.isActive ? `[${t.text}]` : t.text)).join(' · ')}`,
 		);
 
 		for (const tab of inactiveTabs) {

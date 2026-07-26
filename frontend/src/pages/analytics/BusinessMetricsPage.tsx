@@ -14,7 +14,7 @@ import { DashboardStatsSection } from './DashboardStatsSection';
 import { EventSummarySection } from './EventSummarySection';
 import { UserActivitySection } from './UserActivitySection';
 
-const VALID_DAYS = new Set([7, 30, 90, 365]);
+const VALID_DAYS = new Set([30, 365, 7, 90]);
 
 export function BusinessMetricsPage() {
 	const { can } = useAuthorization();
@@ -30,7 +30,7 @@ export function BusinessMetricsPage() {
 				else prev.set('days', String(value));
 				return prev;
 			},
-			{ replace: true }
+			{ replace: true },
 		);
 	};
 
@@ -39,7 +39,7 @@ export function BusinessMetricsPage() {
 			<div className="flex h-[60vh] items-center justify-center">
 				<div className="text-center">
 					<h1 className="text-h1">Access Denied</h1>
-					<p className="text-muted-foreground mt-2">
+					<p className="mt-2 text-muted-foreground">
 						You need OPERATOR role or higher to view business metrics.
 					</p>
 				</div>

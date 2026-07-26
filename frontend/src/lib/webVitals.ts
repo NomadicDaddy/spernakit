@@ -60,7 +60,7 @@ function onMetric(metric: Metric): void {
 				navigationType: metric.navigationType ?? 'unknown',
 				rating: metric.rating,
 				value: rounded,
-			})}`
+			})}`,
 		);
 		return;
 	}

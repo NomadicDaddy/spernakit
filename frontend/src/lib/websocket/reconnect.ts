@@ -56,7 +56,7 @@ class ReconnectScheduler {
 
 		const delay = Math.min(
 			BASE_RECONNECT_DELAY * Math.pow(2, this.reconnectAttempts),
-			MAX_RECONNECT_DELAY
+			MAX_RECONNECT_DELAY,
 		);
 		this.reconnectAttempts++;
 

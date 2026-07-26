@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Database, Download, RotateCcw } from 'lucide
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import { getBackupStatus, restoreBackup, triggerBackup, type BackupFile } from '@/api/backup';
+import { type BackupFile, getBackupStatus, restoreBackup, triggerBackup } from '@/api/backup';
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +34,7 @@ function BackupList({
 }: BackupListProps) {
 	const { formatDateTime } = useFormatters();
 	if (backups.length === 0) {
-		return <p className="text-muted-foreground text-sm">No backups available</p>;
+		return <p className="text-sm text-muted-foreground">No backups available</p>;
 	}
 
 	const totalPages = Math.ceil(backups.length / BACKUPS_PER_PAGE);
@@ -50,10 +50,10 @@ function BackupList({
 						className="flex items-center justify-between rounded-md border p-3"
 						key={backup.filename}>
 						<div className="flex items-center gap-3">
-							<Database aria-hidden="true" className="text-muted-foreground size-4" />
+							<Database aria-hidden="true" className="size-4 text-muted-foreground" />
 							<div>
 								<p className="text-sm font-medium">{backup.filename}</p>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-xs text-muted-foreground">
 									{formatDateTime(backup.timestamp)}
 									{' — '}
 									{formatBytes(backup.sizeBytes)}
@@ -132,7 +132,7 @@ export function BackupTab() {
 					(params) => {
 						params.delete('backupPage');
 					},
-					{ replace: false }
+					{ replace: false },
 				);
 				void queryClient.invalidateQueries({ queryKey: ['backup-status'] });
 			} else {
@@ -162,7 +162,7 @@ export function BackupTab() {
 			<div className="flex h-[40vh] items-center justify-center">
 				<div className="text-center">
 					<h2 className="text-h2">Access Denied</h2>
-					<p className="text-muted-foreground mt-2">
+					<p className="mt-2 text-muted-foreground">
 						You need ADMIN role or higher to manage backups.
 					</p>
 				</div>
@@ -182,7 +182,7 @@ export function BackupTab() {
 					params.set('backupPage', String(nextPage));
 				}
 			},
-			{ replace: false }
+			{ replace: false },
 		);
 	};
 

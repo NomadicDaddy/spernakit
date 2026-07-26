@@ -11,7 +11,7 @@ const workspacePlugin = new Elysia({ name: 'workspace' }).derive(
 	({ request }) => {
 		const headerValue = request.headers.get('x-workspace-id');
 		return { workspaceId: parseWorkspaceId(headerValue ?? undefined) };
-	}
+	},
 );
 
 export { workspacePlugin };

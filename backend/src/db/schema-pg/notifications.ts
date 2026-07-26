@@ -53,7 +53,7 @@ const notifications = pgTable(
 	(table) => [
 		check(
 			'chk_notifications_type',
-			sql`${table.type} in (${sql.raw(NOTIFICATION_TYPE_IN_LIST)})`
+			sql`${table.type} in (${sql.raw(NOTIFICATION_TYPE_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -82,15 +82,15 @@ const notifications = pgTable(
 		index('idx_notifications_user_deleted_created').on(
 			table.userId,
 			table.isDeleted,
-			table.createdAt
+			table.createdAt,
 		),
 		index('idx_notifications_user_workspace_deleted_created').on(
 			table.userId,
 			table.workspaceId,
 			table.isDeleted,
-			table.createdAt
+			table.createdAt,
 		),
-	]
+	],
 );
 
 /**
@@ -137,7 +137,7 @@ const userNotificationPreferences = pgTable(
 			foreignColumns: [users.id],
 			name: 'fk_user_notification_preferences_user_id_users',
 		}).onDelete('cascade'),
-	]
+	],
 );
 
 export { notifications, userNotificationPreferences };

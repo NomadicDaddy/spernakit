@@ -243,7 +243,7 @@ export const myRoutes = new Elysia({ prefix: '/my-resource' }).get(
 	},
 	{
 		beforeHandle: ({ set, user }) => requireRoleFresh('VIEWER')({ set, user }),
-	}
+	},
 );
 ```
 

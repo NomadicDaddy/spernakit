@@ -186,7 +186,7 @@ function storeWebVitals(input: StoreWebVitalsInput): void {
 					url: input.url,
 					userId: input.userId,
 				},
-				`Web vital metric "${metric.name}" exceeded threshold (rating: poor)`
+				`Web vital metric "${metric.name}" exceeded threshold (rating: poor)`,
 			);
 		}
 	}

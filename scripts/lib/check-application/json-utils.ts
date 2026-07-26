@@ -23,7 +23,7 @@ export function readJsonFileOrThrow(filePath: string): unknown {
 export function assertEqual<T>(label: string, actual: T, expected: T): void {
 	if (actual !== expected) {
 		throw new Error(
-			`${label} mismatch. Expected: ${String(expected)}, Found: ${String(actual)}`
+			`${label} mismatch. Expected: ${String(expected)}, Found: ${String(actual)}`,
 		);
 	}
 }

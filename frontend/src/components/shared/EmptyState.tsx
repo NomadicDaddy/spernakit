@@ -28,19 +28,19 @@ function EmptyState({
 	return (
 		<div
 			className={cn(
-				'border-border/60 bg-card/40 flex flex-col items-center justify-center rounded-xl border border-dashed text-center',
+				'flex flex-col items-center justify-center rounded-xl border border-dashed border-border/60 bg-card/40 text-center',
 				variant === 'default' ? 'gap-4 px-6 py-12' : 'gap-3 px-4 py-8',
-				className
+				className,
 			)}>
 			<div
 				aria-hidden="true"
-				className="bg-muted/60 text-primary glow-primary/30 flex size-12 items-center justify-center rounded-xl">
+				className="glow-primary/30 flex size-12 items-center justify-center rounded-xl bg-muted/60 text-primary">
 				<Icon className="size-6" />
 			</div>
 			<div className="space-y-1.5">
 				<h2 className="text-h3">{title}</h2>
 				{description && (
-					<p className="text-muted-foreground mx-auto max-w-md text-sm">{description}</p>
+					<p className="mx-auto max-w-md text-sm text-muted-foreground">{description}</p>
 				)}
 			</div>
 			{action && <div className="pt-1">{action}</div>}

@@ -2,7 +2,7 @@ import { lazyToast } from '@/lib/lazyToast';
 import { WebSocketManager } from '@/lib/websocket/manager';
 import { useAuthStore } from '@/stores/authStore';
 
-import { getCsrfHeader, getCommonHeaders } from './requestHelpers';
+import { getCommonHeaders, getCsrfHeader } from './requestHelpers';
 import { DEFAULT_API_TIMEOUT_MS, fetchWithRetry, withTimeout } from './retryHandler';
 
 let refreshPromise: null | Promise<boolean> = null;
@@ -104,7 +104,7 @@ async function fetchWithRefresh(
 	url: string,
 	init: RequestInit,
 	shouldRetry = false,
-	timeoutMs = DEFAULT_API_TIMEOUT_MS
+	timeoutMs = DEFAULT_API_TIMEOUT_MS,
 ): Promise<Response> {
 	const options: RequestInit = { ...init, credentials: 'include' };
 

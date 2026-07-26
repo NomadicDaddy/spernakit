@@ -77,7 +77,7 @@ async function getSmtpConfig(): Promise<SmtpConfig> {
 		setting.value,
 		SmtpConfigSchema,
 		DEFAULT_SMTP_CONFIG,
-		'SMTP config'
+		'SMTP config',
 	);
 
 	let password = parsed.password ?? DEFAULT_SMTP_CONFIG.password;
@@ -89,7 +89,7 @@ async function getSmtpConfig(): Promise<SmtpConfig> {
 			logger.error(
 				{ err },
 				'SMTP password decryption failed - encryption key may have changed. ' +
-					'Re-enter SMTP credentials in Settings > Email'
+					'Re-enter SMTP credentials in Settings > Email',
 			);
 			password = '';
 		}

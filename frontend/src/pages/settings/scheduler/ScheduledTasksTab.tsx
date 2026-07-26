@@ -31,7 +31,7 @@ function ScheduledTasksTab() {
 		<div className="space-y-6">
 			<div>
 				<h2 className="text-lg font-semibold">Scheduled Tasks</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					View and manage background scheduled tasks.
 				</p>
 			</div>
@@ -94,7 +94,7 @@ function ScheduledTasksTab() {
 											}>
 											{entry.status}
 										</Badge>
-										<span className="text-muted-foreground text-xs">
+										<span className="text-xs text-muted-foreground">
 											{entry.durationMs !== null
 												? `${entry.durationMs}ms`
 												: '-'}
@@ -104,14 +104,14 @@ function ScheduledTasksTab() {
 												{entry.error}
 											</span>
 										)}
-										<span className="text-muted-foreground ml-auto text-xs">
+										<span className="ml-auto text-xs text-muted-foreground">
 											{formatDateTime(entry.startedAt)}
 										</span>
 									</div>
 								))}
 							</div>
 						) : (
-							<p className="text-muted-foreground text-sm">
+							<p className="text-sm text-muted-foreground">
 								No execution history for this task.
 							</p>
 						)}

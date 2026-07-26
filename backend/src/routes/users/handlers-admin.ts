@@ -98,7 +98,7 @@ async function handleAdminResetPassword({
 	const config = getConfig();
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,
-		DEFAULT_REFRESH_TTL_MS
+		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(targetId, new Date(Date.now() + refreshTtlMs));
 	clearRefreshTokenHash(targetId);

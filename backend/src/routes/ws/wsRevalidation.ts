@@ -32,7 +32,7 @@ function extractTokenTimestamps(cookieHeader: null | string): {
 /** Revalidate JWT expiry, account status, and blanket token revocation. */
 function revalidateConnection(
 	ws: { close: (code?: number, reason?: string) => void },
-	ctx: WsContext
+	ctx: WsContext,
 ): boolean {
 	const now = Date.now();
 
@@ -57,7 +57,7 @@ function revalidateConnection(
 		if (!userRecord || userRecord.isDeleted) {
 			logger.debug(
 				{ connId: ctx.connId, userId: ctx.userId },
-				'WebSocket: user deleted, closing'
+				'WebSocket: user deleted, closing',
 			);
 			ws.close(1008, 'Account deleted');
 			return false;
@@ -65,7 +65,7 @@ function revalidateConnection(
 		if (userRecord.lockedUntil && userRecord.lockedUntil > new Date()) {
 			logger.debug(
 				{ connId: ctx.connId, userId: ctx.userId },
-				'WebSocket: user locked, closing'
+				'WebSocket: user locked, closing',
 			);
 			ws.close(1008, 'Account locked');
 			return false;
@@ -79,7 +79,7 @@ function revalidateConnection(
 	) {
 		logger.debug(
 			{ connId: ctx.connId, userId: ctx.userId },
-			'WebSocket: token revoked, closing'
+			'WebSocket: token revoked, closing',
 		);
 		ws.close(1008, 'Token revoked');
 		return false;

@@ -60,13 +60,13 @@ interface RegisterContext {
 
 function checkRegistrationPrerequisites(
 	{ request, set }: Pick<RegisterContext, 'request' | 'set'>,
-	authSettings: ReturnType<typeof getAuthSettings>
+	authSettings: ReturnType<typeof getAuthSettings>,
 ) {
 	if (!authSettings.selfRegistrationEnabled) {
 		set.status = HTTP_STATUS.FORBIDDEN;
 		return forbiddenError(
 			'Self-registration is currently disabled',
-			AUTH_ERROR_CODES.AUTH_REGISTRATION_DISABLED
+			AUTH_ERROR_CODES.AUTH_REGISTRATION_DISABLED,
 		);
 	}
 
@@ -77,14 +77,14 @@ function checkRegistrationPrerequisites(
 			registrationStore,
 			`register-ip:${ip}`,
 			REGISTRATION_RATE_LIMIT_MAX_REQUESTS,
-			REGISTRATION_RATE_LIMIT_WINDOW_MS
+			REGISTRATION_RATE_LIMIT_WINDOW_MS,
 		);
 		if (result.limited) {
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
 			set.headers['Retry-After'] = String(result.retryAfter ?? 0);
 			return rateLimitError(
 				result.retryAfter ?? 0,
-				RATE_ERROR_CODES.RATE_REGISTRATION_LIMIT_EXCEEDED
+				RATE_ERROR_CODES.RATE_REGISTRATION_LIMIT_EXCEEDED,
 			);
 		}
 	}
@@ -95,7 +95,7 @@ function checkRegistrationPrerequisites(
 function validateRegistrationInput(
 	body: RegisterBody,
 	set: RegisterContext['set'],
-	authSettings: ReturnType<typeof getAuthSettings>
+	authSettings: ReturnType<typeof getAuthSettings>,
 ) {
 	const passwordError = validatePasswordStrength(body.password, {
 		requireSpecialCharacter: authSettings.requireSpecialCharacter,
@@ -146,7 +146,7 @@ async function handleRegister({ body, request, set }: RegisterContext) {
 			// Compensate: hard-delete the partially initialized user
 			logger.error(
 				{ err, userId: created.id },
-				'Post-registration setup failed, rolling back user creation'
+				'Post-registration setup failed, rolling back user creation',
 			);
 			hardDeleteUserForRollback(created.id);
 			throw err;
@@ -262,7 +262,7 @@ const authRegisterRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/au
 				},
 				summary: 'Check if self-registration is enabled',
 			},
-		}
+		},
 	);
 
 export { authRegisterRoutes };

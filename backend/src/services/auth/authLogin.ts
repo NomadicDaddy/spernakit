@@ -122,7 +122,7 @@ function recordFailedLogin(user: UserRow): LoginFailure {
 
 		if (lock) {
 			const lockout = new Date(
-				Date.now() + authSettings.lockoutDurationMinutes * MS_PER_MINUTE
+				Date.now() + authSettings.lockoutDurationMinutes * MS_PER_MINUTE,
 			);
 			tx.update(users).set({ lockedUntil: lockout }).where(eq(users.id, user.id)).run();
 		}
@@ -184,7 +184,7 @@ function recordSuccessfulLogin(userId: number, ip: string): void {
 async function login(
 	usernameOrEmail: string,
 	password: string,
-	ip: string
+	ip: string,
 ): Promise<LoginResponse> {
 	const db = getDb();
 
@@ -194,7 +194,7 @@ async function login(
 		.where(
 			usernameOrEmail.includes('@')
 				? eq(users.email, usernameOrEmail)
-				: eq(users.username, usernameOrEmail)
+				: eq(users.username, usernameOrEmail),
 		)
 		.get();
 

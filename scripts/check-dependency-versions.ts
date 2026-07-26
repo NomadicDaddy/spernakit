@@ -110,7 +110,7 @@ function checkDependencyVersions(target: PackageTarget): boolean {
 	const invalid = Object.entries(specs).filter(([, spec]) => !isAllowedSpec(spec));
 	if (invalid.length > 0) {
 		console.error(
-			`❌ ${target.name}: Found ${invalid.length} non-exact dependency spec(s) (exact versions or workspace:* required):`
+			`❌ ${target.name}: Found ${invalid.length} non-exact dependency spec(s) (exact versions or workspace:* required):`,
 		);
 		invalid.forEach(([name, spec]) => console.error(`   - ${name}: ${spec}`));
 		ok = false;

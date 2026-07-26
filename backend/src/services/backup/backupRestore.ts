@@ -50,7 +50,7 @@ function invalidateAllUserSessions(): string[] {
 		logger.error({ err }, 'Failed to invalidate sessions after restore');
 		warnings.push(
 			'Session invalidation failed - active sessions may use stale data. ' +
-				'Restart the server to force all users to re-authenticate.'
+				'Restart the server to force all users to re-authenticate.',
 		);
 	}
 	return warnings;
@@ -78,7 +78,7 @@ function reopenDatabase(dbPath: string): void {
  */
 async function attemptRollbackToEmergency(
 	dbPath: string,
-	emergencyBackupPath: string
+	emergencyBackupPath: string,
 ): Promise<void> {
 	try {
 		// Close any connection opened since the restore attempt before touching the file
@@ -90,7 +90,7 @@ async function attemptRollbackToEmergency(
 	} catch (err) {
 		logger.error(
 			{ error: err },
-			'Failed to roll back after restore failure - manual recovery may be needed'
+			'Failed to roll back after restore failure - manual recovery may be needed',
 		);
 	}
 }
@@ -98,7 +98,7 @@ async function attemptRollbackToEmergency(
 async function performRestore(
 	backupPath: string,
 	startTime: number,
-	dbPath: string
+	dbPath: string,
 ): Promise<RestoreResult> {
 	const pathValidation = validateBackupPath(backupPath);
 	if (!pathValidation.valid) {
@@ -138,13 +138,13 @@ async function performRestore(
 		if (!restoredIntegrity.healthy) {
 			logger.error(
 				{ integrityMessage: restoredIntegrity.message, rolledBack: !!emergencyBackupPath },
-				'Restored database integrity check failed'
+				'Restored database integrity check failed',
 			);
 			// Rollback (with proper connection close/reopen) happens in the catch below
 			throw new Error(
 				emergencyBackupPath
 					? 'Restored database integrity check failed, rolled back'
-					: 'Restored database integrity check failed'
+					: 'Restored database integrity check failed',
 			);
 		}
 
@@ -189,7 +189,7 @@ async function performRestore(
 async function restoreFromBackup(
 	backupPath: string,
 	getDatabasePath: () => string,
-	isBackupRunningRef: { value: boolean }
+	isBackupRunningRef: { value: boolean },
 ): Promise<RestoreResult> {
 	const startTime = performance.now();
 
@@ -197,7 +197,7 @@ async function restoreFromBackup(
 		return buildRestoreFailure(
 			startTime,
 			backupPath,
-			'A backup operation is already in progress'
+			'A backup operation is already in progress',
 		);
 	}
 

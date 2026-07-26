@@ -22,7 +22,7 @@ export async function visitRoute(
 	state: CrawlerState,
 	rootDir: string,
 	url: string,
-	recycle: () => Promise<boolean>
+	recycle: () => Promise<boolean>,
 ): Promise<void> {
 	if (!session.page) return;
 
@@ -107,7 +107,7 @@ export async function visitRoute(
 		const elements = await getInteractiveElements(session.page);
 		const testableCount = elements.filter((e) => e.type !== 'link').length;
 		console.log(
-			`   Found ${elements.length} elements (${testableCount} testable, ${elements.length - testableCount} links)`
+			`   Found ${elements.length} elements (${testableCount} testable, ${elements.length - testableCount} links)`,
 		);
 
 		await testInteractiveElements(session.page, results, opts, elements, finalUrl);
@@ -141,7 +141,7 @@ async function isPageDegraded(session: CrawlSession): Promise<boolean> {
 async function navigateWithRetry(
 	session: CrawlSession,
 	opts: CrawlerOpts,
-	url: string
+	url: string,
 ): Promise<void> {
 	if (!session.page) return;
 	try {

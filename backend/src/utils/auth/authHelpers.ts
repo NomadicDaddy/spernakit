@@ -45,7 +45,7 @@ export function storeRefreshTokenHash(userId: number, refreshToken: string): voi
 export function rotateRefreshTokenHash(
 	userId: number,
 	expectedOldHash: string,
-	newRefreshToken: string
+	newRefreshToken: string,
 ): boolean {
 	const db = getDb();
 	const rows = db
@@ -113,7 +113,7 @@ export function buildCookieHeader(
 	value: string,
 	maxAge: number,
 	request?: RequestWithHeaders,
-	cookiePath = '/'
+	cookiePath = '/',
 ): string {
 	const secure = isSecureCookie(request) ? '; Secure' : '';
 	return `${name}=${encodeURIComponent(value)}; HttpOnly; SameSite=Strict; Path=${cookiePath}; Max-Age=${Math.floor(maxAge / 1000)}${secure}`;
@@ -132,7 +132,7 @@ export function buildCookieHeader(
 export function buildClearCookieHeader(
 	name: string,
 	request?: RequestWithHeaders,
-	cookiePath = '/'
+	cookiePath = '/',
 ): string {
 	const secure = isSecureCookie(request) ? '; Secure' : '';
 	return `${name}=; HttpOnly; SameSite=Strict; Path=${cookiePath}; Max-Age=0${secure}`;
@@ -170,7 +170,7 @@ export function setAuthCookies(
 	set: SetWithHeaders,
 	config: SecurityConfig,
 	tokens: TokenPair,
-	request?: RequestWithHeaders
+	request?: RequestWithHeaders,
 ): void {
 	const appConfig = getConfig();
 	const refreshMaxAgeMs = parseDurationMs(appConfig.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY);
@@ -181,7 +181,7 @@ export function setAuthCookies(
 			tokens.refreshToken,
 			refreshMaxAgeMs,
 			request,
-			REFRESH_COOKIE_PATH
+			REFRESH_COOKIE_PATH,
 		),
 	]);
 }
@@ -196,7 +196,7 @@ export function setAuthCookies(
 export function clearAuthCookies(
 	set: SetWithHeaders,
 	config: SecurityConfig,
-	request?: RequestWithHeaders
+	request?: RequestWithHeaders,
 ): void {
 	setMultipleCookies(set, [
 		buildClearCookieHeader(config.authCookieName, request),

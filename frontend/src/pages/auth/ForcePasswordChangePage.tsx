@@ -82,7 +82,7 @@ function ForcePasswordChangePage() {
 				return { error: message };
 			}
 		},
-		{ error: null }
+		{ error: null },
 	);
 
 	if (!isAuthenticated) {
@@ -151,7 +151,7 @@ function ForcePasswordChangePage() {
 							{state.error && !isPending && (
 								<p
 									aria-live="polite"
-									className="text-destructive text-center text-sm"
+									className="text-center text-sm text-destructive"
 									role="alert">
 									{state.error}
 								</p>

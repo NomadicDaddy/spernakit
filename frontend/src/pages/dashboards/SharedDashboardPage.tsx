@@ -50,7 +50,7 @@ function SharedDashboardPage() {
 		return (
 			<div className="flex flex-col items-center justify-center p-12">
 				<h2 className="text-lg font-semibold">Unable to load shared dashboard</h2>
-				<p className="text-muted-foreground mt-2 text-sm">
+				<p className="mt-2 text-sm text-muted-foreground">
 					{error instanceof ApiError
 						? `Error ${error.status}`
 						: 'An unexpected error occurred'}

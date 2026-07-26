@@ -24,20 +24,20 @@ function MetricsSummary({
 			) : (
 				<>
 					<StatCard
-						icon={<Users aria-hidden="true" className="text-muted-foreground size-5" />}
+						icon={<Users aria-hidden="true" className="size-5 text-muted-foreground" />}
 						index={0}
 						title="Total Users"
 						value={data?.totalUsers ?? 0}
 					/>
 					<StatCard
-						icon={<Bell aria-hidden="true" className="text-muted-foreground size-5" />}
+						icon={<Bell aria-hidden="true" className="size-5 text-muted-foreground" />}
 						index={1}
 						title="Unread Notifications"
 						value={data?.unreadNotifications ?? 0}
 					/>
 					<StatCard
 						icon={
-							<Shield aria-hidden="true" className="text-muted-foreground size-5" />
+							<Shield aria-hidden="true" className="size-5 text-muted-foreground" />
 						}
 						index={2}
 						title="System Health"
@@ -45,7 +45,7 @@ function MetricsSummary({
 					/>
 					<StatCard
 						icon={
-							<Activity aria-hidden="true" className="text-muted-foreground size-5" />
+							<Activity aria-hidden="true" className="size-5 text-muted-foreground" />
 						}
 						index={3}
 						title="Audit Events"

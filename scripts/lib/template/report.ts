@@ -19,7 +19,7 @@ function printCategoryCounts(
 	heading: string,
 	items: FileResult[],
 	identicalLabel: string,
-	driftedLabel: string
+	driftedLabel: string,
 ): void {
 	const checked = items.filter((r) => r.status !== 'missing-in-template').length;
 	console.log(`   ${heading} (${checked} checked)`);
@@ -44,7 +44,7 @@ function printFileList(results: FileResult[], label: (r: FileResult) => string):
 export function printReport(
 	results: FileResult[],
 	version: string,
-	options: { brandedAdvisory?: boolean } = {}
+	options: { brandedAdvisory?: boolean } = {},
 ): number {
 	// Scaffold-time runs (init.ps1 sets DRIFT_BRANDED_ADVISORY=1) treat branded
 	// drift as advisory: init's own transforms (dependency refresh, version reset,
@@ -66,7 +66,7 @@ export function printReport(
 		'Infrastructure Files',
 		infra,
 		'match baseline',
-		'have domain customizations'
+		'have domain customizations',
 	);
 	// Security-infrastructure files (auth routes, security config, create-api-app).
 	// Unlike advisory infrastructure drift, drift or removal here FAILS the gate.
@@ -74,7 +74,7 @@ export function printReport(
 		'Security-Infrastructure Files',
 		security,
 		'match baseline',
-		'drifted (failing)'
+		'drifted (failing)',
 	);
 
 	// Detail sections
@@ -83,7 +83,7 @@ export function printReport(
 			r.status === 'drifted' &&
 			r.category !== 'infrastructure' &&
 			r.category !== 'security-infrastructure' &&
-			!(brandedAdvisory && r.category === 'branded')
+			!(brandedAdvisory && r.category === 'branded'),
 	);
 	const brandedAdvisoryFiles = brandedAdvisory
 		? branded.filter((r) => r.status === 'drifted')
@@ -98,7 +98,7 @@ export function printReport(
 		printFileList(drifted, (r) =>
 			r.category === 'pure'
 				? `${r.category} — should match template`
-				: `${r.category} — differs beyond branding`
+				: `${r.category} — differs beyond branding`,
 		);
 		console.log('');
 	}
@@ -110,11 +110,11 @@ export function printReport(
 	// 'suppressed', not as failures).
 	if (securityDriftedFiles.length > 0 || securityMissingFiles.length > 0) {
 		console.log(
-			`   SECURITY DRIFT (${securityDriftedFiles.length + securityMissingFiles.length} file(s), FAILING):`
+			`   SECURITY DRIFT (${securityDriftedFiles.length + securityMissingFiles.length} file(s), FAILING):`,
 		);
 		printFileList(
 			securityDriftedFiles,
-			() => 'security-infrastructure — differs from baseline'
+			() => 'security-infrastructure — differs from baseline',
 		);
 		printFileList(securityMissingFiles, () => 'security-infrastructure — missing in app');
 		console.log('     Restore the template baseline, or acknowledge an intentional');
@@ -124,7 +124,7 @@ export function printReport(
 
 	if (brandedAdvisoryFiles.length > 0) {
 		console.log(
-			`   WARNING: Branded drift (${brandedAdvisoryFiles.length} file(s), advisory at scaffold time):`
+			`   WARNING: Branded drift (${brandedAdvisoryFiles.length} file(s), advisory at scaffold time):`,
 		);
 		printFileList(brandedAdvisoryFiles, () => 'branded — differs beyond branding');
 		console.log('     Expected from init transforms (dependency refresh, version, ports).');
@@ -136,7 +136,7 @@ export function printReport(
 	// accidental divergence from the template baseline can be told apart.
 	if (infraDriftedFiles.length > 0) {
 		console.log(
-			`   WARNING: Infrastructure drift (${infraDriftedFiles.length} file(s), not failing):`
+			`   WARNING: Infrastructure drift (${infraDriftedFiles.length} file(s), not failing):`,
 		);
 		printFileList(infraDriftedFiles, () => 'infrastructure — differs from baseline');
 		console.log('     Review these when upgrading the template version.');

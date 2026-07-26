@@ -28,15 +28,15 @@ function TopBar() {
 	const visibleNavItems = appFeatures
 		? getVisibleNavItems(hasMinRole, appFeatures)
 		: navItems.filter(
-				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole))
+				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole)),
 			);
 
 	return (
-		<header className="bg-background sticky top-0 z-40 border-b">
+		<header className="sticky top-0 z-40 border-b bg-background">
 			<div
 				className={cn(
 					'flex h-14 items-center justify-between px-4',
-					containerWidth === 'centered' && 'mx-auto w-full max-w-7xl'
+					containerWidth === 'centered' && 'mx-auto w-full max-w-7xl',
 				)}>
 				{/* Left: hamburger (mobile) + app name + nav links */}
 				<div className="flex min-w-0 items-center gap-1">
@@ -55,7 +55,7 @@ function TopBar() {
 										'hover:bg-accent hover:text-accent-foreground',
 										isActive
 											? 'bg-accent text-accent-foreground'
-											: 'text-muted-foreground'
+											: 'text-muted-foreground',
 									)
 								}
 								key={item.to}

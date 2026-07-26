@@ -22,7 +22,7 @@ export function HealthStatusSection({ details, detailsLoading }: HealthStatusSec
 						<Activity aria-hidden="true" className="size-6" />
 						<div className="flex-1">
 							<p className="text-sm font-medium">Overall Status</p>
-							<p className="text-muted-foreground text-xs">{details.timestamp}</p>
+							<p className="text-xs text-muted-foreground">{details.timestamp}</p>
 						</div>
 						<Badge className={statusBadgeClassName(details.status)}>
 							{details.status}

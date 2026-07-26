@@ -13,7 +13,7 @@ import { AuthFooterLink } from '@/components/auth/AuthFooterLink';
 import { AuthFormError } from '@/components/auth/AuthFormError';
 import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { DemoAccountButtons } from '@/components/auth/DemoAccountButtons';
-import { OAuthProviderButtons, type OAuthProvider } from '@/components/auth/OAuthProviderButtons';
+import { type OAuthProvider, OAuthProviderButtons } from '@/components/auth/OAuthProviderButtons';
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
@@ -88,7 +88,7 @@ function LoginPage() {
 				return { error: message };
 			}
 		},
-		{ error: null }
+		{ error: null },
 	);
 
 	if (isAuthenticated) {
@@ -118,7 +118,7 @@ function LoginPage() {
 						<div className="flex items-center justify-between">
 							<Label htmlFor="password">Password</Label>
 							<Link
-								className="text-primary text-sm hover:underline"
+								className="text-sm text-primary hover:underline"
 								to="/forgot-password">
 								Forgot password?
 							</Link>

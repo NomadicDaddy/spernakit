@@ -19,7 +19,7 @@ function sleep(ms: number): Promise<void> {
 async function mapWithConcurrency<T, R>(
 	items: T[],
 	fn: (item: T) => Promise<R>,
-	concurrency = 5
+	concurrency = 5,
 ): Promise<PromiseSettledResult<R>[]> {
 	const results: PromiseSettledResult<R>[] = [];
 	for (let i = 0; i < items.length; i += concurrency) {

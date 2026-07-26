@@ -70,7 +70,7 @@ export function checkNoCommittedSecrets(repoRoot: string): void {
 		throw new Error(
 			`Committed secrets detected in tracked config files:\n  ${violations.join('\n  ')}\n` +
 				'  Secret values must use PRODUCTION_CHANGE_REQUIRED-* placeholders. ' +
-				'Actual secrets belong in gitignored config/{slug}.json or environment variables.'
+				'Actual secrets belong in gitignored config/{slug}.json or environment variables.',
 		);
 	}
 
@@ -86,7 +86,7 @@ export function checkNoEnvFiles(repoRoot: string): void {
 	const envFiles = fs.readdirSync(repoRoot).filter((name) => name.startsWith('.env'));
 	if (envFiles.length > 0) {
 		throw new Error(
-			`JSON-only config policy violation: found .env files in repository root: ${envFiles.join(', ')}. Use config/*.json instead.`
+			`JSON-only config policy violation: found .env files in repository root: ${envFiles.join(', ')}. Use config/*.json instead.`,
 		);
 	}
 	console.log('   No .env files found.');

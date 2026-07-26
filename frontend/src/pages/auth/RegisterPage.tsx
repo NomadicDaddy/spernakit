@@ -74,7 +74,7 @@ function validateRegisterForm(
 	email: string,
 	password: string,
 	confirmPassword: string,
-	requireSpecialCharacter: boolean
+	requireSpecialCharacter: boolean,
 ): FieldErrors {
 	const errors: FieldErrors = {};
 	const usernameError = validateUsername(username);
@@ -114,7 +114,7 @@ function RegisterPage() {
 				email,
 				password,
 				confirmPassword,
-				requireSpecialCharacter
+				requireSpecialCharacter,
 			);
 			if (Object.keys(fieldErrors).length > 0) {
 				return { error: null, fieldErrors };
@@ -130,7 +130,7 @@ function RegisterPage() {
 				return { error: message, fieldErrors: {} };
 			}
 		},
-		{ error: null, fieldErrors: {} }
+		{ error: null, fieldErrors: {} },
 	);
 
 	if (isAuthenticated) {
@@ -168,7 +168,7 @@ function RegisterPage() {
 							{...(fieldErrors.username ? { 'aria-invalid': true } : {})}
 						/>
 						{fieldErrors.username ? (
-							<p className="text-destructive text-sm" id="username-error">
+							<p className="text-sm text-destructive" id="username-error">
 								{fieldErrors.username}
 							</p>
 						) : null}
@@ -186,7 +186,7 @@ function RegisterPage() {
 							{...(fieldErrors.email ? { 'aria-invalid': true } : {})}
 						/>
 						{fieldErrors.email ? (
-							<p className="text-destructive text-sm" id="email-error">
+							<p className="text-sm text-destructive" id="email-error">
 								{fieldErrors.email}
 							</p>
 						) : null}
@@ -207,7 +207,7 @@ function RegisterPage() {
 							{...(fieldErrors.password ? { 'aria-invalid': true } : {})}
 						/>
 						{fieldErrors.password ? (
-							<p className="text-destructive text-sm" id="password-error">
+							<p className="text-sm text-destructive" id="password-error">
 								{fieldErrors.password}
 							</p>
 						) : null}
@@ -227,7 +227,7 @@ function RegisterPage() {
 							{...(fieldErrors.confirmPassword ? { 'aria-invalid': true } : {})}
 						/>
 						{fieldErrors.confirmPassword ? (
-							<p className="text-destructive text-sm" id="confirmPassword-error">
+							<p className="text-sm text-destructive" id="confirmPassword-error">
 								{fieldErrors.confirmPassword}
 							</p>
 						) : null}

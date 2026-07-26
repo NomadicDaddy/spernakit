@@ -48,7 +48,7 @@ const healthAlertsConfigRoutes = new Elysia({
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: acknowledgeAlertDocs,
 			params: HealthAlertIdSchema,
-		}
+		},
 	)
 	.post(
 		'/alerts/:id/resolve',
@@ -66,7 +66,7 @@ const healthAlertsConfigRoutes = new Elysia({
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: resolveAlertDocs,
 			params: HealthAlertIdSchema,
-		}
+		},
 	)
 	.get(
 		'/config',
@@ -76,7 +76,7 @@ const healthAlertsConfigRoutes = new Elysia({
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: getHealthConfigDocs,
-		}
+		},
 	)
 	.put(
 		'/config',
@@ -97,7 +97,7 @@ const healthAlertsConfigRoutes = new Elysia({
 				{
 					alertsEnabled: t.Optional(t.Boolean()),
 					alertThreshold: t.Optional(
-						t.Union([t.Literal('degraded'), t.Literal('unhealthy')])
+						t.Union([t.Literal('degraded'), t.Literal('unhealthy')]),
 					),
 					diskSpaceDegradedThreshold: t.Optional(t.Number({ maximum: 1, minimum: 0 })),
 					diskSpaceUnhealthyThreshold: t.Optional(t.Number({ maximum: 1, minimum: 0 })),
@@ -111,8 +111,8 @@ const healthAlertsConfigRoutes = new Elysia({
 									filesystem: true,
 									memory: true,
 								},
-							})
-						)
+							}),
+						),
 					),
 					logRetentionDays: t.Optional(t.Number({ maximum: 3650, minimum: 1 })),
 					memoryHeapDegradedThreshold: t.Optional(t.Number({ maximum: 1, minimum: 0 })),
@@ -120,10 +120,10 @@ const healthAlertsConfigRoutes = new Elysia({
 				},
 				{
 					description: 'Health check configuration updates',
-				}
+				},
 			),
 			detail: updateHealthConfigDocs,
-		}
+		},
 	)
 	.post(
 		'/alerts/cleanup',
@@ -134,7 +134,7 @@ const healthAlertsConfigRoutes = new Elysia({
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: cleanupAlertsDocs,
-		}
+		},
 	);
 
 export { healthAlertsConfigRoutes };

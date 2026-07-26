@@ -17,7 +17,7 @@ function normalizePath(filePath: string): string {
 async function collectFiles(
 	projectRoot: string,
 	globs: string[],
-	excludes: string[]
+	excludes: string[],
 ): Promise<string[]> {
 	const allFiles = new Set<string>();
 
@@ -51,7 +51,7 @@ async function collectFiles(
 export async function collectDirectories(
 	projectRoot: string,
 	globs: string[],
-	excludes: string[]
+	excludes: string[],
 ): Promise<string[]> {
 	const allDirectories = new Set<string>();
 
@@ -126,7 +126,7 @@ async function collectHiddenCandidates(projectRoot: string): Promise<string[]> {
 
 async function collectPrettierFiles(
 	projectRoot: string,
-	deps: StepDependencies
+	deps: StepDependencies,
 ): Promise<string[]> {
 	const { getFileInfo } = await import('prettier');
 	const candidates = [
@@ -157,7 +157,7 @@ async function collectPrettierFiles(
 
 export async function collectDependencyFiles(
 	projectRoot: string,
-	deps: StepDependencies
+	deps: StepDependencies,
 ): Promise<string[]> {
 	if (deps.collector === 'prettier') {
 		return collectPrettierFiles(projectRoot, deps);

@@ -69,7 +69,7 @@ export class TestResults {
 		url: string,
 		success: boolean,
 		action: string = 'click',
-		error: null | string = null
+		error: null | string = null,
 	): void {
 		this.clickedElements.push({
 			action,
@@ -93,7 +93,7 @@ export class TestResults {
 		const duration = Date.now() - this.startTime;
 		const failedClicks = this.clickedElements.filter((el) => !el.success).length;
 		const contentFailures = this.contentAssertions.filter(
-			(a) => a.isErrorPage || a.is404Page || !a.hasContent
+			(a) => a.isErrorPage || a.is404Page || !a.hasContent,
 		).length;
 
 		const success =

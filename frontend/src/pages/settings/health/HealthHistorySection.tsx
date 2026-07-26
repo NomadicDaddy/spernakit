@@ -43,16 +43,16 @@ export function HealthHistorySection({ historyData, historyLoading }: HealthHist
 									<Badge
 										className={cn(
 											statusBadgeClassName(historyEntry.status),
-											'text-xs'
+											'text-xs',
 										)}>
 										{historyEntry.status}
 									</Badge>
-									<span className="text-muted-foreground text-xs">
+									<span className="text-xs text-muted-foreground">
 										{historyEntry.durationMs !== null
 											? `${historyEntry.durationMs}ms`
 											: '-'}
 									</span>
-									<span className="text-muted-foreground ml-auto text-xs">
+									<span className="ml-auto text-xs text-muted-foreground">
 										{formatDateTime(historyEntry.createdAt)}
 									</span>
 								</div>
@@ -60,7 +60,7 @@ export function HealthHistorySection({ historyData, historyLoading }: HealthHist
 						})}
 					</div>
 				) : (
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						No health check history yet. Click Refresh to run checks.
 					</p>
 				)}

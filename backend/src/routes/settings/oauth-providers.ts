@@ -7,8 +7,8 @@ import { authPlugin } from '../../plugins/auth.ts';
 import { log as logAudit } from '../../services/auditService.ts';
 import {
 	getOAuthProviderSettingsAsync,
-	updateOAuthProviderSettings,
 	type OAuthProviderName,
+	updateOAuthProviderSettings,
 } from '../../services/oauthService.ts';
 import { dataResponse, successResponse } from '../../utils/apiResponse.ts';
 
@@ -78,7 +78,7 @@ const settingsOAuthProvidersRoutes = new Elysia({
 					'returned as last-4 characters only. Requires SYSOP role.',
 				summary: 'Get OAuth provider settings (SYSOP)',
 			},
-		}
+		},
 	)
 	.patch(
 		'/oauth-providers/:provider',
@@ -116,7 +116,7 @@ const settingsOAuthProvidersRoutes = new Elysia({
 				summary: 'Update OAuth provider settings (SYSOP)',
 			},
 			params: providerParam,
-		}
+		},
 	)
 	.post('/oauth-providers/:provider/test', handleOAuthProviderTest, {
 		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),

@@ -6,7 +6,7 @@ function fillDemoCredentials(
 	usernameInput: HTMLInputElement,
 	passwordInput: HTMLInputElement,
 	username: string,
-	password: string
+	password: string,
 ): void {
 	const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 	// eslint-disable-next-line @typescript-eslint/unbound-method

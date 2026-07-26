@@ -7,7 +7,7 @@ type AlertChannel = 'email' | 'in-app' | 'webhook';
 function recordAttemptResults(
 	results: AlertNotificationResult[],
 	allResults: Map<AlertChannel, AlertNotificationResult>,
-	succeededChannels: Set<AlertChannel>
+	succeededChannels: Set<AlertChannel>,
 ): AlertNotificationResult[] {
 	for (const result of results) {
 		allResults.set(result.channel, result);
@@ -32,7 +32,7 @@ function logRetryScheduled(
 	attempt: number,
 	maxRetries: number,
 	failedChannels: AlertChannel[],
-	delayMs: number
+	delayMs: number,
 ): void {
 	logger.warn(
 		{
@@ -42,14 +42,14 @@ function logRetryScheduled(
 			maxRetries,
 			nextRetryIn: delayMs,
 		},
-		'Alert notification failed, will retry'
+		'Alert notification failed, will retry',
 	);
 }
 
 function logFinalFailure(
 	alertId: number,
 	maxRetries: number,
-	failedChannels: AlertChannel[]
+	failedChannels: AlertChannel[],
 ): void {
 	logger.error(
 		{
@@ -57,7 +57,7 @@ function logFinalFailure(
 			failedChannels,
 			maxRetries,
 		},
-		'Alert notifications failed after all retries'
+		'Alert notifications failed after all retries',
 	);
 }
 

@@ -68,7 +68,7 @@ function failExecution(id: number, error: string, startedAt: Date): number {
  * @returns Execution result with duration, error, and status
  */
 async function executeTask(
-	taskName: string
+	taskName: string,
 ): Promise<{ durationMs: number; error: null | string; status: string }> {
 	const task = tasks.get(taskName);
 	if (!task) {
@@ -98,7 +98,7 @@ async function executeTask(
  * @returns Execution result
  */
 async function triggerTask(
-	taskName: string
+	taskName: string,
 ): Promise<{ durationMs: number; error: null | string; status: string }> {
 	const result = await executeTask(taskName);
 
@@ -125,7 +125,7 @@ async function triggerTask(
  */
 function getTaskHistory(
 	taskName: string,
-	limitCount = 20
+	limitCount = 20,
 ): {
 	completedAt: null | string;
 	createdAt: string;

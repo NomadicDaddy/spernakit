@@ -46,7 +46,7 @@ export function UserActivitySection({ days }: UserActivitySectionProps) {
 		<>
 			<div className="mt-6">
 				<h2 className="text-lg font-semibold">User Activity</h2>
-				<p className="text-muted-foreground mt-1 text-sm">
+				<p className="mt-1 text-sm text-muted-foreground">
 					Per-user activity metrics (ADMIN)
 				</p>
 			</div>
@@ -79,7 +79,7 @@ export function UserActivitySection({ days }: UserActivitySectionProps) {
 							icon={
 								<Activity
 									aria-hidden="true"
-									className="text-muted-foreground size-5"
+									className="size-5 text-muted-foreground"
 								/>
 							}
 							title="Total Events"
@@ -102,7 +102,7 @@ export function UserActivitySection({ days }: UserActivitySectionProps) {
 										</div>
 									))}
 									{activityData.byCategory.length === 0 && (
-										<p className="text-muted-foreground text-sm">
+										<p className="text-sm text-muted-foreground">
 											No categories
 										</p>
 									)}
@@ -131,7 +131,7 @@ export function UserActivitySection({ days }: UserActivitySectionProps) {
 									</div>
 								))}
 								{activityData.recentEvents.length === 0 && (
-									<p className="text-muted-foreground text-center">
+									<p className="text-center text-muted-foreground">
 										No recent events
 									</p>
 								)}

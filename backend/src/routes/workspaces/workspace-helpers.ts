@@ -37,7 +37,7 @@ function checkRoleAssignment(
 	authUser: AuthPayload,
 	workspaceId: number,
 	targetRole: WorkspaceMemberRole,
-	set: SetWithStatus
+	set: SetWithStatus,
 ): null | ReturnType<typeof forbiddenError> {
 	if (isSysop(authUser)) return null;
 	const wsRole = getWorkspaceMemberRole(authUser.id, workspaceId);
@@ -56,7 +56,7 @@ function checkTargetModifiable(
 	authUser: AuthPayload,
 	workspaceId: number,
 	targetUserId: number,
-	set: SetWithStatus
+	set: SetWithStatus,
 ): null | ReturnType<typeof forbiddenError> | ReturnType<typeof notFoundError> {
 	if (isSysop(authUser)) return null;
 	const wsRole = getWorkspaceMemberRole(authUser.id, workspaceId);
@@ -77,7 +77,7 @@ function checkTargetModifiable(
  */
 function validateBatchSize(
 	count: number,
-	set: SetWithStatus
+	set: SetWithStatus,
 ): null | ReturnType<typeof badRequestError> {
 	if (count > MAX_BATCH_SIZE) {
 		set.status = HTTP_STATUS.BAD_REQUEST;
@@ -94,7 +94,7 @@ function validateBatchSize(
 function requireMembershipOrSysop(
 	authUser: AuthPayload,
 	workspaceId: number,
-	set: SetWithStatus
+	set: SetWithStatus,
 ):
 	| { error: null; role: undefined | WorkspaceMemberRole }
 	| { error: ReturnType<typeof forbiddenError>; role: undefined } {
@@ -114,7 +114,7 @@ function requireMembershipOrSysop(
 function requireWorkspaceAdmin(
 	user: AuthPayload | null,
 	workspaceId: number,
-	set: SetWithStatus
+	set: SetWithStatus,
 ): { authUser: AuthPayload; ok: true } | { error: unknown; ok: false } {
 	const authUser = assertUser(user);
 	const guard = requireWorkspaceRole({ set, user: authUser, workspaceId }, 'ADMIN');
@@ -128,6 +128,6 @@ export {
 	findWorkspaceOrThrow,
 	requireMembershipOrSysop,
 	requireWorkspaceAdmin,
-	validateBatchSize,
 	type SetWithStatus,
+	validateBatchSize,
 };

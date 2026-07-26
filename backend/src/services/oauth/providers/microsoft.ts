@@ -1,4 +1,4 @@
-import type { TokenExchangeParams, TokenExchangeResult, ProfileParseResult } from './types.ts';
+import type { ProfileParseResult, TokenExchangeParams, TokenExchangeResult } from './types.ts';
 
 import { buildTokenExchangeBody, fetchProfileData, performTokenExchange, str } from './types.ts';
 
@@ -14,7 +14,7 @@ export interface MicrosoftTokenParams extends TokenExchangeParams {
 }
 
 export async function exchangeMicrosoftCode(
-	params: MicrosoftTokenParams
+	params: MicrosoftTokenParams,
 ): Promise<TokenExchangeResult> {
 	const body = buildTokenExchangeBody(params, { scope: 'openid email profile' });
 	return performTokenExchange(getTokenUrl(params.tenantId), body, 'microsoft');

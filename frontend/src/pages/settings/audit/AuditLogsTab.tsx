@@ -41,7 +41,7 @@ function AuditLogsTab() {
 		<div className="space-y-6">
 			<div>
 				<h2 className="text-lg font-semibold">Audit Logs</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					View and search system activity logs.
 				</p>
 			</div>
@@ -51,7 +51,7 @@ function AuditLogsTab() {
 				<div className="relative max-w-sm flex-1">
 					<Search
 						aria-hidden="true"
-						className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2"
+						className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
 					/>
 					<Input
 						aria-label="Search audit logs"
@@ -100,14 +100,14 @@ function AuditLogsTab() {
 
 					{/* Expanded details row */}
 					{expandedRow !== null && (
-						<div className="bg-muted rounded-md border p-4">
+						<div className="rounded-md border bg-muted p-4">
 							<p className="mb-2 text-sm font-medium">Details</p>
-							<pre className="text-muted-foreground overflow-x-auto text-xs">
+							<pre className="overflow-x-auto text-xs text-muted-foreground">
 								{JSON.stringify(
 									data?.data.find((d) => d.id === expandedRow)?.details ??
 										'No details available',
 									null,
-									2
+									2,
 								)}
 							</pre>
 						</div>

@@ -68,13 +68,13 @@ function loadJson(path: string): Record<string, unknown> {
 	} catch (err) {
 		throw new Error(
 			`Failed to parse config at ${path}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }
 
 function parseSchemaIssues(
-	parseResult: ReturnType<typeof appConfigSchema.safeParse>
+	parseResult: ReturnType<typeof appConfigSchema.safeParse>,
 ): SchemaIssue[] {
 	if (parseResult.success) return [];
 	return parseResult.error.issues.map((issue) => ({
@@ -238,11 +238,11 @@ function main(): void {
 				JSON.stringify({
 					error: err instanceof Error ? err.message : String(err),
 					status: 'fail',
-				})
+				}),
 			);
 		} else {
 			console.error(
-				`Config validation error: ${err instanceof Error ? err.message : String(err)}`
+				`Config validation error: ${err instanceof Error ? err.message : String(err)}`,
 			);
 		}
 		process.exit(1);

@@ -104,5 +104,5 @@ class SchemaValidator<T extends TObject> {
 	}
 }
 
-export { SchemaValidator, safeParse };
+export { safeParse, SchemaValidator };
 export type { SafeParseResult, SchemaIssue };

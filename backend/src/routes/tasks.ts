@@ -37,7 +37,7 @@ function handleUpdateTask({ body, params, set }: UpdateTaskContext) {
 			set.status = HTTP_STATUS.BAD_REQUEST;
 			return badRequestError(
 				`Invalid schedule expression: "${body.cronExpression}". ` +
-					'Expected format: "6h", "30m", "10s", "5000ms", or a raw millisecond number.'
+					'Expected format: "6h", "30m", "10s", "5000ms", or a raw millisecond number.',
 			);
 		}
 	}
@@ -79,7 +79,7 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: listTasksDocs,
-		}
+		},
 	)
 	.get(
 		'/:name/history',
@@ -92,7 +92,7 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 			params: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_-]*$' }),
 			}),
-		}
+		},
 	)
 	.post(
 		'/:name/trigger',
@@ -110,13 +110,13 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 			params: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_-]*$' }),
 			}),
-		}
+		},
 	)
 	.patch('/:name', handleUpdateTask, {
 		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			cronExpression: t.Optional(
-				t.String({ maxLength: 20, minLength: 1, pattern: '^\\d+(ms|[dhms])$' })
+				t.String({ maxLength: 20, minLength: 1, pattern: '^\\d+(ms|[dhms])$' }),
 			),
 			enabled: t.Optional(t.Boolean()),
 		}),

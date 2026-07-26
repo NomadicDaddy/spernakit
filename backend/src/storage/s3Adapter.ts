@@ -51,7 +51,7 @@ class S3StorageAdapter implements StorageAdapter {
 
 		if (!accessKeyId || !secretAccessKey || !bucket || !region) {
 			throw new Error(
-				'S3 storage adapter requires accessKeyId, secretAccessKey, bucket, and region in config.storage.s3'
+				'S3 storage adapter requires accessKeyId, secretAccessKey, bucket, and region in config.storage.s3',
 			);
 		}
 

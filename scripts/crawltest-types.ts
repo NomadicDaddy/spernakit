@@ -237,7 +237,7 @@ export async function waitForContent(page: Page, settleDelay: number): Promise<v
 					document.querySelector('[class*="skeleton"], [class*="Skeleton"]') !== null;
 				return len > 10 && !hasSkeletons;
 			},
-			{ timeout: 5000 }
+			{ timeout: 5000 },
 		);
 	} catch {
 		// Timeout is acceptable — page may genuinely have sparse content

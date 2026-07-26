@@ -104,8 +104,8 @@ function UsersTab() {
 			/>
 
 			{isAdmin() && selectedRows.length > 0 && (
-				<div className="bg-muted flex items-center gap-2 rounded-md px-4 py-2">
-					<span className="text-muted-foreground text-sm">
+				<div className="flex items-center gap-2 rounded-md bg-muted px-4 py-2">
+					<span className="text-sm text-muted-foreground">
 						{selectedRows.length} selected
 					</span>
 					<Button
@@ -167,7 +167,7 @@ function UsersTab() {
 				onUpdate={(id, input) =>
 					updateMutation.mutate(
 						{ id, input: input },
-						{ onSuccess: () => setDialog(null) }
+						{ onSuccess: () => setDialog(null) },
 					)
 				}
 				user={dialog?.type === 'edit' ? dialog.user : null}

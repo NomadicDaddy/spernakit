@@ -177,7 +177,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 							placeholder={copy.placeholder}
 							value={description}
 						/>
-						<p className="text-muted-foreground text-xs">Press Ctrl+Enter to submit</p>
+						<p className="text-xs text-muted-foreground">Press Ctrl+Enter to submit</p>
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="bug-email">Email (optional)</Label>
@@ -189,13 +189,13 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 							type="email"
 							value={email}
 						/>
-						<p className="text-muted-foreground text-xs">
+						<p className="text-xs text-muted-foreground">
 							Provide email if you’d like follow-up on this{' '}
 							{kind === 'bug' ? 'issue' : 'request'}
 						</p>
 					</div>
-					<div className="bg-muted/50 rounded-md p-3">
-						<p className="text-muted-foreground text-xs">
+					<div className="rounded-md bg-muted/50 p-3">
+						<p className="text-xs text-muted-foreground">
 							<span className="font-medium">Auto-captured:</span> URL, browser info,
 							screen size, timezone, theme
 						</p>

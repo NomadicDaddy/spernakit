@@ -56,7 +56,7 @@ function createEmergencyBackup(dbPath: string): null | string {
 	} catch (err) {
 		logger.warn(
 			{ emergencyBackupPath, err },
-			'backupDatabaseTo failed during emergency-backup creation - falling back to copyFileSync'
+			'backupDatabaseTo failed during emergency-backup creation - falling back to copyFileSync',
 		);
 		// Fall back to file copy if VACUUM INTO fails (e.g., PostgreSQL dialect)
 		copyFileSync(dbPath, emergencyBackupPath);
@@ -97,7 +97,7 @@ function rollbackFromEmergency(dbPath: string, emergencyBackupPath: null | strin
  * @returns Raw SQLite path, temp files to clean up, and optional error
  */
 async function prepareForRestore(
-	backupPath: string
+	backupPath: string,
 ): Promise<{ error?: string; rawPath: string; tempFiles: string[] }> {
 	const tempFiles: string[] = [];
 	let currentPath = resolve(backupPath);
@@ -143,7 +143,7 @@ function buildRestoreFailure(
 	startTime: number,
 	backupPath: string,
 	error: string,
-	emergencyBackupPath: null | string = null
+	emergencyBackupPath: null | string = null,
 ): RestoreResult {
 	return {
 		durationMs: Math.round(performance.now() - startTime),

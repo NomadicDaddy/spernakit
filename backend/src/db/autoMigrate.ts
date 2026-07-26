@@ -1,1 +1,1 @@
-export { getSchemaVersion, runAutoMigrations } from './migrate/runner.ts';
+export { runAutoMigrations } from './migrate/runner.ts';

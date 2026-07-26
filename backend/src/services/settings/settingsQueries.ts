@@ -100,7 +100,7 @@ function getByKeys(keys: string[]): Map<string, SettingRow> {
 		if (cached) {
 			settingsMap.set(
 				key,
-				cached.isEncrypted ? { ...cached, value: ENCRYPTED_PLACEHOLDER } : cached
+				cached.isEncrypted ? { ...cached, value: ENCRYPTED_PLACEHOLDER } : cached,
 			);
 		} else {
 			missingKeys.push(key);
@@ -120,7 +120,7 @@ function getByKeys(keys: string[]): Map<string, SettingRow> {
 			settingsCache.set(row.key, row);
 			settingsMap.set(
 				row.key,
-				row.isEncrypted ? { ...row, value: ENCRYPTED_PLACEHOLDER } : row
+				row.isEncrypted ? { ...row, value: ENCRYPTED_PLACEHOLDER } : row,
 			);
 		}
 	}

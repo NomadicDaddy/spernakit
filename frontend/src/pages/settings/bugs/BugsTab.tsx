@@ -98,7 +98,7 @@ function BugsTab() {
 		return (
 			<div className="space-y-4">
 				<h2 className="text-lg font-semibold">Bug Reports &amp; Feature Requests</h2>
-				<p className="text-muted-foreground text-sm">Loading submissions…</p>
+				<p className="text-sm text-muted-foreground">Loading submissions…</p>
 			</div>
 		);
 	}
@@ -107,7 +107,7 @@ function BugsTab() {
 		<div className="space-y-4">
 			<div>
 				<h2 className="text-lg font-semibold">Bug Reports &amp; Feature Requests</h2>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					View and manage bug reports and feature requests submitted by users.
 				</p>
 			</div>

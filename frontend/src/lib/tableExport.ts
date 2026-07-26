@@ -12,7 +12,7 @@ function stringifyValue(val: unknown): string {
 }
 
 /** Characters that trigger formula interpretation in spreadsheet applications. */
-const FORMULA_PREFIXES = new Set(['=', '+', '-', '@', '\t', '\r']);
+const FORMULA_PREFIXES = new Set(['\t', '\r', '-', '@', '+', '=']);
 
 /** Escape a CSV cell value, quoting if it contains commas, quotes, or newlines. */
 function escapeCsvCell(val: unknown): string {
@@ -38,7 +38,7 @@ function exportTableData(
 	rows: Record<string, unknown>[],
 	columns: string[],
 	name: string,
-	format: 'csv' | 'json'
+	format: 'csv' | 'json',
 ): void {
 	if (rows.length === 0) return;
 

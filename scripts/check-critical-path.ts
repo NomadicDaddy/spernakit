@@ -164,7 +164,7 @@ function checkBudget(totalBrotli: number, updateBudget: boolean): boolean {
 		writeFileSync(BUDGET_PATH, `${JSON.stringify(budget, null, '\t')}\n`);
 		log(
 			`\nBudget written to scripts/critical-path-budget.json (${kb(budget.maxCriticalPathBrotliBytes)}, +${Math.round((BUDGET_HEADROOM - 1) * 100)}% headroom)`,
-			'cyan'
+			'cyan',
 		);
 		return true;
 	}
@@ -179,17 +179,17 @@ function checkBudget(totalBrotli: number, updateBudget: boolean): boolean {
 	if (totalBrotli > budget.maxCriticalPathBrotliBytes) {
 		log(
 			`✗ Critical path ${kb(totalBrotli)} exceeds budget ${kb(budget.maxCriticalPathBrotliBytes)}`,
-			'red'
+			'red',
 		);
 		log(
 			'If the growth is intentional, regenerate: bun scripts/check-critical-path.ts --update-budget',
-			'yellow'
+			'yellow',
 		);
 		return false;
 	}
 	log(
 		`✓ Critical path ${kb(totalBrotli)} within budget ${kb(budget.maxCriticalPathBrotliBytes)}`,
-		'green'
+		'green',
 	);
 	return true;
 }
@@ -221,7 +221,7 @@ function main(): void {
 	}
 	log(
 		`\n${String(assets.length).padStart(2)} blocking assets   ${kb(totalBrotli)} br  (${kb(totalRaw)} raw)\n`,
-		'cyan'
+		'cyan',
 	);
 
 	const budgetOk = checkBudget(totalBrotli, updateBudget);
@@ -240,7 +240,7 @@ function main(): void {
 	if (!reactChunk) {
 		log(
 			'✗ Could not locate the React runtime in any chunk — update REACT_RUNTIME_MARKERS.',
-			'red'
+			'red',
 		);
 		runtimeOk = false;
 	} else if (!criticalNames.includes(reactChunk)) {
@@ -249,7 +249,7 @@ function main(): void {
 		log('  round trip on every page load. Check the codeSplitting groups in', 'yellow');
 		log(
 			'  frontend/vite.config.ts — react/react-dom must land in a preloaded chunk.',
-			'yellow'
+			'yellow',
 		);
 		runtimeOk = false;
 	} else {
@@ -265,7 +265,7 @@ function main(): void {
 			for (const dep of late) log(`    ${dep}`, 'red');
 			log(
 				'  A static import that is not preloaded is a serialized round trip: the',
-				'yellow'
+				'yellow',
 			);
 			log('  browser cannot request it until it has parsed the entry chunk.', 'yellow');
 			waterfallOk = false;

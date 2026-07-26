@@ -188,7 +188,7 @@ const workspaceCrudRoutes = new Elysia({
 				limit: t.Optional(t.Number({ maximum: MAX_PAGE_LIMIT, minimum: 1 })),
 				page: t.Optional(t.Number({ minimum: 1 })),
 			}),
-		}
+		},
 	)
 	// API-only: No frontend caller (list endpoint covers UI needs). Available for API-key consumers.
 	.get(
@@ -213,7 +213,7 @@ const workspaceCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: getWorkspaceByIdDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post('/', handleCreateWorkspace, {
 		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
@@ -235,12 +235,12 @@ const workspaceCrudRoutes = new Elysia({
 						t.Object({
 							accentColor: t.Optional(t.String({ maxLength: 7 })),
 							logoFileId: t.Optional(t.Integer()),
-						})
+						}),
 					),
 					currency: t.Optional(t.String({ maxLength: 10 })),
 					defaultDashboardId: t.Optional(t.Integer()),
 					timezone: t.Optional(t.String({ maxLength: 100 })),
-				})
+				}),
 			),
 		}),
 		detail: updateWorkspaceDocs,

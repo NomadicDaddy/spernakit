@@ -82,8 +82,8 @@ export function cleanupStaleAlerts(): { batches: number; cleaned: number } {
 				.where(
 					and(
 						isNull(healthCheckAlerts.resolvedAt),
-						lt(healthCheckAlerts.createdAt, cutoff)
-					)
+						lt(healthCheckAlerts.createdAt, cutoff),
+					),
 				)
 				.limit(MAX_CLEANUP_BATCH_SIZE)
 				.all()

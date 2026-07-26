@@ -1,6 +1,6 @@
 'use no memo';
 
-import { type Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
+import { useVirtualizer, type Virtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,10 +42,10 @@ function SqlResultsTable({ columns, rowCount, rows }: SqlResultsTableProps) {
 					style={shouldVirtualize ? { maxHeight: 600 } : undefined}>
 					<table className="w-full text-sm">
 						<thead className={shouldVirtualize ? 'sticky top-0 z-10' : undefined}>
-							<tr className="bg-card border-b">
+							<tr className="border-b bg-card">
 								{columns.map((col) => (
 									<th
-										className="text-muted-foreground px-3 py-2 text-left font-medium whitespace-nowrap"
+										className="px-3 py-2 text-left font-medium whitespace-nowrap text-muted-foreground"
 										key={col}>
 										{col}
 									</th>
@@ -144,7 +144,7 @@ function StaticTableBody({ columns, rows }: StaticTableBodyProps) {
 			{rows.length === 0 && (
 				<tr>
 					<td
-						className="text-muted-foreground py-8 text-center"
+						className="py-8 text-center text-muted-foreground"
 						colSpan={columns.length || 1}>
 						No results
 					</td>

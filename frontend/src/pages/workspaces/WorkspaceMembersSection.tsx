@@ -80,10 +80,10 @@ function WorkspaceMembersSection({
 				onBulkAddMembers: withWorkspaceId(
 					selectedWorkspace,
 					(id, list: { role: string; userId: number }[]) =>
-						memberHooks.bulkAddMembers({ members: list, workspaceId: id })
+						memberHooks.bulkAddMembers({ members: list, workspaceId: id }),
 				),
 				onBulkRemoveMembers: withWorkspaceId(selectedWorkspace, (id, userIds: number[]) =>
-					memberHooks.bulkRemoveMembers({ userIds, workspaceId: id })
+					memberHooks.bulkRemoveMembers({ userIds, workspaceId: id }),
 				),
 				onRemoveMember: withWorkspaceId(selectedWorkspace, (id, userId: number) => {
 					setRemoveMemberTarget({ userId, workspaceId: id });
@@ -91,7 +91,7 @@ function WorkspaceMembersSection({
 				onUpdateMemberRole: withWorkspaceId(
 					selectedWorkspace,
 					(id, userId: number, role: string) =>
-						memberHooks.updateMemberRole({ role, userId, workspaceId: id })
+						memberHooks.updateMemberRole({ role, userId, workspaceId: id }),
 				),
 			}}
 		/>

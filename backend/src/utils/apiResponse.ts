@@ -93,7 +93,7 @@ function paginatedResponse<T>(result: PaginatedResponse<T>): PaginatedResponse<T
 function paginatedResponse<T, U>(result: PaginatedResponse<T>, data: U[]): PaginatedResponse<U>;
 function paginatedResponse<T, U>(
 	result: PaginatedResponse<T>,
-	data?: U[]
+	data?: U[],
 ): PaginatedResponse<T | U> {
 	return {
 		data: data ?? result.data,

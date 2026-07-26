@@ -17,7 +17,7 @@ export function CheckCard({ check }: CheckCardProps) {
 					{statusIcon(check.status)}
 					<div>
 						<p className="text-sm font-medium capitalize">{check.checkType}</p>
-						<p className="text-muted-foreground text-xs">{check.durationMs}ms</p>
+						<p className="text-xs text-muted-foreground">{check.durationMs}ms</p>
 					</div>
 				</div>
 				<Badge className={statusBadgeClassName(check.status)}>{check.status}</Badge>

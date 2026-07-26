@@ -46,7 +46,7 @@ function broadcast(input: BroadcastInput): number {
 	if (totalUsers > MAX_BROADCAST_BATCH_SIZE) {
 		logger.info(
 			{ batchSize: MAX_BROADCAST_BATCH_SIZE, totalUsers },
-			'Notification broadcast processing in batches'
+			'Notification broadcast processing in batches',
 		);
 	}
 
@@ -99,13 +99,13 @@ function broadcast(input: BroadcastInput): number {
  */
 function getStatistics(
 	userId: number,
-	workspaceId?: null | number
+	workspaceId?: null | number,
 ): { byType: Record<string, number>; read: number; total: number; unread: number } {
 	const db = getDb();
 	const baseConditions = [eq(notifications.userId, userId), eq(notifications.isDeleted, false)];
 	if (isDefined(workspaceId)) {
 		baseConditions.push(
-			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!
+			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!,
 		);
 	}
 	const base = and(...baseConditions);

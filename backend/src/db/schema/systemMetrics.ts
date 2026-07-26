@@ -61,7 +61,7 @@ const systemMetrics = sqliteTable(
 	(table) => [
 		check(
 			'chk_system_metrics_metric_type',
-			sql`${table.metricType} in (${sql.raw(SYSTEM_METRIC_TYPE_IN_LIST)})`
+			sql`${table.metricType} in (${sql.raw(SYSTEM_METRIC_TYPE_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `metadata` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -69,7 +69,7 @@ const systemMetrics = sqliteTable(
 		index('idx_system_metrics_metric_type').on(table.metricType),
 		index('idx_system_metrics_created_at').on(table.createdAt),
 		index('idx_system_metrics_type_created').on(table.metricType, table.createdAt),
-	]
+	],
 );
 
 export { systemMetrics };

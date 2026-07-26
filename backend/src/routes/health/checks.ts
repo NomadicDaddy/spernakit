@@ -34,7 +34,7 @@ const healthChecksRoutes = new Elysia({
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('OPERATOR')({ set, user }),
 			detail: healthDetailsDocs,
-		}
+		},
 	)
 	.get(
 		'/history',
@@ -52,7 +52,7 @@ const healthChecksRoutes = new Elysia({
 			query: t.Object({
 				limit: t.Optional(t.Numeric({ default: 100, maximum: 1000, minimum: 1 })),
 			}),
-		}
+		},
 	)
 	.post(
 		'/checks/:checkName/run',
@@ -74,7 +74,7 @@ const healthChecksRoutes = new Elysia({
 					pattern: '^[a-z][a-z0-9_-]*$',
 				}),
 			}),
-		}
+		},
 	)
 	.delete(
 		'/logs',
@@ -85,7 +85,7 @@ const healthChecksRoutes = new Elysia({
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: cleanupHealthLogsDocs,
-		}
+		},
 	);
 
 export { healthChecksRoutes };

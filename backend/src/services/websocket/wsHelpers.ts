@@ -207,7 +207,7 @@ export function handleSubscribe(
 	ws: { subscribe(channel: string): void },
 	conn: { channels: Set<string>; user: AuthPayload } | undefined,
 	connId: string,
-	channel: string | undefined
+	channel: string | undefined,
 ): void {
 	if (!channel) {
 		sendToConnection(connId, { data: 'Missing channel', type: 'error' });
@@ -247,7 +247,7 @@ export function handleUnsubscribe(
 	ws: { unsubscribe(channel: string): void },
 	conn: { channels: Set<string> } | undefined,
 	connId: string,
-	channel: string | undefined
+	channel: string | undefined,
 ): void {
 	if (channel && isValidChannel(channel)) {
 		ws.unsubscribe(channel);

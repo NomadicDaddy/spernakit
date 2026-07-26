@@ -119,7 +119,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Get SMTP configuration (SYSOP only)',
 			},
-		}
+		},
 	)
 	.put(
 		'/smtp/config',
@@ -178,7 +178,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Update SMTP configuration (SYSOP only)',
 			},
-		}
+		},
 	)
 	.post('/smtp/test', handleSmtpTest, {
 		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
@@ -251,7 +251,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Get email status (ADMIN+)',
 			},
-		}
+		},
 	);
 
 export { settingsSmtpRoutes };

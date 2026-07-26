@@ -9,9 +9,9 @@ import { dirname, join } from 'node:path';
 
 import { collectDependencyFiles, collectDirectories, hashFile } from './lib/smoke-cache/collect.ts';
 import {
+	isCacheableStep,
 	STEP_DEPENDENCIES,
 	UNCACHEABLE_STEPS,
-	isCacheableStep,
 } from './lib/smoke-cache/dependencies.ts';
 
 // ===== TYPE DEFINITIONS =====
@@ -150,7 +150,7 @@ async function outputsExist(projectRoot: string, stepName: string): Promise<bool
 
 export async function canSkipStep(
 	projectRoot: string,
-	stepName: string
+	stepName: string,
 ): Promise<CacheCheckResult> {
 	if (!isCacheableStep(stepName)) {
 		const reason = UNCACHEABLE_STEPS.has(stepName)
@@ -190,7 +190,7 @@ export async function recordStepResult(
 	projectRoot: string,
 	stepName: string,
 	result: 'fail' | 'pass',
-	duration: number
+	duration: number,
 ): Promise<void> {
 	if (!isCacheableStep(stepName)) return;
 

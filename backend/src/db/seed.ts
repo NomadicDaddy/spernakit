@@ -33,7 +33,7 @@ if (dbDialect === 'postgres') {
 	logDatabase('error', 'This seed script uses synchronous SQLite methods.');
 	logDatabase(
 		'error',
-		'For PostgreSQL, use drizzle-kit push and adapt the seed to async queries.'
+		'For PostgreSQL, use drizzle-kit push and adapt the seed to async queries.',
 	);
 	process.exit(1);
 }
@@ -62,7 +62,7 @@ async function seed(): Promise<void> {
 		logDatabase(
 			'warn',
 			'IMPORTANT: Save these production credentials now - they cannot be retrieved later. ' +
-				'All accounts require password change on first login.'
+				'All accounts require password change on first login.',
 		);
 	}
 

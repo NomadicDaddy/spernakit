@@ -194,7 +194,7 @@ export function closeAllConnections(): void {
 export function broadcastCrudToUser(
 	userId: number,
 	event: WsCrudEvent,
-	data?: Record<string, unknown>
+	data?: Record<string, unknown>,
 ): void {
 	broadcastToUser(userId, {
 		data: data ?? {},
@@ -215,7 +215,7 @@ export function broadcastCrudToUser(
 export function broadcastCrudToWorkspace(
 	workspaceId: number,
 	event: WsCrudEvent,
-	data?: Record<string, unknown>
+	data?: Record<string, unknown>,
 ): void {
 	broadcastToChannel(`workspace:${workspaceId}`, {
 		data: data ?? {},

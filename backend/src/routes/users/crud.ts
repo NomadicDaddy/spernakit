@@ -47,10 +47,10 @@ const usersCrudRoutes = new Elysia({
 				t.String({
 					description: 'Comma-separated list of fields to return',
 					maxLength: 500,
-				})
+				}),
 			),
 			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 })
+				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
 			),
 			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 			role: t.Optional(UserRoleSchema),
@@ -90,7 +90,7 @@ const usersCrudRoutes = new Elysia({
 					maxLength: USERNAME_MAX_LENGTH,
 					minLength: USERNAME_MIN_LENGTH,
 					pattern: USERNAME_PATTERN,
-				})
+				}),
 			),
 		}),
 		detail: updateUserDocs,

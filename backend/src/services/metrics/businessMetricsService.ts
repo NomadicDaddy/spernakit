@@ -86,7 +86,7 @@ function countDistinctUsers(db: ReturnType<typeof getDb>, since: Date): number {
 
 function getConversionRates(
 	db: ReturnType<typeof getDb>,
-	since: Date
+	since: Date,
 ): DashboardStats['conversionRates'] {
 	const events = db
 		.select({
@@ -102,8 +102,8 @@ function getConversionRates(
 					(${businessEvents.eventCategory} = 'conversion' AND ${businessEvents.eventName} IN ('user_registered', 'workspace_created'))
 					OR
 					(${businessEvents.eventCategory} = 'feature_usage' AND ${businessEvents.eventName} = 'file_uploaded')
-				)`
-			)
+				)`,
+			),
 		)
 		.groupBy(businessEvents.eventCategory, businessEvents.eventName)
 		.all();
@@ -124,8 +124,8 @@ function getTopFeatures(db: ReturnType<typeof getDb>, since: Date): DashboardSta
 		.where(
 			and(
 				eq(businessEvents.eventCategory, 'feature_usage'),
-				gte(businessEvents.createdAt, since)
-			)
+				gte(businessEvents.createdAt, since),
+			),
 		)
 		.groupBy(businessEvents.eventName)
 		.orderBy(desc(count()))

@@ -81,7 +81,7 @@ export async function probeCompression(probeUrl: URL): Promise<ProbeOutcome> {
 				}
 
 				resolve(
-					contentEncoding ? { contentEncoding, reachable: true } : { reachable: true }
+					contentEncoding ? { contentEncoding, reachable: true } : { reachable: true },
 				);
 			});
 		});

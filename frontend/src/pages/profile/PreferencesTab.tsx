@@ -82,7 +82,7 @@ function PreferencesTab() {
 
 	function handleUiSettingChange<K extends keyof UserUiSettings>(
 		key: K,
-		value: UserUiSettings[K]
+		value: UserUiSettings[K],
 	) {
 		if (!uiSettings) return;
 		updateUiSettingsMutation.mutate({

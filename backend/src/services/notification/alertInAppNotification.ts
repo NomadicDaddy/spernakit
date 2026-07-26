@@ -32,7 +32,7 @@ function sendInAppAlert(alert: AlertData): AlertNotificationResult {
 
 	logger.info(
 		{ alertId: alert.id, channel: 'in-app', recipientCount: count },
-		'In-app alert sent'
+		'In-app alert sent',
 	);
 	return { channel: 'in-app', success: true };
 }

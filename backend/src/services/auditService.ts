@@ -76,7 +76,7 @@ function query(params: QueryParams): {
 
 	if (isDefined(params.workspaceId)) {
 		conditions.push(
-			or(eq(auditLogs.workspaceId, params.workspaceId), isNull(auditLogs.workspaceId))!
+			or(eq(auditLogs.workspaceId, params.workspaceId), isNull(auditLogs.workspaceId))!,
 		);
 	}
 	if (params.userId !== undefined) {
@@ -97,7 +97,7 @@ function query(params: QueryParams): {
 		// entity names (e.g., backup target name) captured by the audit plugin from
 		// request bodies, not just action strings and entity types.
 		conditions.push(
-			sql`(${auditLogs.action} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityType} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityId} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.details} LIKE ${searchPattern} ESCAPE '\\')`
+			sql`(${auditLogs.action} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityType} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityId} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.details} LIKE ${searchPattern} ESCAPE '\\')`,
 		);
 	}
 
@@ -139,7 +139,7 @@ function query(params: QueryParams): {
 				username: row.username,
 			}));
 		},
-		() => db.select({ count: count() }).from(auditLogs).where(whereClause).get()
+		() => db.select({ count: count() }).from(auditLogs).where(whereClause).get(),
 	);
 
 	return result;

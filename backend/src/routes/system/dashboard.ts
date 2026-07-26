@@ -47,7 +47,7 @@ const dashboardCache = new LRUCache<string, DashboardResponse>({
 function getDashboardData(
 	userId: number,
 	userIsSysop: boolean,
-	workspaceId: null | number
+	workspaceId: null | number,
 ): DashboardResponse {
 	const effectiveWorkspaceId = userIsSysop ? null : workspaceId;
 	const cacheKey = `${userId}:${effectiveWorkspaceId ?? 'all'}`;
@@ -135,7 +135,7 @@ const systemDashboardRoutes = new Elysia({
 				},
 				summary: 'Get dashboard statistics (OPERATOR+)',
 			},
-		}
+		},
 	);
 
 export { systemDashboardRoutes };

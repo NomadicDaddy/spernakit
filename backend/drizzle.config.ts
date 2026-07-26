@@ -20,7 +20,7 @@ function getAppSlug(): string {
 	const configDir = resolve(__dirname, '..', 'config');
 	if (existsSync(configDir)) {
 		const files = readdirSync(configDir).filter(
-			(f) => f.endsWith('.json') && !f.startsWith('.')
+			(f) => f.endsWith('.json') && !f.startsWith('.'),
 		);
 		if (files.length === 1 && files[0]) return files[0].replace(/\.json$/, '');
 	}

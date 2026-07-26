@@ -42,7 +42,7 @@ const mfaSettings = pgTable(
 			foreignColumns: [users.id],
 			name: 'fk_mfa_settings_user_id_users',
 		}).onDelete('cascade'),
-	]
+	],
 );
 
 export { mfaSettings };

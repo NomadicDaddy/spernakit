@@ -99,7 +99,7 @@ async function run(): Promise<void> {
 
 			await page.waitForFunction(
 				() => document.body.innerText.includes('Invalid credentials'),
-				{ timeout: 15000 }
+				{ timeout: 15000 },
 			);
 		});
 
@@ -123,13 +123,13 @@ async function run(): Promise<void> {
 					return null;
 				},
 				{ timeout: 15000 },
-				serviceUnavailableText
+				serviceUnavailableText,
 			);
 			const state = await stateHandle.jsonValue();
 
 			if (state === 'unavailable') {
 				console.log(
-					'Password reset is disabled in this environment; skipping missing-email validation step.'
+					'Password reset is disabled in this environment; skipping missing-email validation step.',
 				);
 				return;
 			}
@@ -138,7 +138,7 @@ async function run(): Promise<void> {
 
 			await page.waitForFunction(
 				() => document.body.innerText.includes('Email is required'),
-				{ timeout: 15000 }
+				{ timeout: 15000 },
 			);
 		});
 
@@ -162,7 +162,7 @@ async function run(): Promise<void> {
 			// Wait for Sonner error toast with the backend error message
 			await page.waitForFunction(
 				() => document.body.innerText.includes('Invalid or expired reset token'),
-				{ timeout: 20000 }
+				{ timeout: 20000 },
 			);
 		});
 	} catch (err) {

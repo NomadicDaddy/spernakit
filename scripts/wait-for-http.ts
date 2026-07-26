@@ -88,7 +88,7 @@ async function checkContainerHealth(containerName: string): Promise<boolean> {
 		console.error(
 			`[wait-for-http] FATAL: Container "${containerName}" was OOM-killed.` +
 				' The process exceeded the container memory limit.' +
-				' Check for unbounded memory allocation (large file reads, uncapped collections, etc).'
+				' Check for unbounded memory allocation (large file reads, uncapped collections, etc).',
 		);
 		return true;
 	}
@@ -96,7 +96,7 @@ async function checkContainerHealth(containerName: string): Promise<boolean> {
 	if (!state.running && state.exitCode === 137) {
 		console.error(
 			`[wait-for-http] FATAL: Container "${containerName}" exited with code 137 (SIGKILL).` +
-				' This typically indicates an OOM kill by the kernel.'
+				' This typically indicates an OOM kill by the kernel.',
 		);
 		return true;
 	}
@@ -105,7 +105,7 @@ async function checkContainerHealth(containerName: string): Promise<boolean> {
 		console.error(
 			`[wait-for-http] WARNING: Container "${containerName}" has restarted` +
 				` ${state.restartCount} time(s) (exit code: ${state.exitCode}).` +
-				' The container may be crash-looping.'
+				' The container may be crash-looping.',
 		);
 	}
 
@@ -119,7 +119,7 @@ async function main(): Promise<void> {
 	const url = args['url'];
 	if (!url) {
 		console.error(
-			'[wait-for-http] Missing required --url argument (e.g. --url http://localhost:{port}/health)'
+			'[wait-for-http] Missing required --url argument (e.g. --url http://localhost:{port}/health)',
 		);
 		process.exit(1);
 	}
@@ -133,7 +133,7 @@ async function main(): Promise<void> {
 	const start = Date.now();
 	const containerInfo = containerName ? `, container: ${containerName}` : '';
 	console.log(
-		`[wait-for-http] Waiting for ${url} (timeout ${timeoutMs}ms, interval ${intervalMs}ms${containerInfo})`
+		`[wait-for-http] Waiting for ${url} (timeout ${timeoutMs}ms, interval ${intervalMs}ms${containerInfo})`,
 	);
 
 	while (Date.now() - start < timeoutMs) {
@@ -144,7 +144,7 @@ async function main(): Promise<void> {
 				process.exit(0);
 			}
 			console.log(
-				`[wait-for-http] Not ready yet: ${url} responded with ${res.status} ${res.statusText}`
+				`[wait-for-http] Not ready yet: ${url} responded with ${res.status} ${res.statusText}`,
 			);
 		} catch (err) {
 			const message = err instanceof Error ? err.message : String(err);

@@ -63,7 +63,7 @@ function WorkspaceBrandingTab({
 						onFileSelect={onUpload}
 					/>
 				)}
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					Upload a logo for this workspace (max 2 MB, image files only).
 				</p>
 			</div>
@@ -99,7 +99,7 @@ function WorkspaceBrandingTab({
 						value={form.accentColor}
 					/>
 				</div>
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					Primary accent color for this workspace&apos;s branding.
 				</p>
 			</div>

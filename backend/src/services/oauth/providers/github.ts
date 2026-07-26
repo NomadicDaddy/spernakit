@@ -1,4 +1,4 @@
-import type { TokenExchangeParams, TokenExchangeResult, ProfileParseResult } from './types.ts';
+import type { ProfileParseResult, TokenExchangeParams, TokenExchangeResult } from './types.ts';
 
 import { fetchProfileData, OAUTH_FETCH_TIMEOUT_MS, performTokenExchange, str } from './types.ts';
 
@@ -7,7 +7,7 @@ const PROFILE_URL = 'https://api.github.com/user';
 const EMAILS_URL = 'https://api.github.com/user/emails';
 
 export async function exchangeGitHubCode(
-	params: TokenExchangeParams
+	params: TokenExchangeParams,
 ): Promise<TokenExchangeResult> {
 	const body: Record<string, string> = {
 		client_id: params.clientId,

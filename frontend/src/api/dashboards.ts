@@ -99,7 +99,7 @@ function createDashboard(input: {
 /** Update dashboard name and/or replace all widgets. */
 function updateDashboard(
 	id: number,
-	input: { name: string; widgets?: WidgetInput[] }
+	input: { name: string; widgets?: WidgetInput[] },
 ): Promise<DataResponse<DashboardWithWidgets>> {
 	return apiClient.put(`/dashboards/${id}`, { body: input });
 }

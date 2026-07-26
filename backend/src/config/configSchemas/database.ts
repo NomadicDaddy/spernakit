@@ -1,4 +1,4 @@
-import { Type, enumString, withEmptyDefault } from '../configSchemaHelpers';
+import { enumString, Type, withEmptyDefault } from '../configSchemaHelpers';
 
 export const databaseVacuumSchema = Type.Object({
 	enabled: Type.Boolean({ default: true }),

@@ -46,14 +46,14 @@ export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
 		const firstSpace = line.search(/\s/);
 		if (firstSpace === -1) {
 			console.log(
-				`   Warning: .templateoverrides line ${i + 1} is missing a path: "${line}"`
+				`   Warning: .templateoverrides line ${i + 1} is missing a path: "${line}"`,
 			);
 			continue;
 		}
 		const action = line.slice(0, firstSpace).toUpperCase() as TemplateOverrideAction;
 		if (!VALID_OVERRIDE_ACTIONS.has(action)) {
 			console.log(
-				`   Warning: .templateoverrides line ${i + 1} has unknown action "${action}" (expected DELETED, SKIP, or KEEP)`
+				`   Warning: .templateoverrides line ${i + 1} has unknown action "${action}" (expected DELETED, SKIP, or KEEP)`,
 			);
 			continue;
 		}
@@ -63,7 +63,7 @@ export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
 		const reason = reasonStart === -1 ? '' : rest.slice(reasonStart + 1).trim();
 		if (filePathPart.length === 0) {
 			console.log(
-				`   Warning: .templateoverrides line ${i + 1} has an empty path after action "${action}"`
+				`   Warning: .templateoverrides line ${i + 1} has an empty path after action "${action}"`,
 			);
 			continue;
 		}
@@ -88,7 +88,7 @@ export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
  */
 export function applyTemplateOverrides(
 	results: FileResult[],
-	overrides: TemplateOverrides
+	overrides: TemplateOverrides,
 ): FileResult[] {
 	return results.map((r) => {
 		if (r.status === 'drifted') {

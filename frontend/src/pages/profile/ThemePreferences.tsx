@@ -43,7 +43,7 @@ function ThemePreferences({
 								className={cn(
 									'flex items-center gap-2',
 									themeMode === option.value &&
-										'ring-primary ring-2 ring-offset-2'
+										'ring-2 ring-primary ring-offset-2',
 								)}
 								key={option.value}
 								onClick={() => onThemeModeChange(option.value)}
@@ -68,8 +68,8 @@ function ThemePreferences({
 								className={cn(
 									'flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
 									appTheme === theme.value
-										? 'border-primary ring-primary ring-2 ring-offset-2'
-										: 'border-border hover:border-primary/50'
+										? 'border-primary ring-2 ring-primary ring-offset-2'
+										: 'border-border hover:border-primary/50',
 								)}
 								disabled={disabled}
 								key={theme.value}
@@ -81,7 +81,7 @@ function ThemePreferences({
 								/>
 								<div className="min-w-0">
 									<div className="text-sm font-medium">{theme.label}</div>
-									<div className="text-muted-foreground truncate text-xs">
+									<div className="truncate text-xs text-muted-foreground">
 										{theme.description}
 									</div>
 								</div>

@@ -92,7 +92,7 @@ const databaseAdminRoutes = new Elysia({
 		query: t.Object({
 			includeDeleted: t.Optional(t.BooleanString()),
 			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 })
+				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
 			),
 			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 		}),
@@ -114,7 +114,7 @@ const databaseAdminRoutes = new Elysia({
 			params: t.Object({
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
-		}
+		},
 	)
 	.put(
 		'/data/:tableName/:rowId',
@@ -133,7 +133,7 @@ const databaseAdminRoutes = new Elysia({
 				rowId: t.Numeric({ minimum: 1 }),
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
-		}
+		},
 	)
 	.delete(
 		'/data/:tableName/:rowId',
@@ -152,7 +152,7 @@ const databaseAdminRoutes = new Elysia({
 				rowId: t.Numeric({ minimum: 1 }),
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
-		}
+		},
 	)
 	// Query execution (SYSOP only — can access all tables)
 	.post(
@@ -171,7 +171,7 @@ const databaseAdminRoutes = new Elysia({
 					'Executes a read-only SELECT query. Non-SELECT statements are rejected server-side.',
 				summary: 'Execute read-only query (SYSOP)',
 			},
-		}
+		},
 	)
 	// Safe mode management
 	.get('/safe-mode', () => dataResponse({ enabled: getSafeMode() }), {
@@ -205,7 +205,7 @@ const databaseAdminRoutes = new Elysia({
 				description: 'Toggles safe mode on or off. Only SYSOP can change this.',
 				summary: 'Toggle safe mode (SYSOP)',
 			},
-		}
+		},
 	);
 
 export { databaseAdminRoutes };

@@ -120,7 +120,7 @@ async function runMissedTasks(): Promise<void> {
 					})
 					.finally(() => {
 						runningTasks.delete(name);
-					})
+					}),
 			);
 		}
 	}

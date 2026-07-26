@@ -55,10 +55,10 @@ function validateDemoCredentials(nodeEnv: string, testing: AppConfig['testing'])
 	if (issues.length > 0) {
 		configLogger.error(
 			{ issues: issues.map((i) => i.message) },
-			'SECURITY ERROR: Demo credentials detected in non-development environment'
+			'SECURITY ERROR: Demo credentials detected in non-development environment',
 		);
 		configLogger.info(
-			'\nUpdate testing.crawlLoginEmail and testing.crawlLoginPassword in your config file'
+			'\nUpdate testing.crawlLoginEmail and testing.crawlLoginPassword in your config file',
 		);
 		process.exit(1);
 	}
@@ -77,7 +77,7 @@ function warnDisabledAuthRateLimit(nodeEnv: string, authRateLimitEnabled: boolea
 function warnUnsafeTrustProxy(
 	nodeEnv: string,
 	trustProxy: boolean,
-	trustedProxies: string[]
+	trustedProxies: string[],
 ): void {
 	const issues = checkTrustProxy(nodeEnv, trustProxy, trustedProxies);
 	emitIssues(issues);
@@ -108,7 +108,7 @@ function warnPostgresSsl(nodeEnv: string, database: AppConfig['database']): void
 		database.dialect,
 		database.ssl.enabled,
 		database.ssl.rejectUnauthorized,
-		database.url
+		database.url,
 	);
 	emitIssues(issues);
 }
@@ -116,7 +116,7 @@ function warnPostgresSsl(nodeEnv: string, database: AppConfig['database']): void
 function warnEmptyAllowedOrigins(
 	nodeEnv: string,
 	trustProxy: boolean,
-	allowedOrigins: string[]
+	allowedOrigins: string[],
 ): void {
 	const isDevOrTest = nodeEnv === 'development' || nodeEnv === 'test';
 	const issues = checkEmptyAllowedOrigins(isDevOrTest, trustProxy, allowedOrigins);
@@ -176,12 +176,12 @@ function collectServerIssues(nodeEnv: string, validated: AppConfig): ValidationI
 			validated.database.dialect,
 			validated.database.ssl.enabled,
 			validated.database.ssl.rejectUnauthorized,
-			validated.database.url
+			validated.database.url,
 		),
 		...checkEmptyAllowedOrigins(
 			isDevOrTest,
 			validated.server.trustProxy,
-			validated.cors.allowedOrigins
+			validated.cors.allowedOrigins,
 		),
 		...checkAllowNoOrigin(isDevOrTest, validated.cors.allowNoOrigin),
 		...checkFrontendDevOrigins(isDevOrTest, validated.cors.frontendDevOrigins),

@@ -25,7 +25,7 @@ function createErrorResponse(
 	code: ErrorCode,
 	message: string,
 	requestId?: string,
-	details?: Record<string, unknown>
+	details?: Record<string, unknown>,
 ): ErrorResponse {
 	const response: ErrorResponse = {
 		code,
@@ -47,7 +47,7 @@ function createErrorResponse(
 function unauthorizedError(
 	message = 'Authentication required',
 	code: ErrorCode = AUTH_ERROR_CODES.AUTH_TOKEN_MISSING,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.UNAUTHORIZED, code, message, requestId);
 }
@@ -55,7 +55,7 @@ function unauthorizedError(
 function forbiddenError(
 	message = 'Access denied',
 	code: ErrorCode = AUTH_ERROR_CODES.AUTH_PERMISSION_DENIED,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.FORBIDDEN, code, message, requestId);
 }
@@ -63,7 +63,7 @@ function forbiddenError(
 function notFoundError(
 	resource: string,
 	code: ErrorCode = RESOURCE_ERROR_CODES.RESOURCE_NOT_FOUND,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.NOT_FOUND, code, `${resource} not found`, requestId);
 }
@@ -72,7 +72,7 @@ function validationError(
 	message: string,
 	code: ErrorCode = VALIDATION_ERROR_CODES.VALIDATION_FAILED,
 	requestId?: string,
-	details?: Record<string, unknown>
+	details?: Record<string, unknown>,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.VALIDATION_FAILED, code, message, requestId, details);
 }
@@ -80,41 +80,41 @@ function validationError(
 function rateLimitError(
 	retryAfterSeconds: number,
 	code: ErrorCode = RATE_ERROR_CODES.RATE_LIMIT_EXCEEDED,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(
 		ErrorTitle.RATE_LIMITED,
 		code,
 		`Rate limit exceeded. Try again in ${retryAfterSeconds} seconds.`,
 		requestId,
-		{ retryAfter: retryAfterSeconds }
+		{ retryAfter: retryAfterSeconds },
 	);
 }
 
 function conflictError(
 	message: string,
 	code: ErrorCode = RESOURCE_ERROR_CODES.RESOURCE_ALREADY_EXISTS,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.CONFLICT, code, message, requestId);
 }
 
 function internalError(
 	code: ErrorCode = SERVER_ERROR_CODES.SERVER_INTERNAL_ERROR,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(
 		ErrorTitle.INTERNAL_ERROR,
 		code,
 		'An unexpected error occurred',
-		requestId
+		requestId,
 	);
 }
 
 function serviceUnavailableError(
 	message: string,
 	code: ErrorCode = SERVER_ERROR_CODES.SERVER_INTERNAL_ERROR,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.SERVICE_UNAVAILABLE, code, message, requestId);
 }
@@ -122,7 +122,7 @@ function serviceUnavailableError(
 function badRequestError(
 	message: string,
 	code: ErrorCode = VALIDATION_ERROR_CODES.VALIDATION_FAILED,
-	requestId?: string
+	requestId?: string,
 ): ErrorResponse {
 	return createErrorResponse(ErrorTitle.BAD_REQUEST, code, message, requestId);
 }

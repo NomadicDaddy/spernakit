@@ -49,7 +49,7 @@ const emailChangeTokens = sqliteTable(
 		}).onDelete('cascade'),
 		index('idx_email_change_tokens_user_id').on(table.userId),
 		index('idx_email_change_tokens_expires_at').on(table.expiresAt),
-	]
+	],
 );
 
 export { emailChangeTokens };

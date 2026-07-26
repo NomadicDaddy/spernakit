@@ -6,7 +6,7 @@
 function SkipLink() {
 	return (
 		<a
-			className="bg-background text-foreground border-primary sr-only fixed top-2 left-2 z-[100] rounded-md border px-4 py-2 text-sm font-medium shadow-lg focus:not-sr-only"
+			className="sr-only fixed top-2 left-2 z-[100] rounded-md border border-primary bg-background px-4 py-2 text-sm font-medium text-foreground shadow-lg focus:not-sr-only"
 			href="#main-content">
 			Skip to main content
 		</a>

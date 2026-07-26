@@ -33,7 +33,7 @@ function buildBackupResult(
 		error?: null | string | undefined;
 		sizeBytes?: number;
 		success: boolean;
-	}
+	},
 ): BackupResult {
 	return {
 		backupPath: options.backupPath ?? null,
@@ -58,7 +58,7 @@ function persistBackupStatus(result: BackupResult): void {
 	} catch (err) {
 		logger.warn(
 			{ error: err instanceof Error ? err.message : 'Unknown error' },
-			'Failed to persist backup status to settings table'
+			'Failed to persist backup status to settings table',
 		);
 	}
 }
@@ -72,7 +72,7 @@ function loadPersistedBackupStatus(): BackupResult | null {
 	} catch (err) {
 		logger.warn(
 			{ error: err instanceof Error ? err.message : 'Unknown error' },
-			'Failed to parse persisted backup status'
+			'Failed to parse persisted backup status',
 		);
 	}
 	return null;
@@ -88,7 +88,7 @@ function notifyBackupFailure(error: string): void {
 	}).catch((err: unknown) => {
 		logger.warn(
 			{ error: err instanceof Error ? err.message : 'Unknown error' },
-			'Failed to send backup failure alert'
+			'Failed to send backup failure alert',
 		);
 	});
 }
@@ -132,7 +132,7 @@ function performBackupCopy(dbPath: string): { backupPath: string; error?: string
 async function postProcessBackup(
 	rawBackupPath: string,
 	compress: boolean,
-	encrypt: boolean
+	encrypt: boolean,
 ): Promise<{ error?: string; finalPath: string }> {
 	let currentPath = rawBackupPath;
 

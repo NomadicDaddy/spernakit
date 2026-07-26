@@ -54,7 +54,7 @@ const targets = fs
 			file.endsWith('.db') ||
 			file.endsWith('.db-shm') ||
 			file.endsWith('.db-wal') ||
-			file === '.seeded'
+			file === '.seeded',
 	);
 
 if (targets.length === 0) {
@@ -74,7 +74,7 @@ if (!force) {
 	if (populated.length > 0) {
 		console.error(
 			`   Refusing to reset: ${populated.join(', ')} contain${populated.length === 1 ? 's' : ''} user data. ` +
-				'Re-run with --force to delete anyway.'
+				'Re-run with --force to delete anyway.',
 		);
 		process.exit(1);
 	}

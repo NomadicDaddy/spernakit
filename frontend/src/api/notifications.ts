@@ -16,7 +16,7 @@ export const RECENT_NOTIFICATIONS_LIMIT = 5;
 export const notificationKeys = {
 	list: (
 		workspaceId: null | number,
-		params?: { limit?: string; page?: string; readStatus?: string; type?: string }
+		params?: { limit?: string; page?: string; readStatus?: string; type?: string },
 	) =>
 		[
 			'notifications',
@@ -41,7 +41,7 @@ interface ListNotificationsParams {
 
 /** Fetch paginated notifications with optional filtering by read status and type. */
 function listNotifications(
-	params?: ListNotificationsParams
+	params?: ListNotificationsParams,
 ): Promise<PaginatedResponse<Notification>> {
 	const filtered = buildQueryParams(params);
 	return apiClient.get<PaginatedResponse<Notification>>('/notifications', {
@@ -91,7 +91,7 @@ interface BroadcastNotificationData {
 
 /** Broadcast a notification to all users (ADMIN+). Optionally filter by role. */
 function broadcastNotification(
-	data: BroadcastNotificationData
+	data: BroadcastNotificationData,
 ): Promise<DataResponse<{ count: number }>> {
 	return apiClient.post<DataResponse<{ count: number }>>('/notifications/broadcast', {
 		body: data,
@@ -106,7 +106,7 @@ interface NotificationRetentionPolicy {
 /** Fetch the effective notification retention policy (ADMIN+). */
 function getNotificationRetentionPolicy(): Promise<DataResponse<NotificationRetentionPolicy>> {
 	return apiClient.get<DataResponse<NotificationRetentionPolicy>>(
-		'/notifications/retention-policy'
+		'/notifications/retention-policy',
 	);
 }
 
@@ -126,7 +126,7 @@ function getNotificationPreferences(): Promise<DataResponse<NotificationPreferen
 
 /** Update the current user's notification preferences. */
 function updateNotificationPreferences(
-	preferences: NotificationPreferences
+	preferences: NotificationPreferences,
 ): Promise<DataResponse<NotificationPreferences>> {
 	return apiClient.put<DataResponse<NotificationPreferences>>('/notifications/preferences', {
 		body: preferences,

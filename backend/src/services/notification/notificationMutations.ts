@@ -17,7 +17,7 @@ const MARK_ALL_MAX_BATCHES = 100;
 function findOwned(
 	id: number,
 	userId: number,
-	extraConditions?: ReturnType<typeof eq>
+	extraConditions?: ReturnType<typeof eq>,
 ): { id: number } | undefined {
 	const db = getDb();
 	return db
@@ -28,8 +28,8 @@ function findOwned(
 				eq(notifications.id, id),
 				eq(notifications.userId, userId),
 				eq(notifications.isDeleted, false),
-				extraConditions
-			)
+				extraConditions,
+			),
 		)
 		.get();
 }
@@ -74,7 +74,7 @@ function markAllAsRead(userId: number, workspaceId?: null | number): number {
 
 	if (workspaceId !== undefined && workspaceId !== null) {
 		conditions.push(
-			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!
+			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!,
 		);
 	}
 
@@ -161,8 +161,8 @@ function bulkDelete(ids: number[], userId: number): number {
 			and(
 				inArray(notifications.id, ids),
 				eq(notifications.userId, userId),
-				eq(notifications.isDeleted, false)
-			)
+				eq(notifications.isDeleted, false),
+			),
 		)
 		.returning({ id: notifications.id })
 		.all();

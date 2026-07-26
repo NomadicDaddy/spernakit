@@ -14,10 +14,8 @@ export {
 	stopEventLoopLatencyTimer,
 	storeWebVitals,
 } from './metrics/metricsCollectionService.ts';
-export type { WebVitalSummary } from './metrics/metricsQueryService.ts';
 export {
 	getLatestMetrics,
 	getMetricsHistory,
 	getWebVitalsSummary,
 } from './metrics/metricsQueryService.ts';
-export type { EventCategory } from 'spernakit-shared';

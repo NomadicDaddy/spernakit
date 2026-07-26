@@ -1,7 +1,7 @@
 /** URL hostname comparisons include the literal localhost name. */
-const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set(['localhost', '127.0.0.1', '::1']);
+const LOOPBACK_HOSTNAMES: ReadonlySet<string> = new Set(['::1', '127.0.0.1', 'localhost']);
 /** Socket-address comparisons include IPv4-mapped IPv6 loopback. */
-const LOOPBACK_IPS: ReadonlySet<string> = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+const LOOPBACK_IPS: ReadonlySet<string> = new Set(['::1', '::ffff:127.0.0.1', '127.0.0.1']);
 
 function normalizeLoopbackCandidate(value: string): string {
 	const normalized = value.toLowerCase();

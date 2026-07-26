@@ -166,7 +166,7 @@ function logWithCategory(
 	level: LogLevel,
 	category: LogCategoryType,
 	message: string,
-	meta?: Record<string, unknown>
+	meta?: Record<string, unknown>,
 ): void {
 	logger[level]({ category, ...meta }, message);
 }

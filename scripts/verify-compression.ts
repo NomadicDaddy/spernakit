@@ -64,7 +64,7 @@ async function testBackendCompression(): Promise<boolean> {
 		}
 		if (compressionRequired) {
 			logError(
-				`No Content-Encoding on direct backend response — compression is required in mode "${mode}"`
+				`No Content-Encoding on direct backend response — compression is required in mode "${mode}"`,
 			);
 			return false;
 		}
@@ -92,7 +92,7 @@ async function testBackendCompression(): Promise<boolean> {
 
 	if (compressionRequired) {
 		logError(
-			`Proxied path reachable but returned no Content-Encoding — compression is required in mode "${mode}"`
+			`Proxied path reachable but returned no Content-Encoding — compression is required in mode "${mode}"`,
 		);
 		return false;
 	}
@@ -159,7 +159,7 @@ async function testFrontendBuildCompression(): Promise<boolean> {
 
 			if (fileSize < COMPRESSION_THRESHOLD_BYTES) {
 				logInfo(
-					`  Skipped: below ${COMPRESSION_THRESHOLD_BYTES}-byte compression threshold`
+					`  Skipped: below ${COMPRESSION_THRESHOLD_BYTES}-byte compression threshold`,
 				);
 				continue;
 			}

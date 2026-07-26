@@ -49,7 +49,7 @@ export const apiKeys = sqliteTable(
 	(table) => [
 		check(
 			'chk_api_keys_key_scope',
-			sql`${table.keyScope} in (${sql.raw(API_KEY_SCOPE_IN_LIST)})`
+			sql`${table.keyScope} in (${sql.raw(API_KEY_SCOPE_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -60,5 +60,5 @@ export const apiKeys = sqliteTable(
 		index('idx_api_keys_is_active').on(table.isActive),
 		index('idx_api_keys_expires_at').on(table.expiresAt),
 		uniqueIndex('idx_api_keys_user_key_name').on(table.createdBy, table.keyName),
-	]
+	],
 );

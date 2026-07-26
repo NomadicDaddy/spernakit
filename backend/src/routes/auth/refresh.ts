@@ -39,7 +39,7 @@ function validateRefreshTokenReuse(
 	dbUser: ReturnType<typeof getUserRefreshInfo>,
 	refreshToken: string,
 	userId: number,
-	set: RefreshContext['set']
+	set: RefreshContext['set'],
 ) {
 	const presentedHash = hashRefreshToken(refreshToken);
 	if (
@@ -109,7 +109,7 @@ async function handleTokenRefresh({ request, set }: RefreshContext) {
 	const rotated = rotateRefreshTokenHash(
 		payload.id,
 		dbUser.refreshTokenHash!,
-		tokens.refreshToken
+		tokens.refreshToken,
 	);
 	if (!rotated) {
 		set.status = HTTP_STATUS.CONFLICT;

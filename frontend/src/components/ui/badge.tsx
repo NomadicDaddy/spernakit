@@ -22,7 +22,7 @@ const badgeVariants = cva(
 				secondary: 'bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90',
 			},
 		},
-	}
+	},
 );
 
 function Badge({
@@ -30,7 +30,7 @@ function Badge({
 	className,
 	variant = 'default',
 	...props
-}: React.ComponentProps<'span'> & VariantProps<typeof badgeVariants> & { asChild?: boolean }) {
+}: { asChild?: boolean } & React.ComponentProps<'span'> & VariantProps<typeof badgeVariants>) {
 	const Comp = asChild ? Slot : 'span';
 
 	return (

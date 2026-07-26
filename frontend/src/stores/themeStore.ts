@@ -37,8 +37,8 @@ const useThemeStore = create<ThemeState>()(
 			name: STORAGE_KEYS.theme,
 			storage: debouncedLocalStorage(),
 			version: 1,
-		}
-	)
+		},
+	),
 );
 
 export { useThemeStore };

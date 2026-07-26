@@ -18,7 +18,7 @@ interface WorkspaceUpdateAuditInput {
 
 function buildWorkspaceUpdateAuditDetails(
 	body: WorkspaceUpdateAuditInput,
-	beforeSettings: null | WorkspaceSettingsInput
+	beforeSettings: null | WorkspaceSettingsInput,
 ): Record<string, unknown> {
 	const auditDetails: Record<string, unknown> = {};
 	if (body.name !== undefined) auditDetails.name = body.name;

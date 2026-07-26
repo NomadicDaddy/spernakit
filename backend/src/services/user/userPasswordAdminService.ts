@@ -28,7 +28,7 @@ import { invalidateUserProfileCache } from './userCrudHelpers.ts';
 async function adminResetUserPassword(
 	actingAdminId: number,
 	targetUserId: number,
-	options: { mode: 'email' } | { mode: 'set'; password: string }
+	options: { mode: 'email' } | { mode: 'set'; password: string },
 ): Promise<{ error?: string; success: boolean }> {
 	const db = getDb();
 	const targetUser = db

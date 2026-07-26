@@ -22,7 +22,7 @@ const DEFAULT_NEW_WIDGET: WidgetInput = {
 
 function mapWidgetsToInput(
 	widgets: DashboardWidget[],
-	layoutMap?: Map<string, Layout[0]>
+	layoutMap?: Map<string, Layout[0]>,
 ): WidgetInput[] {
 	return widgets.map((w) => {
 		const layoutItem = layoutMap?.get(String(w.id));
@@ -103,7 +103,7 @@ export function useDashboardWidgets({
 					onAddWidgetSuccess?.();
 					setNewWidget(() => ({ ...DEFAULT_NEW_WIDGET }));
 				},
-			}
+			},
 		);
 	};
 

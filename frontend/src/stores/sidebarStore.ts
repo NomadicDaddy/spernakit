@@ -35,8 +35,8 @@ const useSidebarStore = create<SidebarState>()(
 			name: STORAGE_KEYS.sidebar,
 			storage: debouncedLocalStorage<SidebarState>(),
 			version: 1,
-		}
-	)
+		},
+	),
 );
 
 export { useSidebarStore };

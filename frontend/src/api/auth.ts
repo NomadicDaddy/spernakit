@@ -1,6 +1,6 @@
 import type { DataResponse, ErrorCode, ErrorResponse, RoleLabels, UserRole } from '@/api/types';
 
-import { ApiError, apiClient } from '@/api/client';
+import { apiClient, ApiError } from '@/api/client';
 import { useAuthStore } from '@/stores/authStore';
 
 interface LoginRequest {
@@ -39,7 +39,7 @@ interface MfaChallengeResponse {
 }
 
 function isMfaChallengeResponse(
-	data: MfaChallengeResponse | UserData
+	data: MfaChallengeResponse | UserData,
 ): data is MfaChallengeResponse {
 	return 'mfaRequired' in data && data.mfaRequired === true;
 }
@@ -162,7 +162,7 @@ interface RegistrationStatusResponse {
 
 async function getRegistrationStatus(): Promise<RegistrationStatusResponse> {
 	const res = await apiClient.get<DataResponse<RegistrationStatusResponse>>(
-		'/auth/registration-status'
+		'/auth/registration-status',
 	);
 	return res.data;
 }

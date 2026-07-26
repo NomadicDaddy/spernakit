@@ -78,13 +78,13 @@ function EmailTab() {
 								<Badge variant={status.lastTestSuccess ? 'default' : 'destructive'}>
 									{status.lastTestSuccess ? 'Success' : 'Failed'}
 								</Badge>
-								<span className="text-muted-foreground text-sm">
+								<span className="text-sm text-muted-foreground">
 									{formatDateTime(status.lastTestAt)}
 								</span>
 							</div>
 						)}
 						{!status.configured && (
-							<p className="text-muted-foreground text-sm">
+							<p className="text-sm text-muted-foreground">
 								To enable email, configure SMTP settings below.
 							</p>
 						)}

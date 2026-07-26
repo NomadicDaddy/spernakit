@@ -9,9 +9,9 @@ function ViewMemberRow({ member }: ViewMemberRowProps) {
 		<div className="flex items-center justify-between rounded-lg border p-3">
 			<div>
 				<div className="font-medium">{member.username}</div>
-				<div className="text-muted-foreground text-xs">User ID: {member.userId}</div>
+				<div className="text-xs text-muted-foreground">User ID: {member.userId}</div>
 			</div>
-			<span className="text-muted-foreground text-sm">{member.role}</span>
+			<span className="text-sm text-muted-foreground">{member.role}</span>
 		</div>
 	);
 }

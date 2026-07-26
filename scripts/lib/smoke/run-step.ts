@@ -60,7 +60,7 @@ export async function runCommand(
 	force: boolean,
 	useCache: boolean,
 	logFile?: string,
-	continueOnFailure = false
+	continueOnFailure = false,
 ): Promise<number> {
 	const stepKey = getStepKey(command);
 

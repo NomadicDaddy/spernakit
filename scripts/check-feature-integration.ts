@@ -14,7 +14,7 @@
  *
  * Run: bun scripts/check-feature-integration.ts
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '..');
@@ -35,7 +35,7 @@ function extractNamedExports(source: string): string[] {
 			s
 				.trim()
 				.split(/\s+as\s+/)[0]!
-				.trim()
+				.trim(),
 		);
 		names.push(...items.filter(Boolean));
 	}
@@ -119,7 +119,7 @@ function checkBackendRoutes(): string[] {
 					.replace(resolve(ROOT, 'backend/src/routes/'), '')
 					.replace(/\\/g, '/');
 				errors.push(
-					`  Route "${routeExport}" exported from backend/src/routes/${rel} but not .use()'d in create-api-app.ts (or any domain aggregator)`
+					`  Route "${routeExport}" exported from backend/src/routes/${rel} but not .use()'d in create-api-app.ts (or any domain aggregator)`,
 				);
 			}
 		}
@@ -164,7 +164,7 @@ function checkFrontendPages(): string[] {
 			.replace(/\.tsx$/, '');
 		if (!registeredPages.has(rel)) {
 			errors.push(
-				`  Page "${rel}" exists but is not imported in frontend/src/routes/lazyPages.ts`
+				`  Page "${rel}" exists but is not imported in frontend/src/routes/lazyPages.ts`,
 			);
 		}
 	}
@@ -188,7 +188,7 @@ function checkSkeletonImportPaths(): string[] {
 	const errors: string[] = [];
 	const pattern = new RegExp(
 		`from\\s+['"]@/components/shared/(${SKELETON_NAMES.join('|')})['"]`,
-		'g'
+		'g',
 	);
 
 	function walk(dir: string) {
@@ -206,7 +206,7 @@ function checkSkeletonImportPaths(): string[] {
 						.replace(/\\/g, '/');
 					errors.push(
 						`  ${rel}: imports "${match[1]}" from "@/components/shared/${match[1]}" — ` +
-							`use "@/components/shared/skeletons/${match[1]}" instead`
+							`use "@/components/shared/skeletons/${match[1]}" instead`,
 					);
 				}
 			}
@@ -238,7 +238,7 @@ const skeletonErrors = checkSkeletonImportPaths();
 if (skeletonErrors.length > 0) {
 	allErrors.push(
 		'Forbidden skeleton import shorthand (use "@/components/shared/skeletons/<Name>"):',
-		...skeletonErrors
+		...skeletonErrors,
 	);
 }
 

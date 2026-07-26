@@ -152,7 +152,7 @@ export function isFileExcluded(filePath: string): boolean {
 export function enumerateTemplateFiles(spernakitPath: string, version: string): string[] {
 	const result = Bun.spawnSync(
 		['git', '-C', spernakitPath, 'ls-tree', '--name-only', '-r', `v${version}`],
-		{ stderr: 'pipe', stdout: 'pipe' }
+		{ stderr: 'pipe', stdout: 'pipe' },
 	);
 
 	if (result.exitCode !== 0) {
@@ -205,7 +205,7 @@ export function enumerateInitFiles(sourcePath: string): string[] {
 
 export function loadClassificationOverrides(
 	spernakitPath: string,
-	version: string
+	version: string,
 ): { overrides: ClassificationOverrides; source: 'filesystem' | 'git' } | null {
 	// Check filesystem first - prefer new format (has $comment) over git tag
 	const fsPath = path.join(spernakitPath, 'scripts', 'template-manifest.json');
@@ -224,7 +224,7 @@ export function loadClassificationOverrides(
 	const gitContent = getTemplateFileAtVersion(
 		spernakitPath,
 		version,
-		'scripts/template-manifest.json'
+		'scripts/template-manifest.json',
 	);
 	if (gitContent) {
 		try {

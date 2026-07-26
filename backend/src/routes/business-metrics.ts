@@ -76,10 +76,10 @@ const businessMetricsRoutes = new Elysia({
 						default: DATE_RANGE_DEFAULT_DAYS,
 						maximum: DATE_RANGE_MAX_DAYS,
 						minimum: 1,
-					})
+					}),
 				),
 			}),
-		}
+		},
 	)
 	.get(
 		'/events',
@@ -127,17 +127,17 @@ const businessMetricsRoutes = new Elysia({
 						default: DATE_RANGE_DEFAULT_DAYS,
 						maximum: DATE_RANGE_MAX_DAYS,
 						minimum: 1,
-					})
+					}),
 				),
 				limit: t.Optional(
 					t.Numeric({
 						default: 20,
 						maximum: 100,
 						minimum: 1,
-					})
+					}),
 				),
 			}),
-		}
+		},
 	)
 	.get(
 		'/user-activity/:userId',
@@ -190,10 +190,10 @@ const businessMetricsRoutes = new Elysia({
 						default: DATE_RANGE_DEFAULT_DAYS,
 						maximum: DATE_RANGE_MAX_DAYS,
 						minimum: 1,
-					})
+					}),
 				),
 			}),
-		}
+		},
 	)
 	.post(
 		'/track',
@@ -231,9 +231,9 @@ const businessMetricsRoutes = new Elysia({
 								t.Boolean(),
 								t.Null(),
 							]),
-							{ maxProperties: MAX_PROPERTIES_DEFAULT }
+							{ maxProperties: MAX_PROPERTIES_DEFAULT },
 						),
-					])
+					]),
 				),
 			}),
 			detail: {
@@ -259,7 +259,7 @@ const businessMetricsRoutes = new Elysia({
 				},
 				summary: 'Track a business event',
 			},
-		}
+		},
 	);
 
 export { businessMetricsRoutes };

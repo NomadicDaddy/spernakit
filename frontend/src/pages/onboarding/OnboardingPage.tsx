@@ -34,14 +34,14 @@ function QuickStartCard({
 	return (
 		<Card className="relative" interactive>
 			<CardContent className="flex items-start gap-3 pt-6">
-				<Icon aria-hidden="true" className="text-primary mt-0.5 h-5 w-5 shrink-0" />
+				<Icon aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
 				<div>
 					<p className="font-medium">
 						<Link className="after:absolute after:inset-0" to={link}>
 							{title}
 						</Link>
 					</p>
-					<p className="text-muted-foreground text-sm">{description}</p>
+					<p className="text-sm text-muted-foreground">{description}</p>
 				</div>
 			</CardContent>
 		</Card>
@@ -50,14 +50,14 @@ function QuickStartCard({
 
 function TipCard({ text, title }: { text: string; title: string }) {
 	return (
-		<div className="bg-muted/50 flex items-start gap-3 rounded-lg p-4">
+		<div className="flex items-start gap-3 rounded-lg bg-muted/50 p-4">
 			<BookOpen
 				aria-hidden="true"
-				className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0"
+				className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
 			/>
 			<div>
 				<p className="text-sm font-medium">{title}</p>
-				<p className="text-muted-foreground text-sm">{text}</p>
+				<p className="text-sm text-muted-foreground">{text}</p>
 			</div>
 		</div>
 	);
@@ -78,10 +78,10 @@ function OnboardingCompletionBanner({
 	return (
 		<Card className="border-primary/20 bg-primary/5">
 			<CardContent className="flex items-center gap-3 pt-6">
-				<CheckCircle2 aria-hidden="true" className="text-primary h-6 w-6 shrink-0" />
+				<CheckCircle2 aria-hidden="true" className="h-6 w-6 shrink-0 text-primary" />
 				<div className="flex-1">
 					<p className="font-medium">Onboarding Complete</p>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Completed on {completedAt ? formatDate(completedAt) : 'unknown date'}
 					</p>
 				</div>

@@ -30,8 +30,8 @@ const widgetSchema = t.Object({
 		t.Record(
 			t.String({ maxLength: FIELD_LENGTH_MEDIUM }),
 			t.Union([t.String({ maxLength: 2000 }), t.Number(), t.Boolean(), t.Null()]),
-			{ maxProperties: MAX_PROPERTIES_DEFAULT }
-		)
+			{ maxProperties: MAX_PROPERTIES_DEFAULT },
+		),
 	),
 	refreshInterval: t.Optional(t.Integer({ minimum: 5 })),
 	row: t.Integer({ minimum: 0 }),

@@ -29,7 +29,7 @@ function ViewMembersDialog({ isOpen, members, onOpenChange }: ViewMembersDialogP
 				<div className="space-y-4 py-4">
 					<div className="max-h-96 overflow-y-auto">
 						{members.length === 0 ? (
-							<div className="text-muted-foreground py-4 text-center">
+							<div className="py-4 text-center text-muted-foreground">
 								No members yet
 							</div>
 						) : (

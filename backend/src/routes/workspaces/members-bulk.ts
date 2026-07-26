@@ -48,7 +48,7 @@ interface RejectedResult {
 function filterByRoleHierarchy(
 	userIds: number[],
 	requesterWsRole: WorkspaceMemberRole,
-	workspaceId: number
+	workspaceId: number,
 ): { rejectedResults: RejectedResult[]; validUserIds: number[] } {
 	const validUserIds: number[] = [];
 	const rejectedResults: RejectedResult[] = [];
@@ -95,14 +95,14 @@ function handleBulkDeleteMembers({ body, params, set, user }: BulkDeleteMembersC
 	const { error: membershipError, role: requesterWsRole } = requireMembershipOrSysop(
 		ctx.authUser,
 		id,
-		set
+		set,
 	);
 	if (membershipError) return membershipError;
 	if (requesterWsRole) {
 		const { rejectedResults, validUserIds } = filterByRoleHierarchy(
 			body.userIds,
 			requesterWsRole,
-			id
+			id,
 		);
 
 		if (validUserIds.length === 0 && rejectedResults.length > 0) {
@@ -145,12 +145,12 @@ const workspaceMembersBulkRoutes = new Elysia({
 			const { error: membershipError, role: wsRole } = requireMembershipOrSysop(
 				ctx.authUser,
 				id,
-				set
+				set,
 			);
 			if (membershipError) return membershipError;
 			if (wsRole) {
 				const disallowed = body.members.filter(
-					(m) => !canModifyWorkspaceRole(wsRole, m.role)
+					(m) => !canModifyWorkspaceRole(wsRole, m.role),
 				);
 				if (disallowed.length > 0) {
 					set.status = HTTP_STATUS.FORBIDDEN;
@@ -174,7 +174,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 						]),
 						userId: t.Number({ minimum: 1 }),
 					}),
-					{ maxItems: 100, minItems: 1 }
+					{ maxItems: 100, minItems: 1 },
 				),
 			}),
 			detail: {
@@ -208,7 +208,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 						description: 'Batch add members result with per-item status.',
 					},
 					'400': badRequestExample(
-						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`
+						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`,
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
@@ -217,7 +217,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 				summary: 'Bulk add workspace members (workspace ADMIN+)',
 			},
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post('/:id/members/bulk-delete', handleBulkDeleteMembers, {
 		beforeHandle: requireAuth,

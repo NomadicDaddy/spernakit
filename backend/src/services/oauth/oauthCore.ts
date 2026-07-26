@@ -6,9 +6,9 @@ import type {
 	OAuthTokens,
 } from './oauthTypes.ts';
 import type {
+	ProfileParseResult,
 	TokenExchangeParams,
 	TokenExchangeResult,
-	ProfileParseResult,
 } from './providers/types.ts';
 
 import { linkAccountOrCreateUser } from './oauthAccountService.ts';
@@ -54,7 +54,7 @@ function getProviderProfileParser(provider: OAuthProvider): ProfileParseFn {
 function buildTokenParams(
 	providerConfig: OAuthProviderConfig,
 	code: string,
-	codeVerifier: string
+	codeVerifier: string,
 ): TokenExchangeParams {
 	return {
 		callbackUrl: providerConfig.callbackUrl,
@@ -68,7 +68,7 @@ function buildTokenParams(
 async function exchangeCode(
 	provider: OAuthProvider,
 	code: string,
-	codeVerifier?: string
+	codeVerifier?: string,
 ): Promise<OAuthTokens> {
 	if (!codeVerifier) {
 		throw new Error('PKCE code verifier is required for token exchange');
@@ -78,10 +78,10 @@ async function exchangeCode(
 	if (!providerConfig) throw new Error(`Provider ${provider} is not configured`);
 
 	const exchangeFn = getProviderExchange(provider);
-	let params: TokenExchangeParams & { tenantId?: string | undefined } = buildTokenParams(
+	let params: { tenantId?: string | undefined } & TokenExchangeParams = buildTokenParams(
 		providerConfig,
 		code,
-		codeVerifier
+		codeVerifier,
 	);
 
 	if (provider === 'microsoft') {
@@ -111,7 +111,7 @@ async function fetchProfile(provider: OAuthProvider, accessToken: string): Promi
 async function handleCallback(
 	provider: OAuthProvider,
 	code: string,
-	state: string | undefined
+	state: string | undefined,
 ): Promise<HandleCallbackResult> {
 	if (!validateOAuthState(state)) {
 		throw new Error('Invalid or expired OAuth state parameter');
@@ -131,4 +131,3 @@ async function handleCallback(
 }
 
 export { handleCallback };
-export type { OAuthProfile, OAuthProvider, OAuthTokens };

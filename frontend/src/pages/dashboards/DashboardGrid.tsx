@@ -90,7 +90,7 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 	const handleMoveKeyDown = (
 		event: KeyboardEvent<HTMLButtonElement>,
 		widgetId: number,
-		direction: MoveDirection
+		direction: MoveDirection,
 	) => {
 		if (event.key !== 'Enter' && event.key !== ' ') return;
 
@@ -118,9 +118,9 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 			{dashboard.widgets.length === 0 ? (
 				<Card>
 					<CardContent className="flex flex-col items-center justify-center py-12">
-						<Plus aria-hidden="true" className="text-muted-foreground mb-4 size-12" />
+						<Plus aria-hidden="true" className="mb-4 size-12 text-muted-foreground" />
 						<h2 className="text-lg font-semibold">No widgets yet</h2>
-						<p className="text-muted-foreground mt-1 text-sm">
+						<p className="mt-1 text-sm text-muted-foreground">
 							{canMutate
 								? 'Switch to edit mode and add widgets to your dashboard.'
 								: 'This dashboard has no widgets yet.'}
@@ -149,7 +149,7 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 						width={width || 1200}>
 						{dashboard.widgets.map((widget) => {
 							const widgetLayout = currentLayout.find(
-								(item) => item.i === String(widget.id)
+								(item) => item.i === String(widget.id),
 							);
 							const canMoveLeft = widgetLayout ? widgetLayout.x > 0 : false;
 							const canMoveRight = widgetLayout

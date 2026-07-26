@@ -11,7 +11,7 @@ export const corsSchema = Type.Object({
 			default: [],
 			description:
 				'Explicit list of allowed origins for production deployments with trustProxy enabled',
-		}
+		},
 	),
 	allowNoOrigin: Type.Boolean({ default: false }),
 	frontendDevOrigins: Type.Array(Type.String(), { default: [] }),

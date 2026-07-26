@@ -74,7 +74,7 @@ function FeatureFlagsSection({ features, onFeatureChange, pending }: FeatureFlag
 						key={toggle.key}>
 						<div className="space-y-0.5">
 							<Label htmlFor={toggle.key}>{toggle.label}</Label>
-							<p className="text-muted-foreground text-sm">{toggle.description}</p>
+							<p className="text-sm text-muted-foreground">{toggle.description}</p>
 						</div>
 						<Switch
 							checked={features[toggle.key] ?? true}

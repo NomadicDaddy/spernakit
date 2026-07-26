@@ -82,8 +82,8 @@ export function AlertCard({ alert }: AlertCardProps) {
 						</div>
 					)}
 				</div>
-				<p className="text-muted-foreground mt-1 text-xs">{alert.message}</p>
-				<p className="text-muted-foreground text-xs">{formatDateTime(alert.createdAt)}</p>
+				<p className="mt-1 text-xs text-muted-foreground">{alert.message}</p>
+				<p className="text-xs text-muted-foreground">{formatDateTime(alert.createdAt)}</p>
 			</div>
 		</div>
 	);

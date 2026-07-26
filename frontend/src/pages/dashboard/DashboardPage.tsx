@@ -37,7 +37,7 @@ interface WsDashboardMessage {
 	type: string;
 }
 
-const DASHBOARD_METRICS_HOURS = new Set([1, 6, 12, 24]);
+const DASHBOARD_METRICS_HOURS = new Set([1, 12, 24, 6]);
 const DEFAULT_METRICS_HOURS = 6;
 
 /**
@@ -67,7 +67,7 @@ function useDashboardData(enabled: boolean, canUseGlobalScope: boolean) {
 							...oldData,
 							...wsMessage.data,
 						};
-					}
+					},
 				);
 				void queryClient.invalidateQueries({ queryKey: ['metrics-history'] });
 			}
@@ -111,7 +111,7 @@ function DashboardPage() {
 					params.set('metricsHours', String(hours));
 				}
 			},
-			{ replace: false }
+			{ replace: false },
 		);
 	};
 	const { cpuData, memoryData, metricsLoading } = useMetricsHistory(metricsHours, hasAccess);

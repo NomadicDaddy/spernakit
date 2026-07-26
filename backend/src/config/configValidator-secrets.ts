@@ -4,8 +4,8 @@ import { configLogger } from './configLogger.ts';
 import {
 	checkEncryptionKeyFormat,
 	checkKnownDevKeys,
-	checkPemKeyFormat,
 	checkMfaKeyPair,
+	checkPemKeyFormat,
 	checkPlaceholderPemKeys,
 	checkPlaceholderSecrets,
 	checkSecretStrength,
@@ -86,7 +86,7 @@ function emitSecretIssues(issues: ValidationIssue[], context: string, hint?: str
 
 	configLogger[pinoLevel](
 		{ fields: issues.map((i) => `${i.field} (${i.message})`) },
-		`${label}: ${context}`
+		`${label}: ${context}`,
 	);
 	if (hint) configLogger.info(hint);
 	if (hasError) process.exit(1);
@@ -100,7 +100,7 @@ function validatePlaceholderSecrets(nodeEnv: string, secretFields: SecretField[]
 		isDev
 			? 'Placeholder secrets detected - run "bun run generate-keys" to generate unique secrets'
 			: 'Placeholder secrets detected in non-development environment',
-		'\nGenerate new secrets with: bun run generate-keys'
+		'\nGenerate new secrets with: bun run generate-keys',
 	);
 }
 
@@ -110,7 +110,7 @@ function validateSecretStrength(nodeEnv: string, secretFields: SecretField[]): v
 	emitSecretIssues(
 		issues,
 		'Weak secrets detected in non-development environment',
-		'\nGenerate secure secrets with: bun run generate-keys\n\nOr use OpenSSL: openssl rand -base64 32'
+		'\nGenerate secure secrets with: bun run generate-keys\n\nOr use OpenSSL: openssl rand -base64 32',
 	);
 }
 
@@ -122,7 +122,7 @@ function validatePemKeys(nodeEnv: string, pemFields: PemKeyField[]): void {
 		isDev
 			? 'Placeholder PEM keys detected - run "bun run generate-keys" to generate EC key pairs'
 			: 'Placeholder PEM keys detected in non-development environment',
-		'\nGenerate EC key pairs with: bun run generate-keys'
+		'\nGenerate EC key pairs with: bun run generate-keys',
 	);
 
 	if (isDev) return;
@@ -130,7 +130,7 @@ function validatePemKeys(nodeEnv: string, pemFields: PemKeyField[]): void {
 	emitSecretIssues(
 		formatIssues,
 		'Invalid PEM keys detected',
-		'\nGenerate EC key pairs with: bun run generate-keys'
+		'\nGenerate EC key pairs with: bun run generate-keys',
 	);
 }
 
@@ -141,7 +141,7 @@ function validateKnownDevKeys(nodeEnv: string, security: AppConfig['security']):
 		issues,
 		'Known development keys/secrets detected in non-development environment. ' +
 			'These keys are committed to Git and publicly known.',
-		'\nGenerate unique keys with: bun run generate-keys'
+		'\nGenerate unique keys with: bun run generate-keys',
 	);
 }
 
@@ -155,7 +155,7 @@ function validateMfaKeyPair(nodeEnv: string, security: AppConfig['security']): v
 	emitSecretIssues(
 		checkMfaKeyPair(nodeEnv, security),
 		'Incomplete MFA challenge key pair',
-		'\nGenerate the dedicated MFA key pair with: bun run generate-keys'
+		'\nGenerate the dedicated MFA key pair with: bun run generate-keys',
 	);
 }
 
@@ -171,7 +171,7 @@ function collectSecretIssues(
 	nodeEnv: string,
 	secretFields: SecretField[],
 	pemKeyFields: PemKeyField[],
-	security: AppConfig['security']
+	security: AppConfig['security'],
 ): ValidationIssue[] {
 	const isDev = nodeEnv === 'development';
 	const isDevOrTest = isDev || nodeEnv === 'test';
@@ -189,13 +189,13 @@ function collectSecretIssues(
 
 export {
 	collectSecretIssues,
-	getSecretFields,
 	getPemKeyFields,
-	type ValidationIssue,
+	getSecretFields,
 	validateEncryptionKeyFormat,
 	validateKnownDevKeys,
 	validateMfaKeyPair,
 	validatePemKeys,
 	validatePlaceholderSecrets,
 	validateSecretStrength,
+	type ValidationIssue,
 };

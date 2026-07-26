@@ -34,7 +34,7 @@ async function updateSmtpConfig(config: Partial<SmtpConfig>): Promise<DataRespon
 }
 
 async function sendSmtpTestEmail(
-	request: TestEmailRequest
+	request: TestEmailRequest,
 ): Promise<DataResponse<{ success: boolean }>> {
 	return apiClient.post<DataResponse<{ success: boolean }>>('/settings/smtp/test', {
 		body: request,

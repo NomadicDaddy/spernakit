@@ -3,7 +3,7 @@ import type { DataResponse } from '@/api/types';
 
 function useChartData(
 	metricsData: DataResponse<MetricsResponse> | undefined,
-	metricType: string
+	metricType: string,
 ): { timestamp: string; value: number }[] {
 	const history = metricsData?.data.history ?? [];
 	return history

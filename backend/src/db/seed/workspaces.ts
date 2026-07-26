@@ -21,7 +21,7 @@ function addUsersToDefaultWorkspace(
 	db: SeedDb,
 	createdUsers: CreatedUser[],
 	workspaceId: number,
-	roleMap: WorkspaceRoleMap
+	roleMap: WorkspaceRoleMap,
 ): void {
 	for (const user of createdUsers) {
 		const wsRole = roleMap[user.role as keyof WorkspaceRoleMap];

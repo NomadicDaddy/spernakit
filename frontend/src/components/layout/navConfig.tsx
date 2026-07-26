@@ -92,12 +92,12 @@ const navItems: NavItem[] = navEntries.filter((e): e is NavItem => e.type !== 's
 /** Visibility filter returning NavItem[] — used by template-managed layout components. */
 function getVisibleNavItems(
 	hasMinRole: (role: UserRole) => boolean,
-	appFeatures: AppFeatures
+	appFeatures: AppFeatures,
 ): NavItem[] {
 	return navItems.filter(
 		(item) =>
 			(!item.minRole || hasMinRole(item.minRole)) &&
-			(!item.featureFlag || appFeatures[item.featureFlag])
+			(!item.featureFlag || appFeatures[item.featureFlag]),
 	);
 }
 

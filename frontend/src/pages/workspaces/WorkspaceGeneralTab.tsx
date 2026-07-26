@@ -81,7 +81,7 @@ function WorkspaceGeneralTab({ form, isPending, onSave, setForm }: WorkspaceGene
 						))}
 					</SelectContent>
 				</Select>
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					Default timezone for this workspace.
 				</p>
 			</div>
@@ -108,7 +108,7 @@ function WorkspaceGeneralTab({ form, isPending, onSave, setForm }: WorkspaceGene
 						))}
 					</SelectContent>
 				</Select>
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					Default currency for this workspace.
 				</p>
 			</div>

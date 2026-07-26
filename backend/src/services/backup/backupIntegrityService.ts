@@ -15,7 +15,7 @@ interface IntegrityCheckResult {
  */
 export function verifyDatabaseIntegrity(
 	dbPath: string,
-	mode: 'full' | 'quick' = 'quick'
+	mode: 'full' | 'quick' = 'quick',
 ): IntegrityCheckResult {
 	const startTime = performance.now();
 	try {

@@ -86,7 +86,7 @@ const dashboardConfigs = pgTable(
 		index('idx_dashboard_configs_user_id_is_deleted').on(table.userId, table.isDeleted),
 		index('idx_dashboard_configs_workspace_id').on(table.workspaceId),
 		index('idx_dashboard_configs_workspace_id_user_id').on(table.workspaceId, table.userId),
-	]
+	],
 );
 
 /**
@@ -132,11 +132,11 @@ const dashboardWidgets = pgTable(
 	(table) => [
 		check(
 			'chk_dashboard_widgets_metric_type',
-			sql`${table.metricType} in (${sql.raw(METRIC_TYPE_IN_LIST)})`
+			sql`${table.metricType} in (${sql.raw(METRIC_TYPE_IN_LIST)})`,
 		),
 		check(
 			'chk_dashboard_widgets_widget_type',
-			sql`${table.widgetType} in (${sql.raw(WIDGET_TYPE_IN_LIST)})`
+			sql`${table.widgetType} in (${sql.raw(WIDGET_TYPE_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -162,9 +162,9 @@ const dashboardWidgets = pgTable(
 		index('idx_dashboard_widgets_is_deleted').on(table.isDeleted),
 		index('idx_dashboard_widgets_dashboard_id_is_deleted').on(
 			table.dashboardId,
-			table.isDeleted
+			table.isDeleted,
 		),
-	]
+	],
 );
 
 export { dashboardConfigs, dashboardWidgets };

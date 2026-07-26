@@ -143,7 +143,7 @@ export function HealthConfigSection({
 										Generate alerts on health degradation
 									</Label>
 								</div>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-xs text-muted-foreground">
 									When disabled, health checks still run but no alerts are raised
 								</p>
 							</div>
@@ -166,7 +166,7 @@ export function HealthConfigSection({
 										<SelectItem value="unhealthy">Unhealthy</SelectItem>
 									</SelectContent>
 								</Select>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-xs text-muted-foreground">
 									Minimum severity that triggers an alert
 								</p>
 							</div>
@@ -188,7 +188,7 @@ export function HealthConfigSection({
 										type="number"
 										value={toPercent(config?.[field.key])}
 									/>
-									<p className="text-muted-foreground text-xs">
+									<p className="text-xs text-muted-foreground">
 										{field.description}
 									</p>
 								</div>
@@ -211,7 +211,7 @@ export function HealthConfigSection({
 								type="number"
 								value={config?.logRetentionDays ?? 30}
 							/>
-							<p className="text-muted-foreground text-xs">
+							<p className="text-xs text-muted-foreground">
 								Health check logs older than this will be automatically cleaned up
 							</p>
 						</div>

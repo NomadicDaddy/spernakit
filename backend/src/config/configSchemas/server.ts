@@ -1,4 +1,4 @@
-import { Type, enumString } from '../configSchemaHelpers';
+import { enumString, Type } from '../configSchemaHelpers';
 
 export const serverSchema = Type.Object({
 	backendPort: Type.Integer({ maximum: 65535, minimum: 1 }),

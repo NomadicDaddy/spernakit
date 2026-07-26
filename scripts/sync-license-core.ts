@@ -65,7 +65,7 @@ function loadTargets(root: string): Target[] {
 			/[\\/]/u.test(directory)
 		) {
 			throw new Error(
-				`${configPath}: entry ${index} directory must be one sibling directory name.`
+				`${configPath}: entry ${index} directory must be one sibling directory name.`,
 			);
 		}
 		if (
@@ -74,7 +74,7 @@ function loadTargets(root: string): Target[] {
 			packageName !== packageName.trim()
 		) {
 			throw new Error(
-				`${configPath}: entry ${index} packageName must be a non-empty string.`
+				`${configPath}: entry ${index} packageName must be a non-empty string.`,
 			);
 		}
 
@@ -96,12 +96,12 @@ function hasUncommittedChanges(targetRoot: string, relativePath: string): boolea
 		{
 			stderr: 'pipe',
 			stdout: 'pipe',
-		}
+		},
 	);
 	if (result.exitCode !== 0) {
 		const detail = result.stderr.toString().trim();
 		throw new Error(
-			`Refusing to sync ${targetRoot}: git could not inspect ${relativePath}.${detail ? ` ${detail}` : ''}`
+			`Refusing to sync ${targetRoot}: git could not inspect ${relativePath}.${detail ? ` ${detail}` : ''}`,
 		);
 	}
 	return result.stdout.toString().trim().length > 0;
@@ -148,7 +148,7 @@ async function main(): Promise<void> {
 	if (targets.length === 0) {
 		console.log(
 			'No license-core-targets.json present; no sibling repositories to synchronize. ' +
-				'Copy license-core-targets.json.example to license-core-targets.json to register some.'
+				'Copy license-core-targets.json.example to license-core-targets.json to register some.',
 		);
 		return;
 	}
@@ -157,7 +157,7 @@ async function main(): Promise<void> {
 		const targetRoot = resolve(applications, target.directory);
 		if ((await targetState(targetRoot, target.packageName)) === 'absent') {
 			console.warn(
-				`Skipping ${target.directory}: sibling repository not present at ${targetRoot}.`
+				`Skipping ${target.directory}: sibling repository not present at ${targetRoot}.`,
 			);
 			skipped.push(target.directory);
 			continue;
@@ -187,7 +187,7 @@ async function main(): Promise<void> {
 		console.error('Refusing to overwrite uncommitted changes:');
 		for (const path of blocked) console.error(`  - ${path}`);
 		console.error(
-			'These files differ from Spernakit and have uncommitted work that this sync would destroy.'
+			'These files differ from Spernakit and have uncommitted work that this sync would destroy.',
 		);
 		console.error('Commit or discard them in the target repository, then run this again.');
 		exit(1);
@@ -203,12 +203,12 @@ async function main(): Promise<void> {
 	if (skipped.length > 0) {
 		console.warn(
 			`License core drift NOT verified for: ${skipped.join(', ')} ` +
-				'(run this from a checkout where the sibling repositories are present).'
+				'(run this from a checkout where the sibling repositories are present).',
 		);
 	}
 
 	console.log(
-		check ? 'License core copies match Spernakit.' : 'License core synchronization complete.'
+		check ? 'License core copies match Spernakit.' : 'License core synchronization complete.',
 	);
 }
 

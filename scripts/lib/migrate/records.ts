@@ -26,7 +26,7 @@ function ensureMigrationsTable(db: Database): void {
 export function getAppliedMigrations(db: Database): MigrationRecord[] {
 	ensureMigrationsTable(db);
 	const stmt = db.query<MigrationRecord, []>(
-		'SELECT id, hash, created_at FROM __drizzle_migrations ORDER BY id'
+		'SELECT id, hash, created_at FROM __drizzle_migrations ORDER BY id',
 	);
 	return stmt.all();
 }
@@ -39,6 +39,6 @@ export function markMigrationApplied(db: Database, tag: string): void {
 	const createdAt = Date.now();
 	db.query('INSERT INTO __drizzle_migrations (hash, created_at) VALUES (?, ?)').run(
 		hash,
-		createdAt
+		createdAt,
 	);
 }

@@ -53,7 +53,7 @@ function main(): void {
 	if (!existsSync(schemaPath)) {
 		console.error(
 			`[FAIL] Schema artifact missing: ${schemaPath}\n` +
-				'       Run `bun run config:schema` to generate it.'
+				'       Run `bun run config:schema` to generate it.',
 		);
 		process.exit(1);
 	}
@@ -71,7 +71,7 @@ function main(): void {
 			`       File: ${schemaPath}\n` +
 			'       TypeBox source files under backend/src/config/configSchemas/ have\n' +
 			'       changed since the committed schema was generated.\n\n' +
-			'       Fix: bun run config:schema\n'
+			'       Fix: bun run config:schema\n',
 	);
 	process.exit(1);
 }

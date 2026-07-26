@@ -18,7 +18,7 @@ import { useAppFeatures } from '@/hooks/useAppFeatures';
 const LazyNotificationBell = lazy(() =>
 	import('@/components/layout/NotificationBell').then((m) => ({
 		default: m.NotificationBell,
-	}))
+	})),
 );
 
 interface HeaderBarActionsProps {

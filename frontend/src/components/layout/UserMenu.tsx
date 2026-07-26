@@ -66,7 +66,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 				<DropdownMenuLabel>
 					<div className="flex flex-col space-y-1">
 						<p className="text-sm font-medium">{user?.username}</p>
-						<p className="text-muted-foreground text-xs">{user?.email}</p>
+						<p className="text-xs text-muted-foreground">{user?.email}</p>
 					</div>
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
@@ -98,7 +98,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 									startTransition(() => {
 										setMode(t.value);
 										updateUserUiSettings({ theme: t.value }).catch(
-											() => undefined
+											() => undefined,
 										);
 									});
 								}}>
@@ -117,7 +117,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 					}}>
 					<Keyboard aria-hidden="true" className="mr-2 size-4" />
 					Keyboard Shortcuts
-					<span className="text-muted-foreground ml-auto text-xs">?</span>
+					<span className="ml-auto text-xs text-muted-foreground">?</span>
 				</DropdownMenuItem>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem

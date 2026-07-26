@@ -31,7 +31,7 @@ function usePagination(defaultLimit = 20, syncToUrl = false): UsePaginationResul
 					}
 					return next;
 				},
-				{ replace: true }
+				{ replace: true },
 			);
 		} else {
 			setLocalPage(newPage);
@@ -51,7 +51,7 @@ function usePagination(defaultLimit = 20, syncToUrl = false): UsePaginationResul
 					next.delete('page');
 					return next;
 				},
-				{ replace: true }
+				{ replace: true },
 			);
 		} else {
 			setLocalLimit(newLimit);
@@ -67,7 +67,7 @@ function usePagination(defaultLimit = 20, syncToUrl = false): UsePaginationResul
 					next.delete('page');
 					return next;
 				},
-				{ replace: true }
+				{ replace: true },
 			);
 		} else {
 			setLocalPage(1);

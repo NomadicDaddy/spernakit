@@ -59,7 +59,7 @@ export const DANGEROUS_CONTENT_PATTERN = new RegExp(
 	`(?:${DANGEROUS_HTML_TAGS.source})|` +
 		`(?:${DANGEROUS_EVENT_HANDLERS.source})|` +
 		`(?:${DANGEROUS_PROTOCOLS.source})`,
-	'i'
+	'i',
 );
 
 /** File extensions that are always blocked regardless of MIME type. */

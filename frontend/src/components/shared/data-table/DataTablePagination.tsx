@@ -33,7 +33,7 @@ export function DataTablePagination<TData>({
 
 	return (
 		<div className="flex items-center justify-between">
-			<div className="text-muted-foreground text-sm">
+			<div className="text-sm text-muted-foreground">
 				{onRowSelectionChange && (
 					<span>
 						{table.getFilteredSelectedRowModel().rows.length} of{' '}
@@ -51,7 +51,9 @@ export function DataTablePagination<TData>({
 						}
 					}}
 					value={String(
-						isServerPagination ? pagination.limit : table.getState().pagination.pageSize
+						isServerPagination
+							? pagination.limit
+							: table.getState().pagination.pageSize,
 					)}>
 					<SelectTrigger aria-label="Rows per page" className="w-[100px]">
 						<SelectValue />
@@ -64,7 +66,7 @@ export function DataTablePagination<TData>({
 						))}
 					</SelectContent>
 				</Select>
-				<span className="text-muted-foreground text-sm">
+				<span className="text-sm text-muted-foreground">
 					Page {currentPage} of {totalPages || 1}
 				</span>
 				<Button

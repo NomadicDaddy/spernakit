@@ -73,7 +73,7 @@ async function handleLogin({ body, request, set }: LoginContext) {
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			LOGIN_ERROR_MESSAGES[result.reason],
-			LOGIN_ERROR_CODES[result.reason]
+			LOGIN_ERROR_CODES[result.reason],
 		);
 	}
 
@@ -96,7 +96,7 @@ async function handleLogin({ body, request, set }: LoginContext) {
 		setCacheHeaders(set, 'NO_CACHE');
 		return serviceUnavailableError(
 			'MFA is not configured on this server. Contact an administrator.',
-			AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED
+			AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED,
 		);
 	}
 

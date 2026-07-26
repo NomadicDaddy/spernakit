@@ -127,7 +127,7 @@ function formatImportLine(sourceFile: string, names: ParsedImportName[]): string
 export function processFile(
 	content: string,
 	exportMap: Map<string, ExportEntry>,
-	filePath: string
+	filePath: string,
 ): { content: string; modified: boolean; warnings: string[] } {
 	const warnings: string[] = [];
 	const barrelImports = findBarrelImports(content);

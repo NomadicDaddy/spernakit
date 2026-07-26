@@ -49,7 +49,7 @@ function MobileNav() {
 	const visibleNavItems = appFeatures
 		? getVisibleNavItems(hasMinRole, appFeatures)
 		: navItems.filter(
-				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole))
+				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole)),
 			);
 
 	// Auto-close menu when route changes (derived state during render pattern)
@@ -85,10 +85,10 @@ function MobileNav() {
 							className={cn(
 								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
 								'hover:bg-accent hover:text-accent-foreground',
-								'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2',
+								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 								location.pathname.startsWith(item.to)
 									? 'bg-accent text-accent-foreground'
-									: 'text-muted-foreground'
+									: 'text-muted-foreground',
 							)}
 							key={item.to}
 							onClick={() => setOpen(false)}
@@ -108,10 +108,10 @@ function MobileNav() {
 							className={cn(
 								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
 								'hover:bg-accent hover:text-accent-foreground',
-								'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2',
+								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 								location.pathname.startsWith('/profile')
 									? 'bg-accent text-accent-foreground'
-									: 'text-muted-foreground'
+									: 'text-muted-foreground',
 							)}
 							onClick={() => setOpen(false)}
 							to="/profile/personal">
@@ -122,8 +122,8 @@ function MobileNav() {
 							className={cn(
 								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
 								'hover:bg-accent hover:text-accent-foreground',
-								'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2',
-								'text-muted-foreground'
+								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+								'text-muted-foreground',
 							)}
 							onClick={() => setOpen(false)}
 							to="/profile/preferences">
@@ -136,7 +136,7 @@ function MobileNav() {
 
 					{/* Theme selector */}
 					<div className="flex items-center justify-between px-4 py-3">
-						<span className="text-muted-foreground text-xs font-medium">Theme</span>
+						<span className="text-xs font-medium text-muted-foreground">Theme</span>
 						<div className="flex gap-1">
 							{themeModes.map((t) => (
 								<Button
@@ -161,7 +161,7 @@ function MobileNav() {
 					{user && (
 						<div className="border-t px-4 py-3">
 							<p className="truncate text-sm font-medium">{user.username}</p>
-							<p className="text-muted-foreground truncate text-xs">{user.email}</p>
+							<p className="truncate text-xs text-muted-foreground">{user.email}</p>
 						</div>
 					)}
 				</div>

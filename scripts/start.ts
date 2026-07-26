@@ -58,7 +58,7 @@ if (values.check) {
 const existingBackendPid = readPidFile(logsDir, 'backend');
 if (existingBackendPid !== null && !isProcessAlive(existingBackendPid)) {
 	console.log(
-		`⚠ Found stale backend.pid (PID ${existingBackendPid}) — previous backend exited silently. Check logs/backend.error.log.`
+		`⚠ Found stale backend.pid (PID ${existingBackendPid}) — previous backend exited silently. Check logs/backend.error.log.`,
 	);
 }
 
@@ -81,7 +81,7 @@ const backendPid = spawnBackground(
 	'backend',
 	'bun',
 	['src/app.ts'],
-	path.join(rootDir, 'backend')
+	path.join(rootDir, 'backend'),
 );
 
 if (!backendPid) {
@@ -106,7 +106,7 @@ const frontendPid = spawnBackground(
 	'frontend',
 	'bun',
 	['run', 'dev'],
-	path.join(rootDir, 'frontend')
+	path.join(rootDir, 'frontend'),
 );
 
 if (!frontendPid) {

@@ -27,7 +27,7 @@ interface PageHeaderProps {
 function Breadcrumbs({ items }: { items: Breadcrumb[] }) {
 	return (
 		<nav aria-label="Breadcrumb" className="mb-1">
-			<ol className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+			<ol className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
 				{items.map((item, i) => {
 					const isLast = i === items.length - 1;
 					return (
@@ -35,14 +35,14 @@ function Breadcrumbs({ items }: { items: Breadcrumb[] }) {
 							<li>
 								{item.to && !isLast ? (
 									<Link
-										className="hover:text-foreground transition-colors"
+										className="transition-colors hover:text-foreground"
 										to={item.to}>
 										{item.label}
 									</Link>
 								) : (
 									<span
 										aria-current={isLast ? 'page' : undefined}
-										className={cn(isLast && 'text-foreground font-medium')}>
+										className={cn(isLast && 'font-medium text-foreground')}>
 										{item.label}
 									</span>
 								)}
@@ -80,7 +80,7 @@ function PageHeader({
 			<div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
 				<div className="flex min-w-0 items-start gap-3">
 					{Icon && (
-						<div className="bg-muted/60 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
+						<div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted/60 text-primary">
 							<Icon aria-hidden="true" className="size-5" />
 						</div>
 					)}

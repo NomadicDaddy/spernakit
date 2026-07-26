@@ -28,7 +28,7 @@ async function getUserUiSettings(): Promise<DataResponse<UserUiSettings>> {
  * Update user UI settings.
  */
 async function updateUserUiSettings(
-	params: UpdateUserUiSettingsParams
+	params: UpdateUserUiSettingsParams,
 ): Promise<DataResponse<UserUiSettings>> {
 	return apiClient.put<DataResponse<UserUiSettings>>('/settings/user', {
 		body: params,

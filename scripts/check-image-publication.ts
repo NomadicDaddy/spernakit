@@ -29,7 +29,7 @@ const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as
 if (manifest.name !== 'spernakit') {
 	const canPublish =
 		Object.values(manifest.scripts ?? {}).some((command) =>
-			/\bdocker\s+(?:compose\s+)?push\b|docker-image\.ts\s+push/.test(command)
+			/\bdocker\s+(?:compose\s+)?push\b|docker-image\.ts\s+push/.test(command),
 		) || Boolean((manifest.scripts ?? {})['docker:image:push']);
 
 	if (!canPublish) {
@@ -40,16 +40,16 @@ if (manifest.name !== 'spernakit') {
 	const offerPath = join(root, 'licenses/SOURCE-OFFER.md');
 	if (!existsSync(offerPath)) {
 		console.error(
-			'This project can publish a container image but has no licenses/SOURCE-OFFER.md.'
+			'This project can publish a container image but has no licenses/SOURCE-OFFER.md.',
 		);
 		console.error(
-			'Publishing makes you the distributor of the GPL/LGPL components in the image'
+			'Publishing makes you the distributor of the GPL/LGPL components in the image',
 		);
 		console.error(
-			'(Bun with statically linked JavaScriptCore, and the Alpine base packages), and'
+			'(Bun with statically linked JavaScriptCore, and the Alpine base packages), and',
 		);
 		console.error(
-			'they require you to offer corresponding source. Complete the offer, or remove'
+			'they require you to offer corresponding source. Complete the offer, or remove',
 		);
 		console.error('the publication path. See licenses/CONTAINER-DISTRIBUTION.md.');
 		process.exit(1);

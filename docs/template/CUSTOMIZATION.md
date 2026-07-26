@@ -177,7 +177,7 @@ const products = sqliteTable(
 		index('idx_products_category').on(table.category),
 		index('idx_products_is_deleted').on(table.isDeleted),
 		index('idx_products_created_by').on(table.createdBy),
-	]
+	],
 );
 
 export { products };
@@ -309,7 +309,7 @@ const productRoutes = new Elysia({ detail: { tags: ['Products'] }, prefix: '/pro
 
 			return dataResponse(getProducts());
 		},
-		{ detail: { summary: 'List all products' } }
+		{ detail: { summary: 'List all products' } },
 	)
 	.post(
 		'/',
@@ -330,7 +330,7 @@ const productRoutes = new Elysia({ detail: { tags: ['Products'] }, prefix: '/pro
 				price: t.Number({ minimum: 0 }),
 			}),
 			detail: { summary: 'Create a product' },
-		}
+		},
 	)
 	.delete(
 		'/:id',
@@ -345,7 +345,7 @@ const productRoutes = new Elysia({ detail: { tags: ['Products'] }, prefix: '/pro
 		{
 			detail: { summary: 'Soft-delete a product' },
 			params: t.Object({ id: t.String() }),
-		}
+		},
 	);
 
 export { productRoutes };
@@ -422,7 +422,7 @@ function createProduct(data: CreateProductData): Promise<DataResponse<Product>> 
 
 function updateProduct(
 	id: number,
-	data: Partial<CreateProductData>
+	data: Partial<CreateProductData>,
 ): Promise<DataResponse<Product>> {
 	return apiClient.put<DataResponse<Product>>(`/products/${id}`, { body: data });
 }
@@ -639,7 +639,7 @@ To customize your theme, update the CSS custom properties in `:root` (light mode
 	}
 
 	.card-custom {
-		@apply border-border bg-card rounded-lg border p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl;
+		@apply rounded-lg border border-border bg-card p-6 shadow-lg transition-shadow duration-200 hover:shadow-xl;
 	}
 }
 ```

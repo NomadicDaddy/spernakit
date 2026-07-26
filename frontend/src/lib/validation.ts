@@ -40,7 +40,7 @@ function isValidEmail(email: string): boolean {
 function validatePasswordMatch(
 	password: string,
 	confirmPassword: string,
-	options?: PasswordValidationOptions
+	options?: PasswordValidationOptions,
 ): null | string {
 	if (password !== confirmPassword) {
 		return 'Passwords do not match';

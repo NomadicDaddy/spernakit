@@ -39,7 +39,7 @@ async function parseImportFile(file: File): Promise<DashboardExport | null> {
 		'prototype' in parsed
 	) {
 		toast.error(
-			'Invalid dashboard file. Ensure the file is a valid JSON export from this application.'
+			'Invalid dashboard file. Ensure the file is a valid JSON export from this application.',
 		);
 		return null;
 	}

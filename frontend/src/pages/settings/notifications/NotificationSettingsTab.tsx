@@ -125,7 +125,7 @@ function NotificationSettingsTab() {
 					toast.success(`${label} updated`);
 					setOptimistic((prev) => ({ ...prev, [key]: null }));
 				},
-			}
+			},
 		);
 	}
 
@@ -187,12 +187,12 @@ function NotificationSettingsTab() {
 						<div className="flex items-center justify-between">
 							<div className="space-y-0.5">
 								<Label>Deleted notifications</Label>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-xs text-muted-foreground">
 									Soft-deleted notifications are permanently purged after this
 									window. Read notifications are not auto-purged.
 								</p>
 							</div>
-							<span className="text-muted-foreground text-sm">
+							<span className="text-sm text-muted-foreground">
 								{retentionLoading
 									? '…'
 									: deletedNotificationsDays === undefined

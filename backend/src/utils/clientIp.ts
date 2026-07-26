@@ -50,7 +50,7 @@ function captureClientIp(server: null | Server<unknown>, request: Request): void
 	} catch (err) {
 		logger.debug(
 			{ err: err instanceof Error ? err.message : String(err) },
-			'captureClientIp: server.requestIP threw'
+			'captureClientIp: server.requestIP threw',
 		);
 	}
 
@@ -157,7 +157,7 @@ function getClientIpFromForwardedHeader(request: Request, trustedProxies: string
 		if (!isValidIpAddress(ip)) {
 			logger.warn(
 				{ header: 'x-forwarded-for', ip: rawIp },
-				'Invalid IP address in X-Forwarded-For header'
+				'Invalid IP address in X-Forwarded-For header',
 			);
 			continue;
 		}
@@ -165,21 +165,21 @@ function getClientIpFromForwardedHeader(request: Request, trustedProxies: string
 		if (isTrustedProxy(ip, trustedProxies)) {
 			logger.debug(
 				{ ip, position: i, total: ips.length },
-				'Trusted proxy found in X-Forwarded-For chain'
+				'Trusted proxy found in X-Forwarded-For chain',
 			);
 			continue;
 		}
 
 		logger.debug(
 			{ ip, position: i, total: ips.length },
-			'Using non-trusted IP from X-Forwarded-For chain'
+			'Using non-trusted IP from X-Forwarded-For chain',
 		);
 		return ip;
 	}
 
 	logger.warn(
 		{ forwarded, trustedProxies },
-		'All IPs in X-Forwarded-For chain are trusted proxies, no client IP found'
+		'All IPs in X-Forwarded-For chain are trusted proxies, no client IP found',
 	);
 	return null;
 }

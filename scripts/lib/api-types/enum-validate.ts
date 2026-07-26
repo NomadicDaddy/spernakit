@@ -40,7 +40,7 @@ const FRONTEND_TYPES_DIR = join(
 	'frontend',
 	'src',
 	'api',
-	'types'
+	'types',
 );
 
 const PROJECT_ROOT = join(import.meta.dirname, '..', '..', '..');

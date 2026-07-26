@@ -8,8 +8,8 @@ import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { getById } from '../../services/fileService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
-	type ErrorResponse,
 	badRequestError,
+	type ErrorResponse,
 	forbiddenError,
 	notFoundError,
 } from '../../utils/errorResponse.ts';
@@ -52,7 +52,7 @@ function validateWorkspaceScope({
  */
 function scopedWorkspaceId(
 	user: AuthPayload,
-	workspaceId: null | number
+	workspaceId: null | number,
 ): null | number | undefined {
 	return !isSysop(user) ? workspaceId : undefined;
 }
@@ -88,7 +88,7 @@ function checkFileOwnership({
 
 function validateUploadedFile(
 	file: File | undefined,
-	set: { status?: number | string }
+	set: { status?: number | string },
 ): ErrorResponse | null {
 	if (!file) {
 		set.status = HTTP_STATUS.BAD_REQUEST;
@@ -155,7 +155,7 @@ function resolveFileWithAccess({
 function assertFileContext(
 	user: AuthPayload | null,
 	workspaceId: null | number,
-	set: { status?: number | string }
+	set: { status?: number | string },
 ): { authUser: AuthPayload; ok: true } | { error: object; ok: false } {
 	const authUser = assertUser(user);
 	const scopeCheck = validateWorkspaceScope({ set, user: authUser, workspaceId });

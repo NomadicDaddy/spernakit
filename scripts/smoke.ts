@@ -229,7 +229,7 @@ async function main(): Promise<void> {
 				force,
 				useCache,
 				step.logFile,
-				aggregateFailures
+				aggregateFailures,
 			);
 			if (exitCode !== 0) failedSteps.push(step.description);
 		}

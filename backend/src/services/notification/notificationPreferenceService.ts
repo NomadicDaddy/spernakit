@@ -31,7 +31,7 @@ function parseBoolPref(value: null | string | undefined, fallback: boolean, key:
 	if (value === undefined || value === null) {
 		logger.warn(
 			{ key, reason: 'missing' },
-			'Notification default setting row missing - using fallback'
+			'Notification default setting row missing - using fallback',
 		);
 		return fallback;
 	}
@@ -41,7 +41,7 @@ function parseBoolPref(value: null | string | undefined, fallback: boolean, key:
 	} catch {
 		logger.warn(
 			{ key, raw: value, reason: 'malformed' },
-			'Notification default setting malformed - using fallback'
+			'Notification default setting malformed - using fallback',
 		);
 		return fallback;
 	}
@@ -49,7 +49,7 @@ function parseBoolPref(value: null | string | undefined, fallback: boolean, key:
 
 	logger.warn(
 		{ key, raw: value, reason: 'malformed' },
-		'Notification default setting malformed - using fallback'
+		'Notification default setting malformed - using fallback',
 	);
 	return fallback;
 }
@@ -67,27 +67,27 @@ function getDefaultPreferences(): NotificationPreferences {
 		emailNotifications: parseBoolPref(
 			settingsMap.get(SETTING_KEYS.email)?.value,
 			NOTIFICATION_SETTINGS_DEFAULTS.email,
-			SETTING_KEYS.email
+			SETTING_KEYS.email,
 		),
 		marketingEmails: parseBoolPref(
 			settingsMap.get(SETTING_KEYS.marketing)?.value,
 			NOTIFICATION_SETTINGS_DEFAULTS.marketing,
-			SETTING_KEYS.marketing
+			SETTING_KEYS.marketing,
 		),
 		pushNotifications: parseBoolPref(
 			settingsMap.get(SETTING_KEYS.push)?.value,
 			NOTIFICATION_SETTINGS_DEFAULTS.push,
-			SETTING_KEYS.push
+			SETTING_KEYS.push,
 		),
 		securityAlerts: parseBoolPref(
 			settingsMap.get(SETTING_KEYS.security)?.value,
 			NOTIFICATION_SETTINGS_DEFAULTS.security,
-			SETTING_KEYS.security
+			SETTING_KEYS.security,
 		),
 		systemAlerts: parseBoolPref(
 			settingsMap.get(SETTING_KEYS.system)?.value,
 			NOTIFICATION_SETTINGS_DEFAULTS.system,
-			SETTING_KEYS.system
+			SETTING_KEYS.system,
 		),
 	};
 }
@@ -108,7 +108,7 @@ function getUnreadCount(userId: number, workspaceId?: null | number): number {
 	];
 	if (isDefined(workspaceId)) {
 		conditions.push(
-			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!
+			or(eq(notifications.workspaceId, workspaceId), isNull(notifications.workspaceId))!,
 		);
 	}
 	const result = db
@@ -164,7 +164,7 @@ function getPreferences(userId: number): NotificationPreferences {
  */
 function updatePreferences(
 	userId: number,
-	preferences: NotificationPreferences
+	preferences: NotificationPreferences,
 ): NotificationPreferences {
 	const db = getDb();
 

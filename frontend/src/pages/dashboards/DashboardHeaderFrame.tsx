@@ -49,7 +49,7 @@ function DashboardHeaderFrame({
 							</Button>
 						)}
 					</div>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						{widgetCount} widget{widgetCount !== 1 ? 's' : ''}
 					</p>
 				</div>

@@ -1,4 +1,4 @@
-import { Type, enumString } from '../../config/configSchemaHelpers.ts';
+import { enumString, Type } from '../../config/configSchemaHelpers.ts';
 import { APP_FEATURES_KEYS, LAYOUT_MODES } from '../../constants/appFeatures.ts';
 import { logger } from '../../utils/logger.ts';
 import { parseSettingsJson } from '../../utils/validation.ts';
@@ -65,7 +65,7 @@ function getDefaultUserUiSettings(): UserUiSettings {
 		} catch {
 			logger.warn(
 				{ key: APP_FEATURES_KEYS.defaultLayoutMode, value: layoutRaw },
-				'Failed to parse default layout setting, using defaults'
+				'Failed to parse default layout setting, using defaults',
 			);
 		}
 	}
@@ -94,7 +94,7 @@ function getUserUiSettings(userId: number): UserUiSettings {
 		setting?.value ?? null,
 		UserUiSettingsSchema,
 		defaults,
-		`user UI settings for user ${userId}`
+		`user UI settings for user ${userId}`,
 	);
 }
 
@@ -109,7 +109,7 @@ function getUserUiSettings(userId: number): UserUiSettings {
 function updateUserUiSettings(
 	userId: number,
 	settings: Partial<UserUiSettings>,
-	updatedBy: number
+	updatedBy: number,
 ): UserUiSettings {
 	const key = `user_settings_${userId}`;
 	const current = getUserUiSettings(userId);

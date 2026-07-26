@@ -37,7 +37,7 @@ export function TemplateDashboardDialog({
 				<div className="space-y-2 py-4">
 					{templates?.map((t) => (
 						<button
-							className="hover:bg-accent w-full rounded-md border p-3 text-left transition-colors"
+							className="w-full rounded-md border p-3 text-left transition-colors hover:bg-accent"
 							disabled={templateMutation?.isPending}
 							key={t.id}
 							onClick={() => {
@@ -46,7 +46,7 @@ export function TemplateDashboardDialog({
 							}}
 							type="button">
 							<div className="font-medium">{t.name}</div>
-							<div className="text-muted-foreground text-sm">
+							<div className="text-sm text-muted-foreground">
 								{t.widgetCount} widgets
 							</div>
 						</button>

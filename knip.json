@@ -12,7 +12,7 @@
 	"workspaces": {
 		".": {
 			"entry": ["scripts/*.ts"],
-			"ignoreBinaries": ["taskkill", "netstat", "lsof"],
+			"ignoreBinaries": ["netstat"],
 			"project": ["scripts/**/*.ts"]
 		},
 		"backend": {
@@ -23,13 +23,7 @@
 		"frontend": {
 			"entry": ["src/App.tsx", "src/routes.tsx"],
 			"ignore": ["src/components/ui/*.tsx"],
-			"ignoreDependencies": [
-				"@fontsource-variable/inter",
-				"@fontsource-variable/manrope",
-				"tailwindcss",
-				"tw-animate-css"
-			],
-			"project": ["src/**/*.{ts,tsx}"]
+			"project": ["src/**/*.{ts,tsx,css}"]
 		},
 		"shared": {}
 	}

@@ -32,7 +32,7 @@ for (const t of ['api_keys', 'audit_logs', 'token_blacklist', 'users']) {
 }
 expect(
 	!MUTATION_DENIED_TABLES.has('scheduled_task_executions'),
-	'MUTATION_DENIED_TABLES does NOT contain "scheduled_task_executions" (legacy IMMUTABLE set)'
+	'MUTATION_DENIED_TABLES does NOT contain "scheduled_task_executions" (legacy IMMUTABLE set)',
 );
 
 console.log('\n--- isTableMutable (pure logic, no DB needed) ---');
@@ -42,7 +42,7 @@ for (const t of ['api_keys', 'audit_logs', 'token_blacklist', 'users']) {
 // scheduled_task_executions still denied via legacy IMMUTABLE set
 expect(
 	isTableMutable('scheduled_task_executions') === false,
-	'isTableMutable("scheduled_task_executions") === false (legacy immutable)'
+	'isTableMutable("scheduled_task_executions") === false (legacy immutable)',
 );
 // A normal mutable table passes the *logic* check (it will only fail validateTableName
 // against sqlite_master if not present, but isTableMutable is denylist-only)
@@ -61,7 +61,7 @@ for (const t of ['api_keys', 'audit_logs', 'token_blacklist', 'users']) {
 	expect(threw, `assertTableMutable("${t}") throws`);
 	expect(
 		msg.includes('read-only') || msg.includes('cannot be modified'),
-		`assertTableMutable("${t}") message is the standard read-only error (got: "${msg}")`
+		`assertTableMutable("${t}") message is the standard read-only error (got: "${msg}")`,
 	);
 }
 
@@ -73,7 +73,7 @@ console.log('\n--- validateMutableTableName shape (Deeper reference) ---');
 // the point is the compose-with-denylist shape exists and is exported.)
 expect(
 	typeof validateMutableTableName === 'function',
-	'validateMutableTableName is exported as a function'
+	'validateMutableTableName is exported as a function',
 );
 
 if (failures > 0) {

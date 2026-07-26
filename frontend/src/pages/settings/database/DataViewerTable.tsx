@@ -62,7 +62,7 @@ function EditableCell({
 							actions.onEditCommit(
 								rowId,
 								column,
-								(e.target as HTMLInputElement).value
+								(e.target as HTMLInputElement).value,
 							);
 						}
 						if (e.key === 'Escape') {
@@ -109,7 +109,7 @@ function DataViewerTable({ actions, columnNames, editingCell, rows, state }: Dat
 							<tr className="border-b">
 								{columnNames.map((col) => (
 									<th
-										className="text-muted-foreground px-3 py-2 text-left font-medium whitespace-nowrap"
+										className="px-3 py-2 text-left font-medium whitespace-nowrap text-muted-foreground"
 										key={col}>
 										{col}
 									</th>
@@ -142,14 +142,14 @@ function DataViewerTable({ actions, columnNames, editingCell, rows, state }: Dat
 													onClick={() =>
 														actions.onDeleteClick(
 															rowId,
-															state.hasIsDeleted
+															state.hasIsDeleted,
 														)
 													}
 													size="sm"
 													variant="ghost">
 													<Trash2
 														aria-hidden="true"
-														className="text-destructive h-3.5 w-3.5"
+														className="h-3.5 w-3.5 text-destructive"
 													/>
 												</Button>
 											</td>
@@ -160,7 +160,7 @@ function DataViewerTable({ actions, columnNames, editingCell, rows, state }: Dat
 							{rows.length === 0 && (
 								<tr>
 									<td
-										className="text-muted-foreground py-8 text-center"
+										className="py-8 text-center text-muted-foreground"
 										colSpan={columnNames.length + (state.canMutate ? 1 : 0)}>
 										No data
 									</td>

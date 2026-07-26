@@ -42,5 +42,5 @@ export const passwordHistory = sqliteTable(
 		index('idx_password_history_user_id').on(table.userId),
 		index('idx_password_history_created_at').on(table.createdAt),
 		uniqueIndex('idx_password_history_user_hash').on(table.userId, table.passwordHash),
-	]
+	],
 );

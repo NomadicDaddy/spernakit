@@ -21,7 +21,7 @@ function findMembership(workspaceId: number, userId: number): { id: number } | u
 		.select({ id: workspaceMembers.id })
 		.from(workspaceMembers)
 		.where(
-			and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId))
+			and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)),
 		)
 		.get();
 }
@@ -56,7 +56,7 @@ function addMember(
 	workspaceId: number,
 	userId: number,
 	role: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER',
-	performedBy?: number
+	performedBy?: number,
 ): boolean {
 	const db = getDb();
 
@@ -90,7 +90,7 @@ function updateMemberRole(
 	workspaceId: number,
 	userId: number,
 	role: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER',
-	performedBy?: number
+	performedBy?: number,
 ): boolean {
 	const db = getDb();
 
@@ -123,7 +123,7 @@ function getMembershipRole(workspaceId: number, userId: number): null | string {
 		.select({ role: workspaceMembers.role })
 		.from(workspaceMembers)
 		.where(
-			and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId))
+			and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)),
 		)
 		.get();
 	return row?.role ?? null;
@@ -147,8 +147,8 @@ function getMembershipRoles(workspaceId: number, userIds: number[]): Map<number,
 		.where(
 			and(
 				eq(workspaceMembers.workspaceId, workspaceId),
-				inArray(workspaceMembers.userId, userIds)
-			)
+				inArray(workspaceMembers.userId, userIds),
+			),
 		)
 		.all();
 	return new Map(rows.map((r) => [r.userId, r.role]));
@@ -156,9 +156,9 @@ function getMembershipRoles(workspaceId: number, userIds: number[]): Map<number,
 
 export {
 	addMember,
+	getMembers,
 	getMembershipRole,
 	getMembershipRoles,
-	getMembers,
 	isWorkspaceMember,
 	removeMember,
 	updateMemberRole,

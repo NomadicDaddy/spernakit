@@ -43,7 +43,7 @@ function resolveAppSlug(repoRoot: string, configDir: string): string {
 	}
 	if (!appSlug) {
 		console.error(
-			'❌ Unable to determine app slug. Set APP_SLUG/VITE_APP_SLUG or ensure defaults.json or config/*.json is present.'
+			'❌ Unable to determine app slug. Set APP_SLUG/VITE_APP_SLUG or ensure defaults.json or config/*.json is present.',
 		);
 		process.exit(1);
 	}
@@ -61,7 +61,7 @@ function createConfigFromDefaults(repoRoot: string, configDir: string, configPat
 	if (!fs.existsSync(defaultsPath)) {
 		console.error(`❌ JSON config not found: ${configPath}`);
 		console.error(
-			'   defaults.json is also missing; run setup or restore backend/src/config/defaults.json.'
+			'   defaults.json is also missing; run setup or restore backend/src/config/defaults.json.',
 		);
 		process.exit(1);
 	}
@@ -89,7 +89,7 @@ function createConfigFromDefaults(repoRoot: string, configDir: string, configPat
 		console.log(`⚠️  JSON config not found. Created ${configPath} from defaults.json.`);
 	} catch (err: unknown) {
 		console.error(
-			`❌ Failed to create JSON config from defaults at ${defaultsPath}: ${String(err)}`
+			`❌ Failed to create JSON config from defaults at ${defaultsPath}: ${String(err)}`,
 		);
 		process.exit(1);
 	}
@@ -119,7 +119,7 @@ function mergeTestCredentials(config: AppConfig, configDir: string): void {
 		}
 	} catch (err: unknown) {
 		console.warn(
-			`⚠️  Failed to load test credentials from ${testingLocalPath}: ${String(err)}`
+			`⚠️  Failed to load test credentials from ${testingLocalPath}: ${String(err)}`,
 		);
 	}
 }

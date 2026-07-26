@@ -43,7 +43,7 @@ function listOAuthProviderSettings(): Promise<OAuthProviderSettingsResponse> {
 
 function updateOAuthProviderSetting(
 	provider: OAuthProviderName,
-	payload: UpdateOAuthProviderPayload
+	payload: UpdateOAuthProviderPayload,
 ): Promise<{ success: boolean }> {
 	return apiClient.patch<{ success: boolean }>(`/settings/oauth-providers/${provider}`, {
 		body: payload,
@@ -51,7 +51,7 @@ function updateOAuthProviderSetting(
 }
 
 function testOAuthProviderConnection(
-	provider: OAuthProviderName
+	provider: OAuthProviderName,
 ): Promise<TestOAuthProviderResponse> {
 	return apiClient.post<TestOAuthProviderResponse>(`/settings/oauth-providers/${provider}/test`, {
 		body: {},

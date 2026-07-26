@@ -115,7 +115,7 @@ async function upload(input: UploadInput): Promise<FileRecord> {
 		} catch (err) {
 			logger.error(
 				{ err, storageKey, thumbnailKey },
-				'Failed to clean up orphaned storage files after DB insert failure'
+				'Failed to clean up orphaned storage files after DB insert failure',
 			);
 		}
 		throw err;

@@ -90,7 +90,7 @@ const dashboardConfigs = sqliteTable(
 		index('idx_dashboard_configs_user_id_is_deleted').on(table.userId, table.isDeleted),
 		index('idx_dashboard_configs_workspace_id').on(table.workspaceId),
 		index('idx_dashboard_configs_workspace_id_user_id').on(table.workspaceId, table.userId),
-	]
+	],
 );
 
 /**
@@ -139,11 +139,11 @@ const dashboardWidgets = sqliteTable(
 	(table) => [
 		check(
 			'chk_dashboard_widgets_metric_type',
-			sql`${table.metricType} in (${sql.raw(METRIC_TYPE_IN_LIST)})`
+			sql`${table.metricType} in (${sql.raw(METRIC_TYPE_IN_LIST)})`,
 		),
 		check(
 			'chk_dashboard_widgets_widget_type',
-			sql`${table.widgetType} in (${sql.raw(WIDGET_TYPE_IN_LIST)})`
+			sql`${table.widgetType} in (${sql.raw(WIDGET_TYPE_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `options` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -172,9 +172,9 @@ const dashboardWidgets = sqliteTable(
 		index('idx_dashboard_widgets_is_deleted').on(table.isDeleted),
 		index('idx_dashboard_widgets_dashboard_id_is_deleted').on(
 			table.dashboardId,
-			table.isDeleted
+			table.isDeleted,
 		),
-	]
+	],
 );
 
 export { dashboardConfigs, dashboardWidgets };

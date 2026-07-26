@@ -51,8 +51,8 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 			toast.error(
 				getSafeErrorMessage(
 					err,
-					'Failed to update profile. Please check your input and try again.'
-				)
+					'Failed to update profile. Please check your input and try again.',
+				),
 			),
 		onSuccess: (result) => {
 			toast.success('Profile updated');
@@ -74,11 +74,11 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 			apiClient.post<DataResponse<EmailChangeResponse>>('/users/me/email-change', { body }),
 		onError: (err) =>
 			toast.error(
-				getSafeErrorMessage(err, 'Could not start email change. Please try again.')
+				getSafeErrorMessage(err, 'Could not start email change. Please try again.'),
 			),
 		onSuccess: () => {
 			toast.success(
-				'Confirmation link sent to the new email address. The change will take effect once you confirm.'
+				'Confirmation link sent to the new email address. The change will take effect once you confirm.',
 			);
 			setNewEmail('');
 			setCurrentPassword('');
@@ -146,7 +146,7 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 						<div className="space-y-2">
 							<Label>Current email</Label>
 							<p className="text-sm font-medium">{user.email}</p>
-							<p className="text-muted-foreground text-xs">
+							<p className="text-xs text-muted-foreground">
 								Use the &ldquo;Change email address&rdquo; section below to update
 								this.
 							</p>
@@ -190,7 +190,7 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 							/>
 							<div aria-live="polite">
 								{emailError ? (
-									<p className="text-destructive text-xs" id="new-email-error">
+									<p className="text-xs text-destructive" id="new-email-error">
 										{emailError}
 									</p>
 								) : null}

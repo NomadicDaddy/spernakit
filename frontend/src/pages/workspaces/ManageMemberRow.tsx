@@ -32,7 +32,7 @@ function ManageMemberRow({
 				/>
 				<div>
 					<div className="font-medium">{member.username}</div>
-					<div className="text-muted-foreground text-xs">User ID: {member.userId}</div>
+					<div className="text-xs text-muted-foreground">User ID: {member.userId}</div>
 				</div>
 			</div>
 			<div className="flex items-center gap-3">

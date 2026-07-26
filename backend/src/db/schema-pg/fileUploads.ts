@@ -83,7 +83,7 @@ const fileUploads = pgTable(
 		// its leading column, so no separate idx_file_uploads_is_deleted is needed.
 		index('idx_file_uploads_is_deleted_deleted_at').on(table.isDeleted, table.deletedAt),
 		index('idx_file_uploads_workspace_id_is_deleted').on(table.workspaceId, table.isDeleted),
-	]
+	],
 );
 
 export { fileUploads };

@@ -34,7 +34,7 @@ async function oauthFetch(
 	url: string,
 	init: RequestInit,
 	provider: string,
-	operation: string
+	operation: string,
 ): Promise<Response> {
 	try {
 		return await fetch(url, { ...init, signal: AbortSignal.timeout(OAUTH_FETCH_TIMEOUT_MS) });
@@ -49,7 +49,7 @@ async function oauthFetch(
 export async function performTokenExchange(
 	tokenUrl: string,
 	body: Record<string, string>,
-	provider: string
+	provider: string,
 ): Promise<TokenExchangeResult> {
 	const response = await oauthFetch(
 		tokenUrl,
@@ -62,7 +62,7 @@ export async function performTokenExchange(
 			method: 'POST',
 		},
 		provider,
-		'token exchange'
+		'token exchange',
 	);
 
 	if (!response.ok) {
@@ -87,13 +87,13 @@ export async function performTokenExchange(
 export async function fetchProfileData(
 	profileUrl: string,
 	accessToken: string,
-	provider: string
+	provider: string,
 ): Promise<Record<string, unknown>> {
 	const response = await oauthFetch(
 		profileUrl,
 		{ headers: { Authorization: `Bearer ${accessToken}` } },
 		provider,
-		'profile fetch'
+		'profile fetch',
 	);
 
 	if (!response.ok) {
@@ -113,7 +113,7 @@ function str(value: unknown): string {
 
 function buildTokenExchangeBody(
 	params: TokenExchangeParams,
-	extra?: Record<string, string>
+	extra?: Record<string, string>,
 ): Record<string, string> {
 	return {
 		client_id: params.clientId,

@@ -21,7 +21,7 @@ class WebSocketManager {
 		},
 		() => {
 			void this.probeBackendAndReconnect();
-		}
+		},
 	);
 	private intentionalClose = false;
 	private setConnectionState: ((state: ConnectionState) => void) | null = null;

@@ -61,8 +61,8 @@ function getCredentials(): GeneratedCredential[] {
 }
 
 function getSeedUsersWithPasswords(
-	useSecurePasswords = false
-): (UserInfo & { password: string })[] {
+	useSecurePasswords = false,
+): ({ password: string } & UserInfo)[] {
 	return SEED_USERS.map((info) => ({
 		...info,
 		password: useSecurePasswords ? generateSecurePassword(24) : getDevPassword(info.username),
@@ -81,9 +81,9 @@ function formatCredentialsForDisplay(credentials: GeneratedCredential[]): string
 }
 
 export {
-	SEED_USER_COUNT,
 	formatCredentialsForDisplay,
 	generateSecurePassword,
 	getCredentials,
 	getSeedUsersWithPasswords,
+	SEED_USER_COUNT,
 };

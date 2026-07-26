@@ -27,8 +27,8 @@ export function HealthStatusWidget({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center justify-between pb-1">
-				<span className="text-muted-foreground text-xs font-medium">{widget.title}</span>
-				<Heart aria-hidden="true" className="text-muted-foreground size-4" />
+				<span className="text-xs font-medium text-muted-foreground">{widget.title}</span>
+				<Heart aria-hidden="true" className="size-4 text-muted-foreground" />
 			</div>
 			<div className={`text-2xl font-bold capitalize ${statusColor}`}>{status}</div>
 		</div>

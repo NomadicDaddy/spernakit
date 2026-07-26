@@ -46,7 +46,7 @@ type RequestEmailChangeResult =
 async function requestEmailChange(
 	userId: number,
 	currentPassword: string,
-	newEmail: string
+	newEmail: string,
 ): Promise<RequestEmailChangeResult> {
 	const db = getDb();
 	const config = getConfig();
@@ -77,7 +77,7 @@ async function requestEmailChange(
 	}
 
 	const { expiresAt, token, tokenHash } = generateSecurityToken(
-		config.security.emailChangeTokenExpiryMs
+		config.security.emailChangeTokenExpiryMs,
 	);
 
 	db.insert(emailChangeTokens)
@@ -122,7 +122,7 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 		.select()
 		.from(emailChangeTokens)
 		.where(
-			and(eq(emailChangeTokens.tokenHash, tokenHash), isNull(emailChangeTokens.consumedAt))
+			and(eq(emailChangeTokens.tokenHash, tokenHash), isNull(emailChangeTokens.consumedAt)),
 		)
 		.get();
 
@@ -177,7 +177,7 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,
-		DEFAULT_REFRESH_TTL_MS
+		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(record.userId, new Date(Date.now() + refreshTtlMs));
 

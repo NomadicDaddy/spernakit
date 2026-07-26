@@ -1,4 +1,4 @@
-import type { TokenExchangeParams, TokenExchangeResult, ProfileParseResult } from './types.ts';
+import type { ProfileParseResult, TokenExchangeParams, TokenExchangeResult } from './types.ts';
 
 import { buildTokenExchangeBody, fetchProfileData, performTokenExchange, str } from './types.ts';
 
@@ -6,7 +6,7 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const PROFILE_URL = 'https://www.googleapis.com/oauth2/v2/userinfo';
 
 export async function exchangeGoogleCode(
-	params: TokenExchangeParams
+	params: TokenExchangeParams,
 ): Promise<TokenExchangeResult> {
 	return performTokenExchange(TOKEN_URL, buildTokenExchangeBody(params), 'google');
 }

@@ -44,7 +44,7 @@ const authOAuthRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth'
 				},
 				summary: 'List enabled OAuth providers',
 			},
-		}
+		},
 	)
 	.get('/oauth/:provider', handleOAuthRedirect, {
 		detail: {

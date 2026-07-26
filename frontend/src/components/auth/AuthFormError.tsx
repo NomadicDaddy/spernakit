@@ -3,7 +3,7 @@ function AuthFormError({ error, isPending }: { error: null | string; isPending: 
 	if (!error || isPending) return null;
 
 	return (
-		<p aria-live="polite" className="text-destructive text-center text-sm" role="alert">
+		<p aria-live="polite" className="text-center text-sm text-destructive" role="alert">
 			{error}
 		</p>
 	);

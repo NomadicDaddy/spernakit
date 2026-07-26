@@ -53,7 +53,7 @@ export function flushRateLimits(): void {
 
 export async function launchSession(
 	session: CrawlSession,
-	attach: (page: Page) => void
+	attach: (page: Page) => void,
 ): Promise<void> {
 	session.browser = await puppeteer.launch({
 		args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
@@ -73,7 +73,7 @@ export async function screenshotPreLoginPages(
 	session: CrawlSession,
 	results: TestResults,
 	opts: CrawlerOpts,
-	state: CrawlerState
+	state: CrawlerState,
 ): Promise<void> {
 	if (!session.page || !opts.screenshotDir) return;
 
@@ -105,7 +105,7 @@ export async function loginSession(
 	results: TestResults,
 	opts: CrawlerOpts,
 	email: string,
-	password: string
+	password: string,
 ): Promise<void> {
 	if (!session.page) throw new Error('Browser not initialized');
 
@@ -163,7 +163,7 @@ export async function loginSession(
 export async function navigateSessionToStart(
 	session: CrawlSession,
 	results: TestResults,
-	opts: CrawlerOpts
+	opts: CrawlerOpts,
 ): Promise<void> {
 	if (!session.page) throw new Error('Browser not initialized');
 
@@ -184,7 +184,7 @@ export async function navigateSessionToStart(
 export async function recycleBrowser(
 	session: CrawlSession,
 	opts: CrawlerOpts,
-	attach: (page: Page) => void
+	attach: (page: Page) => void,
 ): Promise<boolean> {
 	if (session.reLoginFailed) return false;
 
@@ -240,7 +240,7 @@ export async function recycleBrowser(
 				if (contentLen > 50) break;
 				const delay = 2000 * (attempt + 1);
 				console.log(
-					`   ⟳ Dashboard content sparse (${contentLen} chars), retrying in ${delay}ms...`
+					`   ⟳ Dashboard content sparse (${contentLen} chars), retrying in ${delay}ms...`,
 				);
 				await Bun.sleep(delay);
 				await session.page.reload({

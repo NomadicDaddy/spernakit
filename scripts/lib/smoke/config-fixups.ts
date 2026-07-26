@@ -9,8 +9,8 @@ import {
 	copyFileSync,
 	existsSync,
 	mkdirSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	unlinkSync,
 	writeFileSync,
 } from 'node:fs';
@@ -38,7 +38,7 @@ function writeRateLimitDisable(configPath: string): void {
 /** Apply mode-specific overrides to the copied Docker smoke-test config. */
 function writeDockerConfigOverrides(
 	configPath: string,
-	mode: 'docker-local' | 'docker-prod'
+	mode: 'docker-local' | 'docker-prod',
 ): void {
 	try {
 		const cfg = JSON.parse(readFileSync(configPath, 'utf-8'));
@@ -118,7 +118,7 @@ export function recoverDevRateLimitBackup(projectRoot: string): void {
  */
 export function ensureDockerTestDirs(
 	projectRoot: string,
-	mode: 'docker-local' | 'docker-prod'
+	mode: 'docker-local' | 'docker-prod',
 ): void {
 	const appSlug = process.env.APP_SLUG ?? '';
 	const appdataRoot = process.env.APPDATA_ROOT ?? '';

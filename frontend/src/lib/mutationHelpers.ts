@@ -31,7 +31,7 @@ function stdCallbacks(
 		onSuccess?: () => void;
 		/** Success message shown in toast. */
 		successMessage: string;
-	}
+	},
 ) {
 	return {
 		onError: (err: Error) => {
@@ -78,7 +78,7 @@ function bulkCallbacks(
 		invalidateKeys: readonly (readonly unknown[])[];
 		/** Noun label for affected items, e.g. 'users', 'members', 'roles'. */
 		itemLabel: string;
-	}
+	},
 ) {
 	return {
 		onError: (err: Error) => {
@@ -88,7 +88,7 @@ function bulkCallbacks(
 			const { failed, succeeded } = response.data;
 			if (failed > 0) {
 				lazyToast.warning(
-					`${opts.action} ${succeeded} ${opts.itemLabel}, ${failed} failed`
+					`${opts.action} ${succeeded} ${opts.itemLabel}, ${failed} failed`,
 				);
 			} else {
 				lazyToast.success(`${opts.action} ${succeeded} ${opts.itemLabel}`);

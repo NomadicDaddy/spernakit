@@ -71,7 +71,7 @@ interface UserActivityData {
 function getUserActivity(userId: number, days = 30): Promise<DataResponse<UserActivityData>> {
 	return apiClient.get<DataResponse<UserActivityData>>(
 		`/business-metrics/user-activity/${userId}`,
-		{ params: { days: String(days) } }
+		{ params: { days: String(days) } },
 	);
 }
 

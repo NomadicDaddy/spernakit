@@ -67,7 +67,7 @@ async function databaseBackupTask(): Promise<{
  */
 function recordIntegrityMetric(
 	result: { durationMs: number; healthy: boolean; message: string },
-	mode: string
+	mode: string,
 ): void {
 	getDb()
 		.insert(systemMetrics)
@@ -93,7 +93,7 @@ function recordIntegrityMetric(
  */
 function reportIntegrityResult(
 	result: { durationMs: number; healthy: boolean; message: string },
-	mode: string
+	mode: string,
 ): void {
 	if (!result.healthy) {
 		logDatabase('error', 'Database integrity check failed', {

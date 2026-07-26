@@ -71,7 +71,7 @@ export function spawnBackground(
 	name: string,
 	command: string,
 	args: string[],
-	cwd: string
+	cwd: string,
 ): null | number {
 	const stdoutFd = openLogFd(logsDir, `${name}.log`);
 	const stderrFd = openLogFd(logsDir, `${name}.error.log`);

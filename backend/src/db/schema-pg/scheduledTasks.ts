@@ -15,7 +15,7 @@ import { SCHEDULED_TASK_STATUSES } from 'spernakit-shared';
 
 // DB-level domain guard: keep the CHECK list single-sourced from SCHEDULED_TASK_STATUSES.
 const SCHEDULED_TASK_STATUS_IN_LIST = SCHEDULED_TASK_STATUSES.map((status) => `'${status}'`).join(
-	', '
+	', ',
 );
 
 /**
@@ -41,13 +41,13 @@ const scheduledTaskExecutions = pgTable(
 	(table) => [
 		check(
 			'chk_scheduled_task_executions_status',
-			sql`${table.status} in (${sql.raw(SCHEDULED_TASK_STATUS_IN_LIST)})`
+			sql`${table.status} in (${sql.raw(SCHEDULED_TASK_STATUS_IN_LIST)})`,
 		),
 		index('idx_scheduled_task_executions_task_name').on(table.taskName),
 		index('idx_scheduled_task_executions_status').on(table.status),
 		index('idx_scheduled_task_executions_created_at').on(table.createdAt),
 		index('idx_scheduled_task_executions_name_created').on(table.taskName, table.createdAt),
-	]
+	],
 );
 
 /**
@@ -66,7 +66,7 @@ const scheduledTaskConfigs = pgTable(
 			.notNull()
 			.$defaultFn(() => new Date()),
 	},
-	(table) => [uniqueIndex('idx_scheduled_task_configs_task_name').on(table.taskName)]
+	(table) => [uniqueIndex('idx_scheduled_task_configs_task_name').on(table.taskName)],
 );
 
 export { scheduledTaskConfigs, scheduledTaskExecutions };

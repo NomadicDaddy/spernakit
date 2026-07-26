@@ -46,7 +46,7 @@ function shareDashboard(
 	dashboardId: number,
 	userId: number,
 	expiresInDays = 30,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): { shareExpiresAt: Date; shareToken: string } | null {
 	const db = getDb();
 	const appConfig = getConfig();

@@ -75,7 +75,7 @@ export function validateTotpCode(secretBase32: string, code: string): boolean {
  */
 export async function verifyEnabledMfa(
 	userId: number,
-	code: string
+	code: string,
 ): Promise<null | typeof mfaSettings.$inferSelect> {
 	const db = getDb();
 	const mfa = db.select().from(mfaSettings).where(eq(mfaSettings.userId, userId)).get();

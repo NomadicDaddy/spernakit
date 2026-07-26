@@ -30,7 +30,7 @@ function useFileColumns({
 			accessorKey: 'originalName',
 			cell: ({ row }) => (
 				<div className="flex items-center">
-					<FileText aria-hidden="true" className="text-muted-foreground mr-2 h-4 w-4" />
+					<FileText aria-hidden="true" className="mr-2 h-4 w-4 text-muted-foreground" />
 					<span className="min-w-0 truncate font-medium">
 						{row.original.originalName}
 					</span>
@@ -72,7 +72,7 @@ function useFileColumns({
 					{canDelete && (
 						<Button
 							aria-label="Delete file"
-							className="text-destructive h-8 w-8 p-0"
+							className="h-8 w-8 p-0 text-destructive"
 							disabled={isActionDisabled}
 							onClick={() => onDelete(row.original)}
 							title="Delete"

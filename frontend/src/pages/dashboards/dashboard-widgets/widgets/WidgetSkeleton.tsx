@@ -5,7 +5,7 @@ export function WidgetSkeleton({ title }: { title?: string }) {
 		<div className="flex h-full flex-col">
 			<div className="flex items-center justify-between pb-1">
 				{title ? (
-					<span className="text-muted-foreground text-xs font-medium">{title}</span>
+					<span className="text-xs font-medium text-muted-foreground">{title}</span>
 				) : (
 					<Skeleton className="h-3 w-24" />
 				)}

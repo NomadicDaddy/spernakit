@@ -18,7 +18,7 @@ function assertPreMigrationIntegrity(db: Database): void {
 	}
 	throw new Error(
 		`Pre-migration database validation failed. Manual intervention required. ` +
-			`Errors: ${preErrors.join('; ')}`
+			`Errors: ${preErrors.join('; ')}`,
 	);
 }
 
@@ -36,7 +36,7 @@ function tryCreatePreMigrationBackup(db: Database, dbPath: string): string | und
 function assertPostMigrationIntegrity(
 	db: Database,
 	dbPath: string,
-	backupPath: string | undefined
+	backupPath: string | undefined,
 ): void {
 	const postErrors = validateDatabaseIntegrity(db);
 	if (postErrors.length === 0) return;
@@ -46,7 +46,7 @@ function assertPostMigrationIntegrity(
 	if (!backupPath) return;
 
 	logger.error(
-		'Post-migration validation failed - attempting to restore from pre-migration backup'
+		'Post-migration validation failed - attempting to restore from pre-migration backup',
 	);
 	db.close();
 	try {
@@ -55,11 +55,11 @@ function assertPostMigrationIntegrity(
 	} catch (err) {
 		logger.error(
 			{ err },
-			'Failed to restore from backup - database may be in inconsistent state'
+			'Failed to restore from backup - database may be in inconsistent state',
 		);
 	}
 	throw new Error(
-		'Post-migration validation failed. Database restored from backup. Manual intervention required.'
+		'Post-migration validation failed. Database restored from backup. Manual intervention required.',
 	);
 }
 
@@ -89,7 +89,7 @@ function assertForeignKeyIntegrity(db: Database, tag: string): void {
 	const violations = db.query('PRAGMA foreign_key_check').all();
 	if (violations.length > 0) {
 		throw new Error(
-			`Foreign key check failed after migration ${tag}: ${violations.length} violation(s)`
+			`Foreign key check failed after migration ${tag}: ${violations.length} violation(s)`,
 		);
 	}
 }
@@ -134,7 +134,7 @@ function applyMigrationEntry(db: Database, entry: JournalEntry, migrationsDir: s
 		// Record (hash, content_hash) only after every statement succeeded or was
 		// benignly skipped — a non-benign failure throws before this insert.
 		db.query(
-			'INSERT INTO __drizzle_migrations (hash, created_at, content_hash) VALUES (?, ?, ?)'
+			'INSERT INTO __drizzle_migrations (hash, created_at, content_hash) VALUES (?, ?, ?)',
 		).run(computeTagHash(entry.tag), Date.now(), computeContentHash(sql));
 
 		db.exec('COMMIT');
@@ -149,7 +149,7 @@ function applyMigrationEntry(db: Database, entry: JournalEntry, migrationsDir: s
 		logger.warn(
 			{ skippedCount, tag: entry.tag },
 			`MIGRATION ${entry.tag} applied with ${skippedCount} statement(s) skipped as benign DDL ` +
-				`errors - verify the schema matches expectations`
+				`errors - verify the schema matches expectations`,
 		);
 	}
 	logger.info(`  Applied migration: ${entry.tag}`);
@@ -166,7 +166,7 @@ function isBenignDdlError(err: unknown, tag: string, statement: string): boolean
 	if (isBenign) {
 		logger.warn(
 			{ statement: statement.substring(0, 200) },
-			`Benign DDL error in migration ${tag}, statement skipped: ${err.message}`
+			`Benign DDL error in migration ${tag}, statement skipped: ${err.message}`,
 		);
 	}
 

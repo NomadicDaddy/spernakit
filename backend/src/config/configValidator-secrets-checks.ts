@@ -28,12 +28,12 @@ const MIN_UNIQUE_CHARS_DEFAULT = 12;
  * keys, startup is blocked because they are publicly known from Git.
  */
 const KNOWN_DEV_KEY_FINGERPRINTS = new Set([
-	'89fb67ead9d9f926', // jwtPrivateKey from config/spernakit.json
-	'41c0a95e2a89b7d1', // jwtRefreshPrivateKey from config/spernakit.json
+	'0e193a085c4cee6a', // encryptionKey from config/spernakit.json
 	'19aa8daa9b50fb3a', // mfaPrivateKey from config/spernakit.json
 	'2c72eaa2f09ca781', // mfaPublicKey from config/spernakit.json
+	'41c0a95e2a89b7d1', // jwtRefreshPrivateKey from config/spernakit.json
 	'6a790ac091530510', // cookieSecret from config/spernakit.json
-	'0e193a085c4cee6a', // encryptionKey from config/spernakit.json
+	'89fb67ead9d9f926', // jwtPrivateKey from config/spernakit.json
 	'ea3bd27688a3555d', // applicationApiKey from config/spernakit.json
 ]);
 
@@ -169,7 +169,7 @@ function checkKnownDevKeys(security: AppConfig['security']): ValidationIssue[] {
 		{ name: 'security.applicationApiKey', value: security.applicationApiKey },
 	];
 	const matches = fieldsToCheck.filter((f) =>
-		KNOWN_DEV_KEY_FINGERPRINTS.has(fingerprintSecret(f.value))
+		KNOWN_DEV_KEY_FINGERPRINTS.has(fingerprintSecret(f.value)),
 	);
 	return matches.map((f) => ({
 		field: f.name,

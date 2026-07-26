@@ -27,12 +27,12 @@ function DemoAccountButtons({
 		<>
 			<div className="relative my-4">
 				<Separator />
-				<span className="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs">
+				<span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
 					Demo Accounts (Dev Only)
 				</span>
 			</div>
 			<div className="space-y-2">
-				<p className="text-muted-foreground text-center text-xs">
+				<p className="text-center text-xs text-muted-foreground">
 					Quick login with demo accounts (passwords auto-filled)
 				</p>
 				{accounts.map((account) => (
@@ -46,7 +46,7 @@ function DemoAccountButtons({
 									usernameRef.current,
 									passwordRef.current,
 									account.username,
-									account.password
+									account.password,
 								);
 								formRef.current?.requestSubmit();
 							}
@@ -55,7 +55,7 @@ function DemoAccountButtons({
 						<User aria-hidden="true" className="size-4" />
 						<div className="flex flex-col items-start">
 							<span className="text-sm font-medium">{account.username}</span>
-							<span className="text-muted-foreground text-xs">{account.role}</span>
+							<span className="text-xs text-muted-foreground">{account.role}</span>
 						</div>
 					</Button>
 				))}

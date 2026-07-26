@@ -112,11 +112,11 @@ async function main(): Promise<void> {
 			if (result.skipped) {
 				skippedCount++;
 				console.log(
-					`⏭️  Skipped: ${path.relative(PUBLIC_DIR, result.path)} (${result.reason})`
+					`⏭️  Skipped: ${path.relative(PUBLIC_DIR, result.path)} (${result.reason})`,
 				);
 			} else if (result.dryRun) {
 				console.log(
-					`🧪 Would optimize: ${path.relative(PUBLIC_DIR, result.path)} (${result.originalSize} KB)`
+					`🧪 Would optimize: ${path.relative(PUBLIC_DIR, result.path)} (${result.originalSize} KB)`,
 				);
 			} else if (result.success) {
 				optimizedCount++;
@@ -125,7 +125,7 @@ async function main(): Promise<void> {
 
 				console.log(`✅ Optimized: ${path.relative(PUBLIC_DIR, result.path)}`);
 				console.log(
-					`   Original: ${result.originalSize} KB → WebP: ${result.webpSize} KB (${result.savings} savings)`
+					`   Original: ${result.originalSize} KB → WebP: ${result.webpSize} KB (${result.savings} savings)`,
 				);
 
 				if (result.variants && result.variants.length > 0) {

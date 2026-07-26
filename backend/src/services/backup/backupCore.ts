@@ -7,7 +7,6 @@ import { getConfig } from '../../config/configLoader.ts';
 import { projectRoot } from '../../config/configUtils.ts';
 import { BYTES_PER_MB } from '../../constants/files.ts';
 import { logger } from '../../utils/logger.ts';
-import { verifyDatabaseIntegrity } from './backupIntegrityService.ts';
 import { cleanupOldBackups, listBackups } from './backupLifecycleService.ts';
 import {
 	type BackupResult,
@@ -64,7 +63,7 @@ function validateBackupEnabled(): { enabled: boolean; error?: string } {
 function finalizeBackupResult(
 	timestamp: string,
 	startTime: number,
-	options: Parameters<typeof buildBackupResult>[2]
+	options: Parameters<typeof buildBackupResult>[2],
 ): BackupResult {
 	const result = buildBackupResult(timestamp, startTime, options);
 	lastBackupResult = result;
@@ -125,7 +124,7 @@ export async function createBackup(): Promise<BackupResult> {
 				path: postResult.finalPath,
 				sizeMB: (stats.size / BYTES_PER_MB).toFixed(2),
 			},
-			'Database backup created successfully'
+			'Database backup created successfully',
 		);
 
 		await cleanupOldBackups();
@@ -175,5 +174,3 @@ export function getBackupStatus(): BackupStatus {
 		totalSizeBytes,
 	};
 }
-
-export { verifyDatabaseIntegrity };

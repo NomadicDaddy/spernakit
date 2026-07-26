@@ -39,7 +39,7 @@ const settingsGeneralRoutes = new Elysia({
 				? getAll()
 				: getAll().filter(
 						(row) =>
-							!RESTRICTED_KEY_PREFIXES.some((prefix) => row.key.startsWith(prefix))
+							!RESTRICTED_KEY_PREFIXES.some((prefix) => row.key.startsWith(prefix)),
 					);
 			return dataResponse(rows);
 		},
@@ -83,7 +83,7 @@ const settingsGeneralRoutes = new Elysia({
 				},
 				summary: 'List all settings (ADMIN+)',
 			},
-		}
+		},
 	)
 	// API-only: No frontend caller (bulk GET covers UI needs). Available for API-key consumers.
 	.get(
@@ -139,7 +139,7 @@ const settingsGeneralRoutes = new Elysia({
 			params: t.Object({
 				key: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_.]+$' }),
 			}),
-		}
+		},
 	)
 	.put(
 		'/:key',
@@ -158,7 +158,7 @@ const settingsGeneralRoutes = new Elysia({
 					`Key "${params.key}" is not in the runtime settings write allowlist. ` +
 						'Generic settings writes are restricted to app feature and notification keys; ' +
 						'security/auth/smtp/oauth/encryption settings use typed endpoints, and static ' +
-						'config namespaces are not runtime-editable through the generic endpoint.'
+						'config namespaces are not runtime-editable through the generic endpoint.',
 				);
 			}
 			const setting = update({
@@ -211,7 +211,7 @@ const settingsGeneralRoutes = new Elysia({
 					'400': badRequestExample(
 						'Key "app.name" is not in the runtime settings write allowlist. ' +
 							'Generic settings writes are restricted to app feature and notification keys.',
-						'VALIDATION_FAILED'
+						'VALIDATION_FAILED',
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
@@ -221,7 +221,7 @@ const settingsGeneralRoutes = new Elysia({
 			params: t.Object({
 				key: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_.]+$' }),
 			}),
-		}
+		},
 	);
 
 export { settingsGeneralRoutes };

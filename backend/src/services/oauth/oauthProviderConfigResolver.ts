@@ -13,7 +13,7 @@ function buildLiveProviderConfig(
 	clientId: string,
 	clientSecret: string,
 	callbackUrl: string,
-	tenantId: string | undefined
+	tenantId: string | undefined,
 ): OAuthProviderConfig {
 	return {
 		callbackUrl,
@@ -28,7 +28,7 @@ async function resolveStoredProviderConfig(
 	stored: StoredSettingsRow,
 	fallbackCallbackUrl: string,
 	tenantId: string | undefined,
-	provider: OAuthProviderName
+	provider: OAuthProviderName,
 ): Promise<null | OAuthProviderConfig> {
 	let clientSecret = stored.settings.clientSecret;
 	if (stored.isEncrypted && clientSecret) {
@@ -37,7 +37,7 @@ async function resolveStoredProviderConfig(
 		} catch (err) {
 			logger.error(
 				{ err, provider },
-				'OAuth provider clientSecret decryption failed - provider unavailable'
+				'OAuth provider clientSecret decryption failed - provider unavailable',
 			);
 			return null;
 		}
@@ -57,7 +57,7 @@ async function resolveStoredProviderConfig(
 
 function resolveFileProviderConfig(
 	fileConfig: ReturnType<typeof getConfig>['oauth'][OAuthProviderName],
-	tenantId: string | undefined
+	tenantId: string | undefined,
 ): null | OAuthProviderConfig {
 	if (
 		!fileConfig?.enabled ||
@@ -72,7 +72,7 @@ function resolveFileProviderConfig(
 		fileConfig.clientId,
 		fileConfig.clientSecret,
 		fileConfig.callbackUrl,
-		tenantId
+		tenantId,
 	);
 }
 
@@ -90,7 +90,7 @@ function resolveFileProviderConfig(
  * @returns Live provider config or null
  */
 async function resolveLiveProviderConfig(
-	provider: OAuthProviderName
+	provider: OAuthProviderName,
 ): Promise<null | OAuthProviderConfig> {
 	const config = getConfig();
 	const fileConfig = config.oauth[provider];
@@ -103,7 +103,7 @@ async function resolveLiveProviderConfig(
 			stored,
 			fileConfig?.callbackUrl ?? '',
 			tenantId,
-			provider
+			provider,
 		);
 	}
 

@@ -35,6 +35,7 @@ import {
 	checkFile,
 	classifyFile,
 	enumerateTemplateFiles,
+	type FileResult,
 	gitTagExists,
 	isSpernakitItself,
 	loadAppBrandingValues,
@@ -43,7 +44,6 @@ import {
 	printReport,
 	readSpernakitVersion,
 	resolveSpernakitPath,
-	type FileResult,
 } from './template-shared.js';
 
 // ===== CONSTANTS =====
@@ -113,7 +113,7 @@ function main(): void {
 		const { overrides, source: manifestSource } = overridesResult;
 		if (manifestSource === 'filesystem') {
 			console.log(
-				`   Note: manifest loaded from filesystem (not yet tagged at v${version}).`
+				`   Note: manifest loaded from filesystem (not yet tagged at v${version}).`,
 			);
 			console.log('');
 		}
@@ -135,7 +135,7 @@ function main(): void {
 		for (const filePath of templateFiles) {
 			const category = classifyFile(filePath, overrides);
 			results.push(
-				checkFile(spernakitPath, version, filePath, category, appBranding, repoRoot)
+				checkFile(spernakitPath, version, filePath, category, appBranding, repoRoot),
 			);
 		}
 

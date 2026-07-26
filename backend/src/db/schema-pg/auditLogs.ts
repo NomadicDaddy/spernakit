@@ -49,7 +49,7 @@ const auditLogs = pgTable(
 		index('idx_audit_logs_created_at').on(table.createdAt),
 		index('idx_audit_logs_workspace_id').on(table.workspaceId),
 		index('idx_audit_logs_workspace_created').on(table.workspaceId, table.createdAt),
-	]
+	],
 );
 
 export { auditLogs };

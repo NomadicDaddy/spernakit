@@ -56,7 +56,7 @@ type CacheDuration = keyof typeof CACHE_DURATIONS;
 function setCacheHeaders(
 	set: { headers: Record<string, number | string> },
 	duration: CacheDuration,
-	options: { isPublic?: boolean; mustRevalidate?: boolean } = {}
+	options: { isPublic?: boolean; mustRevalidate?: boolean } = {},
 ): void {
 	const { isPublic = false, mustRevalidate = false } = options;
 	const seconds = CACHE_DURATIONS[duration];

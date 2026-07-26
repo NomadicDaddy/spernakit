@@ -77,7 +77,7 @@ export function validateRowValues(values: DataRow): void {
 	for (const [key, val] of Object.entries(values)) {
 		if (val !== null && typeof val !== 'number' && typeof val !== 'string') {
 			throw new Error(
-				`Invalid value type for column "${key}": expected null, number, or string, got ${typeof val}`
+				`Invalid value type for column "${key}": expected null, number, or string, got ${typeof val}`,
 			);
 		}
 		if (JSON_COLUMN_NAMES.has(key) && typeof val === 'string') {

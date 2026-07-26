@@ -53,7 +53,7 @@ function parseSettingsJson<T>(
 	value: null | string,
 	schema: TObject,
 	defaults: T,
-	context: string
+	context: string,
 ): T {
 	if (!value) {
 		return { ...defaults } as T;

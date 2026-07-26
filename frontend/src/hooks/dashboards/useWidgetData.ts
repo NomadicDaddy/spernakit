@@ -32,7 +32,7 @@ interface UseWidgetDataOptions {
 
 export function useWidgetData(
 	widget: DashboardWidget,
-	{ allowPrivateData = true }: UseWidgetDataOptions = {}
+	{ allowPrivateData = true }: UseWidgetDataOptions = {},
 ) {
 	const queryClient = useQueryClient();
 	const subscribe = useWsStore((s) => s.subscribe);
@@ -77,7 +77,7 @@ export function useWidgetData(
 
 	const { metricsData: metricsQueryData } = useMetricsHistory(
 		hours,
-		needsMetrics && canLoadPrivateData
+		needsMetrics && canLoadPrivateData,
 	);
 
 	return {

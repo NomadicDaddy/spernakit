@@ -130,7 +130,7 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 
 				{step === 'enroll' && setup.data && (
 					<div className="space-y-4">
-						<div className="bg-muted flex justify-center rounded-md p-4">
+						<div className="flex justify-center rounded-md bg-muted p-4">
 							{qrDataUrl && (
 								<img
 									alt="MFA enrollment QR code"
@@ -145,7 +145,7 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 							<Label>Manual setup code</Label>
 							<div className="flex items-center gap-2">
 								<code
-									className="bg-muted flex-1 rounded px-2 py-1 font-mono text-xs break-all"
+									className="flex-1 rounded bg-muted px-2 py-1 font-mono text-xs break-all"
 									translate="no">
 									{setup.data.secret}
 								</code>
@@ -176,11 +176,11 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 							<Label>Recovery codes</Label>
 							<CopyButton value={backupCodes.join('\n')} />
 						</div>
-						<p className="text-muted-foreground text-xs">
+						<p className="text-xs text-muted-foreground">
 							Each code can be used once if you lose access to your authenticator.
 							Store them somewhere safe. They will not be shown again.
 						</p>
-						<div className="bg-muted rounded-md p-3">
+						<div className="rounded-md bg-muted p-3">
 							<div className="grid grid-cols-2 gap-1 font-mono text-xs">
 								{backupCodes.map((c) => (
 									<span key={c}>{c}</span>
@@ -200,7 +200,7 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 				)}
 
 				{error && (
-					<p aria-live="polite" className="text-destructive text-sm" role="alert">
+					<p aria-live="polite" className="text-sm text-destructive" role="alert">
 						{error}
 					</p>
 				)}

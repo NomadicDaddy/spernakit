@@ -70,7 +70,7 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 					/>
 					<CommandList>
 						{isFetching && candidateUsers.length === 0 ? (
-							<div className="text-muted-foreground py-6 text-center text-sm">
+							<div className="py-6 text-center text-sm text-muted-foreground">
 								Loading…
 							</div>
 						) : candidateUsers.length === 0 ? (
@@ -94,12 +94,12 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 												'mr-2 size-4',
 												selectedUser?.id === user.id
 													? 'opacity-100'
-													: 'opacity-0'
+													: 'opacity-0',
 											)}
 										/>
 										<div className="flex flex-col">
 											<span className="font-medium">{user.username}</span>
-											<span className="text-muted-foreground text-xs">
+											<span className="text-xs text-muted-foreground">
 												{user.email}
 											</span>
 										</div>

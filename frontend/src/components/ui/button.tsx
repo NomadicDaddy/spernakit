@@ -33,7 +33,7 @@ const buttonVariants = cva(
 				secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
 			},
 		},
-	}
+	},
 );
 
 function Button({
@@ -42,10 +42,10 @@ function Button({
 	size = 'default',
 	variant = 'default',
 	...props
-}: React.ComponentProps<'button'> &
-	VariantProps<typeof buttonVariants> & {
-		asChild?: boolean;
-	}) {
+}: {
+	asChild?: boolean;
+} & React.ComponentProps<'button'> &
+	VariantProps<typeof buttonVariants>) {
 	const Comp = asChild ? Slot : 'button';
 
 	return (

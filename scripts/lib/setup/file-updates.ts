@@ -17,7 +17,7 @@ import { updateFile, updateJsonFile } from './json-files.ts';
 function applySpernakitVersionOrdering(
 	pkg: Record<string, unknown>,
 	appSlug: string,
-	spernakitVersion: string
+	spernakitVersion: string,
 ): void {
 	const shouldWrite = appSlug !== 'spernakit';
 	if (shouldWrite) {

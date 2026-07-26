@@ -61,13 +61,13 @@ function OAuthCallbackPage() {
 					void navigate('/dashboard');
 				} else {
 					toast.error(
-						'OAuth authentication failed. Please try again or sign in with your username and password.'
+						'OAuth authentication failed. Please try again or sign in with your username and password.',
 					);
 					void navigate('/login');
 				}
 			} catch {
 				toast.error(
-					'OAuth authentication failed. Please try again or sign in with your username and password.'
+					'OAuth authentication failed. Please try again or sign in with your username and password.',
 				);
 				void navigate('/login');
 			}

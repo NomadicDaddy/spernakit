@@ -21,8 +21,8 @@ import { buildCookieHeader, isSecureCookie } from '../../utils/auth/authHelpers.
 import {
 	AUTH_ERROR_CODES,
 	badRequestError,
-	forbiddenError,
 	type ErrorResponse,
+	forbiddenError,
 	unauthorizedError,
 } from '../../utils/errorResponse.ts';
 import { logger } from '../../utils/logger.ts';
@@ -38,7 +38,7 @@ const oauthCallbackStore = createRateLimitStore();
  */
 function validateOAuthQuery(
 	query: { code?: string; error?: string; state?: string },
-	provider: string
+	provider: string,
 ):
 	| { body: ErrorResponse; ok: false; status: number }
 	| { code: string; ok: true; state?: string | undefined } {
@@ -47,7 +47,7 @@ function validateOAuthQuery(
 		return {
 			body: badRequestError(
 				'OAuth provider denied access',
-				AUTH_ERROR_CODES.AUTH_OAUTH_FAILED
+				AUTH_ERROR_CODES.AUTH_OAUTH_FAILED,
 			),
 			ok: false,
 			status: HTTP_STATUS.BAD_REQUEST,
@@ -72,7 +72,7 @@ function validateOAuthQuery(
 function validateSessionBinding(
 	state: string,
 	request: Request,
-	provider: string
+	provider: string,
 ): { body: ErrorResponse; status: number } | null {
 	const cookieHeader = request.headers.get('cookie') ?? '';
 	const cookies = parseCookies(cookieHeader);
@@ -88,7 +88,7 @@ function validateSessionBinding(
 		return {
 			body: badRequestError(
 				'OAuth session binding failed',
-				AUTH_ERROR_CODES.AUTH_OAUTH_FAILED
+				AUTH_ERROR_CODES.AUTH_OAUTH_FAILED,
 			),
 			status: HTTP_STATUS.BAD_REQUEST,
 		};
@@ -103,7 +103,7 @@ function validateSessionBinding(
  */
 function validateAccountStatus(
 	userId: number,
-	provider: string
+	provider: string,
 ):
 	| { error: { body: ErrorResponse; status: number }; user?: never }
 	| { error?: never; user: UserAccountStatus } {
@@ -143,7 +143,7 @@ function checkOAuthCallbackRateLimit(ip: string): {
 		oauthCallbackStore,
 		`oauth-callback-ip:${ip}`,
 		OAUTH_CALLBACK_IP_MAX_REQUESTS,
-		OAUTH_CALLBACK_IP_WINDOW_MS
+		OAUTH_CALLBACK_IP_WINDOW_MS,
 	);
 	if (result.limited) {
 		return result.retryAfter !== undefined
@@ -160,7 +160,7 @@ function checkOAuthCallbackRateLimit(ip: string): {
 function buildOAuthLoginCookies(
 	tokens: { accessToken: string; refreshToken: string },
 	csrfToken: string,
-	request: Request
+	request: Request,
 ): string[] {
 	const config = getConfig();
 	const secure = isSecureCookie(request);
@@ -180,14 +180,14 @@ function buildOAuthLoginCookies(
 			config.security.authCookieName,
 			tokens.accessToken,
 			config.security.cookieMaxAge,
-			request
+			request,
 		),
 		buildCookieHeader(
 			config.security.refreshCookieName,
 			tokens.refreshToken,
 			parseDurationMs(config.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY),
 			request,
-			REFRESH_COOKIE_PATH
+			REFRESH_COOKIE_PATH,
 		),
 		csrfCookie,
 		clearBindCookie,

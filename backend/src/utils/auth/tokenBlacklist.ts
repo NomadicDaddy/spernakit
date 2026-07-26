@@ -103,8 +103,8 @@ function isUserTokensRevokedAfter(userId: number, tokenIssuedAt: Date): boolean 
 			and(
 				eq(tokenBlacklist.userId, userId),
 				gt(tokenBlacklist.expiresAt, now),
-				gt(tokenBlacklist.createdAt, tokenIssuedAt)
-			)
+				gt(tokenBlacklist.createdAt, tokenIssuedAt),
+			),
 		)
 		.limit(1)
 		.all();

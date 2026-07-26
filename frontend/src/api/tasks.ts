@@ -68,7 +68,7 @@ function triggerTask(taskName: string): Promise<DataResponse<TriggerResult>> {
 /** Update a scheduled task's configuration (schedule and/or enabled state). Requires ADMIN+ role. */
 function updateTask(
 	taskName: string,
-	payload: TaskUpdatePayload
+	payload: TaskUpdatePayload,
 ): Promise<DataResponse<TaskUpdateResult>> {
 	return apiClient.patch<DataResponse<TaskUpdateResult>>(`/tasks/${taskName}`, { body: payload });
 }

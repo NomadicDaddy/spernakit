@@ -9,9 +9,9 @@ import { mfaSettings } from '../../../db/schema/mfaSettings.ts';
 import { encrypt } from '../../../utils/encryption.ts';
 import { logAuth } from '../../../utils/logger.ts';
 import {
-	RECOVERY_CODE_COUNT,
 	formatRecoveryCode,
 	generateRecoveryCode,
+	RECOVERY_CODE_COUNT,
 	verifyEnabledMfa,
 } from '../mfaHelpers.ts';
 

@@ -48,7 +48,7 @@ function WorkspaceFormDialogs({
 					(id, form: { description?: string; name?: string }) => {
 						updateWorkspace({ id, input: form });
 						closeDialog();
-					}
+					},
 				)}
 				workspace={workspaces.find((w) => w.id === selectedWorkspace)}
 			/>

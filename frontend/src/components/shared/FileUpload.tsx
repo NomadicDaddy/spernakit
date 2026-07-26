@@ -106,7 +106,7 @@ function FileUpload({
 					dragOver && isInteractive
 						? 'border-primary bg-primary/5'
 						: 'border-muted-foreground/25 hover:border-muted-foreground/50',
-					!isInteractive && 'cursor-not-allowed opacity-50'
+					!isInteractive && 'cursor-not-allowed opacity-50',
 				)}
 				onClick={() => isInteractive && inputRef.current?.click()}
 				onDragLeave={handleDragLeave}
@@ -120,12 +120,12 @@ function FileUpload({
 				}}
 				role="button"
 				tabIndex={isInteractive ? 0 : -1}>
-				<FileUp aria-hidden className="text-muted-foreground mb-2 h-8 w-8" />
-				<p className="text-muted-foreground text-sm">
+				<FileUp aria-hidden className="mb-2 h-8 w-8 text-muted-foreground" />
+				<p className="text-sm text-muted-foreground">
 					Drag and drop a file here, or click to browse
 				</p>
 				{maxSizeBytes && (
-					<p className="text-muted-foreground/70 mt-1 text-xs">
+					<p className="mt-1 text-xs text-muted-foreground/70">
 						Maximum size: {formatFileSize(maxSizeBytes)}
 					</p>
 				)}
@@ -140,7 +140,7 @@ function FileUpload({
 			/>
 
 			{sizeError && (
-				<p aria-live="polite" className="text-destructive text-sm" role="alert">
+				<p aria-live="polite" className="text-sm text-destructive" role="alert">
 					{sizeError}
 				</p>
 			)}
@@ -149,7 +149,7 @@ function FileUpload({
 				<div className="flex items-center justify-between rounded-md border px-3 py-2">
 					<div className="min-w-0 flex-1">
 						<p className="truncate text-sm font-medium">{selectedFile.name}</p>
-						<p className="text-muted-foreground text-xs">
+						<p className="text-xs text-muted-foreground">
 							{formatFileSize(selectedFile.size)}
 						</p>
 					</div>

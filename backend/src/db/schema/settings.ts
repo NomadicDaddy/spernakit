@@ -54,7 +54,7 @@ const settings = sqliteTable(
 			name: 'fk_settings_updated_by_users',
 		}).onDelete('set null'),
 		index('idx_settings_key_is_deleted').on(table.key, table.isDeleted),
-	]
+	],
 );
 
 export { settings };

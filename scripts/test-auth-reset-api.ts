@@ -63,7 +63,7 @@ async function run(): Promise<void> {
 		assert(response.status === 400, `Expected 400 for missing fields, got ${response.status}`);
 		assert(
 			body?.message === 'Token, password, and confirm password are required',
-			`Unexpected message for missing fields: ${body?.message}`
+			`Unexpected message for missing fields: ${body?.message}`,
 		);
 	}
 
@@ -79,11 +79,11 @@ async function run(): Promise<void> {
 		});
 		assert(
 			response.status === 400,
-			`Expected 400 for mismatched passwords, got ${response.status}`
+			`Expected 400 for mismatched passwords, got ${response.status}`,
 		);
 		assert(
 			body?.message === 'Passwords do not match',
-			`Unexpected message for mismatched passwords: ${body?.message}`
+			`Unexpected message for mismatched passwords: ${body?.message}`,
 		);
 	}
 
@@ -100,13 +100,13 @@ async function run(): Promise<void> {
 		assert(response.status === 400, `Expected 400 for invalid token, got ${response.status}`);
 		assert(
 			body?.error === 'Invalid or expired reset token',
-			`Unexpected error for invalid token: ${body?.error}`
+			`Unexpected error for invalid token: ${body?.error}`,
 		);
 		assert(
 			(typeof body?.message === 'string' && body.message.toLowerCase().includes('invalid')) ||
 				(typeof body?.message === 'string' &&
 					body.message.toLowerCase().includes('expired')),
-			`Unexpected message detail for invalid token: ${body?.message}`
+			`Unexpected message detail for invalid token: ${body?.message}`,
 		);
 	}
 

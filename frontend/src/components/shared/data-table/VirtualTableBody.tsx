@@ -1,4 +1,4 @@
-import { type Row, flexRender } from '@tanstack/react-table';
+import { flexRender, type Row } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { TableBody, TableCell, TableRow } from '@/components/ui/table';
@@ -87,7 +87,7 @@ function VirtualTableBody<TData>({
 												}}>
 												{flexRender(
 													cell.column.columnDef.cell,
-													cell.getContext()
+													cell.getContext(),
 												)}
 											</div>
 										))}

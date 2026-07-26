@@ -26,7 +26,7 @@ let config: AppConfig | null = null;
 function loadOrCreateUserConfig(
 	configPath: string,
 	configDir: string,
-	defaults: Record<string, unknown>
+	defaults: Record<string, unknown>,
 ): Record<string, unknown> {
 	if (existsSync(configPath)) {
 		try {
@@ -34,7 +34,7 @@ function loadOrCreateUserConfig(
 		} catch (err) {
 			throw new Error(
 				`Failed to parse config at ${configPath}: ${err instanceof Error ? err.message : String(err)}`,
-				{ cause: err }
+				{ cause: err },
 			);
 		}
 	}
@@ -51,7 +51,7 @@ function loadOrCreateUserConfig(
 	configLogger.warn(
 		{ configPath },
 		'Config auto-created from defaults with placeholder secrets. ' +
-			'You MUST update secrets before running in production.'
+			'You MUST update secrets before running in production.',
 	);
 	return defaults;
 }
@@ -72,11 +72,11 @@ function parseConfigSchema(raw: Record<string, unknown>): AppConfig {
 	for (const issue of result.error.issues) {
 		configLogger.error(
 			{ message: issue.message, path: issue.path.join('.') },
-			'  Validation issue'
+			'  Validation issue',
 		);
 	}
 	throw new Error(
-		`Configuration validation failed with ${result.error.issues.length} issue(s). See logs above.`
+		`Configuration validation failed with ${result.error.issues.length} issue(s). See logs above.`,
 	);
 }
 

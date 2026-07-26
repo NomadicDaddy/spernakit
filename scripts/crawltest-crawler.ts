@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { CrawlEventContext } from './crawltest-events';
 import type { CrawlSession } from './crawltest-session';
-import type { CrawlerOpts, CrawlerOptions, CrawlerState } from './crawltest-types';
+import type { CrawlerOptions, CrawlerOpts, CrawlerState } from './crawltest-types';
 
 import { discoverRoutes } from './crawltest-discovery';
 import { attachPageHandlers } from './crawltest-events';
@@ -173,7 +173,7 @@ export class WebCrawler {
 				this.opts,
 				this.seedRoutes,
 				this.maxDepth,
-				flushRateLimits
+				flushRateLimits,
 			);
 
 			if (this.startFromRoute) {
@@ -184,7 +184,7 @@ export class WebCrawler {
 
 				if (filtered.length === 0) {
 					console.log(
-						`\n⚠️  No routes found starting from "${this.startFromRoute}". Discovered routes:`
+						`\n⚠️  No routes found starting from "${this.startFromRoute}". Discovered routes:`,
 					);
 					for (const r of routes) {
 						console.log(`   ${new URL(r).pathname}`);
@@ -195,7 +195,7 @@ export class WebCrawler {
 				}
 
 				console.log(
-					`\n📍 Discovered ${routes.length} routes, filtered to ${filtered.length} starting from "${this.startFromRoute}"\n`
+					`\n📍 Discovered ${routes.length} routes, filtered to ${filtered.length} starting from "${this.startFromRoute}"\n`,
 				);
 				this.results.routesDiscovered = routes.length;
 				routes = filtered;
@@ -223,7 +223,7 @@ export class WebCrawler {
 				this.state,
 				ROOT_DIR,
 				route,
-				this.recycle
+				this.recycle,
 			);
 		}
 

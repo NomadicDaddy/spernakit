@@ -1,7 +1,6 @@
 import type { BunSQLiteDatabase } from 'drizzle-orm/bun-sqlite';
 import type { WorkspaceMemberRole } from 'spernakit-shared';
 
-import type { AppConfig } from '../../config/configSchema.ts';
 import type { UserRole } from '../../types/roles.ts';
 import type * as schema from '../schema/index.ts';
 
@@ -22,12 +21,4 @@ interface CreatedUser {
 	username: string;
 }
 
-export type {
-	AppConfig,
-	CreatedUser,
-	SeedDb,
-	SeedUser,
-	UserRole,
-	WorkspaceMemberRole,
-	WorkspaceRoleMap,
-};
+export type { CreatedUser, SeedDb, SeedUser, WorkspaceRoleMap };

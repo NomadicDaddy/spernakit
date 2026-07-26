@@ -39,7 +39,7 @@ function LayoutDefaultsSection({
 							className={cn(
 								'flex items-center gap-2',
 								defaultLayoutMode === option.value &&
-									'ring-primary ring-2 ring-offset-2'
+									'ring-2 ring-primary ring-offset-2',
 							)}
 							disabled={pending}
 							key={option.value}

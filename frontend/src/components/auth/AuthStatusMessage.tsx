@@ -16,7 +16,7 @@ function AuthStatusMessage({ description, linkText, linkTo, title }: AuthStatusM
 		<AuthPageLayout description={description} title={title}>
 			<CardContent className="text-center">
 				<Link
-					className="text-primary focus-visible:ring-ring rounded-sm text-sm hover:underline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+					className="rounded-sm text-sm text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
 					to={linkTo}>
 					{linkText}
 				</Link>

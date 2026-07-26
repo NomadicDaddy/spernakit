@@ -71,7 +71,7 @@ function ensureAuthSettingsSeeded(): void {
 	seedDefault(
 		'authentication',
 		DEFAULT_AUTH_SECURITY_SETTINGS,
-		'Authentication security settings'
+		'Authentication security settings',
 	);
 }
 
@@ -93,7 +93,7 @@ function getAuthSettings(): AuthSecuritySettings {
 		setting?.value ?? null,
 		AuthSecuritySettingsSchema,
 		DEFAULT_AUTH_SECURITY_SETTINGS,
-		'auth security settings'
+		'auth security settings',
 	);
 
 	cachedSettings = result;
@@ -110,7 +110,7 @@ function getAuthSettings(): AuthSecuritySettings {
  */
 function updateAuthSettings(
 	settings: Partial<AuthSecuritySettings>,
-	updatedBy: number
+	updatedBy: number,
 ): AuthSecuritySettings {
 	const current = getAuthSettings();
 	const merged = { ...current, ...settings };

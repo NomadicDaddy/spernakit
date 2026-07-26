@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import type { UserRole, User } from '@/api/types';
+import type { User, UserRole } from '@/api/types';
 
 import { Button } from '@/components/ui/button';
 import {

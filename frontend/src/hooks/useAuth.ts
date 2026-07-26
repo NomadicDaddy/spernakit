@@ -1,6 +1,6 @@
 import type { LoginRequest, LoginResult, UserData } from '@/api/auth';
 
-import { getMe, login as apiLogin, logout as apiLogout } from '@/api/auth';
+import { login as apiLogin, logout as apiLogout, getMe } from '@/api/auth';
 import { trackEvent } from '@/api/businessMetrics';
 import { queryClient } from '@/lib/queryClient';
 import { useAuthStore } from '@/stores/authStore';

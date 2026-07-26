@@ -6,10 +6,10 @@ import { isScaffoldMapped, toTemplatePath } from './classify.ts';
 import { getTemplateFileAtVersion, readLocalFile } from './repo.ts';
 import { normalizeLineEndings } from './text.ts';
 import {
-	TEMPLATE_BRANDING,
 	type BrandingValues,
 	type DriftCategory,
 	type FileResult,
+	TEMPLATE_BRANDING,
 } from './types.ts';
 
 export function checkFile(
@@ -18,14 +18,14 @@ export function checkFile(
 	filePath: string,
 	category: DriftCategory,
 	appBranding: BrandingValues | null,
-	repoRoot: string
+	repoRoot: string,
 ): FileResult {
 	// An app's ignore files and hooks are compared against scaffolding/, not against spernakit's own
 	// copies — those are the published-repo versions and are deliberately the opposite of an app's.
 	const templateContent = getTemplateFileAtVersion(
 		spernakitPath,
 		version,
-		toTemplatePath(filePath)
+		toTemplatePath(filePath),
 	);
 	const localContent = readLocalFile(repoRoot, filePath);
 

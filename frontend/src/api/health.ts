@@ -127,7 +127,7 @@ function getHealthConfig(): Promise<DataResponse<HealthCheckConfig>> {
 }
 
 function updateHealthConfig(
-	updates: Partial<HealthCheckConfig>
+	updates: Partial<HealthCheckConfig>,
 ): Promise<DataResponse<HealthCheckConfig>> {
 	return apiClient.put<DataResponse<HealthCheckConfig>>('/health/config', {
 		body: updates,

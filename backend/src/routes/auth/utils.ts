@@ -102,7 +102,7 @@ const authUtilsRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth'
 				},
 				summary: 'Get security health report (ADMIN+)',
 			},
-		}
+		},
 	)
 	.get(
 		'/demo-accounts',
@@ -179,7 +179,7 @@ const authUtilsRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth'
 				},
 				summary: 'Get demo accounts (development only)',
 			},
-		}
+		},
 	);
 
 export { authUtilsRoutes };

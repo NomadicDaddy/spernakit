@@ -25,7 +25,7 @@ export function HealthVitalsSection({ vitalsData, vitalsLoading }: HealthVitalsS
 			) : (
 				<Card>
 					<CardContent className="p-4">
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							No Web Vitals data yet. Metrics are collected in production builds.
 						</p>
 					</CardContent>

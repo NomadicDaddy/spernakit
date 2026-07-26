@@ -88,7 +88,7 @@ async function getFileSize(filePath: string): Promise<string> {
 async function convertToWebP(
 	inputPath: string,
 	outputPath: string,
-	quality: number
+	quality: number,
 ): Promise<void> {
 	await new Bun.Image(inputPath).webp({ quality }).write(outputPath);
 }
@@ -100,7 +100,7 @@ async function generateResponsiveVariant(
 	inputPath: string,
 	outputPath: string,
 	width: number,
-	quality: number
+	quality: number,
 ): Promise<void> {
 	const metadata = await new Bun.Image(inputPath).metadata();
 
@@ -120,7 +120,7 @@ async function generateResponsiveVariant(
  */
 export async function optimizeImage(
 	imagePath: string,
-	options: OptimizationOptions
+	options: OptimizationOptions,
 ): Promise<null | OptimizationResult> {
 	const ext = path.extname(imagePath);
 	const basename = path.basename(imagePath, ext);

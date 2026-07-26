@@ -84,39 +84,39 @@ async function run(): Promise<void> {
 				origin: getConfig().server.frontendUrl,
 			},
 			method: 'POST',
-		})
+		}),
 	);
 	const bodyText = await response.text();
 
 	assert(
 		response.status === 200,
-		`Expected 200 from /auth/refresh while account locked, got ${response.status} (body: ${bodyText})`
+		`Expected 200 from /auth/refresh while account locked, got ${response.status} (body: ${bodyText})`,
 	);
 	assert(
 		!bodyText.includes('AUTH_ACCOUNT_LOCKED'),
-		'Refresh response must not contain AUTH_ACCOUNT_LOCKED — lockout must not gate refresh'
+		'Refresh response must not contain AUTH_ACCOUNT_LOCKED — lockout must not gate refresh',
 	);
 	assert(
 		(response.headers.get('set-cookie') ?? '').includes(cookieName),
-		'Refresh must rotate and re-set the refresh cookie on success'
+		'Refresh must rotate and re-set the refresh cookie on success',
 	);
 
 	// --- Criterion 3: account lock still protects NEW password logins ---
 	const loginResult = await login(VICTIM_USERNAME, VICTIM_PASSWORD, '127.0.0.1');
 	assert(
 		'reason' in loginResult && loginResult.reason === 'locked',
-		`Locked account must still reject new password login (reason 'locked'), got ${JSON.stringify(loginResult)}`
+		`Locked account must still reject new password login (reason 'locked'), got ${JSON.stringify(loginResult)}`,
 	);
 
 	// --- Criterion 4: lockout threshold sits strictly above the rate limit ---
 	const settings = getAuthSettings();
 	assert(
 		settings.maxLoginAttempts === AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1,
-		`maxLoginAttempts (${settings.maxLoginAttempts}) must equal AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1 (${AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1})`
+		`maxLoginAttempts (${settings.maxLoginAttempts}) must equal AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1 (${AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1})`,
 	);
 	assert(
 		settings.maxLoginAttempts > AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
-		'Lockout threshold must be strictly above the per-account rate limit'
+		'Lockout threshold must be strictly above the per-account rate limit',
 	);
 
 	await closeDatabase();

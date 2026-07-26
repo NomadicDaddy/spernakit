@@ -18,7 +18,7 @@ interface AccountLockoutActions {
 	onMaxLoginAttemptsChange: (value: string) => void;
 }
 
-type AccountLockoutSectionProps = AccountLockoutState & AccountLockoutActions;
+type AccountLockoutSectionProps = AccountLockoutActions & AccountLockoutState;
 
 function AccountLockoutSection({
 	enableAccountLocking,
@@ -33,7 +33,7 @@ function AccountLockoutSection({
 			<div className="flex flex-row items-center justify-between rounded-lg border p-4">
 				<div className="space-y-0.5">
 					<Label htmlFor="enableAccountLocking">Account Lockout</Label>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Lock user accounts after repeated failed login attempts
 					</p>
 				</div>
@@ -55,7 +55,7 @@ function AccountLockoutSection({
 							onChange={onMaxLoginAttemptsChange}
 							value={maxLoginAttempts}
 						/>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							Number of failed attempts before account is locked (1-100)
 						</p>
 					</div>
@@ -69,7 +69,7 @@ function AccountLockoutSection({
 							onChange={onLockoutDurationChange}
 							value={lockoutDurationMinutes}
 						/>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							How long the account remains locked (1-1440 minutes)
 						</p>
 					</div>

@@ -68,7 +68,7 @@ const oauthAccounts = sqliteTable(
 	(table) => [
 		check(
 			'chk_oauth_accounts_provider',
-			sql`${table.provider} in (${sql.raw(OAUTH_PROVIDER_IN_LIST)})`
+			sql`${table.provider} in (${sql.raw(OAUTH_PROVIDER_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `profile` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -97,10 +97,10 @@ const oauthAccounts = sqliteTable(
 		index('idx_oauth_accounts_is_deleted').on(table.isDeleted),
 		uniqueIndex('idx_oauth_accounts_provider_account').on(
 			table.provider,
-			table.providerAccountId
+			table.providerAccountId,
 		),
 		uniqueIndex('idx_oauth_accounts_user_provider').on(table.userId, table.provider),
-	]
+	],
 );
 
 const oauthAccountsRelations = relations(oauthAccounts, ({ one }) => ({

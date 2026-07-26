@@ -49,7 +49,7 @@ function resolveUserFromRequest(request: Request): AuthPayload | null {
 		return null;
 	}
 
-	const iat = (payload as AuthPayload & { iat?: number }).iat;
+	const iat = (payload as { iat?: number } & AuthPayload).iat;
 	if (iat && isUserTokensRevokedAfter(payload.id, new Date(iat * 1000))) {
 		logger.debug({ userId: payload.id }, 'User tokens revoked after token issuance');
 		return null;
@@ -60,7 +60,7 @@ function resolveUserFromRequest(request: Request): AuthPayload | null {
 
 async function resolveApiKeyUser(
 	request: Request,
-	apiKeyHeader: string
+	apiKeyHeader: string,
 ): Promise<AuthPayload | null> {
 	const hasHmacHeaders =
 		request.headers.get('x-api-signature') !== null &&

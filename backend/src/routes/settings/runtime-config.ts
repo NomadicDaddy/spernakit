@@ -51,7 +51,7 @@ const settingsRuntimeConfigRoutes = new Elysia({
 								examples: {
 									success: dataExample(
 										'Redacted runtime config snapshot',
-										RUNTIME_CONFIG_EXAMPLE
+										RUNTIME_CONFIG_EXAMPLE,
 									),
 								},
 							},
@@ -63,7 +63,7 @@ const settingsRuntimeConfigRoutes = new Elysia({
 				},
 				summary: 'Get redacted runtime config overview (SYSOP only)',
 			},
-		}
+		},
 	);
 
 export { settingsRuntimeConfigRoutes };

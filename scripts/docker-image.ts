@@ -74,7 +74,7 @@ if (pkg.name === 'spernakit') {
 const registry = process.env.IMAGE_REGISTRY;
 if (!registry) {
 	console.error(
-		'IMAGE_REGISTRY is required to publish (for example a GHCR or ECR namespace you control).'
+		'IMAGE_REGISTRY is required to publish (for example a GHCR or ECR namespace you control).',
 	);
 	console.error('The template names no registry for you; publishing is your decision.');
 	process.exit(1);

@@ -13,7 +13,7 @@
  *
  * Run: bun scripts/check-schema-parity.ts
  */
-import { readFileSync, readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '..');
@@ -33,7 +33,7 @@ function extractColumnNames(source: string): string[] {
 	const names: string[] = [];
 	// Match column name strings: type('name', ...) — captures the string argument
 	for (const m of source.matchAll(
-		/\b(?:integer|text|boolean|timestamp|serial|bigint|numeric|real|blob|json|jsonb|doublePrecision|uuid|varchar|char|date|time|decimal|smallint|mediumint|tinyint)\s*\(\s*'([^']+)'/g
+		/\b(?:integer|text|boolean|timestamp|serial|bigint|numeric|real|blob|json|jsonb|doublePrecision|uuid|varchar|char|date|time|decimal|smallint|mediumint|tinyint)\s*\(\s*'([^']+)'/g,
 	)) {
 		const name = m[1]!.trim();
 		if (!names.includes(name)) {
@@ -151,12 +151,12 @@ function checkEnumDomainConstraints(source: string, relativePath: string): strin
 		for (const column of extractEnumColumns(table.source, table.startLine)) {
 			const constraintName = `chk_${table.tableName}_${column.columnName}`;
 			const pattern = new RegExp(
-				`check\\s*\\(\\s*'${escapeRegularExpression(constraintName)}'\\s*,`
+				`check\\s*\\(\\s*'${escapeRegularExpression(constraintName)}'\\s*,`,
 			);
 
 			if (!pattern.test(table.source)) {
 				domainErrors.push(
-					`  ${relativePath}:${column.line}: enum column "${column.columnName}" lacks a named domain CHECK constraint`
+					`  ${relativePath}:${column.line}: enum column "${column.columnName}" lacks a named domain CHECK constraint`,
 				);
 			}
 		}
@@ -209,7 +209,7 @@ for (const file of commonFiles) {
 
 	if (sqliteColumns.length !== pgColumns.length) {
 		errors.push(
-			`  ${file}: column count mismatch (SQLite: ${sqliteColumns.length}, PG: ${pgColumns.length})`
+			`  ${file}: column count mismatch (SQLite: ${sqliteColumns.length}, PG: ${pgColumns.length})`,
 		);
 	}
 
@@ -244,7 +244,7 @@ for (const file of commonFiles) {
 
 	errors.push(
 		...checkEnumDomainConstraints(sqliteSource, `backend/src/db/schema/${file}`),
-		...checkEnumDomainConstraints(pgSource, `backend/src/db/schema-pg/${file}`)
+		...checkEnumDomainConstraints(pgSource, `backend/src/db/schema-pg/${file}`),
 	);
 }
 

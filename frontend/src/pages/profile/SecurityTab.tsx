@@ -6,8 +6,8 @@ import { getSafeErrorMessage } from '@/api/errorHandling';
 import {
 	disableMfa,
 	getMfaStatus,
-	regenerateRecoveryCodes,
 	type RecoveryCodesResult,
+	regenerateRecoveryCodes,
 } from '@/api/mfa';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { Spinner } from '@/components/shared/Spinner';
@@ -99,10 +99,10 @@ function SecurityTab() {
 						<span className="font-medium">{enabled ? 'Enabled' : 'Disabled'}</span>
 					</p>
 					{!serverConfigured && (
-						<p className="text-muted-foreground text-xs">
+						<p className="text-xs text-muted-foreground">
 							MFA is not configured on this server yet. Run{' '}
 							<code
-								className="bg-muted rounded px-1 font-mono text-xs"
+								className="rounded bg-muted px-1 font-mono text-xs"
 								translate="no">
 								bun run generate-keys
 							</code>{' '}
@@ -199,10 +199,10 @@ function SecurityTab() {
 									<Label>New recovery codes</Label>
 									<CopyButton value={newRecoveryCodes.backupCodes.join('\n')} />
 								</div>
-								<p className="text-muted-foreground text-xs">
+								<p className="text-xs text-muted-foreground">
 									Save these now - they will not be shown again.
 								</p>
-								<div className="bg-muted rounded-md p-3">
+								<div className="rounded-md bg-muted p-3">
 									<div className="grid grid-cols-2 gap-1 font-mono text-xs">
 										{newRecoveryCodes.backupCodes.map((c) => (
 											<span key={c}>{c}</span>

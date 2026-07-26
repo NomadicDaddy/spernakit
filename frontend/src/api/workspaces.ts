@@ -24,7 +24,7 @@ function createWorkspace(input: {
 
 function updateWorkspace(
 	id: number,
-	input: { description?: string; name?: string; settings?: WorkspaceSettings }
+	input: { description?: string; name?: string; settings?: WorkspaceSettings },
 ): Promise<DataResponse<Workspace>> {
 	return apiClient.put<DataResponse<Workspace>>(`/workspaces/${id}`, { body: input });
 }
@@ -39,7 +39,7 @@ function getWorkspaceMembers(id: number): Promise<DataResponse<WorkspaceMember[]
 
 function addWorkspaceMember(
 	id: number,
-	input: { role: string; userId: number }
+	input: { role: string; userId: number },
 ): Promise<SuccessResponse> {
 	return apiClient.post<SuccessResponse>(`/workspaces/${id}/members`, { body: input });
 }
@@ -51,7 +51,7 @@ function removeWorkspaceMember(workspaceId: number, userId: number): Promise<Suc
 function updateMemberRole(
 	workspaceId: number,
 	userId: number,
-	role: string
+	role: string,
 ): Promise<SuccessResponse> {
 	return apiClient.put<SuccessResponse>(`/workspaces/${workspaceId}/members/${userId}/role`, {
 		body: { role },
@@ -60,21 +60,21 @@ function updateMemberRole(
 
 function bulkAddMembers(
 	workspaceId: number,
-	members: { role: string; userId: number }[]
+	members: { role: string; userId: number }[],
 ): Promise<DataResponse<BulkOperationResult>> {
 	return apiClient.post<DataResponse<BulkOperationResult>>(
 		`/workspaces/${workspaceId}/members/bulk`,
-		{ body: { members } }
+		{ body: { members } },
 	);
 }
 
 function bulkRemoveMembers(
 	workspaceId: number,
-	userIds: number[]
+	userIds: number[],
 ): Promise<DataResponse<BulkOperationResult>> {
 	return apiClient.post<DataResponse<BulkOperationResult>>(
 		`/workspaces/${workspaceId}/members/bulk-delete`,
-		{ body: { userIds } }
+		{ body: { userIds } },
 	);
 }
 

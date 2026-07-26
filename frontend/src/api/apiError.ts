@@ -23,7 +23,7 @@ class ApiError extends Error {
 		status: number,
 		code?: ErrorCode,
 		requestId?: string,
-		details?: Record<string, unknown>
+		details?: Record<string, unknown>,
 	) {
 		super(message);
 		this.name = 'ApiError';

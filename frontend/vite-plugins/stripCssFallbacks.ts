@@ -123,7 +123,7 @@ function collectSupportsBlocks(css: string): { end: number; inner: string; start
 function findPrecedingFallback(
 	css: string,
 	supportsStart: number,
-	inner: string
+	inner: string,
 ): { end: number; start: number } | null {
 	// Extract the selector from the inner content
 	const selectorMatch = inner.match(/^([^{]+)\{/);

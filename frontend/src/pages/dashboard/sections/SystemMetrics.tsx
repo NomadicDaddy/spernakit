@@ -57,7 +57,7 @@ function SystemMetrics({
 		<>
 			<div>
 				<h2 className="text-lg font-semibold">System Metrics</h2>
-				<p className="text-muted-foreground mt-1 text-sm">Real-time resource usage</p>
+				<p className="mt-1 text-sm text-muted-foreground">Real-time resource usage</p>
 			</div>
 
 			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -74,7 +74,7 @@ function SystemMetrics({
 							icon={
 								<HardDrive
 									aria-hidden="true"
-									className="text-muted-foreground size-5"
+									className="size-5 text-muted-foreground"
 								/>
 							}
 							progress={Math.min(data?.metrics.memoryUsage ?? 0, 100)}
@@ -89,7 +89,7 @@ function SystemMetrics({
 						/>
 						<StatCard
 							icon={
-								<Cpu aria-hidden="true" className="text-muted-foreground size-5" />
+								<Cpu aria-hidden="true" className="size-5 text-muted-foreground" />
 							}
 							progress={Math.min(data?.metrics.cpuUsage ?? 0, 100)}
 							sparkline={
@@ -105,7 +105,7 @@ function SystemMetrics({
 							icon={
 								<Network
 									aria-hidden="true"
-									className="text-muted-foreground size-5"
+									className="size-5 text-muted-foreground"
 								/>
 							}
 							title="Request Count"
@@ -113,7 +113,7 @@ function SystemMetrics({
 						/>
 						<StatCard
 							icon={
-								<Wifi aria-hidden="true" className="text-muted-foreground size-5" />
+								<Wifi aria-hidden="true" className="size-5 text-muted-foreground" />
 							}
 							title="Active Connections"
 							value={data?.metrics.activeConnections ?? 0}

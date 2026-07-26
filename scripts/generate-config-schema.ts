@@ -40,7 +40,7 @@ function main(): void {
 
 	console.log(`JSON Schema written to: ${outputPath}`);
 	console.log(
-		'Add "$schema": "./config-schema.json" to your config JSON for VS Code intellisense.'
+		'Add "$schema": "./config-schema.json" to your config JSON for VS Code intellisense.',
 	);
 }
 

@@ -120,7 +120,7 @@ function main(): void {
 		inner === outer || inner.startsWith(outer + sep);
 	if (overlaps(target, source) || overlaps(source, target)) {
 		fail(
-			`--target (${target}) overlaps the template source (${source}); choose a separate directory`
+			`--target (${target}) overlaps the template source (${source}); choose a separate directory`,
 		);
 	}
 	const manifestPath = resolve(args.manifest ?? join(source, 'spernakit.psd1'));
@@ -190,7 +190,7 @@ function main(): void {
 				appVersion,
 			],
 			target,
-			{ allowFailure: true }
+			{ allowFailure: true },
 		);
 		run(['bun', 'run', 'db:migrate'], target);
 		run(['bun', 'run', '--cwd', 'backend', 'db:seed'], target);

@@ -20,7 +20,7 @@ export function extractTypeBoxEnumValues(schema: TypeBoxUnionSchema): string[] {
 	return schema.anyOf
 		.filter(
 			(item): item is TypeBoxLiteralSchema =>
-				'const' in item && typeof item.const === 'string'
+				'const' in item && typeof item.const === 'string',
 		)
 		.map((item) => item.const)
 		.sort();
@@ -48,7 +48,7 @@ export function extractUnionValuesFromSource(content: string, typeName: string):
 		const constName = derivedMatch[1];
 		const constPattern = new RegExp(
 			`const\\s+${constName}\\s*=\\s*\\[([^\\]]+)\\]\\s*as\\s+const`,
-			's'
+			's',
 		);
 		const constMatch = constPattern.exec(content);
 		if (!constMatch?.[1]) return null;

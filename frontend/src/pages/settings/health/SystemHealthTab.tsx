@@ -36,7 +36,7 @@ function SystemHealthTab() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h2 className="text-lg font-semibold">System Health</h2>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Monitor system health checks and alerts.
 					</p>
 				</div>
@@ -80,7 +80,7 @@ function SystemHealthTab() {
 			<div className="flex items-center justify-between">
 				<div>
 					<h3 className="text-sm font-medium">Resource Usage Trends</h3>
-					<p className="text-muted-foreground text-xs">Historical CPU and memory usage</p>
+					<p className="text-xs text-muted-foreground">Historical CPU and memory usage</p>
 				</div>
 				<TimeRangeSelector onChange={setMetricsHours} value={metricsHours} />
 			</div>

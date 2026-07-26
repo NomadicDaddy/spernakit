@@ -112,7 +112,7 @@ type UserRow = typeof users.$inferSelect;
 function handleExistingOAuthAccount(
 	tx: DbTransaction,
 	existingOauth: { id: number; userId: number },
-	encryptedTokens: EncryptedTokens
+	encryptedTokens: EncryptedTokens,
 ): UserRow {
 	const found = tx.select().from(users).where(eq(users.id, existingOauth.userId)).get();
 	if (!found) throw new Error('User not found for OAuth account');
@@ -135,7 +135,7 @@ function createNewOAuthUser(
 	provider: OAuthProvider,
 	profile: OAuthProfile,
 	encryptedTokens: EncryptedTokens,
-	passwordHash: string
+	passwordHash: string,
 ): UserRow {
 	const username = generateUniqueUsername(profile.name, tx);
 	const created = tx
@@ -179,7 +179,7 @@ function createNewOAuthUser(
 async function linkAccountOrCreateUser(
 	provider: OAuthProvider,
 	oauthTokens: OAuthTokens,
-	profile: OAuthProfile
+	profile: OAuthProfile,
 ): Promise<HandleCallbackResult> {
 	const db = getDb();
 
@@ -199,8 +199,8 @@ async function linkAccountOrCreateUser(
 				and(
 					eq(oauthAccounts.provider, provider),
 					eq(oauthAccounts.providerAccountId, profile.providerAccountId),
-					eq(oauthAccounts.isDeleted, false)
-				)
+					eq(oauthAccounts.isDeleted, false),
+				),
 			)
 			.get();
 
@@ -216,7 +216,7 @@ async function linkAccountOrCreateUser(
 			// link the OAuth provider manually through account settings.
 			throw new Error(
 				'An account with this email already exists. ' +
-					'Please log in with your existing credentials and link this provider from your account settings.'
+					'Please log in with your existing credentials and link this provider from your account settings.',
 			);
 		}
 
@@ -234,7 +234,7 @@ async function linkAccountOrCreateUser(
 	} else if (alreadyInDefaultWorkspace) {
 		logger.debug(
 			{ provider, userId: user.id },
-			'OAuth user already belongs to default workspace'
+			'OAuth user already belongs to default workspace',
 		);
 	}
 

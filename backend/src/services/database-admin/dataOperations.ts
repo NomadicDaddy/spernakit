@@ -51,7 +51,7 @@ function getTableData(params: GetDataParams): null | PaginatedResponse<DataRow> 
 		(limitNum, offset) => {
 			const rows = raw
 				.prepare(
-					`SELECT * FROM "${params.tableName}" ${whereClause} LIMIT ${limitNum} OFFSET ${offset}`
+					`SELECT * FROM "${params.tableName}" ${whereClause} LIMIT ${limitNum} OFFSET ${offset}`,
 				)
 				.all() as DataRow[];
 			return redactSensitiveColumns(rows);
@@ -61,7 +61,7 @@ function getTableData(params: GetDataParams): null | PaginatedResponse<DataRow> 
 				.prepare(`SELECT COUNT(*) as count FROM "${params.tableName}" ${whereClause}`)
 				.get() as { count: number } | undefined;
 			return result;
-		}
+		},
 	);
 }
 
@@ -99,7 +99,7 @@ function insertRow(tableName: string, values: DataRow): InsertResult | null {
 
 	// Table name validated via allowlist; values are parameterized
 	const stmt = raw.prepare(
-		`INSERT INTO "${tableName}" (${columnList}) VALUES (${placeholders}) RETURNING *`
+		`INSERT INTO "${tableName}" (${columnList}) VALUES (${placeholders}) RETURNING *`,
 	);
 	const insertedRow = stmt.get(...params) as DataRow | null;
 
@@ -214,5 +214,5 @@ function deleteRow(tableName: string, rowId: number): DeleteResult | null {
 	return txn();
 }
 
-export type { DataRow, DeleteResult, InsertResult, UpdateResult };
+export type { DeleteResult, InsertResult, UpdateResult };
 export { deleteRow, getTableData, insertRow, updateRow };

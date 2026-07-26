@@ -328,8 +328,8 @@ export const useMyStore = create<MyState>()(
 		{
 			name: STORAGE_KEYS.myStore,
 			storage: debouncedLocalStorage<MyState>(),
-		}
-	)
+		},
+	),
 );
 ```
 

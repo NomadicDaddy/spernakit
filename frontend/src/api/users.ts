@@ -93,7 +93,7 @@ function bulkDeleteUsers(ids: number[]): Promise<DataResponse<UserBatchResult>> 
 
 /** Bulk update user roles (ADMIN+). */
 function bulkUpdateUserRoles(
-	updates: { id: number; role: string }[]
+	updates: { id: number; role: string }[],
 ): Promise<DataResponse<UserBatchResult>> {
 	return apiClient.put<DataResponse<UserBatchResult>>('/users/bulk/roles', {
 		body: { updates },
@@ -108,7 +108,7 @@ function bulkUpdateUserRoles(
  */
 function adminResetPassword(
 	id: number,
-	payload: { mode: 'email' } | { mode: 'set'; password: string }
+	payload: { mode: 'email' } | { mode: 'set'; password: string },
 ): Promise<SuccessResponse> {
 	return apiClient.post<SuccessResponse>(`/users/${id}/reset-password`, { body: payload });
 }

@@ -120,13 +120,13 @@ const systemMetricsRoutes = new Elysia({
 						default: DEFAULT_METRICS_HOURS,
 						maximum: MAX_METRICS_HOURS,
 						minimum: 1,
-					})
+					}),
 				),
 				limit: t.Optional(
-					t.Numeric({ default: MAX_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 })
+					t.Numeric({ default: MAX_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
 				),
 			}),
-		}
+		},
 	)
 	.post(
 		'/web-vitals',
@@ -153,7 +153,7 @@ const systemMetricsRoutes = new Elysia({
 						rating: t.String({ maxLength: 20 }),
 						value: t.Number(),
 					}),
-					{ maxItems: 50 }
+					{ maxItems: 50 },
 				),
 				timestamp: t.String({ maxLength: 50 }),
 				url: t.String({ maxLength: 2048 }),
@@ -172,7 +172,7 @@ const systemMetricsRoutes = new Elysia({
 				},
 				summary: 'Receive frontend Core Web Vitals batch',
 			},
-		}
+		},
 	)
 	.get(
 		'/web-vitals',
@@ -256,10 +256,10 @@ const systemMetricsRoutes = new Elysia({
 						default: DEFAULT_METRICS_HOURS,
 						maximum: MAX_METRICS_HOURS,
 						minimum: 1,
-					})
+					}),
 				),
 			}),
-		}
+		},
 	);
 
 export { systemMetricsRoutes };

@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 
-import type { CreatedUser, SeedDb, SeedUser, WorkspaceRoleMap } from './types.ts';
+import type { CreatedUser, SeedDb, SeedUser } from './types.ts';
 
 import { users } from '../schema/users.ts';
 import { workspaceRoleMap } from './constants.ts';
@@ -25,7 +25,7 @@ interface SeedOrchestrationConfig {
  */
 async function executeSeedOrchestration(
 	db: SeedDb,
-	config: SeedOrchestrationConfig
+	config: SeedOrchestrationConfig,
 ): Promise<CreatedUser[] | null> {
 	return db.transaction(async (tx) => {
 		const created = await seedUsersIfEmpty(tx, config.seedUsers, config.bcryptRounds);
@@ -54,4 +54,4 @@ async function executeSeedOrchestration(
 }
 
 export { executeSeedOrchestration };
-export type { SeedOrchestrationConfig, WorkspaceRoleMap };
+export type { SeedOrchestrationConfig };

@@ -94,7 +94,7 @@ const workspaces = sqliteTable(
 		uniqueIndex('idx_workspaces_is_default_active')
 			.on(table.isDefault)
 			.where(sql`${table.isDefault} = 1 AND ${table.isDeleted} = 0`),
-	]
+	],
 );
 
 /**
@@ -163,7 +163,7 @@ const workspaceMembers = sqliteTable(
 	(table) => [
 		check(
 			'chk_workspace_members_role',
-			sql`${table.role} in (${sql.raw(WORKSPACE_MEMBER_ROLE_IN_LIST)})`
+			sql`${table.role} in (${sql.raw(WORKSPACE_MEMBER_ROLE_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -188,7 +188,7 @@ const workspaceMembers = sqliteTable(
 		index('idx_workspace_members_workspace_id').on(table.workspaceId),
 		index('idx_workspace_members_user_id').on(table.userId),
 		uniqueIndex('idx_workspace_members_workspace_user').on(table.workspaceId, table.userId),
-	]
+	],
 );
 
 const workspacesRelations = relations(workspaces, ({ many, one }) => ({

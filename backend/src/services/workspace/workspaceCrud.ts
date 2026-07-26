@@ -3,12 +3,11 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { workspaceMembers, workspaces } from '../../db/schema/workspaces.ts';
-import { UniqueConstraintError, isRawUniqueViolation } from '../../utils/errorResponse.ts';
+import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorResponse.ts';
 import {
 	findActive,
 	getById,
 	toRecord,
-	type WorkspaceBranding,
 	type WorkspaceRecord,
 	type WorkspaceSettings,
 } from './workspaceQueries.ts';
@@ -132,4 +131,4 @@ function softDelete(id: number, deletedBy: number): boolean {
 }
 
 export { create, softDelete, update };
-export type { CreateInput, UpdateInput, WorkspaceBranding, WorkspaceRecord, WorkspaceSettings };
+export type { CreateInput, UpdateInput };

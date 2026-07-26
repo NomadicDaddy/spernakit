@@ -14,7 +14,7 @@ import { authPlugin } from './auth.ts';
  * - /auth/logout: allows the user to log out
  * - /auth/refresh: allows token refresh to keep the session alive
  */
-const EXEMPT_PATHS = new Set(['/auth/me', '/users/me/password', '/auth/logout', '/auth/refresh']);
+const EXEMPT_PATHS = new Set(['/auth/logout', '/auth/me', '/auth/refresh', '/users/me/password']);
 
 /**
  * Check whether a user requires a password change, using a short-lived cache
@@ -58,7 +58,7 @@ const passwordChangeGuardPlugin = new Elysia({ name: 'password-change-guard' })
 			set.status = HTTP_STATUS.FORBIDDEN;
 			return forbiddenError(
 				'Password change required before accessing this resource',
-				AUTH_ERROR_CODES.AUTH_PASSWORD_CHANGE_REQUIRED
+				AUTH_ERROR_CODES.AUTH_PASSWORD_CHANGE_REQUIRED,
 			);
 		}
 

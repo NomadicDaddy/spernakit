@@ -13,15 +13,15 @@ import {
 	createBatchCleanupTask,
 	cutoffDate,
 	daysAgo,
-	MAX_CLEANUP_BATCHES,
 	type DbClient,
+	MAX_CLEANUP_BATCHES,
 } from './cleanupUtils.ts';
 
 function batchTokenUpdate(
 	db: DbClient,
 	condition: ReturnType<typeof and>,
 	updates: Record<string, unknown>,
-	now: Date
+	now: Date,
 ): number {
 	const idsToUpdate = db
 		.select({ id: users.id })
@@ -52,7 +52,7 @@ function tokenCleanupTask(): { refreshTokensCleaned: number; resetTokensCleaned:
 		db,
 		resetCondition,
 		{ resetToken: null, resetTokenExpiresAt: null },
-		now
+		now,
 	);
 	while (batchCleaned > 0 && batches < MAX_CLEANUP_BATCHES) {
 		resetTokensCleaned += batchCleaned;
@@ -61,7 +61,7 @@ function tokenCleanupTask(): { refreshTokensCleaned: number; resetTokensCleaned:
 			db,
 			resetCondition,
 			{ resetToken: null, resetTokenExpiresAt: null },
-			now
+			now,
 		);
 	}
 
@@ -75,7 +75,7 @@ function tokenCleanupTask(): { refreshTokensCleaned: number; resetTokensCleaned:
 	const staleDate = daysAgo(STALE_USER_LOGIN_DAYS);
 	const refreshCondition = and(
 		isNotNull(users.refreshTokenHash),
-		lt(users.lastLoginAt, staleDate)
+		lt(users.lastLoginAt, staleDate),
 	);
 	let refreshTokensCleaned = 0;
 	batches = 0;

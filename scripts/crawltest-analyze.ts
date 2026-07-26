@@ -70,7 +70,7 @@ function formatValue(name: string, value: number): string {
 
 function printTopSlowest(
 	byPage: Map<string, Map<string, MetricSnapshot>>,
-	metricName: string
+	metricName: string,
 ): void {
 	const entries: SlowEntry[] = [];
 	for (const [page, metrics] of byPage) {
@@ -83,7 +83,7 @@ function printTopSlowest(
 	console.log(`\n🐢 Slowest pages by ${metricName} (top ${top.length}):`);
 	for (const entry of top) {
 		console.log(
-			`   ${flagFor(entry.rating)} ${formatValue(metricName, entry.value).padStart(7)}  ${entry.page}`
+			`   ${flagFor(entry.rating)} ${formatValue(metricName, entry.value).padStart(7)}  ${entry.page}`,
 		);
 	}
 }
@@ -172,7 +172,7 @@ if (pagesWithIssues.length === 0) {
 		issues.sort((a, b) => (RATING_SCORE[b.rating] ?? 0) - (RATING_SCORE[a.rating] ?? 0));
 		for (const metric of issues) {
 			console.log(
-				`     ${flagFor(metric.rating)} ${metric.name.padEnd(5)} ${formatValue(metric.name, metric.value)} (${metric.rating})`
+				`     ${flagFor(metric.rating)} ${metric.name.padEnd(5)} ${formatValue(metric.name, metric.value)} (${metric.rating})`,
 			);
 		}
 	}

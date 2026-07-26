@@ -24,7 +24,7 @@ import { sendWebhookAlert } from './alertWebhook.ts';
  */
 async function sendAlertNotifications(
 	alert: AlertData,
-	skipChannels?: Set<AlertChannel>
+	skipChannels?: Set<AlertChannel>,
 ): Promise<AlertNotificationResult[]> {
 	const config = getConfig();
 	const { alerting } = config;
@@ -38,7 +38,7 @@ async function sendAlertNotifications(
 					checkType: alert.checkType,
 					cooldownMinutes: alerting.cooldownMinutes,
 				},
-				'Alert notification skipped due to cooldown'
+				'Alert notification skipped due to cooldown',
 			);
 			return [];
 		}
@@ -64,7 +64,7 @@ async function sendAlertNotifications(
 	const results: AlertNotificationResult[] = settled.map((s, i) =>
 		s.status === 'fulfilled'
 			? s.value
-			: { channel: channels[i] as AlertChannel, error: String(s.reason), success: false }
+			: { channel: channels[i] as AlertChannel, error: String(s.reason), success: false },
 	);
 
 	return results;
@@ -83,7 +83,7 @@ const BASE_DELAY_MS = 1000;
  */
 async function sendAlertWithRetry(
 	alert: AlertData,
-	maxRetries: number = DEFAULT_MAX_RETRIES
+	maxRetries: number = DEFAULT_MAX_RETRIES,
 ): Promise<AlertNotificationResult[]> {
 	const allResults = new Map<AlertChannel, AlertNotificationResult>();
 	const succeededChannels = new Set<AlertChannel>();

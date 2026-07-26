@@ -73,7 +73,7 @@ export function render(options: RenderOptions): string {
 		const inGroup = dependencies
 			.filter((dep) => group.workspaces.includes(dep.workspace))
 			.filter(
-				(dep, index, all) => all.findIndex((other) => other.name === dep.name) === index
+				(dep, index, all) => all.findIndex((other) => other.name === dep.name) === index,
 			)
 			.sort((a, b) => byCodepoint(a.name, b.name));
 		if (inGroup.length === 0) continue;
@@ -105,7 +105,7 @@ export function render(options: RenderOptions): string {
 			`Applies to: ${users.join(', ')}.`,
 			'',
 			notice.body,
-			''
+			'',
 		);
 	}
 
@@ -129,7 +129,7 @@ export function render(options: RenderOptions): string {
 		'| License | Packages |',
 		'| ------- | -------- |',
 		...graph.distribution.map((entry) => `| ${entry.license} | ${entry.count} |`),
-		''
+		'',
 	);
 
 	if (graph.flagged.length > 0) {
@@ -142,14 +142,14 @@ export function render(options: RenderOptions): string {
 			...graph.flagged.map((entry) => `- \`${entry.name}\` (${entry.license})`),
 			'',
 			flaggedNote.trim(),
-			''
+			'',
 		);
 	} else {
 		sections.push(
 			'No copyleft or weak-copyleft licensed package (GPL, AGPL, SSPL, EUPL, CDDL,',
 			'OSL, MPL) appears in this production closure. Build tooling is a separate question:',
 			'it is not distributed, so it is not inventoried here.',
-			''
+			'',
 		);
 	}
 
@@ -164,7 +164,7 @@ export function render(options: RenderOptions): string {
 		'`bun run licenses:generate` after changing dependencies, and commit the result.',
 		'`bun run check:licenses` (part of `smoke:qc` and CI) regenerates it in memory and',
 		'fails when the committed copy no longer matches what the lockfile resolves.',
-		''
+		'',
 	);
 
 	return `${sections

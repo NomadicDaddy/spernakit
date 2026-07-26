@@ -17,7 +17,7 @@ export async function discoverRoutes(
 	opts: CrawlerOpts,
 	seedRoutes: string[],
 	maxDepth: number,
-	onFlushRateLimits?: () => void
+	onFlushRateLimits?: () => void,
 ): Promise<string[]> {
 	const discovered = new Set<string>();
 	const toVisit: string[] = [];
@@ -133,7 +133,7 @@ export async function assertPageContent(
 	page: Page,
 	results: TestResults,
 	contentMinLength: number,
-	url: string
+	url: string,
 ): Promise<boolean> {
 	try {
 		await page.waitForFunction(() => document.querySelectorAll('.animate-pulse').length === 0, {
@@ -148,7 +148,7 @@ export async function assertPageContent(
 		const text = main?.innerText ?? document.body.innerText ?? '';
 		const hasHeading = !!document.querySelector('h1, h2');
 		const isErrorPage = Array.from(document.querySelectorAll('h2')).some((h) =>
-			/^something went wrong$/i.test(h.textContent?.trim() ?? '')
+			/^something went wrong$/i.test(h.textContent?.trim() ?? ''),
 		);
 		const is404Page = /\b404\b/.test(text) && /page not found/i.test(text);
 		const trimmedLength = text.trim().length;
@@ -185,10 +185,10 @@ export async function assertPageContent(
 	if (result.textLength < contentMinLength) {
 		results.addError(
 			'CONTENT_ERROR',
-			`Insufficient content at ${url} (${result.textLength} chars, need ${contentMinLength})`
+			`Insufficient content at ${url} (${result.textLength} chars, need ${contentMinLength})`,
 		);
 		console.log(
-			`   ❌ Insufficient content (${result.textLength} chars < ${contentMinLength})`
+			`   ❌ Insufficient content (${result.textLength} chars < ${contentMinLength})`,
 		);
 		return false;
 	}
@@ -219,7 +219,7 @@ export async function assertPageContent(
 export async function assertImageDimensions(
 	page: Page,
 	results: TestResults,
-	url: string
+	url: string,
 ): Promise<boolean> {
 	const violations = await page.evaluate(() => {
 		const offenders: { outerHtmlSnippet: string; src: string }[] = [];
@@ -247,7 +247,7 @@ export async function assertImageDimensions(
 		results.addError(
 			'IMG_DIMENSION_ERROR',
 			`<img> element lacks explicit width/height (and no CSS aspect-ratio) at ${url}`,
-			{ outerHtmlSnippet: v.outerHtmlSnippet, src: v.src, url }
+			{ outerHtmlSnippet: v.outerHtmlSnippet, src: v.src, url },
 		);
 		console.log(`   ❌ img missing dimensions: ${v.src || '(no src)'}`);
 	}

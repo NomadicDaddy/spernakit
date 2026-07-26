@@ -44,8 +44,8 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 			toast.error(
 				getSafeErrorMessage(
 					err,
-					'Failed to change password. Verify your current password and try again.'
-				)
+					'Failed to change password. Verify your current password and try again.',
+				),
 			),
 		onSuccess: () => {
 			toast.success('Password changed');
@@ -60,7 +60,7 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 		e.preventDefault();
 		if (newPassword !== confirmPassword) {
 			toast.error(
-				'Passwords do not match. Please re-enter your new password in both fields.'
+				'Passwords do not match. Please re-enter your new password in both fields.',
 			);
 			return;
 		}

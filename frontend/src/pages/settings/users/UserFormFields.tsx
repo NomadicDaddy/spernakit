@@ -58,11 +58,11 @@ export function UserFormFields({
 					{...(hasUsernameError ? { 'aria-invalid': true } : {})}
 				/>
 				{hasUsernameError ? (
-					<p className="text-destructive text-sm" id={usernameErrorId}>
+					<p className="text-sm text-destructive" id={usernameErrorId}>
 						{usernameError}
 					</p>
 				) : (
-					<p className="text-muted-foreground text-sm" id={usernameHelperId}>
+					<p className="text-sm text-muted-foreground" id={usernameHelperId}>
 						At least {USERNAME_MIN_LENGTH} characters
 					</p>
 				)}
@@ -82,11 +82,11 @@ export function UserFormFields({
 					{...(hasEmailError ? { 'aria-invalid': true } : {})}
 				/>
 				{hasEmailError ? (
-					<p className="text-destructive text-sm" id={emailErrorId}>
+					<p className="text-sm text-destructive" id={emailErrorId}>
 						{emailError}
 					</p>
 				) : (
-					<p className="text-muted-foreground text-sm" id={emailHelperId}>
+					<p className="text-sm text-muted-foreground" id={emailHelperId}>
 						Must be a valid email address
 					</p>
 				)}

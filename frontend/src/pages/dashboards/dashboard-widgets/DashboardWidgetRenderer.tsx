@@ -1,18 +1,17 @@
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import type { DashboardWidget } from '@/api/dashboards';
 
 import { Card, CardContent } from '@/components/ui/card';
 
-import { METRIC_ICON } from './widgetHelpers';
 import { AlertListWidget, GaugeWidget, HealthStatusWidget, StatCardWidget } from './widgets';
 import { WidgetSkeleton } from './widgets/WidgetSkeleton';
 
 const LineChartWidget = lazy(() =>
-	import('./widgets/LineChartWidget').then((m) => ({ default: m.LineChartWidget }))
+	import('./widgets/LineChartWidget').then((m) => ({ default: m.LineChartWidget })),
 );
 const BarChartWidget = lazy(() =>
-	import('./widgets/BarChartWidget').then((m) => ({ default: m.BarChartWidget }))
+	import('./widgets/BarChartWidget').then((m) => ({ default: m.BarChartWidget })),
 );
 
 /**
@@ -67,11 +66,11 @@ function WidgetContent({ allowPrivateData, widget }: WidgetContentProps) {
 			return <StatCardWidget allowPrivateData={allowPrivateData} widget={widget} />;
 		default:
 			return (
-				<div className="text-muted-foreground flex h-full items-center justify-center text-sm">
+				<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 					Unknown widget type
 				</div>
 			);
 	}
 }
 
-export { DashboardWidgetRenderer, METRIC_ICON };
+export { DashboardWidgetRenderer };

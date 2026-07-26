@@ -87,7 +87,7 @@ function seedDefault(
 	key: string,
 	defaultValue: unknown,
 	description?: string,
-	isEncrypted = false
+	isEncrypted = false,
 ): boolean {
 	const existing = getByKeyRaw(key);
 	if (existing) {

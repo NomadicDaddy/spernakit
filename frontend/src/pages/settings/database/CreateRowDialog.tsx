@@ -65,8 +65,8 @@ function CreateRowDialog({
 						<div key={col.name}>
 							<Label className="text-sm" htmlFor={`create-row-${col.name}`}>
 								{col.name}
-								{col.notnull && <span className="text-destructive ml-1">*</span>}
-								<span className="text-muted-foreground ml-2 text-xs">
+								{col.notnull && <span className="ml-1 text-destructive">*</span>}
+								<span className="ml-2 text-xs text-muted-foreground">
 									{col.type}
 								</span>
 							</Label>

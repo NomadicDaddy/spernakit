@@ -31,7 +31,7 @@ function AuthRateLimitSection({
 			<div className="flex flex-row items-center justify-between rounded-lg border p-4">
 				<div className="space-y-0.5">
 					<Label htmlFor="authRateLimitEnabled">Auth Rate Limiting</Label>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Throttle login, registration, and password-reset requests by IP to slow
 						brute-force attempts
 					</p>
@@ -57,7 +57,7 @@ function AuthRateLimitSection({
 							type="number"
 							value={authRateLimitMaxRequests}
 						/>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							Maximum auth requests a single IP may issue in one window (1-1000)
 						</p>
 					</div>
@@ -74,12 +74,12 @@ function AuthRateLimitSection({
 							type="number"
 							value={authRateLimitWindowMinutes}
 						/>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							Rolling window size for the limit (1-1440 minutes)
 						</p>
 					</div>
 
-					<p className="text-muted-foreground text-xs">
+					<p className="text-xs text-muted-foreground">
 						Enforced by the backend auth rate limit plugin. Changes take effect on the
 						next auth request.
 					</p>

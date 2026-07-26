@@ -62,7 +62,7 @@ function WorkspaceDashboardTab({
 						))}
 					</SelectContent>
 				</Select>
-				<p className="text-muted-foreground text-xs">
+				<p className="text-xs text-muted-foreground">
 					The dashboard shown by default when viewing this workspace.
 				</p>
 			</div>

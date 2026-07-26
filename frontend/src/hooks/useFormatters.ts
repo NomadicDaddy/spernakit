@@ -71,7 +71,7 @@ function resolveLocale(language?: string): string {
 /** Map user timeFormat preference to Intl options. */
 function timeOptionsFor(
 	timeFormat: string,
-	timezone: string | undefined
+	timezone: string | undefined,
 ): Intl.DateTimeFormatOptions {
 	const hour12 = timeFormat.includes('AM/PM');
 	const showSeconds = timeFormat.includes(':ss');

@@ -71,7 +71,7 @@ function getUserCache(): LRUCache<number, UserPublic> {
 function enforceUserUniqueness(
 	id: number,
 	input: UpdateInput,
-	existing: { email: string; username: string }
+	existing: { email: string; username: string },
 ): void {
 	if (input.username !== undefined && input.username !== existing.username) {
 		if (usernameExists(input.username, id))
@@ -93,7 +93,7 @@ function enforceUserUniqueness(
  */
 function buildUpdateUserPayload(
 	input: UpdateInput,
-	existing: { email: string }
+	existing: { email: string },
 ): Record<string, boolean | Date | null | number | string | UserRole> {
 	const updateData: Record<string, boolean | Date | null | number | string | UserRole> = {
 		updatedAt: new Date(),

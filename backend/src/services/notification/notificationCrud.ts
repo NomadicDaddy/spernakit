@@ -51,8 +51,8 @@ function list(options: ListOptions): {
 		conditions.push(
 			or(
 				eq(notifications.workspaceId, options.workspaceId),
-				isNull(notifications.workspaceId)
-			)!
+				isNull(notifications.workspaceId),
+			)!,
 		);
 	}
 
@@ -80,7 +80,7 @@ function list(options: ListOptions): {
 				.limit(limitNum)
 				.offset(offset)
 				.all(),
-		() => db.select({ count: count() }).from(notifications).where(where).get()
+		() => db.select({ count: count() }).from(notifications).where(where).get(),
 	);
 }
 
@@ -101,8 +101,8 @@ function getById(id: number, userId: number): Notification | null {
 				and(
 					eq(notifications.id, id),
 					eq(notifications.userId, userId),
-					eq(notifications.isDeleted, false)
-				)
+					eq(notifications.isDeleted, false),
+				),
 			)
 			.get() ?? null
 	);

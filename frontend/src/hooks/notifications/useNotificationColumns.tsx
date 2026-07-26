@@ -30,9 +30,9 @@ export function useNotificationColumns({ onDelete, onMarkAsRead }: NotificationC
 			accessorKey: 'readAt',
 			cell: ({ row }) =>
 				row.original.readAt ? (
-					<CircleCheck className="text-muted-foreground size-4" />
+					<CircleCheck className="size-4 text-muted-foreground" />
 				) : (
-					<Circle className="text-primary size-4 fill-current" />
+					<Circle className="size-4 fill-current text-primary" />
 				),
 			header: '',
 			size: 40,
@@ -59,7 +59,7 @@ export function useNotificationColumns({ onDelete, onMarkAsRead }: NotificationC
 		{
 			accessorKey: 'message',
 			cell: ({ row }) => (
-				<span className="text-muted-foreground line-clamp-1 max-w-xs">
+				<span className="line-clamp-1 max-w-xs text-muted-foreground">
 					{row.original.message}
 				</span>
 			),
@@ -68,7 +68,7 @@ export function useNotificationColumns({ onDelete, onMarkAsRead }: NotificationC
 		{
 			accessorKey: 'createdAt',
 			cell: ({ row }) => (
-				<span className="text-muted-foreground text-sm">
+				<span className="text-sm text-muted-foreground">
 					{formatTimestamp(row.original.createdAt)}
 				</span>
 			),

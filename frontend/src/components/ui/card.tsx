@@ -17,12 +17,12 @@ function Card({ className, interactive = false, variant = 'default', ...props }:
 	return (
 		<div
 			className={cn(
-				'bg-card text-card-foreground flex flex-col gap-6 rounded-xl py-6',
+				'flex flex-col gap-6 rounded-xl bg-card py-6 text-card-foreground',
 				variant === 'default' && 'border shadow-[var(--shadow-card)]',
 				variant === 'elevated' && 'shadow-[var(--shadow-elevated)]',
 				interactive &&
 					'transition-shadow duration-200 hover:shadow-[var(--shadow-card-hover)]',
-				className
+				className,
 			)}
 			data-slot="card"
 			{...props}
@@ -35,7 +35,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
 		<div
 			className={cn(
 				'@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
-				className
+				className,
 			)}
 			data-slot="card-header"
 			{...props}
@@ -56,7 +56,7 @@ function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
 function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
-			className={cn('text-muted-foreground text-sm', className)}
+			className={cn('text-sm text-muted-foreground', className)}
 			data-slot="card-description"
 			{...props}
 		/>
@@ -68,7 +68,7 @@ function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
 		<div
 			className={cn(
 				'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
-				className
+				className,
 			)}
 			data-slot="card-action"
 			{...props}

@@ -108,7 +108,7 @@ function stopService(name: string, port: number): boolean {
 			}
 		} else {
 			console.log(
-				`   ⚠ Stale PID file for ${name} (PID ${filePid} not running) — cleaning up`
+				`   ⚠ Stale PID file for ${name} (PID ${filePid} not running) — cleaning up`,
 			);
 			sawStalePid = true;
 		}
@@ -177,7 +177,7 @@ if (stopBackend && stopFrontend && isDockerRunning()) {
 	// just clean up and let start proceed.
 	if (sawStalePid && !killedAny && !values['from-start']) {
 		console.log(
-			'ℹ Hint: backend may have crashed mid-session — check logs/backend.log and logs/backend.error.log'
+			'ℹ Hint: backend may have crashed mid-session — check logs/backend.log and logs/backend.error.log',
 		);
 		process.exit(1);
 	}

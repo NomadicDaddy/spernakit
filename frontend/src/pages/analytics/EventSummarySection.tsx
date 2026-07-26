@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { getEventSummary, type EventSummary } from '@/api/businessMetrics';
+import { type EventSummary, getEventSummary } from '@/api/businessMetrics';
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -21,7 +21,7 @@ export function EventSummarySection({ days }: EventSummarySectionProps) {
 		<>
 			<div className="mt-6">
 				<h2 className="text-lg font-semibold">Event Summary</h2>
-				<p className="text-muted-foreground mt-1 text-sm">Events by category and name</p>
+				<p className="mt-1 text-sm text-muted-foreground">Events by category and name</p>
 			</div>
 
 			{isLoading ? (
@@ -36,7 +36,7 @@ export function EventSummarySection({ days }: EventSummarySectionProps) {
 									key={`${event.eventCategory}-${event.eventName}`}>
 									<div>
 										<span className="font-medium">{event.eventName}</span>
-										<span className="text-muted-foreground ml-2 text-sm">
+										<span className="ml-2 text-sm text-muted-foreground">
 											({event.eventCategory})
 										</span>
 									</div>
@@ -46,7 +46,7 @@ export function EventSummarySection({ days }: EventSummarySectionProps) {
 								</div>
 							))}
 							{eventsData?.length === 0 && (
-								<p className="text-muted-foreground text-center">
+								<p className="text-center text-muted-foreground">
 									No event data available
 								</p>
 							)}

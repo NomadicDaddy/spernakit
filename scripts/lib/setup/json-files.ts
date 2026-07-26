@@ -23,7 +23,7 @@ export function readJsonObjectOrNull(filePath: string): null | Record<string, un
 
 export function readStringFromObject(
 	obj: Record<string, unknown>,
-	key: string
+	key: string,
 ): string | undefined {
 	const value = obj[key];
 	return typeof value === 'string' ? value : undefined;
@@ -31,7 +31,7 @@ export function readStringFromObject(
 
 export function readNumberFromObject(
 	obj: Record<string, unknown>,
-	key: string
+	key: string,
 ): number | undefined {
 	const value = obj[key];
 	return typeof value === 'number' ? value : undefined;
@@ -55,7 +55,7 @@ export function updateFile(filePath: string, replacements: Record<string, string
 
 export function updateJsonFile(
 	filePath: string,
-	updater: (json: Record<string, unknown>) => void
+	updater: (json: Record<string, unknown>) => void,
 ): void {
 	if (!fs.existsSync(filePath)) {
 		console.log(`⚠️  File not found: ${filePath}`);

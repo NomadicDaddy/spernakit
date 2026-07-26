@@ -39,7 +39,7 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 		{
 			accessorKey: 'createdAt',
 			cell: ({ row }) => (
-				<span className="text-muted-foreground text-sm whitespace-nowrap">
+				<span className="text-sm whitespace-nowrap text-muted-foreground">
 					{formatTimestamp(row.original.createdAt)}
 				</span>
 			),
@@ -82,7 +82,7 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 				return (
 					<div className="flex items-center gap-2">
 						{displayMethod && <Badge variant={badgeVariant}>{displayMethod}</Badge>}
-						<span className="text-muted-foreground text-sm">
+						<span className="text-sm text-muted-foreground">
 							{action.substring(displayMethod.length).trim()}
 						</span>
 					</div>
@@ -93,7 +93,7 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 		{
 			accessorKey: 'resource',
 			cell: ({ row }) => (
-				<span className="text-muted-foreground text-sm">
+				<span className="text-sm text-muted-foreground">
 					{row.original.resource ?? '-'}
 					{row.original.resourceId ? ` #${row.original.resourceId}` : ''}
 				</span>
@@ -104,7 +104,7 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 		{
 			accessorKey: 'ipAddress',
 			cell: ({ row }) => (
-				<span className="text-muted-foreground font-mono text-xs">
+				<span className="font-mono text-xs text-muted-foreground">
 					{row.original.ipAddress ?? '-'}
 				</span>
 			),

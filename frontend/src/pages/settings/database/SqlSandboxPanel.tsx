@@ -14,7 +14,7 @@ import { exportTableData } from '@/lib/tableExport';
 import { SqlResultsTable } from './SqlResultsTable';
 
 /** Tokens accepted as the leading keyword for a read-only query in safe mode. */
-const READ_ONLY_LEADING_TOKENS = new Set(['SELECT', 'WITH', 'EXPLAIN']);
+const READ_ONLY_LEADING_TOKENS = new Set(['EXPLAIN', 'SELECT', 'WITH']);
 
 /**
  * Extract the first SQL token (keyword) from a query after stripping comments.
@@ -61,7 +61,7 @@ function SqlSandboxPanel() {
 				toast.error('Safe mode is ON - write queries blocked');
 				setError(
 					'Safe mode is ON. Only SELECT, WITH, and EXPLAIN queries are allowed. ' +
-						'Toggle Safe Mode off to run write queries.'
+						'Toggle Safe Mode off to run write queries.',
 				);
 				setResultColumns([]);
 				setResultRows([]);
@@ -89,7 +89,7 @@ function SqlSandboxPanel() {
 						title="Safe mode blocks non-SELECT queries client-side before sending to the server.">
 						<div className="space-y-0.5">
 							<Label htmlFor="sql-safe-mode">Safe Mode</Label>
-							<p className="text-muted-foreground text-xs">
+							<p className="text-xs text-muted-foreground">
 								Block write queries (INSERT, UPDATE, DELETE, etc.) before execution
 							</p>
 						</div>
@@ -114,7 +114,7 @@ function SqlSandboxPanel() {
 					/>
 
 					{error && (
-						<p aria-live="polite" className="text-destructive text-sm" role="alert">
+						<p aria-live="polite" className="text-sm text-destructive" role="alert">
 							{error}
 						</p>
 					)}

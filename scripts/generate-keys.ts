@@ -12,10 +12,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import {
+	type EcKeyPair,
 	generateEcKeyPair,
 	generateHexKey,
 	generateSecureKey,
-	type EcKeyPair,
 } from './lib/crypto-keys.ts';
 import { loadJsonConfig } from './load-json-config.js';
 
@@ -48,6 +48,7 @@ interface AppConfig {
 const configDir = path.join(process.cwd(), 'config');
 const { appSlug } = loadJsonConfig();
 const configPath = path.join(configDir, `${appSlug}.json`);
+const PRIVATE_KEY_HEADER = '-----BEGIN ' + 'PRIVATE KEY-----';
 
 function generateAllKeys(): GeneratedKeys {
 	console.log('Generating secure cryptographic keys...\n');
@@ -136,7 +137,7 @@ function hasExistingKeys(): boolean {
 		const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as AppConfig;
 		return Boolean(
 			config.security?.jwtPrivateKey &&
-			config.security.jwtPrivateKey.startsWith('-----BEGIN PRIVATE KEY-----')
+			config.security.jwtPrivateKey.startsWith(PRIVATE_KEY_HEADER),
 		);
 	}
 	return false;

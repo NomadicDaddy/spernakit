@@ -14,7 +14,6 @@ import {
 	tryCreatePreMigrationBackup,
 } from './execution.ts';
 import { readJournal } from './journal.ts';
-import { getSchemaVersion } from './schemaVersion.ts';
 
 /**
  * Auto-run pending Drizzle migrations on startup (SQLite only).
@@ -64,7 +63,7 @@ function runAutoMigrations(dbPath: string, migrationsDir: string): void {
 		assertPostMigrationIntegrity(db, dbPath, backupPath);
 
 		logger.info(
-			`All ${pending.length} migration(s) applied successfully (schema version: ${pending[pending.length - 1]?.tag ?? 'unknown'})`
+			`All ${pending.length} migration(s) applied successfully (schema version: ${pending[pending.length - 1]?.tag ?? 'unknown'})`,
 		);
 
 		if (backupPath) {
@@ -79,4 +78,4 @@ function runAutoMigrations(dbPath: string, migrationsDir: string): void {
 	}
 }
 
-export { getSchemaVersion, runAutoMigrations };
+export { runAutoMigrations };

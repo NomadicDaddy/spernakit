@@ -48,7 +48,7 @@ export function useWorkspaces() {
 		mutationFn: (input: CreateWorkspaceForm) => createWorkspace(input),
 		...wsCb(
 			'Workspace created successfully',
-			'Failed to create workspace. Check required fields and try again.'
+			'Failed to create workspace. Check required fields and try again.',
 		),
 	});
 
@@ -57,7 +57,7 @@ export function useWorkspaces() {
 			updateWorkspace(id, input),
 		...wsCb(
 			'Workspace updated successfully',
-			'Failed to update workspace. Review your changes and try again.'
+			'Failed to update workspace. Review your changes and try again.',
 		),
 	});
 
@@ -65,7 +65,7 @@ export function useWorkspaces() {
 		mutationFn: (id: number) => deleteWorkspace(id),
 		...wsCb(
 			'Workspace deleted successfully',
-			'Failed to delete workspace. Refresh the list and try again.'
+			'Failed to delete workspace. Refresh the list and try again.',
 		),
 	});
 

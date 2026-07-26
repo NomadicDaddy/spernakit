@@ -45,7 +45,7 @@ const bugReports = pgTable(
 		check('chk_bug_reports_kind', sql`${table.kind} in (${sql.raw(BUG_REPORT_KIND_IN_LIST)})`),
 		check(
 			'chk_bug_reports_status',
-			sql`${table.status} in (${sql.raw(BUG_REPORT_STATUS_IN_LIST)})`
+			sql`${table.status} in (${sql.raw(BUG_REPORT_STATUS_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -55,7 +55,7 @@ const bugReports = pgTable(
 		index('idx_bug_reports_user_id').on(table.userId),
 		index('idx_bug_reports_status').on(table.status),
 		index('idx_bug_reports_created_at').on(table.createdAt),
-	]
+	],
 );
 
 export { bugReports };

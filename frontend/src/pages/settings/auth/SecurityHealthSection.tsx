@@ -24,7 +24,7 @@ function SecurityHealthSection({
 	const usersWithIssues = report.users.filter((u: SecurityHealthUser) => u.issues.length > 0);
 	const totalIssues = usersWithIssues.reduce(
 		(sum: number, u: SecurityHealthUser) => sum + u.issues.length,
-		0
+		0,
 	);
 
 	return (
@@ -66,7 +66,7 @@ function SecurityHealthSection({
 								key={user.id}>
 								<div>
 									<span className="text-sm font-medium">{user.username}</span>
-									<span className="text-muted-foreground ml-2 text-xs">
+									<span className="ml-2 text-xs text-muted-foreground">
 										{user.email}
 									</span>
 								</div>

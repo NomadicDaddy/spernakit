@@ -34,7 +34,7 @@ function readJson(path: string): Record<string, unknown> {
 	} catch (err) {
 		throw new Error(
 			`Failed to parse config at ${path}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }

@@ -27,7 +27,7 @@ export function HealthAlertsSection({ historyData, historyLoading }: HealthAlert
 						))}
 					</div>
 				) : (
-					<p className="text-muted-foreground text-sm">No active alerts.</p>
+					<p className="text-sm text-muted-foreground">No active alerts.</p>
 				)}
 			</CardContent>
 		</Card>

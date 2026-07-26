@@ -7,7 +7,7 @@ import type { TestResults } from './crawltest-results';
 import type { CrawlerOpts, InteractiveElement } from './crawltest-types';
 
 import { testButton, testSelect, testSwitch } from './crawltest-elements';
-import { SKIP_PATTERNS, isOnLoginPage, waitForContent } from './crawltest-types';
+import { isOnLoginPage, SKIP_PATTERNS, waitForContent } from './crawltest-types';
 
 // ---------------------------------------------------------------------------
 // Element discovery
@@ -95,7 +95,7 @@ export async function testInteractiveElements(
 	results: TestResults,
 	opts: CrawlerOpts,
 	elements: InteractiveElement[],
-	pageUrl: string
+	pageUrl: string,
 ): Promise<void> {
 	// Track tested element identifiers on this page to avoid duplicates
 	const tested = new Set<string>();
@@ -175,7 +175,7 @@ export async function testInteractiveElements(
 					pageUrl,
 					false,
 					element.type,
-					typedErr.message
+					typedErr.message,
 				);
 				console.log(`   ⚠️  Error testing ${element.type} "${label}": ${typedErr.message}`);
 			}
@@ -195,7 +195,7 @@ async function buttonExistsInDom(page: Page, text: string): Promise<boolean> {
 			(b) => {
 				const role = b.getAttribute('role');
 				return role !== 'switch' && role !== 'combobox';
-			}
+			},
 		);
 		return buttons.some((b) => b.textContent?.trim() === t);
 	}, text);

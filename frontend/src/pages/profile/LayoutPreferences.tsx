@@ -67,7 +67,7 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 								className={cn(
 									'flex items-center gap-2',
 									layoutMode === option.value &&
-										'ring-primary ring-2 ring-offset-2'
+										'ring-2 ring-primary ring-offset-2',
 								)}
 								key={option.value}
 								onClick={() => onLayoutModeChange(option.value)}
@@ -92,7 +92,7 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 								className={cn(
 									'flex items-center gap-2',
 									containerWidth === option.value &&
-										'ring-primary ring-2 ring-offset-2'
+										'ring-2 ring-primary ring-offset-2',
 								)}
 								key={option.value}
 								onClick={() => onContainerWidthChange(option.value)}

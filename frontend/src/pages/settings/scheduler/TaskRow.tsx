@@ -46,7 +46,7 @@ function TaskRow({
 			updateTask(task.name, payload),
 		onError: () => {
 			toast.error(
-				`Failed to update ${task.name}. Check the cron expression format and try again.`
+				`Failed to update ${task.name}. Check the cron expression format and try again.`,
 			);
 		},
 		onSuccess: () => {
@@ -125,7 +125,7 @@ function TaskRow({
 					</div>
 				) : (
 					<button
-						className="text-muted-foreground hover:text-foreground group flex items-center gap-1.5 font-mono text-xs"
+						className="group flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-foreground"
 						disabled={isPending}
 						onClick={() => setEditingSchedule(true)}
 						type="button">

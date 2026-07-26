@@ -68,7 +68,7 @@ export function unregisterApp(manifestPath: string, slug: string): boolean {
 	if (!existsSync(manifestPath)) return false;
 	const content = readFileSync(manifestPath, 'utf8');
 	const pattern = new RegExp(
-		`\\r?\\n\\t\\t'${escapeRegex(slug)}'\\s*=\\s*@\\{[\\s\\S]*?\\r?\\n\\t\\t\\}`
+		`\\r?\\n\\t\\t'${escapeRegex(slug)}'\\s*=\\s*@\\{[\\s\\S]*?\\r?\\n\\t\\t\\}`,
 	);
 	if (!pattern.test(content)) return false;
 	writeFileSync(manifestPath, content.replace(pattern, ''));

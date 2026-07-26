@@ -14,15 +14,15 @@
  * Usage:
  *   bun scripts/check-process-env.ts
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
 /** Files that are explicitly allowed to read process.env. */
 const ALLOWED_FILES = new Set([
-	'backend/src/config/configSecrets.ts',
 	'backend/src/config/configLogger.ts',
+	'backend/src/config/configSecrets.ts',
 ]);
 
 /**
@@ -32,7 +32,7 @@ const ALLOWED_FILES = new Set([
 const PROCESS_ENV_PATTERN = /\bprocess\.env\b|\bprocess\s*\[\s*['"]env['"]\s*\]|\bBun\.env\b/;
 
 /** Directories to skip entirely. */
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'data', 'logs', 'coverage', '.aidd']);
+const SKIP_DIRS = new Set(['.aidd', '.git', 'coverage', 'data', 'dist', 'logs', 'node_modules']);
 
 interface Violation {
 	content: string;
@@ -108,10 +108,10 @@ if (allViolations.length > 0) {
 		console.error(`  ${v.file}:${v.line}: ${v.content}`);
 	}
 	console.error(
-		'\nOnly backend/src/config/configSecrets.ts and configLogger.ts may read process.env.'
+		'\nOnly backend/src/config/configSecrets.ts and configLogger.ts may read process.env.',
 	);
 	console.error(
-		'Add the value to SECRET_CONFIG_KEYS/NESTED_SECRET_KEYS or use the typed config layer.'
+		'Add the value to SECRET_CONFIG_KEYS/NESTED_SECRET_KEYS or use the typed config layer.',
 	);
 	process.exit(1);
 }

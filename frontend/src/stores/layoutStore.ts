@@ -78,8 +78,8 @@ const useLayoutStore = create<LayoutState>()(
 			name: STORAGE_KEYS.layout,
 			storage: debouncedLocalStorage(),
 			version: 2,
-		}
-	)
+		},
+	),
 );
 
 export { useLayoutStore };

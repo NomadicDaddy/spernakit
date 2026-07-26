@@ -56,7 +56,7 @@ interface PackageJson {
 }
 
 const defaults = JSON.parse(
-	readFileSync(join(projectRoot, 'backend/src/config/defaults.json'), 'utf8')
+	readFileSync(join(projectRoot, 'backend/src/config/defaults.json'), 'utf8'),
 ) as DefaultsJson;
 const pkg = JSON.parse(readFileSync(join(projectRoot, 'package.json'), 'utf8')) as PackageJson;
 
@@ -133,19 +133,19 @@ console.log(`  origins:   ${allowedOrigins.join(', ')}`);
 console.log(
 	`  cookieSec: ${cookieSecure}${
 		cookieSecure ? '' : ' (insecure — only acceptable behind a TLS proxy)'
-	}`
+	}`,
 );
 
 if (cookieSecure && !frontendUrl.startsWith('https://')) {
 	console.error(
 		`❌ --cookie-secure requires an HTTPS frontendUrl, got ${frontendUrl}. ` +
-			`Front the deploy with a TLS proxy (Caddy + mkcert) and pass --frontend-url https://...`
+			`Front the deploy with a TLS proxy (Caddy + mkcert) and pass --frontend-url https://...`,
 	);
 	process.exit(1);
 }
 if (!cookieSecure && frontendUrl.startsWith('https://')) {
 	console.warn(
-		'⚠ frontendUrl is HTTPS but --cookie-secure not set — auth cookies will not be sent.'
+		'⚠ frontendUrl is HTTPS but --cookie-secure not set — auth cookies will not be sent.',
 	);
 }
 
@@ -159,7 +159,7 @@ if (!values['skip-image-check']) {
 		console.error(
 			`❌ ${image} is not available in the local Docker daemon. Build it first ` +
 				`(bun run docker:image:build), pull an explicitly selected downstream image, ` +
-				`or pass --skip-image-check.`
+				`or pass --skip-image-check.`,
 		);
 		process.exit(1);
 	}
@@ -193,7 +193,7 @@ console.log(`✓ Wrote ${composeDest}`);
 if (existsSync(configPath) && !values['rotate-secrets']) {
 	console.log(
 		`\n✓ Config already exists at ${configPath} — leaving as-is ` +
-			`(use --rotate-secrets to regenerate).`
+			`(use --rotate-secrets to regenerate).`,
 	);
 } else {
 	if (existsSync(configPath)) {

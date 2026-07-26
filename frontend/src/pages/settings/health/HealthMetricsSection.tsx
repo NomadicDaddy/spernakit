@@ -1,11 +1,11 @@
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 
 import type { MetricDataPoint } from '@/components/shared/charts/MetricChart';
 
 import { ChartSkeleton } from '@/components/shared/skeletons/ChartSkeleton';
 
 const MetricChart = lazy(() =>
-	import('@/components/shared/charts/MetricChart').then((m) => ({ default: m.MetricChart }))
+	import('@/components/shared/charts/MetricChart').then((m) => ({ default: m.MetricChart })),
 );
 
 interface HealthMetricsSectionProps {

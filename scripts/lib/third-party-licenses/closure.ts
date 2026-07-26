@@ -40,7 +40,7 @@ export interface ClosurePackage {
 export async function collectRuntimeClosure(
 	root: string,
 	workspaces: string[],
-	internal: Set<string>
+	internal: Set<string>,
 ): Promise<{ closure: ClosurePackage[]; unresolved: string[] }> {
 	const locked = await collectLockfileClosure(root, {
 		internal,
@@ -54,7 +54,7 @@ export async function collectRuntimeClosure(
 	}
 
 	const closure = [...seen.values()].sort(
-		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version)
+		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version),
 	);
 	return { closure, unresolved: [...unresolved].sort(byCodepoint) };
 }
@@ -63,7 +63,7 @@ async function record(
 	root: string,
 	workspaces: string[],
 	pkg: LockedPackage,
-	state: { seen: Map<string, ClosurePackage>; unresolved: Set<string> }
+	state: { seen: Map<string, ClosurePackage>; unresolved: Set<string> },
 ): Promise<void> {
 	const key = `${pkg.name}@${pkg.version}`;
 	if (state.seen.has(key)) return;

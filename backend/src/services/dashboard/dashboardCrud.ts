@@ -13,8 +13,8 @@ import { dashboardConfigs, dashboardWidgets } from '../../db/schema/dashboards.t
 import {
 	findOwnedDashboard,
 	getWidgetsForDashboard,
-	MAX_WIDGETS_PER_DASHBOARD,
 	mapWidgetInputsToValues,
+	MAX_WIDGETS_PER_DASHBOARD,
 } from './dashboardTypes.ts';
 
 /* -------------------------------------------------------------------------- */
@@ -48,8 +48,8 @@ function softDeleteWidgets(dashboardId: number, userId: number, tx?: DbTransacti
 		.where(
 			and(
 				eq(dashboardWidgets.dashboardId, dashboardId),
-				eq(dashboardWidgets.isDeleted, false)
-			)
+				eq(dashboardWidgets.isDeleted, false),
+			),
 		)
 		.run();
 }
@@ -97,7 +97,7 @@ function listDashboards(userId: number, workspaceId: null | number = null): Dash
 function getDashboard(
 	dashboardId: number,
 	userId: number,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardWithWidgets | null {
 	const config = findOwnedDashboard(dashboardId, userId, workspaceId);
 	if (!config) return null;
@@ -178,7 +178,7 @@ function updateDashboard(
 	dashboardId: number,
 	userId: number,
 	input: DashboardInput,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardWithWidgets | null {
 	const db = getDb();
 
@@ -219,7 +219,7 @@ function updateDashboard(
 function deleteDashboard(
 	dashboardId: number,
 	userId: number,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): boolean {
 	const db = getDb();
 
@@ -240,4 +240,3 @@ function deleteDashboard(
 
 export { createDashboard, deleteDashboard, getDashboard, listDashboards, updateDashboard };
 export type { DashboardInput };
-export type { DashboardExport, DashboardWithWidgets, WidgetInput } from './dashboardTypes.ts';

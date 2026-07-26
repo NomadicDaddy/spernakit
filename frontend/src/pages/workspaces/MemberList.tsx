@@ -18,7 +18,7 @@ function MemberList({
 	selectedUserIds,
 }: MemberListProps) {
 	if (members.length === 0) {
-		return <div className="text-muted-foreground py-4 text-center">No members yet</div>;
+		return <div className="py-4 text-center text-muted-foreground">No members yet</div>;
 	}
 
 	return (

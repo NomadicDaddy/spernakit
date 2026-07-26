@@ -30,8 +30,8 @@ function getStorageAdapter(): StorageAdapter {
 		(err) =>
 			logger.error(
 				{ adapter: config.storage.adapter, error: err },
-				'Storage adapter validation failed'
-			)
+				'Storage adapter validation failed',
+			),
 	);
 
 	return adapter;

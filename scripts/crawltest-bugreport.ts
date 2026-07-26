@@ -50,7 +50,7 @@ export async function testBugReport(
 	results: TestResults,
 	opts: CrawlerOpts,
 	state: CrawlerState,
-	rootDir: string
+	rootDir: string,
 ): Promise<void> {
 	console.log('\n🐛 Testing bug report submission...');
 
@@ -127,7 +127,7 @@ export async function testBugReport(
 			console.log('   ⚠️  Bug report dialog did not appear');
 			results.addError(
 				'BUG_TEST',
-				'Bug report dialog did not appear after clicking bug icon'
+				'Bug report dialog did not appear after clicking bug icon',
 			);
 			return;
 		}
@@ -148,12 +148,12 @@ export async function testBugReport(
 			const testDescription = 'Automated test bug report from crawltest --bug flag.';
 			await page.evaluate((text) => {
 				const textarea = document.querySelector(
-					'textarea#bug-description'
+					'textarea#bug-description',
 				) as HTMLTextAreaElement | null;
 				if (textarea) {
 					const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
 						window.HTMLTextAreaElement.prototype,
-						'value'
+						'value',
 					)?.set;
 					if (nativeInputValueSetter) {
 						nativeInputValueSetter.call(textarea, text);
@@ -169,7 +169,7 @@ export async function testBugReport(
 			// Verify text was entered
 			const textareaValue = await page.$eval(
 				'textarea#bug-description',
-				(el) => (el as HTMLTextAreaElement).value
+				(el) => (el as HTMLTextAreaElement).value,
 			);
 			descriptionEntered = textareaValue.length > 0;
 			if (descriptionEntered) {

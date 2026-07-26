@@ -4,7 +4,7 @@ import { SCHEDULED_TASK_STATUSES } from 'spernakit-shared';
 
 // DB-level domain guard: keep the CHECK list single-sourced from SCHEDULED_TASK_STATUSES.
 const SCHEDULED_TASK_STATUS_IN_LIST = SCHEDULED_TASK_STATUSES.map((status) => `'${status}'`).join(
-	', '
+	', ',
 );
 
 /**
@@ -54,7 +54,7 @@ const scheduledTaskExecutions = sqliteTable(
 	(table) => [
 		check(
 			'chk_scheduled_task_executions_status',
-			sql`${table.status} in (${sql.raw(SCHEDULED_TASK_STATUS_IN_LIST)})`
+			sql`${table.status} in (${sql.raw(SCHEDULED_TASK_STATUS_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `result` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -63,7 +63,7 @@ const scheduledTaskExecutions = sqliteTable(
 		index('idx_scheduled_task_executions_status').on(table.status),
 		index('idx_scheduled_task_executions_created_at').on(table.createdAt),
 		index('idx_scheduled_task_executions_name_created').on(table.taskName, table.createdAt),
-	]
+	],
 );
 
 /**
@@ -85,7 +85,7 @@ const scheduledTaskConfigs = sqliteTable(
 			.notNull()
 			.$defaultFn(() => new Date()),
 	},
-	(table) => [uniqueIndex('idx_scheduled_task_configs_task_name').on(table.taskName)]
+	(table) => [uniqueIndex('idx_scheduled_task_configs_task_name').on(table.taskName)],
 );
 
 export { scheduledTaskConfigs, scheduledTaskExecutions };

@@ -1,7 +1,7 @@
 import {
 	existsSync,
-	readFileSync,
 	readdirSync,
+	readFileSync,
 	renameSync,
 	unlinkSync,
 	writeFileSync,
@@ -46,7 +46,7 @@ async function deriveBackupKey(salt: Uint8Array<ArrayBuffer>, keyHex?: string): 
 		baseKey,
 		{ length: KEY_LENGTH, name: ENCRYPTION_ALGORITHM },
 		false,
-		['encrypt', 'decrypt']
+		['encrypt', 'decrypt'],
 	);
 }
 
@@ -63,7 +63,7 @@ async function deriveBackupKey(salt: Uint8Array<ArrayBuffer>, keyHex?: string): 
 export async function encryptBackupFile(
 	inputPath: string,
 	outputPath: string,
-	keyHex?: string
+	keyHex?: string,
 ): Promise<void> {
 	const data = readFileSync(inputPath);
 	const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
@@ -121,7 +121,7 @@ async function decryptWithKeys(
 	salt: Uint8Array<ArrayBuffer>,
 	iv: Uint8Array<ArrayBuffer>,
 	ciphertext: Uint8Array<ArrayBuffer>,
-	candidateKeys: (string | undefined)[]
+	candidateKeys: (string | undefined)[],
 ): Promise<ArrayBuffer> {
 	let lastError: unknown;
 	for (const keyHex of candidateKeys) {
@@ -141,7 +141,7 @@ async function decryptWithKeys(
 async function reEncryptOneBackup(
 	sourcePath: string,
 	primary: string,
-	previous: string | undefined
+	previous: string | undefined,
 ): Promise<void> {
 	const tempDecryptedPath = `${sourcePath}.tmp.plain`;
 	const tempEncryptedPath = `${sourcePath}.tmp.enc`;
@@ -205,7 +205,7 @@ export async function reEncryptAllBackups(): Promise<{ failed: number; processed
 			failed += 1;
 			logger.error(
 				{ error: err instanceof Error ? err.message : 'Unknown error', filename },
-				'Failed to re-encrypt backup'
+				'Failed to re-encrypt backup',
 			);
 		}
 	}

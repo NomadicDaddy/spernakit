@@ -63,7 +63,7 @@ function NotificationPreferences({
 							<div className="flex items-center justify-between" key={item.key}>
 								<div className="space-y-0.5">
 									<Label htmlFor={`pref-${item.key}`}>{item.label}</Label>
-									<p className="text-muted-foreground text-xs">
+									<p className="text-xs text-muted-foreground">
 										{item.description}
 									</p>
 								</div>

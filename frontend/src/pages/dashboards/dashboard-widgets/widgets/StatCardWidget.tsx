@@ -21,13 +21,13 @@ export function StatCardWidget({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center justify-between pb-1">
-				<span className="text-muted-foreground text-xs font-medium">{widget.title}</span>
+				<span className="text-xs font-medium text-muted-foreground">{widget.title}</span>
 				{METRIC_ICON[widget.metricType]}
 			</div>
 			<div
 				className={
 					value === NO_WIDGET_DATA_LABEL
-						? 'text-muted-foreground text-sm font-medium'
+						? 'text-sm font-medium text-muted-foreground'
 						: 'text-2xl font-bold tabular-nums'
 				}>
 				{value}

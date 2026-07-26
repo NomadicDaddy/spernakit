@@ -48,7 +48,7 @@ interface UserRecord {
 function validateUserForDeletion(
 	id: number,
 	user: undefined | UserRecord,
-	requesterRoleLevel: number
+	requesterRoleLevel: number,
 ): { error?: string; valid: boolean } {
 	if (!user) {
 		return { error: 'User not found', valid: false };
@@ -83,7 +83,7 @@ function executeBulkDelete(validIds: number[], deletedBy: number): BatchItemResu
 function bulkDeleteUsers(
 	ids: number[],
 	deletedBy: number,
-	requesterRoleLevel: number
+	requesterRoleLevel: number,
 ): BatchResult {
 	const { idsToQuery, results } = validateSelfDelete(ids, deletedBy);
 
@@ -124,7 +124,7 @@ function validateRoleUpdate(
 	id: number,
 	role: UserRole,
 	user: undefined | UserRecord,
-	requesterRoleLevel: number
+	requesterRoleLevel: number,
 ): RoleUpdateValidation {
 	if (!user || user.isDeleted) {
 		return { error: 'User not found', id, valid: false };
@@ -162,7 +162,7 @@ function executeBulkRoleUpdates(updates: { id: number; role: UserRole }[]): Batc
 
 function bulkUpdateUserRoles(
 	updates: { id: number; role: UserRole }[],
-	requesterRoleLevel: number
+	requesterRoleLevel: number,
 ): BatchResult {
 	if (updates.length === 0) {
 		return { failed: 0, results: [], succeeded: 0, total: 0 };

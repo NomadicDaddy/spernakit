@@ -154,7 +154,7 @@ class ApiKeyClient {
 	constructor(
 		private apiKey: string,
 		private apiKeySecret: string,
-		private baseUrl: string
+		private baseUrl: string,
 	) {}
 
 	private sign(method: string, path: string, body: string): Record<string, string> {

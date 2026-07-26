@@ -76,7 +76,7 @@ function TrendIndicator({ trend }: { trend: StatCardTrend }) {
 		<div className={cn('mt-2 flex items-center gap-1', color)}>
 			<Icon aria-hidden="true" className="size-4" />
 			<span className="text-sm font-medium">{Math.abs(trend.value)}%</span>
-			<span className="text-muted-foreground text-xs">{trend.label}</span>
+			<span className="text-xs text-muted-foreground">{trend.label}</span>
 		</div>
 	);
 }
@@ -99,7 +99,7 @@ export function StatCard({
 			className={cn(
 				'animate-fade-up',
 				variantCardClasses[variant],
-				hasVariant && 'transition-transform duration-200 hover:scale-[1.02]'
+				hasVariant && 'transition-transform duration-200 hover:scale-[1.02]',
 			)}
 			style={index !== undefined ? { animationDelay: `${index * 40}ms` } : undefined}>
 			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -108,7 +108,7 @@ export function StatCard({
 			</CardHeader>
 			<CardContent className={progress !== undefined ? 'space-y-2' : undefined}>
 				<div className="text-2xl font-bold tracking-tight tabular-nums">{value}</div>
-				{subtitle && <p className="text-muted-foreground text-xs">{subtitle}</p>}
+				{subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
 				{trend && <TrendIndicator trend={trend} />}
 				{sparkline && sparkline.points.length > 1 && (
 					<Sparkline

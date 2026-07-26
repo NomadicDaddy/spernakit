@@ -78,7 +78,7 @@ class ApiClient {
 					signal,
 				},
 				shouldRetry,
-				timeoutMs
+				timeoutMs,
 			);
 
 			if (!res.ok) {
@@ -114,7 +114,7 @@ class ApiClient {
 					signal,
 				},
 				shouldRetry,
-				timeoutMs
+				timeoutMs,
 			);
 
 			return this.handleResponse<T>(res);
@@ -135,7 +135,7 @@ class ApiClient {
 
 	private async request<T>(
 		path: string,
-		options?: RequestOptions & { csrf?: boolean }
+		options?: { csrf?: boolean } & RequestOptions,
 	): Promise<T> {
 		const url = this.buildUrl(path, options?.params);
 		const method = options?.method ?? 'GET';
@@ -202,4 +202,4 @@ class ApiClient {
 
 const apiClient = new ApiClient();
 
-export { ApiError, apiClient };
+export { apiClient, ApiError };

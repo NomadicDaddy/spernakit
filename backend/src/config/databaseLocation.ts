@@ -99,7 +99,7 @@ function isDbPathUnderDataDir(absolutePath: string, projectRoot: string): boolea
  */
 function assertDbUnderDataDir(
 	database: DatabaseLocationConfig,
-	projectRoot: string
+	projectRoot: string,
 ): DbLocationCheckResult {
 	const resolvedPath = resolveLocalDbPath(database, projectRoot);
 	if (resolvedPath === null) {

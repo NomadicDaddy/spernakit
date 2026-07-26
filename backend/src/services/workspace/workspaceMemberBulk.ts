@@ -22,7 +22,7 @@ interface BatchMemberResult {
 
 function bulkAddMembers(
 	workspaceId: number,
-	members: { role: WorkspaceRole; userId: number }[]
+	members: { role: WorkspaceRole; userId: number }[],
 ): BatchMemberResult {
 	const db = getDb();
 	const results: BatchMemberItemResult[] = [];
@@ -47,8 +47,8 @@ function bulkAddMembers(
 		.where(
 			and(
 				eq(workspaceMembers.workspaceId, workspaceId),
-				inArray(workspaceMembers.userId, userIds)
-			)
+				inArray(workspaceMembers.userId, userIds),
+			),
 		)
 		.all();
 
@@ -105,8 +105,8 @@ function bulkRemoveMembers(workspaceId: number, userIds: number[]): BatchMemberR
 		.where(
 			and(
 				eq(workspaceMembers.workspaceId, workspaceId),
-				inArray(workspaceMembers.userId, userIds)
-			)
+				inArray(workspaceMembers.userId, userIds),
+			),
 		)
 		.all();
 
@@ -140,7 +140,7 @@ function bulkRemoveMembers(workspaceId: number, userIds: number[]): BatchMemberR
 
 function addMemberToDefaultWorkspace(
 	userId: number,
-	role: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER' = 'VIEWER'
+	role: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER' = 'VIEWER',
 ): boolean {
 	const defaultWorkspaceId = getDefaultWorkspaceId();
 	if (defaultWorkspaceId === null) return false;
@@ -154,8 +154,8 @@ function addMemberToDefaultWorkspace(
 		.where(
 			and(
 				eq(workspaceMembers.workspaceId, defaultWorkspaceId),
-				eq(workspaceMembers.userId, userId)
-			)
+				eq(workspaceMembers.userId, userId),
+			),
 		)
 		.get();
 
@@ -184,8 +184,8 @@ function isMemberOfDefaultWorkspace(userId: number): boolean {
 		.where(
 			and(
 				eq(workspaceMembers.workspaceId, defaultWorkspaceId),
-				eq(workspaceMembers.userId, userId)
-			)
+				eq(workspaceMembers.userId, userId),
+			),
 		)
 		.get();
 

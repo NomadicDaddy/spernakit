@@ -72,7 +72,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
 				<div className="flex min-h-[400px] flex-col items-center justify-center gap-4 p-6">
 					<div className="text-center">
 						<h2 className="text-xl font-semibold">Something went wrong</h2>
-						<p className="text-muted-foreground mt-2 max-w-md text-sm">
+						<p className="mt-2 max-w-md text-sm text-muted-foreground">
 							{getUserMessage(this.state.error)}
 						</p>
 					</div>

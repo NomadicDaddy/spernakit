@@ -89,7 +89,7 @@ async function main(): Promise<void> {
 	if (synced !== markdown) {
 		console.error('scripts/smoke.md is out of sync with scripts/smoke.json.');
 		console.error(
-			'The runbook describes steps the runner does not run, or omits ones it does.'
+			'The runbook describes steps the runner does not run, or omits ones it does.',
 		);
 		console.error('Run `bun run smoke:docs` and commit the result.');
 		exit(1);

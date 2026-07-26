@@ -6,7 +6,7 @@ import { healthCheckAlerts } from '../../db/schema/healthChecks.ts';
 function hasRecentAlert(
 	checkType: string,
 	cooldownMinutes: number,
-	excludeAlertId?: number
+	excludeAlertId?: number,
 ): boolean {
 	const db = getDb();
 	const cooldownTime = new Date(Date.now() - cooldownMinutes * 60 * 1000);

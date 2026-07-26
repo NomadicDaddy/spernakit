@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
 import type { UserRole } from '@/types/roles';
@@ -69,11 +69,11 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 			<div className="relative border-b">
 				{/* Trailing gradient fade — shows when there is content to scroll right */}
 				{canScrollRight && (
-					<div className="from-background pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-gradient-to-l to-transparent" />
+					<div className="pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-gradient-to-l from-background to-transparent" />
 				)}
 				{/* Leading gradient fade — shows when scrolled past start */}
 				{canScrollLeft && (
-					<div className="from-background pointer-events-none absolute top-0 left-0 z-10 h-full w-12 bg-gradient-to-r to-transparent" />
+					<div className="pointer-events-none absolute top-0 left-0 z-10 h-full w-12 bg-gradient-to-r from-background to-transparent" />
 				)}
 				<nav
 					className="-mb-px flex scrollbar-none gap-4 overflow-x-auto"
@@ -82,10 +82,10 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 					{tabs.map((tab) => (
 						<NavLink
 							className={cn(
-								'focus-visible:ring-ring rounded-sm border-b-2 px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
+								'rounded-sm border-b-2 px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
 								location.pathname === tab.to
 									? 'border-primary text-foreground'
-									: 'text-muted-foreground hover:text-foreground border-transparent'
+									: 'border-transparent text-muted-foreground hover:text-foreground',
 							)}
 							key={tab.to}
 							onClick={onTabClick ? () => onTabClick(tab) : undefined}

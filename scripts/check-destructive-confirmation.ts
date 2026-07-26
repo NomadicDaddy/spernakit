@@ -13,12 +13,12 @@
  * Usage:
  *   bun scripts/check-destructive-confirmation.ts
  */
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'data', 'logs', 'coverage', '.aidd']);
+const SKIP_DIRS = new Set(['.aidd', '.git', 'coverage', 'data', 'dist', 'logs', 'node_modules']);
 
 /** Patterns indicating a destructive API endpoint. */
 const DESTRUCTIVE_ENDPOINT_PATTERNS = [
@@ -138,10 +138,10 @@ if (allViolations.length > 0) {
 		console.error(`    ${v.reason}`);
 	}
 	console.error(
-		'\nDestructive mutations must use ConfirmAlertDialog or a similar confirmation step.'
+		'\nDestructive mutations must use ConfirmAlertDialog or a similar confirmation step.',
 	);
 	console.error(
-		'Add a confirmation dialog import, or add // @no-confirm-required above the call.'
+		'Add a confirmation dialog import, or add // @no-confirm-required above the call.',
 	);
 	process.exit(1);
 }

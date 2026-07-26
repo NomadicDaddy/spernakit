@@ -60,7 +60,7 @@ const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onBeforeHandle(
 				apiStore,
 				key,
 				maxRequests,
-				windowMs
+				windowMs,
 			);
 
 			if (result.limited) {
@@ -68,7 +68,7 @@ const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onBeforeHandle(
 				set.headers['Retry-After'] = String(result.retryAfter || 0);
 				return rateLimitError(
 					result.retryAfter || 0,
-					RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED
+					RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED,
 				);
 			}
 
@@ -78,7 +78,7 @@ const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onBeforeHandle(
 		}
 
 		return undefined;
-	}
+	},
 );
 
 export { apiStore, rateLimitPlugin };

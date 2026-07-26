@@ -32,7 +32,7 @@ function ResetPasswordPage() {
 				return { error: message, submitted: false };
 			}
 		},
-		{ error: null, submitted: false }
+		{ error: null, submitted: false },
 	);
 
 	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {

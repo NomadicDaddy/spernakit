@@ -41,16 +41,16 @@ function ActiveAlerts({ className }: { className?: string }) {
 					<CardDescription>Health issues requiring attention</CardDescription>
 				</div>
 				<Link
-					className="text-primary text-sm font-medium hover:underline"
+					className="text-sm font-medium text-primary hover:underline"
 					to="/settings/system-health">
 					View all
 				</Link>
 			</CardHeader>
 			<CardContent className="flex-1">
 				{isLoading ? (
-					<p className="text-muted-foreground py-6 text-center text-sm">Loading…</p>
+					<p className="py-6 text-center text-sm text-muted-foreground">Loading…</p>
 				) : active.length === 0 ? (
-					<div className="text-muted-foreground flex flex-col items-center gap-2 py-8 text-center text-sm">
+					<div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-muted-foreground">
 						<ShieldCheck
 							aria-hidden="true"
 							className="size-6 text-[oklch(0.723_0.219_149)]"
@@ -68,7 +68,7 @@ function ActiveAlerts({ className }: { className?: string }) {
 									<span
 										className={cn(
 											'flex size-7 shrink-0 items-center justify-center rounded-md',
-											cls
+											cls,
 										)}>
 										<Icon aria-hidden="true" className="size-4" />
 									</span>
@@ -76,7 +76,7 @@ function ActiveAlerts({ className }: { className?: string }) {
 										<p className="truncate text-sm font-medium">
 											{alert.message}
 										</p>
-										<p className="text-muted-foreground truncate text-xs">
+										<p className="truncate text-xs text-muted-foreground">
 											{alert.checkType} · {formatTimestamp(alert.createdAt)}
 										</p>
 									</div>

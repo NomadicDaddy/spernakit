@@ -9,11 +9,11 @@ function Header() {
 	const layoutActions = useLayoutActions();
 
 	return (
-		<header className="bg-background flex h-12 items-center justify-between border-b px-2 md:h-14 md:px-4">
+		<header className="flex h-12 items-center justify-between border-b bg-background px-2 md:h-14 md:px-4">
 			{/* Left: Mobile hamburger + breadcrumbs */}
 			<div className="flex items-center gap-2">
 				<MobileNav />
-				<span className="text-muted-foreground hidden text-sm md:inline">
+				<span className="hidden text-sm text-muted-foreground md:inline">
 					{/* Breadcrumb content will be added by individual pages */}
 				</span>
 			</div>

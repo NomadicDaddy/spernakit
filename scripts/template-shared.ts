@@ -32,11 +32,11 @@ export {
 export { printReport } from './lib/template/report.ts';
 export { escapeRegex, normalizeLineEndings } from './lib/template/text.ts';
 export {
-	TEMPLATE_BRANDING,
 	type BrandingValues,
 	type ClassificationOverrides,
 	type DriftCategory,
 	type FileResult,
+	TEMPLATE_BRANDING,
 	type TemplateOverrideAction,
 	type TemplateOverrides,
 } from './lib/template/types.ts';

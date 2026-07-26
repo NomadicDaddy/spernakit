@@ -9,7 +9,7 @@ import { users } from '../schema/users.ts';
 async function seedUsersIfEmpty(
 	db: SeedDb,
 	seedUsers: SeedUser[],
-	bcryptRounds: number
+	bcryptRounds: number,
 ): Promise<CreatedUser[] | null> {
 	const existingUsers = db.select().from(users).all();
 	if (existingUsers.length > 0) {
@@ -73,7 +73,7 @@ async function seedUsersIfEmpty(
 async function resetDevSeedPasswords(
 	db: SeedDb,
 	seedUsers: SeedUser[],
-	bcryptRounds: number
+	bcryptRounds: number,
 ): Promise<number> {
 	const clearRequiresPasswordChange = !getAuthSettings().requirePasswordChange;
 	let resetCount = 0;

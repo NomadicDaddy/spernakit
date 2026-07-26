@@ -1,7 +1,9 @@
-import { Type, type Static, type TObject, type TLiteral, type TUnion } from '@sinclair/typebox';
+import { type Static, type TLiteral, type TObject, type TUnion, Type } from '@sinclair/typebox';
 
 export { Type } from '@sinclair/typebox';
-export type { Static, TObject, TSchema } from '@sinclair/typebox';
+export type { Static, TObject } from '@sinclair/typebox';
+/** @public Intentional template surface: re-exported for downstream config-schema authors. */
+export type { TSchema } from '@sinclair/typebox';
 
 /**
  * Build a closed set of allowed string values as a union of literals.
@@ -18,11 +20,11 @@ export type { Static, TObject, TSchema } from '@sinclair/typebox';
  */
 function enumString<const V extends readonly string[]>(
 	values: V,
-	options: { default?: V[number]; description?: string } = {}
+	options: { default?: V[number]; description?: string } = {},
 ) {
 	return Type.Union(
 		values.map((value) => Type.Literal(value)),
-		options
+		options,
 	) as TUnion<TLiteral<V[number]>[]>;
 }
 

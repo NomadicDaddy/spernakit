@@ -126,7 +126,7 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
  */
 function requireWorkspaceRole(
 	ctx: WorkspaceGuardContext,
-	minimumRole: WorkspaceMemberRole
+	minimumRole: WorkspaceMemberRole,
 ): ErrorResponse | undefined {
 	const result = validateAuthAndWorkspace(ctx);
 	if (!result.ok) return result.response;
@@ -175,7 +175,7 @@ function getWorkspaceMemberRole(userId: number, workspaceId: number): null | Wor
  */
 function canModifyWorkspaceRole(
 	requesterRole: WorkspaceMemberRole,
-	targetRole: WorkspaceMemberRole
+	targetRole: WorkspaceMemberRole,
 ): boolean {
 	const requesterLevel = WORKSPACE_ROLE_HIERARCHY[requesterRole] ?? 0;
 	const targetLevel = WORKSPACE_ROLE_HIERARCHY[targetRole] ?? 0;

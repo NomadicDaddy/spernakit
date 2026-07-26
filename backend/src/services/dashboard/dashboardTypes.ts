@@ -54,8 +54,8 @@ function getWidgetsForDashboard(dashboardId: number): DashboardWidget[] {
 			.where(
 				and(
 					eq(dashboardWidgets.dashboardId, dashboardId),
-					eq(dashboardWidgets.isDeleted, false)
-				)
+					eq(dashboardWidgets.isDeleted, false),
+				),
 			)
 			.limit(MAX_WIDGETS_PER_DASHBOARD)
 			.all() as DashboardWidget[];
@@ -131,7 +131,7 @@ function createWidget(type: WidgetType, props: CreateWidgetProps): WidgetInput {
 function mapWidgetInputsToValues(
 	widgets: WidgetInput[],
 	dashboardId: number,
-	userId: number
+	userId: number,
 ): (typeof dashboardWidgets.$inferInsert)[] {
 	return widgets.map((w) => ({
 		col: w.col,
@@ -166,7 +166,7 @@ function mapWidgetInputsToValues(
 function findOwnedDashboard(
 	dashboardId: number,
 	userId: number,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardConfig | undefined {
 	const db = getDb();
 	const conditions = [

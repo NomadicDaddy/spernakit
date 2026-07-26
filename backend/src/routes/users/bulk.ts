@@ -28,7 +28,7 @@ function revokeTokensForResults(results: { id: number; success: boolean }[]): vo
 	const config = getConfig();
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,
-		DEFAULT_REFRESH_TTL_MS
+		DEFAULT_REFRESH_TTL_MS,
 	);
 	const revokeExpiry = new Date(Date.now() + refreshTtlMs);
 	for (const item of results) {
@@ -96,14 +96,14 @@ const usersBulkRoutes = new Elysia({
 						description: 'Batch delete result with per-item status.',
 					},
 					'400': badRequestExample(
-						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`
+						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`,
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
 				},
 				summary: 'Bulk delete users (ADMIN+)',
 			},
-		}
+		},
 	)
 	.put(
 		'/bulk/roles',
@@ -117,7 +117,7 @@ const usersBulkRoutes = new Elysia({
 			const requesterLevel = ROLE_HIERARCHY[authUser.role] ?? 0;
 			const result = bulkUpdateUserRoles(
 				body.updates.map((u) => ({ id: u.id, role: u.role })),
-				requesterLevel
+				requesterLevel,
 			);
 
 			revokeTokensForResults(result.results);
@@ -131,7 +131,7 @@ const usersBulkRoutes = new Elysia({
 						id: t.Number(),
 						role: UserRoleSchema,
 					}),
-					{ maxItems: 100, minItems: 1 }
+					{ maxItems: 100, minItems: 1 },
 				),
 			}),
 			detail: {
@@ -165,14 +165,14 @@ const usersBulkRoutes = new Elysia({
 						description: 'Batch role update result with per-item status.',
 					},
 					'400': badRequestExample(
-						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`
+						`Batch size exceeds maximum of ${MAX_BATCH_SIZE} items`,
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
 				},
 				summary: 'Bulk update user roles (ADMIN+)',
 			},
-		}
+		},
 	);
 
 export { usersBulkRoutes };

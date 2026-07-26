@@ -59,7 +59,7 @@ function resolveEnvValue(envValue: string): string {
 
 function replaceSecretsWithEnvVars(
 	config: Record<string, unknown>,
-	slug: string
+	slug: string,
 ): Record<string, unknown> {
 	const result = structuredClone(config);
 	const prefix = slug.toUpperCase().replace(/-/g, '_');
@@ -79,7 +79,7 @@ function replaceSecretsWithEnvVars(
 						envVar,
 						masked: `[${envValue.length} chars]`,
 					},
-					'Secret loaded from environment variable'
+					'Secret loaded from environment variable',
 				);
 			}
 		}
@@ -118,7 +118,7 @@ function replaceSecretsWithEnvVars(
 					envVar,
 					masked: `[${envValue.length} chars]`,
 				},
-				'Secret loaded from environment variable'
+				'Secret loaded from environment variable',
 			);
 		}
 	}

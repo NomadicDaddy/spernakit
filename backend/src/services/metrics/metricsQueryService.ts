@@ -166,7 +166,7 @@ function getWebVitalsSummary(hours = 24): WebVitalSummary[] {
 				WHERE metric_type LIKE 'web-vital-%'
 					AND created_at >= ${sinceSqlParam}
 					AND value IS NOT NULL
-			) AS ranked`
+			) AS ranked`,
 		)
 		.where(sql`ranked.rn = (ranked.cnt * 3 + 3) / 4`)
 		.all();
@@ -186,8 +186,8 @@ function getWebVitalsSummary(hours = 24): WebVitalSummary[] {
 					SELECT MAX(sm2.created_at) FROM ${systemMetrics} sm2
 					WHERE sm2.metric_type = ${systemMetrics.metricType}
 					AND sm2.created_at >= ${sinceSqlParam}
-				)`
-			)
+				)`,
+			),
 		)
 		.all();
 

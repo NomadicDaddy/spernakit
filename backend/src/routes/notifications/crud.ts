@@ -61,16 +61,16 @@ const notificationCrudRoutes = new Elysia({
 					t.String({
 						description: 'Comma-separated list of fields to return',
 						maxLength: 255,
-					})
+					}),
 				),
 				limit: t.Optional(
-					t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 })
+					t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
 				),
 				page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 				readStatus: t.Optional(NotificationReadStatusSchema),
 				type: t.Optional(NotificationTypeSchema),
 			}),
-		}
+		},
 	)
 	.get(
 		'/:id',
@@ -87,7 +87,7 @@ const notificationCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: getNotificationDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post(
 		'/',
@@ -115,14 +115,14 @@ const notificationCrudRoutes = new Elysia({
 				metadata: t.Optional(
 					t.Record(
 						t.String({ maxLength: 100 }),
-						t.Union([t.String({ maxLength: 500 }), t.Number(), t.Boolean()])
-					)
+						t.Union([t.String({ maxLength: 500 }), t.Number(), t.Boolean()]),
+					),
 				),
 				title: t.String({ maxLength: 255, minLength: 1 }),
 				type: t.Optional(NotificationTypeSchema),
 			}),
 			detail: createNotificationDocs,
-		}
+		},
 	)
 	.delete(
 		'/:id',
@@ -139,7 +139,7 @@ const notificationCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: deleteNotificationDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.post(
 		'/bulk-delete',
@@ -154,7 +154,7 @@ const notificationCrudRoutes = new Elysia({
 				ids: t.Array(t.Number({ minimum: 1 }), { maxItems: 100, minItems: 1 }),
 			}),
 			detail: bulkDeleteNotificationsDocs,
-		}
+		},
 	);
 
 export { notificationCrudRoutes };

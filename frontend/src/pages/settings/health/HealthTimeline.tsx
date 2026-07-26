@@ -36,8 +36,8 @@ function TimelineTooltip({ active, payload }: TimelineTooltipProps) {
 	if (!active || !entry) return null;
 
 	return (
-		<div className="bg-popover text-popover-foreground rounded-md border px-3 py-2 text-sm shadow-md">
-			<p className="text-muted-foreground text-xs">{entry.timestamp}</p>
+		<div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+			<p className="text-xs text-muted-foreground">{entry.timestamp}</p>
 			<p className="font-medium capitalize">{entry.status}</p>
 		</div>
 	);
@@ -61,7 +61,7 @@ export function HealthTimeline({ history }: HealthTimelineProps) {
 
 	if (timelineEntries.length === 0) {
 		return (
-			<div className="text-muted-foreground flex h-[80px] items-center justify-center text-sm">
+			<div className="flex h-[80px] items-center justify-center text-sm text-muted-foreground">
 				No history data
 			</div>
 		);

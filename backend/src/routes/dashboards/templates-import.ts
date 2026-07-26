@@ -76,7 +76,7 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'List dashboard templates',
 			},
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  GET /dashboards/shared/:token — view shared dashboard              */
@@ -99,7 +99,7 @@ const dashboardTemplatesRoutes = new Elysia({
 					set.headers['Retry-After'] = String(result.retryAfter ?? 0);
 					return rateLimitError(
 						result.retryAfter ?? 0,
-						RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED
+						RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED,
 					);
 				}
 				return undefined;
@@ -130,7 +130,7 @@ const dashboardTemplatesRoutes = new Elysia({
 			params: t.Object({
 				token: t.String({ maxLength: 500, minLength: 1 }),
 			}),
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  POST /dashboards/from-template — create from template              */
@@ -157,7 +157,7 @@ const dashboardTemplatesRoutes = new Elysia({
 			} catch (err) {
 				set.status = HTTP_STATUS.BAD_REQUEST;
 				return badRequestError(
-					extractErrorMessage(err, 'Failed to create dashboard from template')
+					extractErrorMessage(err, 'Failed to create dashboard from template'),
 				);
 			}
 		},
@@ -190,7 +190,7 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'Create dashboard from template',
 			},
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  POST /dashboards/import — import dashboard from JSON               */

@@ -92,7 +92,7 @@ function buildUpdates(overrides: FormOverrides): Partial<AuthSecuritySettings> {
 }
 
 function useAuthenticationForm(
-	serverData: AuthSecuritySettings | undefined
+	serverData: AuthSecuritySettings | undefined,
 ): AuthenticationFormState {
 	const [overrides, setOverrides] = useState<FormOverrides>({});
 	const dirty = Object.keys(overrides).length > 0;

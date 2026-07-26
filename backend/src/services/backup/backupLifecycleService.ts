@@ -1,4 +1,4 @@
-import { type Stats, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, type Stats, statSync } from 'node:fs';
 import { readdir, stat, unlink } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 
@@ -42,7 +42,7 @@ function getBackupFiles(): BackupFileEntry[] {
 	} catch (err) {
 		logger.error(
 			{ error: err instanceof Error ? err.message : 'Unknown error' },
-			'Failed to read backup directory'
+			'Failed to read backup directory',
 		);
 	}
 
@@ -143,7 +143,7 @@ export async function cleanupOldBackups(): Promise<number> {
 	} catch (err) {
 		logger.error(
 			{ error: err instanceof Error ? err.message : 'Unknown error' },
-			'Backup retention cleanup failed'
+			'Backup retention cleanup failed',
 		);
 	}
 

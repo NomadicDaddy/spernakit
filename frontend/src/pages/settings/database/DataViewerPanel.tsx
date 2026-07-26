@@ -40,7 +40,7 @@ function DataViewerPanel({ tableName }: DataViewerPanelProps) {
 					params.set('dataPage', String(nextPage));
 				}
 			},
-			{ replace: false }
+			{ replace: false },
 		);
 	};
 	const setIncludeDeleted = (checked: boolean) => {
@@ -53,7 +53,7 @@ function DataViewerPanel({ tableName }: DataViewerPanelProps) {
 				}
 				params.delete('dataPage');
 			},
-			{ replace: false }
+			{ replace: false },
 		);
 	};
 
@@ -100,7 +100,7 @@ function DataViewerPanel({ tableName }: DataViewerPanelProps) {
 		return (
 			<Card>
 				<CardContent className="py-8">
-					<p className="text-muted-foreground text-center text-sm">
+					<p className="text-center text-sm text-muted-foreground">
 						Select a table from the Schema tab to view its data.
 					</p>
 				</CardContent>

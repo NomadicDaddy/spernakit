@@ -52,7 +52,7 @@ const dashboardShareExportRoutes = new Elysia({
 					Number(params.id),
 					authUser.id,
 					body?.expiresInDays,
-					scope
+					scope,
 				);
 				if (!result) {
 					set.status = HTTP_STATUS.NOT_FOUND;
@@ -77,9 +77,9 @@ const dashboardShareExportRoutes = new Elysia({
 							default: DATE_RANGE_DEFAULT_DAYS,
 							maximum: DATE_RANGE_MAX_DAYS,
 							minimum: 1,
-						})
+						}),
 					),
-				})
+				}),
 			),
 			detail: {
 				description:
@@ -108,7 +108,7 @@ const dashboardShareExportRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  GET /dashboards/:id/export — export dashboard as JSON              */
@@ -154,7 +154,7 @@ const dashboardShareExportRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	);
 
 export { dashboardShareExportRoutes };

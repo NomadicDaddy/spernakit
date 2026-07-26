@@ -88,7 +88,7 @@ export async function cleanupTestData(page: Page, state: CrawlerState): Promise<
 				}
 			},
 			id,
-			csrfToken
+			csrfToken,
 		);
 		console.log(`   Deleted test dashboard (id: ${id})`);
 	} catch {
@@ -107,7 +107,7 @@ export async function test404Page(
 	results: TestResults,
 	opts: CrawlerOpts,
 	state: CrawlerState,
-	rootDir: string
+	rootDir: string,
 ): Promise<void> {
 	const testUrl = `${opts.baseUrl}/__crawltest-nonexistent-route-404`;
 	console.log(`\n🚫 Testing 404 page: ${testUrl}`);
@@ -127,7 +127,7 @@ export async function test404Page(
 		try {
 			await page.waitForFunction(
 				() => document.querySelectorAll('.animate-pulse').length === 0,
-				{ timeout: 8000 }
+				{ timeout: 8000 },
 			);
 		} catch {
 			// Timeout acceptable
@@ -137,7 +137,7 @@ export async function test404Page(
 			const main = document.querySelector('main');
 			const text = main?.innerText ?? document.body.innerText ?? '';
 			const isErrorPage = Array.from(document.querySelectorAll('h2')).some((h) =>
-				/^something went wrong$/i.test(h.textContent?.trim() ?? '')
+				/^something went wrong$/i.test(h.textContent?.trim() ?? ''),
 			);
 			return { isErrorPage, textLength: text.trim().length };
 		});
@@ -145,7 +145,7 @@ export async function test404Page(
 		if (result.isErrorPage) {
 			results.addError(
 				'CONTENT_ERROR',
-				'Error boundary detected on 404 page — should show a clean 404 instead'
+				'Error boundary detected on 404 page — should show a clean 404 instead',
 			);
 			console.log('   ❌ Error boundary detected on 404 page');
 		} else {

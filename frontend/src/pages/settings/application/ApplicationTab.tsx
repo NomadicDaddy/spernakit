@@ -53,7 +53,7 @@ function ApplicationTab() {
 						return next;
 					});
 					toast.error(
-						`Failed to update ${toggle.label.toLowerCase()}. Please try again.`
+						`Failed to update ${toggle.label.toLowerCase()}. Please try again.`,
 					);
 				},
 				onSuccess: () => {
@@ -64,7 +64,7 @@ function ApplicationTab() {
 					});
 					toast.success(`${toggle.label} updated`);
 				},
-			}
+			},
 		);
 	}
 
@@ -81,7 +81,7 @@ function ApplicationTab() {
 					toast.success('Default layout updated');
 					setOptimisticLayout(null);
 				},
-			}
+			},
 		);
 	}
 

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { type Database, Eye, LayoutGrid, Play, Table } from 'lucide-react';
-import { Suspense, lazy } from 'react';
+import { lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { ApiError } from '@/api/client';
@@ -13,14 +13,14 @@ import { useAuthorization } from '@/hooks/useAuthorization';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
 
 const DataViewerPanel = lazy(() =>
-	import('./DataViewerPanel').then((m) => ({ default: m.DataViewerPanel }))
+	import('./DataViewerPanel').then((m) => ({ default: m.DataViewerPanel })),
 );
 const ErdPanel = lazy(() => import('./ErdPanel').then((m) => ({ default: m.ErdPanel })));
 const SchemaExplorerPanel = lazy(() =>
-	import('./SchemaExplorerPanel').then((m) => ({ default: m.SchemaExplorerPanel }))
+	import('./SchemaExplorerPanel').then((m) => ({ default: m.SchemaExplorerPanel })),
 );
 const SqlSandboxPanel = lazy(() =>
-	import('./SqlSandboxPanel').then((m) => ({ default: m.SqlSandboxPanel }))
+	import('./SqlSandboxPanel').then((m) => ({ default: m.SqlSandboxPanel })),
 );
 
 type Panel = 'data' | 'erd' | 'schema' | 'sql';
@@ -55,7 +55,7 @@ function DatabaseTab() {
 				}
 				return next;
 			},
-			{ replace: true }
+			{ replace: true },
 		);
 	};
 
@@ -71,7 +71,7 @@ function DatabaseTab() {
 				next.delete('dataPage');
 				return next;
 			},
-			{ replace: true }
+			{ replace: true },
 		);
 	};
 
@@ -93,7 +93,7 @@ function DatabaseTab() {
 		return (
 			<Card>
 				<CardContent className="py-8">
-					<p className="text-muted-foreground text-center">
+					<p className="text-center text-muted-foreground">
 						You do not have permission to access the database admin panel. SYSOP role or
 						higher is required.
 					</p>
@@ -110,7 +110,7 @@ function DatabaseTab() {
 		return (
 			<Card>
 				<CardContent className="py-8">
-					<p className="text-muted-foreground text-center">
+					<p className="text-center text-muted-foreground">
 						The database admin panel is disabled by runtime configuration.
 					</p>
 				</CardContent>
@@ -122,7 +122,7 @@ function DatabaseTab() {
 		return (
 			<Card>
 				<CardContent className="py-8">
-					<p className="text-muted-foreground text-center">
+					<p className="text-center text-muted-foreground">
 						The database admin panel is not available with the PostgreSQL dialect. It is
 						only supported when using SQLite.
 					</p>

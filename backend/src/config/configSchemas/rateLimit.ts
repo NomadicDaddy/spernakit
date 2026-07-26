@@ -1,4 +1,4 @@
-import { Type, enumString } from '../configSchemaHelpers';
+import { enumString, Type } from '../configSchemaHelpers';
 
 export const rateLimitSchema = Type.Object({
 	authEnabled: Type.Boolean({ default: true }),

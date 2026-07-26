@@ -1,4 +1,4 @@
-import { and, lt, type SQL, sql } from 'drizzle-orm';
+import { and, lt, sql, type SQL } from 'drizzle-orm';
 
 import { MAX_CLEANUP_BATCH_SIZE, MS_PER_DAY } from '../../constants/scheduler.ts';
 import { getDb } from '../../db/index.ts';

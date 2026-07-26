@@ -24,5 +24,5 @@ export const pkceVerifiers = pgTable(
 	(table) => [
 		uniqueIndex('idx_pkce_verifiers_state').on(table.state),
 		index('idx_pkce_verifiers_expires_at').on(table.expiresAt),
-	]
+	],
 );

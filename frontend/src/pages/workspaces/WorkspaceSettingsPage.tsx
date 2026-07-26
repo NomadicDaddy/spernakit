@@ -150,7 +150,7 @@ function WorkspaceSettingsPage() {
 		return (
 			<div className="space-y-6 p-6">
 				<PageHeader title="Workspace Settings" />
-				<div className="text-muted-foreground py-8 text-center">
+				<div className="py-8 text-center text-muted-foreground">
 					{workspaceId ? 'Workspace not found.' : 'Invalid workspace ID.'}
 				</div>
 			</div>
@@ -161,7 +161,7 @@ function WorkspaceSettingsPage() {
 		return (
 			<div className="space-y-6 p-6">
 				<PageHeader title="Workspace Settings" />
-				<div className="text-muted-foreground py-8 text-center">
+				<div className="py-8 text-center text-muted-foreground">
 					You do not have permission to manage this workspace&apos;s settings.
 				</div>
 			</div>
@@ -188,7 +188,7 @@ function WorkspaceSettingsPage() {
 				</Button>
 			</PageHeader>
 
-			<div className="text-muted-foreground mb-4 text-sm">
+			<div className="mb-4 text-sm text-muted-foreground">
 				Configure workspace-specific options. Changes are saved per tab.
 			</div>
 
@@ -239,8 +239,8 @@ function WorkspaceSettingsPage() {
 				</TabsContent>
 			</Tabs>
 
-			<div className="text-muted-foreground text-sm">
-				<Link className="hover:text-foreground underline" to="/workspaces">
+			<div className="text-sm text-muted-foreground">
+				<Link className="underline hover:text-foreground" to="/workspaces">
 					← Back to all workspaces
 				</Link>
 			</div>

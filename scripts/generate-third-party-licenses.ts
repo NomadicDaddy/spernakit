@@ -14,11 +14,11 @@ import { cwd, exit } from 'node:process';
 import { collectRuntimeClosure, summarizeClosure } from './lib/third-party-licenses/closure.ts';
 import { collectDirectDependencies, workspaceNames } from './lib/third-party-licenses/collect.ts';
 import {
+	type GeneratedDocuments,
 	GROUPS,
 	intro,
 	NOTICES_INTRO,
 	scopeSections,
-	type GeneratedDocuments,
 } from './lib/third-party-licenses/documents.ts';
 import { renderNotices } from './lib/third-party-licenses/notices-doc.ts';
 import { FLAGGED_ANALYSIS } from './lib/third-party-licenses/notices.ts';
@@ -70,7 +70,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 	const { closure, unresolved: unresolvedClosure } = await collectRuntimeClosure(
 		root,
 		WORKSPACES,
-		await workspaceNames(root, WORKSPACES)
+		await workspaceNames(root, WORKSPACES),
 	);
 
 	// A package we ship but cannot locate is a package whose license we never read. That is a
@@ -92,7 +92,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 			console.error(`  - ${license} (${[...new Set(users)].join(', ')})`);
 		}
 		console.error(
-			'Add it to scripts/lib/third-party-licenses/notices.ts after reviewing its terms.'
+			'Add it to scripts/lib/third-party-licenses/notices.ts after reviewing its terms.',
 		);
 		exit(1);
 	}
@@ -144,7 +144,7 @@ async function assertImageCarriesNotices(root: string): Promise<void> {
 
 	const required = ['LICENSE', 'THIRD_PARTY_LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'licenses/'];
 	const missing = required.filter(
-		(asset) => !new RegExp(`^COPY .*${asset}`, 'm').test(dockerfile)
+		(asset) => !new RegExp(`^COPY .*${asset}`, 'm').test(dockerfile),
 	);
 
 	if (missing.length > 0) {

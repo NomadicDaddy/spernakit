@@ -4,9 +4,9 @@ import { OAUTH_PROVIDER_LABELS } from 'spernakit-shared';
 
 import {
 	listOAuthProviderSettings,
+	type OAuthProviderSettings,
 	testOAuthProviderConnection,
 	updateOAuthProviderSetting,
-	type OAuthProviderSettings,
 } from '@/api/oauthProviderSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -176,7 +176,7 @@ function OAuthProvidersSection() {
 		return (
 			<div className="space-y-4">
 				<h2 className="text-lg font-semibold">OAuth / SSO Providers</h2>
-				<div className="text-muted-foreground text-sm">Loading…</div>
+				<div className="text-sm text-muted-foreground">Loading…</div>
 			</div>
 		);
 	}
@@ -186,7 +186,7 @@ function OAuthProvidersSection() {
 	return (
 		<div className="space-y-4">
 			<h2 className="text-lg font-semibold">OAuth / SSO Providers</h2>
-			<p className="text-muted-foreground text-sm">
+			<p className="text-sm text-muted-foreground">
 				Configure OAuth providers for single sign-on. Changes take effect immediately.
 			</p>
 			<div className="space-y-3">

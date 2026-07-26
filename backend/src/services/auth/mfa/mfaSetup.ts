@@ -11,9 +11,9 @@ import { decrypt, encrypt } from '../../../utils/encryption.ts';
 import { MfaAlreadyEnabledError, NotFoundError } from '../../../utils/errorResponse.ts';
 import { logAuth } from '../../../utils/logger.ts';
 import {
-	RECOVERY_CODE_COUNT,
 	formatRecoveryCode,
 	generateRecoveryCode,
+	RECOVERY_CODE_COUNT,
 	validateTotpCode,
 } from '../mfaHelpers.ts';
 

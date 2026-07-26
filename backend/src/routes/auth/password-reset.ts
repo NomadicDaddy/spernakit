@@ -38,10 +38,10 @@ import { getClientIp } from '../../utils/clientIp.ts';
 import { sendEmailWithRetry } from '../../utils/emailRetry.ts';
 import {
 	AUTH_ERROR_CODES,
+	badRequestError,
 	RATE_ERROR_CODES,
 	rateLimitError,
 	VALIDATION_ERROR_CODES,
-	badRequestError,
 } from '../../utils/errorResponse.ts';
 import { logger } from '../../utils/logger.ts';
 
@@ -65,14 +65,14 @@ async function handleForgotPassword({ body, request, set }: ForgotPasswordContex
 			resetStore,
 			`pwd-reset-ip:${ip}`,
 			PASSWORD_RESET_IP_MAX_REQUESTS,
-			PASSWORD_RESET_IP_WINDOW_MS
+			PASSWORD_RESET_IP_WINDOW_MS,
 		);
 		if (ipResult.limited) {
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
 			set.headers['Retry-After'] = String(ipResult.retryAfter ?? 0);
 			return rateLimitError(
 				ipResult.retryAfter ?? 0,
-				RATE_ERROR_CODES.RATE_PASSWORD_RESET_LIMIT_EXCEEDED
+				RATE_ERROR_CODES.RATE_PASSWORD_RESET_LIMIT_EXCEEDED,
 			);
 		}
 
@@ -81,7 +81,7 @@ async function handleForgotPassword({ body, request, set }: ForgotPasswordContex
 			resetStore,
 			`pwd-reset-email:${normalizedEmail}`,
 			PASSWORD_RESET_EMAIL_MAX_REQUESTS,
-			PASSWORD_RESET_EMAIL_WINDOW_MS
+			PASSWORD_RESET_EMAIL_WINDOW_MS,
 		);
 		if (emailResult.limited) {
 			// Silently skip to prevent email enumeration — still return success.
@@ -97,7 +97,7 @@ async function handleForgotPassword({ body, request, set }: ForgotPasswordContex
 		// Fire-and-forget — return success immediately to prevent email enumeration timing leaks.
 		// Do not include email or token in the log context to preserve email-enumeration safety.
 		void sendEmailWithRetry('password-reset', () =>
-			sendPasswordResetEmail(body.email, result.token)
+			sendPasswordResetEmail(body.email, result.token),
 		).catch((err) => {
 			logger.error({ err }, 'Failed to send password reset email');
 		});
@@ -126,14 +126,14 @@ async function handleResetPassword({ body, request, set }: ResetPasswordContext)
 			resetStore,
 			`pwd-confirm-ip:${ip}`,
 			PASSWORD_RESET_CONFIRM_IP_MAX_REQUESTS,
-			PASSWORD_RESET_CONFIRM_IP_WINDOW_MS
+			PASSWORD_RESET_CONFIRM_IP_WINDOW_MS,
 		);
 		if (ipResult.limited) {
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
 			set.headers['Retry-After'] = String(ipResult.retryAfter ?? 0);
 			return rateLimitError(
 				ipResult.retryAfter ?? 0,
-				RATE_ERROR_CODES.RATE_PASSWORD_RESET_LIMIT_EXCEEDED
+				RATE_ERROR_CODES.RATE_PASSWORD_RESET_LIMIT_EXCEEDED,
 			);
 		}
 	}
@@ -154,18 +154,18 @@ async function handleResetPassword({ body, request, set }: ResetPasswordContext)
 		if (result.reason === SERVICE_ERRORS.PASSWORD_HISTORY) {
 			return badRequestError(
 				'This password was used recently. Please choose a different password.',
-				VALIDATION_ERROR_CODES.VALIDATION_WEAK_PASSWORD
+				VALIDATION_ERROR_CODES.VALIDATION_WEAK_PASSWORD,
 			);
 		}
 		if (result.reason === SERVICE_ERRORS.PASSWORD_AGE) {
 			return badRequestError(
 				'Password was changed too recently. Please wait before changing it again.',
-				VALIDATION_ERROR_CODES.VALIDATION_WEAK_PASSWORD
+				VALIDATION_ERROR_CODES.VALIDATION_WEAK_PASSWORD,
 			);
 		}
 		return badRequestError(
 			'Invalid or expired reset token',
-			AUTH_ERROR_CODES.AUTH_RESET_TOKEN_INVALID
+			AUTH_ERROR_CODES.AUTH_RESET_TOKEN_INVALID,
 		);
 	}
 
@@ -223,7 +223,7 @@ const authPasswordResetRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix:
 				},
 				'400': badRequestExample(
 					'Invalid or expired reset token',
-					'AUTH_RESET_TOKEN_INVALID'
+					'AUTH_RESET_TOKEN_INVALID',
 				),
 				'429': RATE_LIMITED_EXAMPLE,
 			},

@@ -5,22 +5,16 @@ import type { UserRole } from '../../types/roles.ts';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { workspaces } from '../../db/schema/workspaces.ts';
-import { UniqueConstraintError, isRawUniqueViolation } from '../../utils/errorResponse.ts';
+import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorResponse.ts';
 import { hashPassword } from '../authService.ts';
-import {
-	getAllUsersSecurityInfo,
-	getTotalUserCount,
-	getUserAuthStatus,
-	getUserRefreshInfo,
-} from './userAuthQueries.ts';
 import { bulkDeleteUsers, bulkUpdateUserRoles } from './userBatchService.ts';
 import {
-	type UpdateInput,
-	type UserPublic,
 	buildUpdateUserPayload,
 	enforceUserUniqueness,
 	getExistingUserForUpdate,
 	getUserCache,
+	type UpdateInput,
+	type UserPublic,
 } from './userCrudHelpers.ts';
 import { getUserById, listUsers, userPublicFields } from './userQueries.ts';
 
@@ -149,7 +143,7 @@ function softDeleteUser(id: number, deletedBy: number): boolean {
 	if (ownedCount > 0) {
 		throw new Error(
 			`Cannot delete user: user owns ${ownedCount} active workspace(s). ` +
-				'Transfer workspace ownership before deleting this account.'
+				'Transfer workspace ownership before deleting this account.',
 		);
 	}
 
@@ -174,11 +168,7 @@ export {
 	bulkDeleteUsers,
 	bulkUpdateUserRoles,
 	createUser,
-	getAllUsersSecurityInfo,
-	getTotalUserCount,
-	getUserAuthStatus,
 	getUserById,
-	getUserRefreshInfo,
 	listUsers,
 	softDeleteUser,
 	updateUser,

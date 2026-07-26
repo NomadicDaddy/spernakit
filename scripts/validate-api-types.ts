@@ -52,19 +52,19 @@ async function main(): Promise<void> {
 				{
 					name: 'NotificationType',
 					values: extractTypeBoxEnumValues(
-						NotificationTypeSchema as unknown as TypeBoxUnionSchema
+						NotificationTypeSchema as unknown as TypeBoxUnionSchema,
 					),
 				},
 				{
 					name: 'ApiKeyScope',
 					values: extractTypeBoxEnumValues(
-						ApiKeyScopeSchema as unknown as TypeBoxUnionSchema
+						ApiKeyScopeSchema as unknown as TypeBoxUnionSchema,
 					),
 				},
 				{
 					name: 'UserRole',
 					values: extractTypeBoxEnumValues(
-						UserRoleSchema as unknown as TypeBoxUnionSchema
+						UserRoleSchema as unknown as TypeBoxUnionSchema,
 					),
 				},
 			];
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
 				if (!specEnums.has(key)) {
 					result.warnings.push(
 						`${known.name} enum not found in OpenAPI spec request schemas ` +
-							`(may only appear in response examples)`
+							`(may only appear in response examples)`,
 					);
 				}
 			}
@@ -103,11 +103,11 @@ async function main(): Promise<void> {
 				JSON.stringify({
 					error: err instanceof Error ? err.message : String(err),
 					status: 'fail',
-				})
+				}),
 			);
 		} else {
 			console.error(
-				`API type validation error: ${err instanceof Error ? err.message : String(err)}`
+				`API type validation error: ${err instanceof Error ? err.message : String(err)}`,
 			);
 		}
 		process.exit(1);

@@ -51,7 +51,7 @@ function verifyWithKey(
 	token: string,
 	publicKey: string,
 	audience: string,
-	issuer: string
+	issuer: string,
 ): AuthPayload | null {
 	try {
 		return jwt.verify(token, publicKey, {
@@ -106,7 +106,7 @@ function verifyRefreshToken(token: string): AuthPayload | null {
 			token,
 			config.security.jwtRefreshPublicKeyPrevious,
 			audience,
-			issuer
+			issuer,
 		);
 	}
 

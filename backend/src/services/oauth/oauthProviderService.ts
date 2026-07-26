@@ -133,7 +133,7 @@ function getOAuthStateSecret(): string {
 		config.security.cookieSecret,
 		'',
 		'spernakit-oauth-state',
-		32
+		32,
 	);
 	return Buffer.from(derived).toString('hex');
 }
@@ -188,7 +188,7 @@ async function getProviderConfig(provider: OAuthProvider): Promise<null | OAuthP
  */
 async function getAuthorizationUrl(
 	provider: OAuthProvider,
-	state?: string
+	state?: string,
 ): Promise<null | OAuthAuthorizationUrlResult> {
 	const providerConfig = await getProviderConfig(provider);
 	if (!providerConfig) return null;
@@ -248,10 +248,9 @@ export {
 	generateOAuthBindingHash,
 	generateOAuthState,
 	getAuthorizationUrl,
-	getOAuthStateSecret,
 	getEnabledProviders,
+	getOAuthStateSecret,
 	getProviderConfig,
 	retrieveAndConsumePKCECodeVerifier,
 	validateOAuthState,
 };
-export type { OAuthProvider };

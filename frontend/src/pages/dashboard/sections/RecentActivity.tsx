@@ -53,24 +53,24 @@ function RecentActivity({
 					<CardDescription>Latest audit events in this workspace</CardDescription>
 				</div>
 				<Link
-					className="text-primary text-sm font-medium hover:underline"
+					className="text-sm font-medium text-primary hover:underline"
 					to="/settings/audit-logs">
 					View all
 				</Link>
 			</CardHeader>
 			<CardContent className="flex-1">
 				{isLoading ? (
-					<p className="text-muted-foreground py-6 text-center text-sm">Loading…</p>
+					<p className="py-6 text-center text-sm text-muted-foreground">Loading…</p>
 				) : entries.length === 0 ? (
-					<div className="text-muted-foreground flex flex-col items-center gap-2 py-8 text-center text-sm">
+					<div className="flex flex-col items-center gap-2 py-8 text-center text-sm text-muted-foreground">
 						<ScrollText aria-hidden="true" className="size-6 opacity-60" />
 						No recent activity to show.
 					</div>
 				) : (
-					<ul className="divide-border/60 -my-2 divide-y">
+					<ul className="-my-2 divide-y divide-border/60">
 						{entries.map((entry) => (
 							<li className="flex items-center gap-3 py-2.5" key={entry.id}>
-								<span className="bg-muted text-muted-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+								<span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
 									{initials(entry.username)}
 								</span>
 								<div className="min-w-0 flex-1">
@@ -90,7 +90,7 @@ function RecentActivity({
 											</>
 										)}
 									</p>
-									<p className="text-muted-foreground truncate text-xs">
+									<p className="truncate text-xs text-muted-foreground">
 										{formatTimestamp(entry.createdAt)}
 										{entry.ipAddress ? ` · ${entry.ipAddress}` : ''}
 									</p>

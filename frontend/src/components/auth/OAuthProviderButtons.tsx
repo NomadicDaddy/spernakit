@@ -40,7 +40,7 @@ function OAuthProviderButtons({ providers }: { providers: OAuthProvider[] }) {
 		<>
 			<div className="relative my-4">
 				<Separator />
-				<span className="bg-card text-muted-foreground absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-xs">
+				<span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
 					or continue with
 				</span>
 			</div>
@@ -61,4 +61,4 @@ function OAuthProviderButtons({ providers }: { providers: OAuthProvider[] }) {
 	);
 }
 
-export { OAuthProviderButtons, type OAuthProvider };
+export { type OAuthProvider, OAuthProviderButtons };

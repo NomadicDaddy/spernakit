@@ -35,7 +35,7 @@ async function handleRotateBackupKey({
 				'and the new key as backupEncryptionKey in config, then restart the app ' +
 				'before calling this endpoint. See docs/template/DEVELOPMENT.md ' +
 				'(Operations - Key Rotation) for the full procedure.',
-			VALIDATION_ERROR_CODES.VALIDATION_FAILED
+			VALIDATION_ERROR_CODES.VALIDATION_FAILED,
 		);
 	}
 
@@ -93,7 +93,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 				},
 				summary: 'Get auth security settings (ADMIN+)',
 			},
-		}
+		},
 	)
 	.put(
 		'/auth-security',
@@ -154,7 +154,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 				},
 				summary: 'Update auth security settings (SYSOP only)',
 			},
-		}
+		},
 	)
 	.post('/auth-security/rotate-backup-key', handleRotateBackupKey, {
 		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),

@@ -91,15 +91,15 @@ function checkConfigConsistency(): {
 
 	const authCookieName = assertDefined(
 		'config: security.authCookieName',
-		config.security?.authCookieName
+		config.security?.authCookieName,
 	);
 	const csrfCookieName = assertDefined(
 		'config: security.csrfCookieName',
-		config.security?.csrfCookieName
+		config.security?.csrfCookieName,
 	);
 	const refreshCookieName = assertDefined(
 		'config: security.refreshCookieName',
-		config.security?.refreshCookieName
+		config.security?.refreshCookieName,
 	);
 	assertEqual('config.security.authCookieName', authCookieName, `${slug}_auth`);
 	assertEqual('config.security.csrfCookieName', csrfCookieName, `${slug}_csrf`);
@@ -135,7 +135,7 @@ function checkPackageJsonFiles(slug: string): void {
 			assertEqual(
 				'backend/package.json name',
 				readString(backendPkg, 'name'),
-				`${slug}-backend`
+				`${slug}-backend`,
 			);
 			assertEqual('backend/package.json type', readString(backendPkg, 'type'), 'module');
 		}
@@ -148,7 +148,7 @@ function checkPackageJsonFiles(slug: string): void {
 			assertEqual(
 				'frontend/package.json name',
 				readString(frontendPkg, 'name'),
-				`${slug}-frontend`
+				`${slug}-frontend`,
 			);
 			assertEqual('frontend/package.json type', readString(frontendPkg, 'type'), 'module');
 		}
@@ -169,7 +169,7 @@ async function checkDatabaseLocation(slug: string): Promise<void> {
 			console.error(`     ${file}`);
 		}
 		throw new Error(
-			`Database files should only exist at data/${slug}.db. Found unauthorized files.`
+			`Database files should only exist at data/${slug}.db. Found unauthorized files.`,
 		);
 	}
 
@@ -186,7 +186,7 @@ async function checkRogueFolders(): Promise<void> {
 			console.error(`     ${folder}`);
 		}
 		throw new Error(
-			`data/ and backup/ folders are restricted to root only. Found rogue folders at: ${rogueFolders.join(', ')}`
+			`data/ and backup/ folders are restricted to root only. Found rogue folders at: ${rogueFolders.join(', ')}`,
 		);
 	}
 

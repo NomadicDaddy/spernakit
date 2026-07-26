@@ -48,7 +48,7 @@ async function runAutoSeed(config: AppConfig): Promise<void> {
 		logger.info(`Auto-seed complete: ${createdUsers.length} users created`);
 		if (isProduction) {
 			logger.warn(
-				'IMPORTANT: Save these production credentials now - they cannot be retrieved later.'
+				'IMPORTANT: Save these production credentials now - they cannot be retrieved later.',
 			);
 		}
 	}

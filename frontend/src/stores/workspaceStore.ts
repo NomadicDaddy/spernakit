@@ -30,8 +30,8 @@ const useWorkspaceStore = create<WorkspaceState>()(
 			name: STORAGE_KEYS.workspace,
 			storage: debouncedLocalStorage<WorkspaceState>(),
 			version: 1,
-		}
-	)
+		},
+	),
 );
 
 export { useWorkspaceStore };

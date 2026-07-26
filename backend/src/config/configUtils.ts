@@ -30,7 +30,7 @@ function deepMerge<T extends Record<string, unknown>>(target: T, source: Partial
 		if (isPlainObject(sourceValue) && isPlainObject(targetValue)) {
 			result[key] = deepMerge(
 				targetValue as Record<string, unknown>,
-				sourceValue as Partial<Record<string, unknown>>
+				sourceValue as Partial<Record<string, unknown>>,
 			) as T[keyof T];
 		} else if (sourceValue !== undefined) {
 			result[key] = sourceValue as T[keyof T];
@@ -92,7 +92,7 @@ function loadDefaults(): Record<string, unknown> {
 	} catch (err) {
 		throw new Error(
 			`Failed to parse defaults.json at ${defaultsPath}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err }
+			{ cause: err },
 		);
 	}
 }

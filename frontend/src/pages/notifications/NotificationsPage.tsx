@@ -12,7 +12,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
 import { Button } from '@/components/ui/button';
 import { useNotificationColumns } from '@/hooks/notifications/useNotificationColumns';
-import { useNotifications, type ReadFilter } from '@/hooks/notifications/useNotifications';
+import { type ReadFilter, useNotifications } from '@/hooks/notifications/useNotifications';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -103,7 +103,7 @@ function NotificationDeleteDialogs({
 								onClearSelectedRows();
 								onShowBulkDeleteChange(false);
 							},
-						}
+						},
 					);
 				}}
 				onOpenChange={onShowBulkDeleteChange}

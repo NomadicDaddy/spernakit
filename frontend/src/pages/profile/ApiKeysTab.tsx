@@ -45,7 +45,7 @@ function ApiKeysTab() {
 				</CardHeader>
 				<CardContent>
 					{keys.length === 0 ? (
-						<div className="text-muted-foreground flex flex-col items-center gap-2 py-8 text-center">
+						<div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
 							<Key aria-hidden="true" className="h-8 w-8" />
 							<p>No API keys yet</p>
 							<p className="text-sm">

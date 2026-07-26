@@ -1,9 +1,9 @@
-import { Type, enumString } from '../../config/configSchemaHelpers.ts';
+import { enumString, Type } from '../../config/configSchemaHelpers.ts';
 import {
 	ALERT_THRESHOLDS,
+	HEALTH_CHECK_LOG_RETENTION_DAYS as DEFAULT_LOG_RETENTION_DAYS,
 	DISK_SPACE_DEGRADED_THRESHOLD,
 	DISK_SPACE_UNHEALTHY_THRESHOLD,
-	HEALTH_CHECK_LOG_RETENTION_DAYS as DEFAULT_LOG_RETENTION_DAYS,
 	MEMORY_HEAP_DEGRADED_THRESHOLD,
 	MEMORY_HEAP_UNHEALTHY_THRESHOLD,
 } from '../../constants/health.ts';
@@ -88,7 +88,7 @@ function ensureHealthConfigSeeded(): void {
 	seedDefault(
 		HEALTH_CONFIG_KEY,
 		DEFAULT_CONFIG,
-		'Health check configuration thresholds and settings'
+		'Health check configuration thresholds and settings',
 	);
 }
 
@@ -99,7 +99,7 @@ function parseConfig(value: null | string): HealthCheckConfig {
 		value,
 		HealthCheckConfigSchema,
 		DEFAULT_CONFIG,
-		'health check config'
+		'health check config',
 	);
 
 	return {
@@ -179,7 +179,7 @@ function validateThresholdCrossing(config: HealthCheckConfig): null | string {
  */
 function updateHealthConfig(
 	updates: Partial<HealthCheckConfig>,
-	updatedBy: number
+	updatedBy: number,
 ): HealthCheckConfig {
 	const current = getHealthConfig();
 	const newConfig = {

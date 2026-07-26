@@ -26,12 +26,12 @@ import { badRequestError, forbiddenError, notFoundError } from '../../utils/erro
 /** Check safe mode and table name validity. Returns an error response or null if valid. */
 function guardMutationRequest(
 	tableName: string,
-	set: { status?: number | string }
+	set: { status?: number | string },
 ): null | ReturnType<typeof forbiddenError> {
 	if (getSafeMode()) {
 		set.status = HTTP_STATUS.FORBIDDEN;
 		return forbiddenError(
-			'Safe mode is enabled. Disable safe mode before performing mutations.'
+			'Safe mode is enabled. Disable safe mode before performing mutations.',
 		);
 	}
 

@@ -21,7 +21,7 @@ interface PasswordValidationOptions {
  */
 function validatePasswordStrength(
 	password: string,
-	options?: PasswordValidationOptions
+	options?: PasswordValidationOptions,
 ): null | string {
 	if (password.length < PASSWORD_MIN_LENGTH) {
 		return `Password must be at least ${PASSWORD_MIN_LENGTH} characters`;

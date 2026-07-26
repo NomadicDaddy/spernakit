@@ -12,7 +12,7 @@ function ssrfIssue(message: string): ValidationIssue[] {
 function checkTrustProxy(
 	nodeEnv: string,
 	trustProxy: boolean,
-	trustedProxies: string[]
+	trustedProxies: string[],
 ): ValidationIssue[] {
 	if (!trustProxy || trustedProxies.length > 0) return [];
 	return [
@@ -30,7 +30,7 @@ function checkPostgresSsl(
 	dialect: 'postgres' | 'sqlite',
 	sslEnabled: boolean,
 	rejectUnauthorized: boolean,
-	databaseUrl: string
+	databaseUrl: string,
 ): ValidationIssue[] {
 	if (dialect !== 'postgres' || isDevOrTest) return [];
 	const issues: ValidationIssue[] = [];
@@ -59,7 +59,7 @@ function checkPostgresSsl(
 function checkEmptyAllowedOrigins(
 	isDevOrTest: boolean,
 	trustProxy: boolean,
-	allowedOrigins: string[]
+	allowedOrigins: string[],
 ): ValidationIssue[] {
 	if (!trustProxy || allowedOrigins.length > 0 || isDevOrTest) return [];
 	return [
@@ -87,7 +87,7 @@ function checkAllowNoOrigin(isDevOrTest: boolean, allowNoOrigin: boolean): Valid
 
 function checkFrontendDevOrigins(
 	isDevOrTest: boolean,
-	frontendDevOrigins: string[]
+	frontendDevOrigins: string[],
 ): ValidationIssue[] {
 	if (frontendDevOrigins.length === 0 || isDevOrTest) return [];
 	return [
@@ -111,7 +111,7 @@ function checkWebhookUrlSsrf(webhookUrl: string): ValidationIssue[] {
 
 	if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
 		return ssrfIssue(
-			`scheme '${parsed.protocol}' not allowed - only http: and https: are permitted`
+			`scheme '${parsed.protocol}' not allowed - only http: and https: are permitted`,
 		);
 	}
 

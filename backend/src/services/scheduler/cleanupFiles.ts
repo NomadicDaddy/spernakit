@@ -127,7 +127,7 @@ async function cleanupOrphanedUploads(db: ReturnType<typeof getDb>): Promise<num
 			})
 			.from(fileUploads)
 			.where(
-				or(inArray(fileUploads.storagePath, keys), inArray(fileUploads.thumbnailKey, keys))
+				or(inArray(fileUploads.storagePath, keys), inArray(fileUploads.thumbnailKey, keys)),
 			)
 			.all();
 
@@ -159,7 +159,7 @@ async function cleanupOrphanedUploads(db: ReturnType<typeof getDb>): Promise<num
 
 async function safeStorageDelete(
 	storage: ReturnType<typeof getStorageAdapter>,
-	key: string
+	key: string,
 ): Promise<boolean> {
 	try {
 		await storage.delete(key);

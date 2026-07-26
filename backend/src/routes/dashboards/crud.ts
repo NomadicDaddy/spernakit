@@ -98,7 +98,7 @@ const dashboardCrudRoutes = new Elysia({
 		{
 			beforeHandle: requireAuth,
 			detail: listDashboardsDocs,
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  GET /dashboards/:id — get dashboard with widgets                   */
@@ -121,7 +121,7 @@ const dashboardCrudRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  POST /dashboards — create dashboard                                */
@@ -160,7 +160,7 @@ const dashboardCrudRoutes = new Elysia({
 				widgets: t.Optional(t.Array(widgetSchema)),
 			}),
 			detail: createDashboardDocs,
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  PUT /dashboards/:id — update dashboard                             */
@@ -177,7 +177,7 @@ const dashboardCrudRoutes = new Elysia({
 					name: body.name,
 					...(body.widgets ? { widgets: toWidgetInputs(body.widgets) } : {}),
 				},
-				scope
+				scope,
 			);
 			if (!dashboard) {
 				set.status = HTTP_STATUS.NOT_FOUND;
@@ -198,7 +198,7 @@ const dashboardCrudRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  DELETE /dashboards/:id — delete dashboard                          */
@@ -223,7 +223,7 @@ const dashboardCrudRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
-		}
+		},
 	);
 
 export { dashboardCrudRoutes };

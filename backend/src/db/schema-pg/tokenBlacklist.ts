@@ -35,5 +35,5 @@ export const tokenBlacklist = pgTable(
 		}).onDelete('cascade'),
 		index('idx_token_blacklist_expires_at').on(table.expiresAt),
 		index('idx_token_blacklist_user_id').on(table.userId),
-	]
+	],
 );

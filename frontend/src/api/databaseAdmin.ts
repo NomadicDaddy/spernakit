@@ -80,23 +80,23 @@ function getRelationships(): Promise<DataResponse<Relationship[]>> {
 /** Fetch paginated data from a table. */
 function getTableData(
 	tableName: string,
-	params?: { includeDeleted?: string; limit?: string; page?: string }
+	params?: { includeDeleted?: string; limit?: string; page?: string },
 ): Promise<PaginatedResponse<Record<string, unknown>>> {
 	const filtered = buildQueryParams(params);
 	return apiClient.get<PaginatedResponse<Record<string, unknown>>>(
 		`/database-admin/data/${tableName}`,
-		{ ...(filtered ? { params: filtered } : {}) }
+		{ ...(filtered ? { params: filtered } : {}) },
 	);
 }
 
 /** Insert a new row into a table. */
 function insertRow(
 	tableName: string,
-	values: Record<string, unknown>
+	values: Record<string, unknown>,
 ): Promise<DataResponse<Record<string, unknown>>> {
 	return apiClient.post<DataResponse<Record<string, unknown>>>(
 		`/database-admin/data/${tableName}`,
-		{ body: values }
+		{ body: values },
 	);
 }
 
@@ -104,11 +104,11 @@ function insertRow(
 function updateRow(
 	tableName: string,
 	rowId: number,
-	values: Record<string, unknown>
+	values: Record<string, unknown>,
 ): Promise<DataResponse<Record<string, unknown>>> {
 	return apiClient.put<DataResponse<Record<string, unknown>>>(
 		`/database-admin/data/${tableName}/${rowId}`,
-		{ body: values }
+		{ body: values },
 	);
 }
 

@@ -2,9 +2,9 @@ import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import {
+	badRequestExample,
 	RATE_LIMITED_EXAMPLE,
 	SUCCESS_EXAMPLE,
-	badRequestExample,
 } from '../../constants/responseExamples.ts';
 import {
 	checkRouteLimit,
@@ -16,8 +16,8 @@ import { successResponse } from '../../utils/apiResponse.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import {
 	AUTH_ERROR_CODES,
-	RATE_ERROR_CODES,
 	badRequestError,
+	RATE_ERROR_CODES,
 	rateLimitError,
 } from '../../utils/errorResponse.ts';
 
@@ -41,7 +41,7 @@ function handleVerifyEmail({
 			verifyStore,
 			`verify-email-ip:${ip}`,
 			VERIFY_IP_MAX_REQUESTS,
-			VERIFY_IP_WINDOW_MS
+			VERIFY_IP_WINDOW_MS,
 		);
 		if (ipResult.limited) {
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
@@ -56,7 +56,7 @@ function handleVerifyEmail({
 		set.status = HTTP_STATUS.BAD_REQUEST;
 		return badRequestError(
 			'Invalid or expired verification token',
-			AUTH_ERROR_CODES.AUTH_VERIFICATION_TOKEN_INVALID
+			AUTH_ERROR_CODES.AUTH_VERIFICATION_TOKEN_INVALID,
 		);
 	}
 
@@ -87,13 +87,13 @@ const authVerifyEmailRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '
 				},
 				'400': badRequestExample(
 					'Invalid or expired verification token',
-					'AUTH_VERIFICATION_TOKEN_INVALID'
+					'AUTH_VERIFICATION_TOKEN_INVALID',
 				),
 				'429': RATE_LIMITED_EXAMPLE,
 			},
 			summary: 'Verify email address with token',
 		},
-	}
+	},
 );
 
 export { authVerifyEmailRoutes };

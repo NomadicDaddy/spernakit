@@ -44,7 +44,7 @@ export function executeRollback(
 	db: Database,
 	rollbacksDir: string,
 	tag: string,
-	force: boolean
+	force: boolean,
 ): void {
 	const rollbackSql = readRollbackSql(rollbacksDir, tag);
 	if (!rollbackSql) {
@@ -126,7 +126,7 @@ export function showRollbackStatus(paths: Paths): void {
 			if (isApplied) {
 				const rollbackStatus = hasRollback ? '✓' : '✗';
 				console.log(
-					`  ${rollbackStatus} ${entry.tag} ${hasRollback ? '(rollback available)' : '(no rollback file)'}`
+					`  ${rollbackStatus} ${entry.tag} ${hasRollback ? '(rollback available)' : '(no rollback file)'}`,
 				);
 			}
 		}

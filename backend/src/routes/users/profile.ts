@@ -35,11 +35,11 @@ import { setCacheHeaders } from '../../utils/caching.ts';
 import { sendEmailWithRetry } from '../../utils/emailRetry.ts';
 import {
 	AUTH_ERROR_CODES,
-	VALIDATION_ERROR_CODES,
 	badRequestError,
 	conflictError,
 	isUniqueConstraintError,
 	notFoundError,
+	VALIDATION_ERROR_CODES,
 } from '../../utils/errorResponse.ts';
 import { logger } from '../../utils/logger.ts';
 import {
@@ -105,7 +105,7 @@ async function handleChangePassword({ body, request, set, user }: ChangePassword
 	// Revoke all tokens for this user (invalidates other sessions/devices)
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,
-		DEFAULT_REFRESH_TTL_MS
+		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(authUser.id, new Date(Date.now() + refreshTtlMs));
 
@@ -133,7 +133,7 @@ async function handleEmailChangeRequest({ body, set, user }: EmailChangeContext)
 			set.status = HTTP_STATUS.UNAUTHORIZED;
 			return badRequestError(
 				'Current password is incorrect',
-				AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS
+				AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS,
 			);
 		}
 		if (result.reason === SERVICE_ERRORS.EMAIL_TAKEN) {
@@ -145,10 +145,10 @@ async function handleEmailChangeRequest({ body, set, user }: EmailChangeContext)
 	}
 
 	void sendEmailWithRetry('email-change-confirm', () =>
-		sendEmailChangeConfirmation(result.newEmail, result.token)
+		sendEmailChangeConfirmation(result.newEmail, result.token),
 	).catch((err) => logger.error({ err }, 'email-change-confirm dispatch failed'));
 	void sendEmailWithRetry('email-change-notify', () =>
-		sendEmailChangeNotification(result.oldEmail, result.newEmail)
+		sendEmailChangeNotification(result.oldEmail, result.newEmail),
 	).catch((err) => logger.error({ err }, 'email-change-notify dispatch failed'));
 
 	return dataResponse({ pending: true });
@@ -194,11 +194,11 @@ const usersProfileRoutes = new Elysia({
 						maxLength: USERNAME_MAX_LENGTH,
 						minLength: USERNAME_MIN_LENGTH,
 						pattern: USERNAME_PATTERN,
-					})
+					}),
 				),
 			}),
 			detail: updateProfileDocs,
-		}
+		},
 	)
 	.post('/me/email-change', handleEmailChangeRequest, {
 		beforeHandle: requireAuth,
@@ -237,7 +237,7 @@ const usersProfileRoutes = new Elysia({
 					pattern: USERNAME_PATTERN,
 				}),
 			}),
-		}
+		},
 	);
 
 export { usersProfileRoutes };

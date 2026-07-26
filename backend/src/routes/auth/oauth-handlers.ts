@@ -44,7 +44,7 @@ async function processOAuthCallbackResult(
 	code: string,
 	state: string,
 	request: Request,
-	set: { headers: Record<string, number | string>; redirect?: string; status?: number | string }
+	set: { headers: Record<string, number | string>; redirect?: string; status?: number | string },
 ): Promise<ErrorResponse | undefined> {
 	const result = await handleCallback(provider, code, state);
 
@@ -62,12 +62,12 @@ async function processOAuthCallbackResult(
 		if (mfaToken === null) {
 			logger.error(
 				{ provider, userId: result.user.id },
-				'OAuth MFA login blocked because challenge signing is unavailable'
+				'OAuth MFA login blocked because challenge signing is unavailable',
 			);
 			set.status = HTTP_STATUS.SERVICE_UNAVAILABLE;
 			return serviceUnavailableError(
 				'MFA is not configured on this server. Contact an administrator.',
-				AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED
+				AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED,
 			);
 		}
 
@@ -91,7 +91,7 @@ async function processOAuthCallbackResult(
 	(set.headers as Record<string, string | string[]>)['set-cookie'] = buildOAuthLoginCookies(
 		tokens,
 		csrfToken,
-		request
+		request,
 	);
 
 	// Redirect to password change if required
@@ -122,7 +122,7 @@ async function handleOAuthCallback({
 			set.headers['Retry-After'] = String(ipResult.retryAfter ?? 0);
 			return rateLimitError(
 				ipResult.retryAfter ?? 0,
-				RATE_ERROR_CODES.RATE_OAUTH_CALLBACK_LIMIT_EXCEEDED
+				RATE_ERROR_CODES.RATE_OAUTH_CALLBACK_LIMIT_EXCEEDED,
 			);
 		}
 	}

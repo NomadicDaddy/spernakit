@@ -47,8 +47,8 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 							t.Null(),
 							t.Array(t.Union([t.String(), t.Number(), t.Boolean(), t.Null()])),
 						]),
-						{ maxProperties: MAX_PROPERTIES_DEFAULT }
-					)
+						{ maxProperties: MAX_PROPERTIES_DEFAULT },
+					),
 				),
 			}),
 			detail: {
@@ -91,13 +91,13 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 						description: 'Bug report or feature request created successfully.',
 					},
 					'400': badRequestExample(
-						'Description is required and must not exceed 5000 characters'
+						'Description is required and must not exceed 5000 characters',
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 				},
 				summary: 'Submit a bug report or feature request',
 			},
-		}
+		},
 	)
 	.get(
 		'/',
@@ -120,7 +120,7 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				limit: t.Optional(t.Numeric({ default: 50, maximum: 200, minimum: 1 })),
 				page: t.Optional(t.Numeric({ default: 1, minimum: 1 })),
 			}),
-		}
+		},
 	);
 
 export { bugsRoutes };

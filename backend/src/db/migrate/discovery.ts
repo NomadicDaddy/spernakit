@@ -35,10 +35,10 @@ function assertNoMigrationDrift(migrationsDir: string, journal: DrizzleJournal):
 		{ orphaned },
 		`Migration drift detected: ${orphaned.length} .sql file(s) exist on disk ` +
 			`but are not registered in _journal.json. Either delete the orphaned ` +
-			`files or add them to _journal.json. Runner refuses to proceed.`
+			`files or add them to _journal.json. Runner refuses to proceed.`,
 	);
 	throw new Error(
-		`Migration drift: orphaned .sql file(s) not in journal: ${orphaned.join(', ')}`
+		`Migration drift: orphaned .sql file(s) not in journal: ${orphaned.join(', ')}`,
 	);
 }
 
@@ -69,7 +69,7 @@ function openMigrationDatabase(dbPath: string): Database {
 function warnOnContentHashMismatch(
 	entry: JournalEntry,
 	recordedContentHash: string,
-	migrationsDir: string
+	migrationsDir: string,
 ): void {
 	const sqlPath = join(migrationsDir, `${entry.tag}.sql`);
 	if (!existsSync(sqlPath)) return;
@@ -78,18 +78,18 @@ function warnOnContentHashMismatch(
 	logger.warn(
 		{ currentContentHash, recordedContentHash, tag: entry.tag },
 		`MIGRATION CONTENT MISMATCH: ${entry.tag}.sql differs from the content recorded when it was applied. ` +
-			`The migration will NOT be re-run. Verify the schema matches expectations.`
+			`The migration will NOT be re-run. Verify the schema matches expectations.`,
 	);
 }
 
 function selectPendingMigrations(
 	db: Database,
 	entries: JournalEntry[],
-	migrationsDir: string
+	migrationsDir: string,
 ): JournalEntry[] {
 	const applied = db
 		.query<{ content_hash: null | string; hash: string }, []>(
-			'SELECT hash, content_hash FROM __drizzle_migrations'
+			'SELECT hash, content_hash FROM __drizzle_migrations',
 		)
 		.all();
 	const entryByTagHash = new Map(entries.map((e) => [computeTagHash(e.tag), e]));
@@ -113,18 +113,11 @@ function selectPendingMigrations(
 			`__drizzle_migrations contains ${unknownHashes.length} record(s) whose hash matches no ` +
 				`journal tag. They were likely written by another tool (e.g. drizzle-kit migrate, ` +
 				`which hashes file contents) or the journal was modified. Refusing to proceed - ` +
-				`reconcile the migration journal manually instead of treating the database as unmigrated.`
+				`reconcile the migration journal manually instead of treating the database as unmigrated.`,
 		);
 	}
 
 	return entries.filter((entry) => !appliedTagHashes.has(computeTagHash(entry.tag)));
-}
-
-function resolveJournalPathFromDb(dbPath: string): string | undefined {
-	const dataDir = join(dbPath, '..');
-	const projectRoot = join(dataDir, '..');
-	const journalPath = join(projectRoot, 'backend', 'drizzle', 'meta', '_journal.json');
-	return existsSync(journalPath) ? journalPath : undefined;
 }
 
 export {
@@ -132,6 +125,5 @@ export {
 	computeContentHash,
 	computeTagHash,
 	openMigrationDatabase,
-	resolveJournalPathFromDb,
 	selectPendingMigrations,
 };

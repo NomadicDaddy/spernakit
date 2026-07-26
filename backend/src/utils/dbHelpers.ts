@@ -29,7 +29,7 @@ function paginatedQuery<T>(
 	page: number | undefined,
 	limit: number | undefined,
 	dataFetcher: (limitNum: number, offsetNum: number) => T[],
-	countFetcher: () => { count: number } | undefined
+	countFetcher: () => { count: number } | undefined,
 ): PaginatedResponse<T> {
 	const pageNum = Math.max(page ?? DEFAULT_PAGE, 1);
 	const limitNum = clampLimit(limit);

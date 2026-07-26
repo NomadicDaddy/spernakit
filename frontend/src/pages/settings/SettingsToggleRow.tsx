@@ -22,7 +22,7 @@ export function SettingsToggleRow({
 		<div className="flex items-center justify-between">
 			<div className="space-y-0.5">
 				<Label htmlFor={id}>{label}</Label>
-				{description && <p className="text-muted-foreground text-xs">{description}</p>}
+				{description && <p className="text-xs text-muted-foreground">{description}</p>}
 			</div>
 			<Switch
 				checked={checked}

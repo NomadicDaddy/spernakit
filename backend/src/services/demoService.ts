@@ -44,7 +44,7 @@ export function getDemoAccounts(clientIp?: string): DemoAccount[] | null {
 	if (clientIp && !isLoopbackAddressOrHostname(clientIp)) {
 		logger.warn(
 			{ clientIp },
-			'Demo accounts endpoint blocked from non-loopback IP in development mode'
+			'Demo accounts endpoint blocked from non-loopback IP in development mode',
 		);
 		return null;
 	}

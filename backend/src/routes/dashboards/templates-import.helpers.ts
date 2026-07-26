@@ -30,7 +30,7 @@ function checkSharedRateLimit(request: Request): { limited: boolean; retryAfter?
 		sharedRateStore,
 		`shared:${ip}`,
 		SHARED_RATE_LIMIT_MAX,
-		SHARED_RATE_LIMIT_WINDOW_MS
+		SHARED_RATE_LIMIT_WINDOW_MS,
 	);
 	if (result.limited) {
 		return result.retryAfter !== undefined

@@ -75,7 +75,7 @@ const PASSWORD_RULES: readonly PasswordRule[] = [
  */
 function validatePasswordComplexity(
 	password: string,
-	options?: PasswordValidationOptions
+	options?: PasswordValidationOptions,
 ): null | string {
 	const requireSpecialCharacter = options?.requireSpecialCharacter ?? true;
 	for (const rule of PASSWORD_RULES) {

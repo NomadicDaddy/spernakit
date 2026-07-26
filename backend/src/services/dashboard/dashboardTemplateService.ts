@@ -181,7 +181,7 @@ function listTemplates(): { id: string; name: string; widgetCount: number }[] {
 function createFromTemplate(
 	userId: number,
 	templateId: string,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardWithWidgets | null {
 	const template = DASHBOARD_TEMPLATES[templateId];
 	if (!template) return null;

@@ -55,7 +55,7 @@ function requestPasswordReset(email: string): null | PasswordResetRequestResult 
 	}
 
 	const { expiresAt, token, tokenHash } = generateSecurityToken(
-		config.security.passwordResetTokenExpiryMs
+		config.security.passwordResetTokenExpiryMs,
 	);
 
 	db.update(users)
@@ -81,7 +81,7 @@ function requestPasswordReset(email: string): null | PasswordResetRequestResult 
  */
 async function resetPassword(
 	token: string,
-	newPassword: string
+	newPassword: string,
 ): Promise<{ reason?: string; success: false } | { success: true; userId: number }> {
 	const db = getDb();
 	const tokenHash = createHash('sha256').update(token).digest('hex');
@@ -134,7 +134,7 @@ async function resetPassword(
 	const config = getConfig();
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,
-		DEFAULT_REFRESH_TTL_MS
+		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(user.id, new Date(Date.now() + refreshTtlMs));
 
@@ -163,7 +163,7 @@ function generateEmailVerificationToken(userId: number): EmailVerificationTokenR
 	}
 
 	const { expiresAt, token, tokenHash } = generateSecurityToken(
-		config.security.emailVerificationTokenExpiryMs
+		config.security.emailVerificationTokenExpiryMs,
 	);
 
 	db.update(users)

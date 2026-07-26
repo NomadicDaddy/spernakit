@@ -14,7 +14,7 @@ import { severityLabel } from './alertFormatting.ts';
 function buildAlertEmailContent(
 	alert: AlertData,
 	appName: string,
-	frontendUrl: string
+	frontendUrl: string,
 ): { subject: string; text: string } {
 	const label = severityLabel(alert.severity);
 	const healthUrl = `${frontendUrl}/settings#system-health`;
@@ -49,7 +49,7 @@ async function sendEmailAlert(alert: AlertData): Promise<AlertNotificationResult
 	const settled = await mapWithConcurrency(
 		alerting.email.recipients,
 		(recipient) => sendEmail({ html, subject, text, to: recipient }),
-		5
+		5,
 	);
 
 	for (const outcome of settled) {

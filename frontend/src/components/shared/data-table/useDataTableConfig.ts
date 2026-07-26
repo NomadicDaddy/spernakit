@@ -56,7 +56,7 @@ function useDataTableConfig<TData, TValue>({
 				onRowSelectionChange(
 					selectedIndices
 						.map((i) => data[i])
-						.filter((item): item is TData => item !== undefined)
+						.filter((item): item is TData => item !== undefined),
 				);
 			}
 		},

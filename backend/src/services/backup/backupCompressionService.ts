@@ -30,8 +30,8 @@ async function decompressBackupFile(inputPath: string, outputPath: string): Prom
 				callback(
 					new Error(
 						`Decompression aborted: output exceeds safe limit ` +
-							`(${sizeLimit} bytes, ratio ${MAX_COMPRESSION_RATIO}:1)`
-					)
+							`(${sizeLimit} bytes, ratio ${MAX_COMPRESSION_RATIO}:1)`,
+					),
 				);
 				return;
 			}
@@ -43,7 +43,7 @@ async function decompressBackupFile(inputPath: string, outputPath: string): Prom
 		createReadStream(inputPath),
 		createGunzip(),
 		sizeGuard,
-		createWriteStream(outputPath)
+		createWriteStream(outputPath),
 	);
 }
 

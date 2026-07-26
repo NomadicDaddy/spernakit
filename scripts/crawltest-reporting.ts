@@ -44,7 +44,7 @@ export function printReport(report: CrawlReport, reportPath: string): void {
 	console.log(`   Routes Discovered: ${report.summary.routesDiscovered}`);
 	console.log(`   URLs Visited: ${report.summary.urlsVisited}`);
 	console.log(
-		`   Content Assertions: ${report.summary.contentAssertions} (${report.summary.contentFailures} failed)`
+		`   Content Assertions: ${report.summary.contentAssertions} (${report.summary.contentFailures} failed)`,
 	);
 	console.log(`   Elements Clicked: ${report.summary.elementsClicked}`);
 	console.log(`   Failed Clicks: ${report.summary.failedClicks}`);

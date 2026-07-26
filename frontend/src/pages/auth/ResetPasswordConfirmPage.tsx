@@ -58,7 +58,7 @@ function ResetPasswordConfirmPage() {
 				return { error: message, success: false };
 			}
 		},
-		{ error: null, success: false }
+		{ error: null, success: false },
 	);
 
 	if (!token) {
@@ -124,7 +124,7 @@ function ResetPasswordConfirmPage() {
 					{hasError && (
 						<p
 							aria-live="polite"
-							className="text-destructive text-center text-sm"
+							className="text-center text-sm text-destructive"
 							id="reset-password-error"
 							role="alert">
 							{state.error}

@@ -27,7 +27,7 @@ function checkConnectionLimits(
 	clientIp: string,
 	userId: number,
 	config: ReturnType<typeof getConfig>,
-	set: { status?: number | string }
+	set: { status?: number | string },
 ): string | undefined {
 	// Loopback addresses are exempt from per-IP limits only when NOT behind a reverse proxy.
 	// When trustProxy is enabled, loopback is the proxy address, not the real client —
@@ -43,7 +43,7 @@ function checkConnectionLimits(
 					connectionCount: currentIpConnections,
 					limit: config.websocket.maxConnectionsPerIp,
 				},
-				'WebSocket upgrade rejected: IP connection limit exceeded'
+				'WebSocket upgrade rejected: IP connection limit exceeded',
 			);
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
 			return 'Too many connections from this IP';
@@ -59,7 +59,7 @@ function checkConnectionLimits(
 				limit: config.websocket.maxConnectionsPerUser,
 				userId,
 			},
-			'WebSocket upgrade rejected: per-user connection limit exceeded'
+			'WebSocket upgrade rejected: per-user connection limit exceeded',
 		);
 		set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
 		return 'Too many connections for this user';

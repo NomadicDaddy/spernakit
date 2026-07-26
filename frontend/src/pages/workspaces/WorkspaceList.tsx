@@ -38,16 +38,16 @@ export function WorkspaceList({
 		<>
 			{isLoading ? (
 				<div className="flex justify-center py-8">
-					<div className="text-muted-foreground text-sm">Loading workspaces…</div>
+					<div className="text-sm text-muted-foreground">Loading workspaces…</div>
 				</div>
 			) : workspaces.length === 0 ? (
 				<div className="rounded-lg border p-8 text-center">
 					<Building2
 						aria-hidden="true"
-						className="text-muted-foreground mx-auto mb-4 h-12 w-12"
+						className="mx-auto mb-4 h-12 w-12 text-muted-foreground"
 					/>
 					<h2 className="mb-2 text-lg font-semibold">No workspaces found</h2>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						{can('ADMIN')
 							? 'Create a workspace to get started.'
 							: 'You are not a member of any workspace.'}
@@ -116,11 +116,11 @@ export function WorkspaceList({
 													</Button>
 													<Button
 														aria-label="Delete workspace"
-														className="text-destructive h-8 w-8 p-0"
+														className="h-8 w-8 p-0 text-destructive"
 														onClick={() =>
 															onDeleteWorkspace(
 																workspace.id,
-																workspace.name
+																workspace.name,
 															)
 														}
 														title="Delete"

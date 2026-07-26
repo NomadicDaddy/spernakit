@@ -5,7 +5,7 @@ import type { FileRecord } from './types.ts';
 import { getDb } from '../../db/index.ts';
 import { fileUploads } from '../../db/schema/fileUploads.ts';
 import { getStorageAdapter } from '../../storage/index.ts';
-import { isDefined, type PaginatedResponse, paginatedQuery } from '../../utils/dbHelpers.ts';
+import { isDefined, paginatedQuery, type PaginatedResponse } from '../../utils/dbHelpers.ts';
 import { mapFileToRecord } from './types.ts';
 
 /**
@@ -17,7 +17,7 @@ import { mapFileToRecord } from './types.ts';
  */
 async function download(
 	id: number,
-	workspaceId?: null | number
+	workspaceId?: null | number,
 ): Promise<{ data: Buffer; filename: string; mimeType: string } | null> {
 	const db = getDb();
 	const conditions = [eq(fileUploads.id, id), eq(fileUploads.isDeleted, false)];
@@ -142,7 +142,7 @@ function list(options?: ListOptions): PaginatedResponse<FileRecord> {
 				.select({ count: count() })
 				.from(fileUploads)
 				.where(and(...conditions))
-				.get()
+				.get(),
 	);
 }
 

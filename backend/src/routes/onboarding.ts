@@ -60,7 +60,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Get onboarding status',
 			},
-		}
+		},
 	)
 	.post(
 		'/complete',
@@ -101,7 +101,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Complete onboarding',
 			},
-		}
+		},
 	)
 	.post(
 		'/reset',
@@ -142,7 +142,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Reset onboarding',
 			},
-		}
+		},
 	);
 
 export { onboardingRoutes };

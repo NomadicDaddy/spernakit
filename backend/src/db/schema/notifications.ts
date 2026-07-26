@@ -44,7 +44,7 @@ const notifications = sqliteTable(
 	(table) => [
 		check(
 			'chk_notifications_type',
-			sql`${table.type} in (${sql.raw(NOTIFICATION_TYPE_IN_LIST)})`
+			sql`${table.type} in (${sql.raw(NOTIFICATION_TYPE_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `metadata` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -76,15 +76,15 @@ const notifications = sqliteTable(
 		index('idx_notifications_user_deleted_created').on(
 			table.userId,
 			table.isDeleted,
-			table.createdAt
+			table.createdAt,
 		),
 		index('idx_notifications_user_workspace_deleted_created').on(
 			table.userId,
 			table.workspaceId,
 			table.isDeleted,
-			table.createdAt
+			table.createdAt,
 		),
-	]
+	],
 );
 
 /**
@@ -119,7 +119,7 @@ const userNotificationPreferences = sqliteTable(
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
 		check(
 			'chk_user_notification_preferences_preferences_json',
-			sql`json_valid(${table.preferences})`
+			sql`json_valid(${table.preferences})`,
 		),
 		foreignKey({
 			columns: [table.createdBy],
@@ -136,7 +136,7 @@ const userNotificationPreferences = sqliteTable(
 			foreignColumns: [users.id],
 			name: 'fk_user_notification_preferences_user_id_users',
 		}).onDelete('cascade'),
-	]
+	],
 );
 
 export { notifications, userNotificationPreferences };

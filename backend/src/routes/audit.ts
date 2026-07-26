@@ -138,7 +138,7 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 									],
 									42,
 									1,
-									20
+									20,
 								),
 							},
 						},
@@ -146,7 +146,7 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 					description: 'Paginated audit log entries.',
 				},
 				'400': badRequestExample(
-					'Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)'
+					'Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)',
 				),
 				'401': UNAUTHORIZED_EXAMPLE,
 				'403': FORBIDDEN_EXAMPLE,
@@ -161,10 +161,10 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 				t.String({
 					description: 'Comma-separated list of fields to return',
 					maxLength: 255,
-				})
+				}),
 			),
 			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 })
+				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
 			),
 			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 			search: t.Optional(t.String({ maxLength: 255 })),

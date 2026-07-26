@@ -79,7 +79,7 @@ interface CreateApiAppOptions {
 function createApiApp(options?: CreateApiAppOptions) {
 	const config = getConfig();
 	const { version } = JSON.parse(
-		readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8')
+		readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
 	) as {
 		version: string;
 	};
@@ -116,7 +116,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 					},
 				},
 				path: '/docs',
-			})
+			}),
 		);
 	}
 
@@ -129,7 +129,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 				return validationError(
 					clientMessage,
 					VALIDATION_ERROR_CODES.VALIDATION_FAILED,
-					requestId
+					requestId,
 				);
 			}
 			if (code === 'NOT_FOUND') {
@@ -137,7 +137,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 				return notFoundError(
 					'Resource',
 					RESOURCE_ERROR_CODES.RESOURCE_NOT_FOUND,
-					requestId
+					requestId,
 				);
 			}
 			set.status = HTTP_STATUS.INTERNAL_SERVER_ERROR;
@@ -182,7 +182,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 					summary: 'Health check endpoint',
 					tags: ['Health'],
 				},
-			}
+			},
 		)
 		.get(
 			'/health/ready',
@@ -237,7 +237,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 					summary: 'Readiness probe endpoint',
 					tags: ['Health'],
 				},
-			}
+			},
 		)
 		.use(routePlugins);
 }

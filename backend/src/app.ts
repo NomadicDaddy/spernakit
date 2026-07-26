@@ -80,7 +80,7 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 		const dbPath = dbUrl.startsWith('file:') ? dbUrl.substring(5) : dbUrl;
 		const absoluteDbPath = resolve(
 			projectRoot,
-			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath
+			dbPath.startsWith('./') ? dbPath.substring(2) : dbPath,
 		);
 
 		// Ensure the data/ directory exists
@@ -152,7 +152,7 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 	}
 
 	logger.info(
-		`${config.app.name} backend running on http://localhost:${config.server.backendPort}`
+		`${config.app.name} backend running on http://localhost:${config.server.backendPort}`,
 	);
 
 	// Initialize scheduled tasks and event loop latency measurement

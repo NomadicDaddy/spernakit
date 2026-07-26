@@ -6,7 +6,7 @@ import path from 'node:path';
 
 export function resolveSpernakitPath(
 	explicit: string | undefined,
-	repoRoot: string
+	repoRoot: string,
 ): null | string {
 	// 1. Explicit CLI arg
 	if (explicit) {
@@ -74,7 +74,7 @@ export function gitTagExists(spernakitPath: string, version: string): boolean {
 export function getTemplateFileAtVersion(
 	spernakitPath: string,
 	version: string,
-	filePath: string
+	filePath: string,
 ): null | string {
 	const result = Bun.spawnSync(['git', '-C', spernakitPath, 'show', `v${version}:${filePath}`], {
 		stderr: 'pipe',

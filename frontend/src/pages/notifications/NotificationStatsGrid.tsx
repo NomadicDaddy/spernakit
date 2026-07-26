@@ -57,7 +57,7 @@ function NotificationStatsGrid({ stats }: { stats: NotificationStatistics | unde
 						<CardContent className="flex items-center gap-3 p-4">
 							<Icon aria-hidden="true" className={`size-5 shrink-0 ${color}`} />
 							<div className="min-w-0">
-								<p className="text-muted-foreground text-xs">{label}</p>
+								<p className="text-xs text-muted-foreground">{label}</p>
 								<p className="text-lg font-semibold tabular-nums">
 									{getValue(stats)}
 								</p>

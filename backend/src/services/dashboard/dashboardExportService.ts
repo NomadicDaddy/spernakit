@@ -15,7 +15,7 @@ import { createDashboard, getDashboard } from './dashboardCrud.ts';
 function exportDashboard(
 	dashboardId: number,
 	userId: number,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardExport | null {
 	const dashboard = getDashboard(dashboardId, userId, workspaceId);
 	if (!dashboard) return null;
@@ -49,7 +49,7 @@ function exportDashboard(
 function importDashboard(
 	userId: number,
 	data: DashboardExport,
-	workspaceId: null | number = null
+	workspaceId: null | number = null,
 ): DashboardWithWidgets {
 	if (data.version !== 1) {
 		throw new Error(`Unsupported dashboard export version: ${data.version}`);

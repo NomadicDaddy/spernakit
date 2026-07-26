@@ -26,7 +26,7 @@ function checkLimit(
 	store: RateLimitStore,
 	key: string,
 	maxRequests: number,
-	windowMs: number
+	windowMs: number,
 ): RateLimitCheckResult {
 	if (backend === 'database') {
 		return checkRateLimit(key, maxRequests, windowMs);
@@ -38,7 +38,7 @@ function checkRouteLimit(
 	store: RateLimitStore,
 	key: string,
 	maxRequests: number,
-	windowMs: number
+	windowMs: number,
 ): RateLimitCheckResult {
 	const backend = getConfig().rateLimit.backend as RateLimitBackend;
 	return checkLimit(backend, store, key, maxRequests, windowMs);

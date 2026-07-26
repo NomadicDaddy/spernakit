@@ -62,7 +62,7 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Get notification retention policy (ADMIN+)',
 			},
-		}
+		},
 	)
 	.post(
 		'/broadcast',
@@ -117,7 +117,7 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Broadcast notification to users (ADMIN+)',
 			},
-		}
+		},
 	)
 	.put(
 		'/:id/read',
@@ -152,7 +152,7 @@ const notificationBroadcastRoutes = new Elysia({
 				summary: 'Mark notification as read',
 			},
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
-		}
+		},
 	)
 	.put(
 		'/read-all',
@@ -188,7 +188,7 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Mark all notifications as read',
 			},
-		}
+		},
 	);
 
 export { notificationBroadcastRoutes };

@@ -9,7 +9,7 @@
  *   Run from any spernakit app root directory.
  */
 
-import { resolve, relative } from 'path';
+import { relative, resolve } from 'path';
 
 import { parseBarrelFile, processFile } from './lib/codemod-barrel/transform.ts';
 
@@ -33,7 +33,7 @@ async function main(): Promise<void> {
 	const barrelContent = (await barrelFile.text()).replace(/\r\n/g, '\n');
 	const exportMap = parseBarrelFile(barrelContent);
 	console.log(
-		`Parsed barrel file: ${exportMap.size} exports from ${new Set([...exportMap.values()].map((e) => e.sourceFile)).size} source files`
+		`Parsed barrel file: ${exportMap.size} exports from ${new Set([...exportMap.values()].map((e) => e.sourceFile)).size} source files`,
 	);
 
 	// Find all .ts/.tsx files
@@ -119,7 +119,7 @@ async function main(): Promise<void> {
 	}
 
 	console.log(
-		`\n${dryRun ? '[DRY RUN] ' : ''}Done. ${modifiedCount} file${modifiedCount === 1 ? '' : 's'} ${dryRun ? 'would be ' : ''}modified.`
+		`\n${dryRun ? '[DRY RUN] ' : ''}Done. ${modifiedCount} file${modifiedCount === 1 ? '' : 's'} ${dryRun ? 'would be ' : ''}modified.`,
 	);
 }
 

@@ -11,9 +11,7 @@ import {
 	fetchColumns,
 	fetchForeignKeys,
 	fetchIndexes,
-	type ColumnInfo,
 	type ForeignKeyInfo,
-	type IndexInfo,
 	type TableDetails,
 	type TableMetadata,
 } from './schemaMetadata.ts';
@@ -60,7 +58,7 @@ function getAllowedTableNames(): string[] {
 	const raw = getRawClient();
 	const rows = raw
 		.prepare(
-			"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '__drizzle_%' ORDER BY name"
+			"SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '__drizzle_%' ORDER BY name",
 		)
 		.all() as { name: string }[];
 	cachedTableNames = rows.map((r) => r.name);
@@ -141,10 +139,10 @@ function getTableDetails(tableName: string): null | TableDetails {
  * Get all foreign key relationships across all tables for ERD rendering.
  * @returns Array of relationships with source and target table/column info.
  */
-function getAllRelationships(): (ForeignKeyInfo & { sourceTable: string })[] {
+function getAllRelationships(): ({ sourceTable: string } & ForeignKeyInfo)[] {
 	const raw = getRawClient();
 	const tableNames = getAllowedTableNames();
-	const relationships: (ForeignKeyInfo & { sourceTable: string })[] = [];
+	const relationships: ({ sourceTable: string } & ForeignKeyInfo)[] = [];
 
 	for (const tableName of tableNames) {
 		assertSafeIdentifier(tableName, 'table');
@@ -169,7 +167,6 @@ function getAllRelationships(): (ForeignKeyInfo & { sourceTable: string })[] {
 	return relationships;
 }
 
-export type { ColumnInfo, ForeignKeyInfo, IndexInfo, TableDetails, TableMetadata };
 export {
 	assertSafeIdentifier,
 	getAllRelationships,

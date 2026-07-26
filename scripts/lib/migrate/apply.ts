@@ -41,7 +41,7 @@ export function formatDuration(ms: number): string {
 function applyMigration(
 	db: Database,
 	migrationsDir: string,
-	entry: JournalEntry
+	entry: JournalEntry,
 ): PerformanceMetrics {
 	const sql = readMigrationSql(migrationsDir, entry.tag);
 	const contentHash = computeContentHash(sql);
@@ -66,7 +66,7 @@ function applyMigration(
 		console.log(`    ✓ Applied in ${formatDuration(durationMs)}`);
 		if (durationMs > 5000) {
 			console.log(
-				`    ⚠ Migration took longer than 5s - consider reviewing for optimization`
+				`    ⚠ Migration took longer than 5s - consider reviewing for optimization`,
 			);
 		}
 		recordMigrationSuccess({
@@ -144,7 +144,7 @@ export function runMigrations(paths: Paths): void {
 		} catch (err) {
 			throw new Error(
 				`Pre-migration backup failed: ${err instanceof Error ? err.message : String(err)}`,
-				{ cause: err }
+				{ cause: err },
 			);
 		}
 
@@ -161,14 +161,14 @@ export function runMigrations(paths: Paths): void {
 
 		// Performance summary
 		console.log(
-			`\n✓ Applied ${pending.length} migration(s) in ${formatDuration(overallDuration)}`
+			`\n✓ Applied ${pending.length} migration(s) in ${formatDuration(overallDuration)}`,
 		);
 
 		// Log performance summary for multi-migration runs
 		if (pending.length > 1) {
 			const totalStatements = performanceResults.reduce(
 				(sum, m) => sum + m.statementCount,
-				0
+				0,
 			);
 			const avgDuration =
 				performanceResults.reduce((sum, m) => sum + m.durationMs, 0) /
@@ -183,7 +183,7 @@ export function runMigrations(paths: Paths): void {
 		const slowMigrations = performanceResults.filter((m) => m.durationMs > 10000);
 		if (slowMigrations.length > 0) {
 			console.log(
-				`\n⚠ ${slowMigrations.length} migration(s) took more than 10s - consider reviewing schema changes`
+				`\n⚠ ${slowMigrations.length} migration(s) took more than 10s - consider reviewing schema changes`,
 			);
 		}
 	} finally {
@@ -224,7 +224,7 @@ export function baselineMigration(paths: Paths): void {
 
 		console.log(`\n✓ Baseline complete. ${pending.length} migration(s) marked as applied.`);
 		console.log(
-			'\nNote: No SQL was executed. The database schema is assumed to match the migration files.'
+			'\nNote: No SQL was executed. The database schema is assumed to match the migration files.',
 		);
 	} finally {
 		db.close();

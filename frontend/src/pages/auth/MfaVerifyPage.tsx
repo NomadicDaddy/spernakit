@@ -61,7 +61,7 @@ function MfaVerifyPage() {
 				return { error: message };
 			}
 		},
-		{ error: null }
+		{ error: null },
 	);
 
 	if (isAuthenticated) {

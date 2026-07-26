@@ -57,7 +57,7 @@ async function fetchStoredCsrfSecret(userId: number): Promise<null | string> {
  */
 async function validateCsrfToken(
 	providedToken: null | string,
-	user: AuthPayload
+	user: AuthPayload,
 ): Promise<boolean> {
 	if (!user || !user.id) return false;
 
@@ -100,7 +100,7 @@ function resolveRequestOrigin(request: Request): null | string {
  */
 function validateUnauthenticatedOrigin(
 	request: Request,
-	set: { status?: number | string }
+	set: { status?: number | string },
 ): ReturnType<typeof unauthorizedError> | undefined {
 	const config = getConfig();
 	let requestOrigin: null | string;
@@ -119,12 +119,12 @@ function validateUnauthenticatedOrigin(
 			const headerUsed = request.headers.get('origin') ? 'Origin' : 'Referer';
 			logger.warn(
 				{ origin: requestOrigin },
-				`Rejected cross-origin unauthenticated POST (via ${headerUsed})`
+				`Rejected cross-origin unauthenticated POST (via ${headerUsed})`,
 			);
 			set.status = HTTP_STATUS.FORBIDDEN;
 			return unauthorizedError(
 				'Cross-origin request rejected',
-				AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED
+				AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED,
 			);
 		}
 		return undefined;
@@ -134,7 +134,7 @@ function validateUnauthenticatedOrigin(
 		set.status = HTTP_STATUS.FORBIDDEN;
 		return unauthorizedError(
 			'Invalid request headers',
-			AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED
+			AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED,
 		);
 	}
 
@@ -143,7 +143,7 @@ function validateUnauthenticatedOrigin(
 		set.status = HTTP_STATUS.FORBIDDEN;
 		return unauthorizedError(
 			'Origin header required',
-			AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED
+			AUTH_ERROR_CODES.AUTH_CSRF_ORIGIN_REJECTED,
 		);
 	}
 
@@ -151,7 +151,7 @@ function validateUnauthenticatedOrigin(
 }
 
 /** HTTP methods that require CSRF validation. */
-const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'DELETE', 'PATCH']);
+const STATE_CHANGING_METHODS = new Set(['DELETE', 'PATCH', 'POST', 'PUT']);
 
 /**
  * Auth infrastructure paths exempt from CSRF token validation (exact match).

@@ -34,13 +34,13 @@ function Sidebar() {
 	const visibleNavItems = appFeatures
 		? getVisibleNavItems(hasMinRole, appFeatures)
 		: navItems.filter(
-				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole))
+				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole)),
 			);
 
 	return (
 		<aside
 			aria-label="Main navigation"
-			className="bg-background flex h-full w-full flex-col overflow-hidden border-r"
+			className="flex h-full w-full flex-col overflow-hidden border-r bg-background"
 			role="navigation">
 			{/* Logo / App Name */}
 			<div className="flex h-14 items-center border-b px-4">
@@ -54,14 +54,14 @@ function Sidebar() {
 					/>
 				) : !collapsed ? (
 					<span
-						className="font-display bg-clip-text text-xl font-semibold tracking-tight text-transparent"
+						className="bg-clip-text font-display text-xl font-semibold tracking-tight text-transparent"
 						style={{ backgroundImage: 'var(--brand-gradient)' }}
 						translate="no">
 						{__APP_NAME__}
 					</span>
 				) : (
 					<span
-						className="font-display mx-auto bg-clip-text text-xl font-bold text-transparent"
+						className="mx-auto bg-clip-text font-display text-xl font-bold text-transparent"
 						style={{ backgroundImage: 'var(--brand-gradient)' }}
 						translate="no">
 						{__APP_NAME__[0]}
@@ -84,11 +84,11 @@ function Sidebar() {
 								cn(
 									'flex items-center gap-3 rounded-md px-3 py-(--density-padding-y) text-sm font-medium transition-colors outline-none',
 									'hover:bg-accent hover:text-accent-foreground',
-									'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2',
+									'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 									isActive
 										? 'bg-accent text-accent-foreground'
 										: 'text-muted-foreground',
-									collapsed && 'justify-center px-2'
+									collapsed && 'justify-center px-2',
 								)
 							}
 							key={item.to}
@@ -118,7 +118,7 @@ function Sidebar() {
 			{/* Version info (when expanded) */}
 			{!collapsed && (
 				<div className="px-4 py-2">
-					<span className="text-muted-foreground text-xs">v{__APP_VERSION__}</span>
+					<span className="text-xs text-muted-foreground">v{__APP_VERSION__}</span>
 				</div>
 			)}
 

@@ -88,7 +88,7 @@ const users = pgTable(
 		index('idx_users_is_deleted').on(table.isDeleted),
 		index('idx_users_email_is_deleted').on(table.email, table.isDeleted),
 		index('idx_users_username_is_deleted').on(table.username, table.isDeleted),
-	]
+	],
 );
 
 export { users };

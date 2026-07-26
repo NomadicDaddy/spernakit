@@ -15,7 +15,7 @@ import { ROLE_HIERARCHY, type UserRole } from '../../types/roles.ts';
 function valueExists(
 	column: typeof users.email | typeof users.username,
 	value: string,
-	excludeUserId?: number
+	excludeUserId?: number,
 ): boolean {
 	const db = getDb();
 	const condition = and(eq(column, value), eq(users.isDeleted, false));

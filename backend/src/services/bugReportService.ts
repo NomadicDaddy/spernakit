@@ -108,9 +108,9 @@ function list(page: number, limit: number): PaginatedResponse<BugReport> {
 				.limit(limitNum)
 				.offset(offset)
 				.all(),
-		() => db.select({ count: count() }).from(bugReports).get()
+		() => db.select({ count: count() }).from(bugReports).get(),
 	);
 }
 
 export { list, submit };
-export type { BugReport, BugReportKind, SubmitBugInput };
+export type { BugReport, SubmitBugInput };

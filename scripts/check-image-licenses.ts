@@ -91,7 +91,7 @@ async function runInImage(image: string, script: string): Promise<string> {
 async function assertNoticesPresent(image: string): Promise<void> {
 	const output = await runInImage(
 		image,
-		REQUIRED_IN_IMAGE.map((path) => `[ -e ${path} ] || echo MISSING ${path}`).join('; ')
+		REQUIRED_IN_IMAGE.map((path) => `[ -e ${path} ] || echo MISSING ${path}`).join('; '),
 	);
 	const missing = output
 		.split('\n')
@@ -113,7 +113,7 @@ async function assertNoticesPresent(image: string): Promise<void> {
 async function collectBasePackages(image: string): Promise<string[]> {
 	const output = await runInImage(
 		image,
-		'awk -F: \'/^P:/{p=$2} /^V:/{v=$2} /^L:/{print p "|" v "|" $2}\' /lib/apk/db/installed'
+		'awk -F: \'/^P:/{p=$2} /^V:/{v=$2} /^L:/{print p "|" v "|" $2}\' /lib/apk/db/installed',
 	);
 	return output
 		.split('\n')
@@ -195,7 +195,7 @@ async function assertNoticesCoverImage(root: string, image: string): Promise<voi
 	const { closure } = await collectRuntimeClosure(
 		root,
 		WORKSPACES,
-		await workspaceNames(root, WORKSPACES)
+		await workspaceNames(root, WORKSPACES),
 	);
 	const attributed = new Set(closure.map((pkg) => `${pkg.name}@${pkg.version}`));
 

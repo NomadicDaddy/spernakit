@@ -22,7 +22,7 @@ function getAuthSecuritySettings(): Promise<DataResponse<AuthSecuritySettings>> 
 }
 
 function updateAuthSecuritySettings(
-	settings: Partial<AuthSecuritySettings>
+	settings: Partial<AuthSecuritySettings>,
 ): Promise<DataResponse<AuthSecuritySettings>> {
 	return apiClient.put<DataResponse<AuthSecuritySettings>>('/settings/auth-security', {
 		body: settings,
@@ -40,7 +40,7 @@ interface BackupKeyRotationResult {
 
 function rotateBackupEncryptionKey(): Promise<DataResponse<BackupKeyRotationResult>> {
 	return apiClient.post<DataResponse<BackupKeyRotationResult>>(
-		'/settings/auth-security/rotate-backup-key'
+		'/settings/auth-security/rotate-backup-key',
 	);
 }
 

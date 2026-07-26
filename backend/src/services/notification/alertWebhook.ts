@@ -42,7 +42,7 @@ function buildWebhookPayload(
 	alert: AlertData,
 	appName: string,
 	nodeEnv: string,
-	frontendUrl: string
+	frontendUrl: string,
 ): WebhookPayload {
 	return {
 		alertId: alert.id,
@@ -60,7 +60,7 @@ async function sendWebhookRequest(
 	url: string,
 	payload: object,
 	headers: Record<string, string>,
-	timeoutMs: number
+	timeoutMs: number,
 ): Promise<{ error?: string; ok: boolean; status?: number }> {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -98,7 +98,7 @@ async function sendWebhookAlert(alert: AlertData): Promise<AlertNotificationResu
 	if (validation.error) {
 		logger.error(
 			{ alertId: alert.id, error: validation.error, url: alerting.webhook.url },
-			'Alert webhook URL validation failed'
+			'Alert webhook URL validation failed',
 		);
 		return {
 			channel: 'webhook',
@@ -130,20 +130,20 @@ async function sendWebhookAlert(alert: AlertData): Promise<AlertNotificationResu
 		validation.resolvedUrl ?? alerting.webhook.url,
 		payload,
 		headers,
-		alerting.webhook.timeoutMs
+		alerting.webhook.timeoutMs,
 	);
 
 	if (result.ok) {
 		logger.info(
 			{ alertId: alert.id, channel: 'webhook', statusCode: result.status },
-			'Alert webhook sent'
+			'Alert webhook sent',
 		);
 		return { channel: 'webhook', success: true };
 	}
 
 	logger.error(
 		{ alertId: alert.id, channel: 'webhook', error: result.error, statusCode: result.status },
-		'Webhook failed'
+		'Webhook failed',
 	);
 	return { channel: 'webhook', error: result.error ?? 'Unknown error', success: false };
 }

@@ -5,13 +5,13 @@ import type { UserRole } from '../../types/roles.ts';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import {
-	type PaginatedResponse,
 	escapeLikePattern,
 	likeEscaped,
 	paginatedQuery,
+	type PaginatedResponse,
 } from '../../utils/dbHelpers.ts';
 import { logger } from '../../utils/logger.ts';
-import { type UserPublic, getUserCache } from './userCrudHelpers.ts';
+import { getUserCache, type UserPublic } from './userCrudHelpers.ts';
 
 const userPublicFields = {
 	createdAt: users.createdAt,
@@ -40,7 +40,7 @@ function listUsers(options: ListOptions): PaginatedResponse<UserPublic> {
 	if (options.search) {
 		const pattern = `%${escapeLikePattern(options.search)}%`;
 		conditions.push(
-			or(likeEscaped(users.username, pattern), likeEscaped(users.email, pattern))!
+			or(likeEscaped(users.username, pattern), likeEscaped(users.email, pattern))!,
 		);
 	}
 
@@ -57,7 +57,7 @@ function listUsers(options: ListOptions): PaginatedResponse<UserPublic> {
 				.limit(limit)
 				.offset(offset)
 				.all(),
-		() => db.select({ count: count() }).from(users).where(where).get()
+		() => db.select({ count: count() }).from(users).where(where).get(),
 	);
 }
 

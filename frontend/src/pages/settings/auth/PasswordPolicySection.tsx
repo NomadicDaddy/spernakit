@@ -20,7 +20,7 @@ interface PasswordPolicyActions {
 	onRequireSpecialCharacterChange: (checked: boolean) => void;
 }
 
-type PasswordPolicySectionProps = PasswordPolicyState & PasswordPolicyActions;
+type PasswordPolicySectionProps = PasswordPolicyActions & PasswordPolicyState;
 
 function formatDays(value: string): string {
 	const days = Number.parseInt(value, 10);
@@ -60,7 +60,7 @@ function PasswordPolicySection({
 					type="number"
 					value={passwordExpiryDays}
 				/>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					{passwordExpiryDayCount === 0
 						? 'Passwords never expire'
 						: `Passwords expire after ${formatDays(passwordExpiryDays)}`}
@@ -72,7 +72,7 @@ function PasswordPolicySection({
 					<Label htmlFor="requirePasswordChange">
 						Require Password Change on First Login
 					</Label>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Force users to change password when logging in
 					</p>
 				</div>
@@ -88,7 +88,7 @@ function PasswordPolicySection({
 					<Label htmlFor="requireSpecialCharacter">
 						Require Special Character in Passwords
 					</Label>
-					<p className="text-muted-foreground text-sm">
+					<p className="text-sm text-muted-foreground">
 						Passwords must contain at least one special character
 					</p>
 				</div>
@@ -111,7 +111,7 @@ function PasswordPolicySection({
 					type="number"
 					value={passwordHistoryDepth}
 				/>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					{passwordHistoryCount === 0
 						? 'Password reuse is not prevented'
 						: `Users cannot reuse the last ${passwordHistoryCount} password${passwordHistoryCount === 1 ? '' : 's'}`}
@@ -130,7 +130,7 @@ function PasswordPolicySection({
 					type="number"
 					value={minPasswordAgeDays}
 				/>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-sm text-muted-foreground">
 					{minPasswordAgeDayCount === 0
 						? 'Users can change password anytime'
 						: `Users must wait ${formatDays(minPasswordAgeDays)} before changing password again`}

@@ -237,7 +237,7 @@ function paginatedExample<T>(
 	items: T[],
 	total: number,
 	page = 1,
-	limit = 20
+	limit = 20,
 ): PaginatedExampleObject<T> {
 	return {
 		summary,

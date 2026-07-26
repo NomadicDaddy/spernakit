@@ -6,8 +6,8 @@ import { getByKeyRaw, update } from '../settingsService.ts';
 import {
 	DEFAULT_SMTP_CONFIG,
 	ensureSmtpConfigSeeded,
-	SMTP_CONFIG_KEY,
 	SmtpConfigSchema as FullSmtpConfigSchema,
+	SMTP_CONFIG_KEY,
 } from './smtpConfigService.ts';
 
 const SmtpCredentialsSchema = Type.Pick(FullSmtpConfigSchema, [
@@ -55,7 +55,7 @@ function hasSmtpCredentials(): boolean {
 		setting.value,
 		SmtpCredentialsSchema,
 		DEFAULT_SMTP_CREDENTIALS,
-		'SMTP config'
+		'SMTP config',
 	);
 
 	return Boolean(parsed.host && parsed.fromAddress && parsed.user && parsed.password);
@@ -76,7 +76,7 @@ async function getEmailStatus(): Promise<EmailStatus> {
 			lastTestSetting.value,
 			SmtpTestResultSchema,
 			{ sentAt: '', success: false },
-			'SMTP test result'
+			'SMTP test result',
 		);
 		lastTestAt = testResult.sentAt || null;
 		lastTestSuccess = testResult.success;

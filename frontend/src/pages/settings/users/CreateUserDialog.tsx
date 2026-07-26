@@ -160,11 +160,11 @@ export function CreateUserDialog({
 							{...(hasPasswordError ? { 'aria-invalid': true } : {})}
 						/>
 						{hasPasswordError ? (
-							<p className="text-destructive text-sm" id={passwordErrorId}>
+							<p className="text-sm text-destructive" id={passwordErrorId}>
 								{liveErrors.password}
 							</p>
 						) : (
-							<p className="text-muted-foreground text-sm" id={passwordHelperId}>
+							<p className="text-sm text-muted-foreground" id={passwordHelperId}>
 								Must be at least {PASSWORD_MIN_LENGTH} characters
 							</p>
 						)}

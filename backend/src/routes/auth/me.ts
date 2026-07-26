@@ -22,7 +22,7 @@ const authMeRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth' })
 				set.status = HTTP_STATUS.UNAUTHORIZED;
 				return unauthorizedError(
 					'Account has been deleted',
-					AUTH_ERROR_CODES.AUTH_ACCOUNT_DELETED
+					AUTH_ERROR_CODES.AUTH_ACCOUNT_DELETED,
 				);
 			}
 
@@ -74,7 +74,7 @@ const authMeRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth' })
 				},
 				summary: 'Get current authenticated user',
 			},
-		}
+		},
 	);
 
 export { authMeRoutes };

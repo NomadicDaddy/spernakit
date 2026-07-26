@@ -28,5 +28,5 @@ export const rateLimitEntries = pgTable(
 			.notNull()
 			.$defaultFn(() => new Date()),
 	},
-	(table) => [index('idx_rate_limit_entries_reset_at').on(table.resetAt)]
+	(table) => [index('idx_rate_limit_entries_reset_at').on(table.resetAt)],
 );

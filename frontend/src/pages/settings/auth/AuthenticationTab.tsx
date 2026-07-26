@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import {
+	type AuthSecuritySettings,
 	getAuthSecuritySettings,
 	getSecurityHealth,
-	type AuthSecuritySettings,
 	updateAuthSecuritySettings,
 } from '@/api/authSecurity';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
@@ -74,7 +74,7 @@ function AuthenticationTab() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<p className="text-muted-foreground text-sm">
+						<p className="text-sm text-muted-foreground">
 							Only SYSOP role can modify authentication security settings.
 						</p>
 					</CardContent>

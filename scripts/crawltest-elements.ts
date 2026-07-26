@@ -17,7 +17,7 @@ export async function testButton(
 	results: TestResults,
 	opts: CrawlerOpts,
 	element: InteractiveElement,
-	pageUrl: string
+	pageUrl: string,
 ): Promise<void> {
 	const label = element.text || element.ariaLabel || `button[${element.index}]`;
 
@@ -25,8 +25,8 @@ export async function testButton(
 	const dialogsBefore = await page.evaluate(
 		() =>
 			document.querySelectorAll(
-				'[role="dialog"], [role="alertdialog"], [data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]'
-			).length
+				'[role="dialog"], [role="alertdialog"], [data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
+			).length,
 	);
 
 	// Click via text match for reliability (filter out switches and comboboxes to match index)
@@ -36,7 +36,7 @@ export async function testButton(
 				(b) => {
 					const role = b.getAttribute('role');
 					return role !== 'switch' && role !== 'combobox';
-				}
+				},
 			);
 			// Try exact text match first
 			let btn = buttons.find((b) => b.textContent?.trim() === text);
@@ -51,7 +51,7 @@ export async function testButton(
 			return false;
 		},
 		element.text,
-		element.index
+		element.index,
 	);
 
 	if (!clicked) {
@@ -65,8 +65,8 @@ export async function testButton(
 	const dialogsAfter = await page.evaluate(
 		() =>
 			document.querySelectorAll(
-				'[role="dialog"], [role="alertdialog"], [data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]'
-			).length
+				'[role="dialog"], [role="alertdialog"], [data-state="open"][role="dialog"], [data-state="open"][role="alertdialog"]',
+			).length,
 	);
 
 	if (dialogsAfter > dialogsBefore) {
@@ -101,7 +101,7 @@ export async function testSwitch(
 	results: TestResults,
 	opts: CrawlerOpts,
 	element: InteractiveElement,
-	pageUrl: string
+	pageUrl: string,
 ): Promise<void> {
 	const label =
 		element.elementId || element.text || element.ariaLabel || `switch[${element.index}]`;
@@ -110,7 +110,7 @@ export async function testSwitch(
 	const stateBefore = await page.evaluate(
 		(elementId: string | undefined, idx: number) => {
 			const switches = Array.from(
-				document.querySelectorAll('button[role="switch"]:not([disabled])')
+				document.querySelectorAll('button[role="switch"]:not([disabled])'),
 			);
 			let sw = elementId ? switches.find((s) => s.getAttribute('id') === elementId) : null;
 			if (!sw && switches[idx]) sw = switches[idx];
@@ -118,7 +118,7 @@ export async function testSwitch(
 			return null;
 		},
 		element.elementId,
-		element.index
+		element.index,
 	);
 
 	if (stateBefore === null) {
@@ -130,14 +130,14 @@ export async function testSwitch(
 	await page.evaluate(
 		(elementId: string | undefined, idx: number) => {
 			const switches = Array.from(
-				document.querySelectorAll('button[role="switch"]:not([disabled])')
+				document.querySelectorAll('button[role="switch"]:not([disabled])'),
 			);
 			let sw = elementId ? switches.find((s) => s.getAttribute('id') === elementId) : null;
 			if (!sw && switches[idx]) sw = switches[idx];
 			if (sw) (sw as HTMLElement).click();
 		},
 		element.elementId,
-		element.index
+		element.index,
 	);
 
 	// Wait for the full save cycle: mutation completes, query refetches, state updates.
@@ -158,7 +158,7 @@ export async function testSwitch(
 			{ timeout: 5000 },
 			element.elementId,
 			element.index,
-			stateBefore
+			stateBefore,
 		);
 	} catch {
 		// Timeout — state didn't change (save may have failed or switch not toggleable)
@@ -174,7 +174,7 @@ export async function testSwitch(
 			return null;
 		},
 		element.elementId,
-		element.index
+		element.index,
 	);
 
 	const toggled = stateAfter !== null && stateAfter !== stateBefore;
@@ -193,20 +193,20 @@ export async function testSwitch(
 				if (sw) (sw as HTMLElement).click();
 			},
 			element.elementId,
-			element.index
+			element.index,
 		);
 		await Bun.sleep(200);
 	}
 
 	console.log(
-		`   🔀 Switch "${label}": ${stateBefore} → ${stateAfter}${toggled ? ' (restored)' : ''}`
+		`   🔀 Switch "${label}": ${stateBefore} → ${stateAfter}${toggled ? ' (restored)' : ''}`,
 	);
 	results.addClickedElement(
 		`switch "${label}"`,
 		pageUrl,
 		toggled,
 		'switch-toggle',
-		toggled ? null : 'state did not change'
+		toggled ? null : 'state did not change',
 	);
 	results.switchesTested++;
 }
@@ -219,7 +219,7 @@ export async function testSelect(
 	page: Page,
 	results: TestResults,
 	element: InteractiveElement,
-	pageUrl: string
+	pageUrl: string,
 ): Promise<void> {
 	const label = element.text || element.ariaLabel || `select[${element.index}]`;
 
@@ -227,21 +227,21 @@ export async function testSelect(
 	await page.evaluate(
 		(text: string, idx: number) => {
 			const combos = Array.from(
-				document.querySelectorAll('button[role="combobox"]:not([disabled])')
+				document.querySelectorAll('button[role="combobox"]:not([disabled])'),
 			);
 			let cb = combos.find((c) => c.textContent?.trim() === text);
 			if (!cb && combos[idx]) cb = combos[idx];
 			if (cb) (cb as HTMLElement).click();
 		},
 		element.text,
-		element.index
+		element.index,
 	);
 
 	await Bun.sleep(300);
 
 	// Check if listbox appeared
 	const hasListbox = await page.evaluate(
-		() => document.querySelectorAll('[role="listbox"], [role="option"]').length > 0
+		() => document.querySelectorAll('[role="listbox"], [role="option"]').length > 0,
 	);
 
 	if (hasListbox) {

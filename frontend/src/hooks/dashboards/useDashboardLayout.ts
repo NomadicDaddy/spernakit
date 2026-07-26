@@ -20,7 +20,7 @@ function widgetsToLayout(widgets: DashboardWidget[]) {
 export function useDashboardLayout(dashboard: DashboardWithWidgets | undefined) {
 	const [prevDashboardId, setPrevDashboardId] = useState(dashboard?.id);
 	const [currentLayout, setCurrentLayout] = useState(() =>
-		dashboard ? widgetsToLayout(dashboard.widgets) : []
+		dashboard ? widgetsToLayout(dashboard.widgets) : [],
 	);
 
 	// React-recommended pattern: adjust state during render when props change

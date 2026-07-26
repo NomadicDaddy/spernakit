@@ -6,10 +6,10 @@ import {
 	EMAIL_CHANGE_CONFIRM_IP_WINDOW_MS,
 } from '../../constants/rateLimit.ts';
 import {
-	RATE_LIMITED_EXAMPLE,
-	SUCCESS_EXAMPLE,
 	badRequestExample,
 	conflictExample,
+	RATE_LIMITED_EXAMPLE,
+	SUCCESS_EXAMPLE,
 } from '../../constants/responseExamples.ts';
 import { SERVICE_ERRORS } from '../../constants/serviceResults.ts';
 import {
@@ -22,9 +22,9 @@ import { successResponse } from '../../utils/apiResponse.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import {
 	AUTH_ERROR_CODES,
-	RATE_ERROR_CODES,
 	badRequestError,
 	conflictError,
+	RATE_ERROR_CODES,
 	rateLimitError,
 } from '../../utils/errorResponse.ts';
 
@@ -46,7 +46,7 @@ function handleConfirmEmailChange({
 			confirmStore,
 			`email-change-confirm:${ip}`,
 			EMAIL_CHANGE_CONFIRM_IP_MAX_REQUESTS,
-			EMAIL_CHANGE_CONFIRM_IP_WINDOW_MS
+			EMAIL_CHANGE_CONFIRM_IP_WINDOW_MS,
 		);
 		if (ipResult.limited) {
 			set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
@@ -65,7 +65,7 @@ function handleConfirmEmailChange({
 		set.status = HTTP_STATUS.BAD_REQUEST;
 		return badRequestError(
 			'Invalid or expired email change token',
-			AUTH_ERROR_CODES.AUTH_EMAIL_CHANGE_TOKEN_INVALID
+			AUTH_ERROR_CODES.AUTH_EMAIL_CHANGE_TOKEN_INVALID,
 		);
 	}
 
@@ -96,7 +96,7 @@ const authConfirmEmailChangeRoutes = new Elysia({
 			},
 			'400': badRequestExample(
 				'Invalid or expired email change token',
-				'AUTH_EMAIL_CHANGE_TOKEN_INVALID'
+				'AUTH_EMAIL_CHANGE_TOKEN_INVALID',
 			),
 			'409': conflictExample('Email address is already in use'),
 			'429': RATE_LIMITED_EXAMPLE,

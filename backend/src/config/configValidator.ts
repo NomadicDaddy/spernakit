@@ -2,15 +2,15 @@ import type { AppConfig } from './configSchema.ts';
 
 import {
 	collectSecretIssues,
-	getSecretFields,
 	getPemKeyFields,
-	type ValidationIssue,
+	getSecretFields,
 	validateEncryptionKeyFormat,
 	validateKnownDevKeys,
 	validateMfaKeyPair,
 	validatePemKeys,
 	validatePlaceholderSecrets,
 	validateSecretStrength,
+	type ValidationIssue,
 } from './configValidator-secrets.ts';
 import {
 	collectServerIssues,
@@ -76,4 +76,4 @@ function collectSecurityIssues(validated: AppConfig): ValidationIssue[] {
 	];
 }
 
-export { collectSecurityIssues, type ValidationIssue, validateSecurityRequirements };
+export { collectSecurityIssues, validateSecurityRequirements, type ValidationIssue };

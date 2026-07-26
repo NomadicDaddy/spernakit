@@ -33,7 +33,7 @@ export function GaugeWidget({
 	return (
 		<div className="flex h-full flex-col">
 			<div className="flex items-center justify-between pb-1">
-				<span className="text-muted-foreground text-xs font-medium">{widget.title}</span>
+				<span className="text-xs font-medium text-muted-foreground">{widget.title}</span>
 				{METRIC_ICON[widget.metricType]}
 			</div>
 			<div className="space-y-2">
@@ -41,7 +41,7 @@ export function GaugeWidget({
 					className={
 						hasNumericValue
 							? 'text-2xl font-bold tabular-nums'
-							: 'text-muted-foreground text-sm font-medium'
+							: 'text-sm font-medium text-muted-foreground'
 					}>
 					{formatGaugeValue(widget.metricType, value)}
 				</div>

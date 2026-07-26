@@ -41,7 +41,7 @@ const bugReports = sqliteTable(
 		check('chk_bug_reports_kind', sql`${table.kind} in (${sql.raw(BUG_REPORT_KIND_IN_LIST)})`),
 		check(
 			'chk_bug_reports_status',
-			sql`${table.status} in (${sql.raw(BUG_REPORT_STATUS_IN_LIST)})`
+			sql`${table.status} in (${sql.raw(BUG_REPORT_STATUS_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `metadata` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -54,7 +54,7 @@ const bugReports = sqliteTable(
 		index('idx_bug_reports_user_id').on(table.userId),
 		index('idx_bug_reports_status').on(table.status),
 		index('idx_bug_reports_created_at').on(table.createdAt),
-	]
+	],
 );
 
 export { bugReports };

@@ -38,7 +38,7 @@ const businessEvents = pgTable(
 	(table) => [
 		check(
 			'chk_business_events_event_category',
-			sql`${table.eventCategory} in (${sql.raw(EVENT_CATEGORY_IN_LIST)})`
+			sql`${table.eventCategory} in (${sql.raw(EVENT_CATEGORY_IN_LIST)})`,
 		),
 		foreignKey({
 			columns: [table.userId],
@@ -55,7 +55,7 @@ const businessEvents = pgTable(
 		index('idx_business_events_user_id').on(table.userId),
 		index('idx_business_events_user_created').on(table.userId, table.createdAt),
 		index('idx_business_events_created_at').on(table.createdAt),
-	]
+	],
 );
 
 export { businessEvents };

@@ -25,7 +25,7 @@ const notificationPreferencesRoutes = new Elysia({
 			const authUser = assertUser(user);
 			const userIsSysop = isSysop(authUser);
 			return dataResponse(
-				getStatistics(authUser.id, !userIsSysop && workspaceId ? workspaceId : undefined)
+				getStatistics(authUser.id, !userIsSysop && workspaceId ? workspaceId : undefined),
 			);
 		},
 		{
@@ -63,7 +63,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get notification statistics',
 			},
-		}
+		},
 	)
 	.get(
 		'/unread-count',
@@ -73,7 +73,7 @@ const notificationPreferencesRoutes = new Elysia({
 			return dataResponse({
 				count: getUnreadCount(
 					authUser.id,
-					!userIsSysop && workspaceId ? workspaceId : undefined
+					!userIsSysop && workspaceId ? workspaceId : undefined,
 				),
 			});
 		},
@@ -103,7 +103,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get unread notification count',
 			},
-		}
+		},
 	)
 	.get(
 		'/preferences',
@@ -138,7 +138,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get notification preferences',
 			},
-		}
+		},
 	)
 	.put(
 		'/preferences',
@@ -188,7 +188,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Update notification preferences',
 			},
-		}
+		},
 	);
 
 export { notificationPreferencesRoutes };

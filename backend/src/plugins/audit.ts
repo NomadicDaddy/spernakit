@@ -13,8 +13,8 @@ const MUTATING_METHODS = new Set(['DELETE', 'PATCH', 'POST', 'PUT']);
 
 /** Paths to exclude from audit logging (noisy or internal). */
 const EXCLUDED_PATHS = new Set([
-	'/api/v1/health',
 	'/api/v1/auth/refresh',
+	'/api/v1/health',
 	'/api/v1/system/web-vitals',
 ]);
 
@@ -45,7 +45,7 @@ const REDACTED_KEYS = new Set(
 	REDACT_PATHS.map((p) => {
 		const leaf = p.replace(/^\*+\./, '').toLowerCase();
 		return leaf;
-	})
+	}),
 );
 
 function resolveUserIdFromRequest(request: Request): number | undefined {

@@ -45,7 +45,7 @@ const businessEvents = sqliteTable(
 	(table) => [
 		check(
 			'chk_business_events_event_category',
-			sql`${table.eventCategory} in (${sql.raw(EVENT_CATEGORY_IN_LIST)})`
+			sql`${table.eventCategory} in (${sql.raw(EVENT_CATEGORY_IN_LIST)})`,
 		),
 		// DB-level integrity guard: reject malformed JSON in the json-mode `metadata` column.
 		// json_valid() returns NULL for NULL input, so the CHECK still permits NULL values.
@@ -65,7 +65,7 @@ const businessEvents = sqliteTable(
 		index('idx_business_events_user_id').on(table.userId),
 		index('idx_business_events_user_created').on(table.userId, table.createdAt),
 		index('idx_business_events_created_at').on(table.createdAt),
-	]
+	],
 );
 
 export { businessEvents };

@@ -12,26 +12,21 @@ import {
 import React from 'react';
 
 import type { MetricType } from '@/api/dashboards';
-
-import { formatTime } from '@/lib/formatters';
-
-export { formatTime };
-
 import type { DashboardData } from '@/api/types';
 
 export const NO_WIDGET_DATA_LABEL = 'No data';
 
 export const METRIC_ICON: Record<MetricType, React.ReactNode> = {
-	active_connections: <Wifi aria-hidden="true" className="text-muted-foreground size-4" />,
-	audit_events: <Activity aria-hidden="true" className="text-muted-foreground size-4" />,
-	business_events: <BarChart3 aria-hidden="true" className="text-muted-foreground size-4" />,
-	cpu_usage: <Cpu aria-hidden="true" className="text-muted-foreground size-4" />,
-	health_checks: <Heart aria-hidden="true" className="text-muted-foreground size-4" />,
-	health_status: <Heart aria-hidden="true" className="text-muted-foreground size-4" />,
-	memory_usage: <HardDrive aria-hidden="true" className="text-muted-foreground size-4" />,
-	request_count: <Network aria-hidden="true" className="text-muted-foreground size-4" />,
-	system_alerts: <AlertTriangle aria-hidden="true" className="text-muted-foreground size-4" />,
-	total_users: <Users aria-hidden="true" className="text-muted-foreground size-4" />,
+	active_connections: <Wifi aria-hidden="true" className="size-4 text-muted-foreground" />,
+	audit_events: <Activity aria-hidden="true" className="size-4 text-muted-foreground" />,
+	business_events: <BarChart3 aria-hidden="true" className="size-4 text-muted-foreground" />,
+	cpu_usage: <Cpu aria-hidden="true" className="size-4 text-muted-foreground" />,
+	health_checks: <Heart aria-hidden="true" className="size-4 text-muted-foreground" />,
+	health_status: <Heart aria-hidden="true" className="size-4 text-muted-foreground" />,
+	memory_usage: <HardDrive aria-hidden="true" className="size-4 text-muted-foreground" />,
+	request_count: <Network aria-hidden="true" className="size-4 text-muted-foreground" />,
+	system_alerts: <AlertTriangle aria-hidden="true" className="size-4 text-muted-foreground" />,
+	total_users: <Users aria-hidden="true" className="size-4 text-muted-foreground" />,
 };
 
 /* -------------------------------------------------------------------------- */
@@ -70,7 +65,7 @@ const METRIC_EXTRACTORS: Record<MetricType, MetricExtractor> = {
 export function resolveMetricValue(
 	metricType: MetricType,
 	data: DashboardData | undefined,
-	options: ResolveOptions = {}
+	options: ResolveOptions = {},
 ): number | string {
 	if (!data?.metrics) {
 		return NO_WIDGET_DATA_LABEL;

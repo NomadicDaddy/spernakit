@@ -34,7 +34,7 @@ function useAppShellShortcuts(): void {
 					handler: () => void navigate(s.path),
 					key: s.key,
 					label: s.label,
-				})
+				}),
 			),
 		];
 

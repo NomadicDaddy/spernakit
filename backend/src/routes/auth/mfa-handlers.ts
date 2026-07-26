@@ -49,7 +49,7 @@ async function handleMfaSetup({ body, set, user }: AuthCtx<{ currentPassword: st
 		set.status = HTTP_STATUS.CONFLICT;
 		return conflictError(
 			'MFA is not configured on this server. Run `bun run generate-keys` to provision the MFA signing key.',
-			AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED
+			AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED,
 		);
 	}
 
@@ -62,7 +62,7 @@ async function handleMfaSetup({ body, set, user }: AuthCtx<{ currentPassword: st
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'Current password is incorrect.',
-			AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS
+			AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS,
 		);
 	}
 
@@ -105,7 +105,7 @@ async function handleVerifyMfaSetup({ body, set, user }: AuthCtx<{ code: string 
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'Invalid verification code. Please try again.',
-			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE
+			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE,
 		);
 	}
 
@@ -125,7 +125,7 @@ async function handleVerifyMfa({
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'MFA challenge token is invalid or expired.',
-			AUTH_ERROR_CODES.AUTH_MFA_TOKEN_INVALID
+			AUTH_ERROR_CODES.AUTH_MFA_TOKEN_INVALID,
 		);
 	}
 
@@ -139,7 +139,7 @@ async function handleVerifyMfa({
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'Invalid MFA code. Please try again.',
-			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE
+			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE,
 		);
 	}
 
@@ -160,7 +160,7 @@ async function handleVerifyRecovery({
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'MFA challenge token is invalid or expired.',
-			AUTH_ERROR_CODES.AUTH_MFA_TOKEN_INVALID
+			AUTH_ERROR_CODES.AUTH_MFA_TOKEN_INVALID,
 		);
 	}
 
@@ -189,7 +189,7 @@ async function handleDisableMfa({ body, set, user }: AuthCtx<{ code: string }>) 
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'Invalid code. MFA was not disabled.',
-			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE
+			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE,
 		);
 	}
 
@@ -206,7 +206,7 @@ async function handleRegenerateRecoveryCodes({ body, set, user }: AuthCtx<{ code
 		set.status = HTTP_STATUS.UNAUTHORIZED;
 		return unauthorizedError(
 			'Invalid code. Recovery codes were not regenerated.',
-			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE
+			AUTH_ERROR_CODES.AUTH_MFA_INVALID_CODE,
 		);
 	}
 

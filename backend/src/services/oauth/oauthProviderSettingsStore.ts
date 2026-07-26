@@ -59,7 +59,7 @@ export function readStoredSettings(provider: OAuthProviderName): null | StoredSe
 	} catch (err) {
 		logger.warn(
 			{ err, provider, source: 'readStoredSettings' },
-			'Failed to parse OAuth provider settings row - provider will be treated as unconfigured'
+			'Failed to parse OAuth provider settings row - provider will be treated as unconfigured',
 		);
 		return null;
 	}
@@ -72,7 +72,7 @@ export function readStoredSettings(provider: OAuthProviderName): null | StoredSe
  * @returns Stored settings or null
  */
 export function getStoredSettings(
-	provider: OAuthProviderName
+	provider: OAuthProviderName,
 ): null | OAuthProviderSettingsInternal {
 	return readStoredSettings(provider)?.settings ?? null;
 }

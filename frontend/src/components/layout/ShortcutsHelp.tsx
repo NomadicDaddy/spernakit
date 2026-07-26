@@ -39,13 +39,13 @@ function ShortcutsHelp() {
 					{items.map((shortcut) => (
 						<div className="flex items-center justify-between py-2" key={shortcut.key}>
 							<span className="text-sm">{shortcut.description}</span>
-							<kbd className="bg-muted rounded px-2 py-1 font-mono text-xs">
+							<kbd className="rounded bg-muted px-2 py-1 font-mono text-xs">
 								{shortcut.label}
 							</kbd>
 						</div>
 					))}
 					{items.length === 0 && (
-						<p className="text-muted-foreground text-sm">No shortcuts registered.</p>
+						<p className="text-sm text-muted-foreground">No shortcuts registered.</p>
 					)}
 				</div>
 			</DialogContent>

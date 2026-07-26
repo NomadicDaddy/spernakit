@@ -18,7 +18,7 @@ function Spinner({ className, size = 16 }: SpinnerProps) {
 			aria-hidden="true"
 			className={cn(
 				'inline-flex [transform:translateZ(0)] animate-spin [will-change:transform]',
-				className
+				className,
 			)}>
 			<Loader2 style={{ height: size, width: size }} />
 		</span>

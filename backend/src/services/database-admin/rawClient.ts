@@ -28,10 +28,10 @@ function getRawClient(): DatabaseType {
 	const db = getDb();
 	// Drizzle's drizzle() return type includes $client but BunSQLiteDatabase's public
 	// type does not expose it. Intersection assertion avoids the double-cast pattern.
-	const rawDb = (db as typeof db & { $client: DatabaseType }).$client;
+	const rawDb = (db as { $client: DatabaseType } & typeof db).$client;
 	if (!rawDb || typeof rawDb.query !== 'function') {
 		throw new Error(
-			'Failed to access raw SQLite client - Drizzle ORM internal API may have changed'
+			'Failed to access raw SQLite client - Drizzle ORM internal API may have changed',
 		);
 	}
 	return rawDb;

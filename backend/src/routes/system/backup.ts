@@ -70,7 +70,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Get database backup status (SYSOP only)',
 			},
-		}
+		},
 	)
 	.post(
 		'/backup/trigger',
@@ -109,7 +109,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Trigger manual database backup (SYSOP only)',
 			},
-		}
+		},
 	)
 	.post(
 		'/backup/restore',
@@ -152,7 +152,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Restore database from backup (SYSOP only)',
 			},
-		}
+		},
 	);
 
 export { systemBackupRoutes };

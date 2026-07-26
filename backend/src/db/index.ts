@@ -61,7 +61,7 @@ function initializeDatabase(
 	pathOrUrl: string,
 	dialect: DatabaseDialect = 'sqlite',
 	sslConfig?: { enabled?: boolean; rejectUnauthorized?: boolean },
-	busyTimeoutMs = 5000
+	busyTimeoutMs = 5000,
 ): AppDatabase {
 	if (db) {
 		throw new Error('Database already initialized. Call closeDatabase() first.');
@@ -76,7 +76,7 @@ function initializeDatabase(
 		// parity verified at compile time until the port lands.
 		throw new Error(
 			'postgres dialect requires a service-layer port; not yet supported at runtime. ' +
-				"Set database.dialect to 'sqlite' or complete the PostgreSQL port described in db/index.ts."
+				"Set database.dialect to 'sqlite' or complete the PostgreSQL port described in db/index.ts.",
 		);
 	}
 
@@ -167,7 +167,7 @@ function runVacuum(): VacuumResult {
 				sizeAfterMB: (sizeAfterBytes / BYTES_PER_MB).toFixed(2),
 				sizeBeforeMB: (sizeBeforeBytes / BYTES_PER_MB).toFixed(2),
 			},
-			'Database VACUUM completed'
+			'Database VACUUM completed',
 		);
 
 		return { freedBytes, sizeAfterBytes, sizeBeforeBytes, success: true };
