@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react';
+
 import type { MetricType, WidgetInput, WidgetType } from '@/api/dashboards';
 
 import { Button } from '@/components/ui/button';
@@ -67,6 +69,8 @@ export function AddWidgetDialog({
 	onOpenChange,
 	onUpdateWidget,
 }: AddWidgetDialogProps) {
+	const titleInputRef = useRef<HTMLInputElement>(null);
+	const [titleError, setTitleError] = useState<null | string>(null);
 	const isChartWidget =
 		newWidget.widgetType === 'line_chart' || newWidget.widgetType === 'bar_chart';
 	const metricOptions = isChartWidget
@@ -85,8 +89,26 @@ export function AddWidgetDialog({
 		});
 	};
 
+	const handleAddWidget = () => {
+		if (isPending) return;
+		if (!newWidget.title.trim()) {
+			setTitleError('Title is required');
+			titleInputRef.current?.focus();
+			return;
+		}
+		setTitleError(null);
+		onAddWidget();
+	};
+
+	const handleOpenChange = (open: boolean) => {
+		if (!open) {
+			setTitleError(null);
+		}
+		onOpenChange(open);
+	};
+
 	return (
-		<Dialog onOpenChange={onOpenChange} open={isOpen}>
+		<Dialog onOpenChange={handleOpenChange} open={isOpen}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Add Widget</DialogTitle>
@@ -98,14 +120,29 @@ export function AddWidgetDialog({
 					<div className="space-y-2">
 						<Label htmlFor="widget-title">Title</Label>
 						<Input
+							aria-describedby={titleError ? 'widget-title-error' : undefined}
 							autoComplete="off"
 							id="widget-title"
-							onChange={(e) =>
-								onUpdateWidget({ ...newWidget, title: e.target.value })
-							}
+							onChange={(e) => {
+								onUpdateWidget({ ...newWidget, title: e.target.value });
+								if (e.target.value.trim()) {
+									setTitleError(null);
+								}
+							}}
 							placeholder="Widget title"
+							ref={titleInputRef}
+							required
 							value={newWidget.title}
+							{...(titleError ? { 'aria-invalid': true } : {})}
 						/>
+						{titleError && (
+							<p
+								aria-live="polite"
+								className="text-sm text-destructive"
+								id="widget-title-error">
+								{titleError}
+							</p>
+						)}
 					</div>
 					<div className="grid grid-cols-2 gap-4">
 						<div className="space-y-2">
@@ -206,10 +243,10 @@ export function AddWidgetDialog({
 					</div>
 				</div>
 				<DialogFooter>
-					<Button onClick={() => onOpenChange(false)} variant="outline">
+					<Button onClick={() => handleOpenChange(false)} variant="outline">
 						Cancel
 					</Button>
-					<Button disabled={!newWidget.title.trim() || isPending} onClick={onAddWidget}>
+					<Button disabled={isPending} onClick={handleAddWidget}>
 						Add Widget
 					</Button>
 				</DialogFooter>

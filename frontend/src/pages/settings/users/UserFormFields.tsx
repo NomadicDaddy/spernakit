@@ -1,3 +1,5 @@
+import type { Ref } from 'react';
+
 import type { UserRole } from '@/api/types';
 
 import { RoleSelector } from '@/components/shared/RoleSelector';
@@ -10,6 +12,7 @@ import { ROLES } from '@/types/roles';
 interface UserFormFieldsProps {
 	email: string;
 	emailError?: string;
+	emailInputRef?: Ref<HTMLInputElement>;
 	idPrefix: string;
 	onEmailBlur?: () => void;
 	onEmailChange: (value: string) => void;
@@ -19,11 +22,13 @@ interface UserFormFieldsProps {
 	role: '' | UserRole;
 	username: string;
 	usernameError?: string;
+	usernameInputRef?: Ref<HTMLInputElement>;
 }
 
 export function UserFormFields({
 	email,
 	emailError,
+	emailInputRef,
 	idPrefix,
 	onEmailBlur,
 	onEmailChange,
@@ -33,6 +38,7 @@ export function UserFormFields({
 	role,
 	username,
 	usernameError,
+	usernameInputRef,
 }: UserFormFieldsProps) {
 	const { roleLabel } = useAuthorization();
 	const usernameErrorId = `${idPrefix}-username-error`;
@@ -52,13 +58,14 @@ export function UserFormFields({
 					id={`${idPrefix}-username`}
 					onBlur={onUsernameBlur}
 					onChange={(e) => onUsernameChange(e.target.value)}
+					ref={usernameInputRef}
 					required
 					spellCheck={false}
 					value={username}
 					{...(hasUsernameError ? { 'aria-invalid': true } : {})}
 				/>
 				{hasUsernameError ? (
-					<p className="text-sm text-destructive" id={usernameErrorId}>
+					<p aria-live="polite" className="text-sm text-destructive" id={usernameErrorId}>
 						{usernameError}
 					</p>
 				) : (
@@ -75,6 +82,7 @@ export function UserFormFields({
 					id={`${idPrefix}-email`}
 					onBlur={onEmailBlur}
 					onChange={(e) => onEmailChange(e.target.value)}
+					ref={emailInputRef}
 					required
 					spellCheck={false}
 					type="email"
@@ -82,7 +90,7 @@ export function UserFormFields({
 					{...(hasEmailError ? { 'aria-invalid': true } : {})}
 				/>
 				{hasEmailError ? (
-					<p className="text-sm text-destructive" id={emailErrorId}>
+					<p aria-live="polite" className="text-sm text-destructive" id={emailErrorId}>
 						{emailError}
 					</p>
 				) : (

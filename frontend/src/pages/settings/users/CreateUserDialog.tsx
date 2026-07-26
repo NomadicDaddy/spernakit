@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { UserRole } from '@/api/types';
 
@@ -75,6 +75,9 @@ export function CreateUserDialog({
 	onCreate,
 	onOpenChange,
 }: CreateUserDialogProps) {
+	const emailInputRef = useRef<HTMLInputElement>(null);
+	const passwordInputRef = useRef<HTMLInputElement>(null);
+	const usernameInputRef = useRef<HTMLInputElement>(null);
 	const [form, setForm] = useState<CreateForm>({
 		email: '',
 		password: '',
@@ -106,9 +109,19 @@ export function CreateUserDialog({
 
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
+		if (isPending) return;
 		// Mark everything touched so errors surface even on direct submit.
 		setTouched({ email: true, password: true, username: true });
-		if (!isValid) return;
+		if (!isValid) {
+			if (usernameError) {
+				usernameInputRef.current?.focus();
+			} else if (emailError) {
+				emailInputRef.current?.focus();
+			} else {
+				passwordInputRef.current?.focus();
+			}
+			return;
+		}
 		onCreate(form);
 		resetDialog();
 	}
@@ -135,6 +148,7 @@ export function CreateUserDialog({
 				<form className="space-y-4" noValidate onSubmit={handleSubmit}>
 					<UserFormFields
 						email={form.email}
+						emailInputRef={emailInputRef}
 						idPrefix="create"
 						onEmailBlur={() => setTouched((t) => ({ ...t, email: true }))}
 						onEmailChange={(value) => setForm((f) => ({ ...f, email: value }))}
@@ -143,6 +157,7 @@ export function CreateUserDialog({
 						onUsernameChange={(value) => setForm((f) => ({ ...f, username: value }))}
 						role={form.role}
 						username={form.username}
+						usernameInputRef={usernameInputRef}
 						{...(liveErrors.email ? { emailError: liveErrors.email } : {})}
 						{...(liveErrors.username ? { usernameError: liveErrors.username } : {})}
 					/>
@@ -154,13 +169,17 @@ export function CreateUserDialog({
 							id="create-password"
 							onBlur={() => setTouched((t) => ({ ...t, password: true }))}
 							onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+							ref={passwordInputRef}
 							required
 							type="password"
 							value={form.password}
 							{...(hasPasswordError ? { 'aria-invalid': true } : {})}
 						/>
 						{hasPasswordError ? (
-							<p className="text-sm text-destructive" id={passwordErrorId}>
+							<p
+								aria-live="polite"
+								className="text-sm text-destructive"
+								id={passwordErrorId}>
 								{liveErrors.password}
 							</p>
 						) : (
@@ -170,7 +189,7 @@ export function CreateUserDialog({
 						)}
 					</div>
 					<DialogFooter>
-						<Button disabled={isPending || !isValid} type="submit">
+						<Button disabled={isPending} type="submit">
 							{isPending ? 'Creating…' : 'Create'}
 						</Button>
 					</DialogFooter>
