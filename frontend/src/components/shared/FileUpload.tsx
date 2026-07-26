@@ -99,7 +99,7 @@ function FileUpload({
 
 	return (
 		<div className={cn('space-y-3', className)}>
-			<div
+			<button
 				aria-label="File upload drop zone - click or drag a file here"
 				className={cn(
 					'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors',
@@ -108,18 +108,12 @@ function FileUpload({
 						: 'border-muted-foreground/25 hover:border-muted-foreground/50',
 					!isInteractive && 'cursor-not-allowed opacity-50',
 				)}
-				onClick={() => isInteractive && inputRef.current?.click()}
+				disabled={!isInteractive}
+				onClick={() => inputRef.current?.click()}
 				onDragLeave={handleDragLeave}
 				onDragOver={handleDragOver}
 				onDrop={handleDrop}
-				onKeyDown={(e) => {
-					if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
-						e.preventDefault();
-						inputRef.current?.click();
-					}
-				}}
-				role="button"
-				tabIndex={isInteractive ? 0 : -1}>
+				type="button">
 				<FileUp aria-hidden className="mb-2 h-8 w-8 text-muted-foreground" />
 				<p className="text-sm text-muted-foreground">
 					Drag and drop a file here, or click to browse
@@ -129,7 +123,7 @@ function FileUpload({
 						Maximum size: {formatFileSize(maxSizeBytes)}
 					</p>
 				)}
-			</div>
+			</button>
 
 			<input
 				accept={accept}
