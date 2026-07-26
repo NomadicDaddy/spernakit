@@ -9,6 +9,7 @@ import { getDb } from '../../db/index.ts';
 import { fileUploads } from '../../db/schema/fileUploads.ts';
 import { getStorageAdapter } from '../../storage/index.ts';
 import { UPLOAD_DIR } from '../../storage/localAdapter.ts';
+import { mapWithConcurrency } from '../../utils/async.ts';
 import { logScheduler } from '../../utils/logger.ts';
 import { log as logAudit } from '../auditService.ts';
 import { cutoffDate, MAX_CLEANUP_BATCHES } from './cleanupUtils.ts';
@@ -42,16 +43,18 @@ async function softDeletedFilesCleanupTask(): Promise<{ batches: number; cleaned
 		// Delete blobs from storage; only hard-delete rows whose blobs are confirmed
 		// gone — deleting the row after a failed blob delete would orphan the blob
 		// permanently. Failed rows are retried on the next scheduled run.
-		const idsToDelete: number[] = [];
-		for (const file of files) {
-			const blobDeleted = await safeStorageDelete(storage, file.storagePath);
-			const thumbnailDeleted = file.thumbnailKey
-				? await safeStorageDelete(storage, file.thumbnailKey)
-				: true;
-			if (blobDeleted && thumbnailDeleted) {
-				idsToDelete.push(file.id);
-			}
-		}
+		const deletionResults = await mapWithConcurrency(files, async (file) => {
+			const [blobDeleted, thumbnailDeleted] = await Promise.all([
+				safeStorageDelete(storage, file.storagePath),
+				file.thumbnailKey
+					? safeStorageDelete(storage, file.thumbnailKey)
+					: Promise.resolve(true),
+			]);
+			return blobDeleted && thumbnailDeleted ? file.id : null;
+		});
+		const idsToDelete = deletionResults.flatMap((result) =>
+			result.status === 'fulfilled' && result.value !== null ? [result.value] : [],
+		);
 
 		// No progress in this batch — stop instead of re-fetching the same failures
 		if (idsToDelete.length === 0) break;
@@ -105,16 +108,17 @@ async function cleanupOrphanedUploads(db: ReturnType<typeof getDb>): Promise<num
 
 	const cutoffMs = Date.now() - ORPHAN_MIN_AGE_MS;
 	const entries = await readdir(UPLOAD_DIR, { recursive: true });
-	const candidates: { key: string; path: string }[] = [];
-
-	for (const entry of entries) {
+	const inspectionResults = await mapWithConcurrency(entries, async (entry) => {
 		const relPath = entry.toString();
 		const filePath = join(UPLOAD_DIR, relPath);
 		const stats = await stat(filePath).catch(() => null);
-		if (!stats?.isFile() || stats.mtimeMs > cutoffMs) continue;
+		if (!stats?.isFile() || stats.mtimeMs > cutoffMs) return null;
 		// Storage keys always use forward slashes (see services/file/upload.ts)
-		candidates.push({ key: relPath.replaceAll('\\', '/'), path: filePath });
-	}
+		return { key: relPath.replaceAll('\\', '/'), path: filePath };
+	});
+	const candidates = inspectionResults.flatMap((result) =>
+		result.status === 'fulfilled' && result.value !== null ? [result.value] : [],
+	);
 
 	let removed = 0;
 	for (let i = 0; i < candidates.length; i += MAX_CLEANUP_BATCH_SIZE) {
@@ -137,17 +141,23 @@ async function cleanupOrphanedUploads(db: ReturnType<typeof getDb>): Promise<num
 			if (row.thumbnailKey) knownKeys.add(row.thumbnailKey);
 		}
 
-		for (const candidate of batch) {
-			if (knownKeys.has(candidate.key)) continue;
-			try {
-				await unlink(candidate.path);
-				removed++;
-			} catch {
-				logScheduler('warn', 'Failed to delete orphaned upload file', {
-					key: candidate.key,
-				});
-			}
-		}
+		const unlinkResults = await mapWithConcurrency(
+			batch.filter((candidate) => !knownKeys.has(candidate.key)),
+			async (candidate) => {
+				try {
+					await unlink(candidate.path);
+					return true;
+				} catch {
+					logScheduler('warn', 'Failed to delete orphaned upload file', {
+						key: candidate.key,
+					});
+					return false;
+				}
+			},
+		);
+		removed += unlinkResults.filter(
+			(result) => result.status === 'fulfilled' && result.value,
+		).length;
 	}
 
 	if (removed > 0) {
