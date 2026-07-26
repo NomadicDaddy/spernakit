@@ -4,7 +4,6 @@ import { lazy, Suspense } from 'react';
 
 import type { BugReport } from '@/lib/bugReport';
 
-import { BugReportButton } from '@/components/layout/BugReportButton';
 import {
 	CommandPaletteLauncher,
 	CommandPaletteLauncherMobile,
@@ -18,6 +17,14 @@ import { useAppFeatures } from '@/hooks/useAppFeatures';
 const LazyNotificationBell = lazy(() =>
 	import('@/components/layout/NotificationBell').then((m) => ({
 		default: m.NotificationBell,
+	})),
+);
+
+// Lazy-load the bug report dialog so its tabs and form controls stay off the
+// critical path. The feature query already gates this user-initiated control.
+const LazyBugReportButton = lazy(() =>
+	import('@/components/layout/BugReportButton').then((m) => ({
+		default: m.BugReportButton,
 	})),
 );
 
@@ -50,7 +57,11 @@ function HeaderBarActions({ extraContent, layoutActions }: HeaderBarActionsProps
 			{extraContent}
 			<CommandPaletteLauncher />
 			<CommandPaletteLauncherMobile />
-			{bugReportEnabled && <BugReportButton onSubmit={layoutActions.handleBugReport} />}
+			{bugReportEnabled && (
+				<Suspense fallback={null}>
+					<LazyBugReportButton onSubmit={layoutActions.handleBugReport} />
+				</Suspense>
+			)}
 			<Suspense fallback={null}>
 				<LazyNotificationBell />
 			</Suspense>

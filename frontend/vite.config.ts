@@ -101,12 +101,13 @@ export default defineConfig({
 						// keeping them here stops shared runtime code landing in the grid-layout
 						// chunk. The radix primitives AND positioning/sidecar deps used by the
 						// eagerly-imported AppShell (react-slot via Button, react-tooltip,
-						// react-dropdown-menu, react-dialog via Sheet, react-separator,
-						// react-avatar) ride along because they are statically
+						// react-dropdown-menu, react-separator, react-avatar) ride along
+						// because they are statically
 						// imported from the entry. Page-only radix (react-select,
 						// react-checkbox, react-switch, react-tabs, react-popover via the
-						// lazy NotificationBell, etc.) is NOT listed here, so the bundler
-						// places it in the lazy page chunks that use it.
+						// lazy NotificationBell, etc.) and react-dialog (used by lazy shell
+						// controls) are NOT listed here, so the bundler keeps them off the
+						// critical path.
 						// One group per chunk name: two groups sharing a name emit two chunks.
 						//
 						// sonner and cmdk were previously co-located here. Both are now
@@ -118,7 +119,7 @@ export default defineConfig({
 						{
 							name: 'react-core',
 							priority: 100,
-							test: /node_modules[\\/](?:react|react-dom|scheduler|use-sync-external-store|zustand|prop-types|fast-equals|@radix-ui[\\/](?:react-slot|react-tooltip|react-dropdown-menu|react-dialog|react-separator|react-avatar)|radix-ui|@floating-ui|aria-hidden|react-remove-scroll|react-remove-scroll-bar|react-style-singleton|use-sidecar|use-callback-ref|get-nonce)[\\/]/,
+							test: /node_modules[\\/](?:react|react-dom|scheduler|use-sync-external-store|zustand|prop-types|fast-equals|@radix-ui[\\/](?:react-slot|react-tooltip|react-dropdown-menu|react-separator|react-avatar)|radix-ui|@floating-ui|use-callback-ref)[\\/]/,
 						},
 						// React Router - split from core to allow parallel loading
 						{
@@ -144,6 +145,13 @@ export default defineConfig({
 							name: 'ui-utils',
 							priority: 70,
 							test: /node_modules[\\/](?:class-variance-authority|clsx|tailwind-merge)[\\/]/,
+						},
+						// Dialog and scroll-lock internals are only reached from lazy shell
+						// controls (mobile nav, bug report, command palette, shortcuts help).
+						{
+							name: 'radix-dialog',
+							priority: 68,
+							test: /node_modules[\\/](?:@radix-ui[\\/]react-dialog|aria-hidden|react-remove-scroll|react-remove-scroll-bar|react-style-singleton|use-sidecar|get-nonce)[\\/]/,
 						},
 						// Sonner toast library — lazy-loaded (Toaster via React.lazy in
 						// App.tsx, toast calls via the dynamic-import adapter in

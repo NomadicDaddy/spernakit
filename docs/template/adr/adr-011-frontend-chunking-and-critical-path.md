@@ -108,7 +108,9 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
 - Radix primitives used only by the eagerly-imported AppShell stay in `react-core` (see
   Alternative 2). Page-only Radix (react-select, react-checkbox, react-switch, react-tabs,
   react-popover) is excluded from the `react-core` regex so the bundler places it in lazy page
-  chunks. sonner and cmdk have their own explicit chunks and are lazy-loaded.
+  chunks. Radix Dialog and its scroll-lock internals live in `radix-dialog`; every shell consumer
+  is lazy-loaded, including the mobile navigation drawer and bug-report form. sonner and cmdk have
+  their own explicit chunks and are lazy-loaded.
 
 ## Consequences
 
@@ -123,7 +125,7 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
 
 ### Negative
 
-- The first load fetches 10 blocking assets rather than 6. This is a win under HTTP/2 multiplexing
+- The first load fetches 13 blocking assets rather than 6. This is a win under HTTP/2 multiplexing
   and better for cache granularity, but nginx listens on plain HTTP (TLS terminates at an external
   reverse proxy), so it assumes the operator's edge speaks HTTP/2 or better.
 - The budget carries 10% headroom to avoid hash-churn flapping, so it will not catch slow creep. The
@@ -135,6 +137,10 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
   `NotificationBell`, `BackendUnreachableBanner`, `ImpersonationBanner`, and `ShortcutsHelp`.
   API-layer toast calls go through a dynamic-import adapter (`lib/lazyToast.ts`) so the
   `queryClient` error cache and `tokenRefresh` no longer pull sonner into the entry chunk.
+- After the refreshed Radix graph raised the result back above the target, the feature-gated
+  bug-report form and mobile-only navigation drawer were deferred too. Radix Dialog now stays in
+  its own lazy chunk, and the current critical path is 167.62 KiB gzip JavaScript. The gate measures
+  that value separately from the combined Brotli/CSS budget and enforces the fixed 170 KiB ceiling.
 
 ## Related ADRs
 
