@@ -142,6 +142,7 @@
 		"stop:frontend": "bun scripts/stop.ts --frontend",
 		"supertest": "bun run smoke:reset && bun run smoke:docker-prod && bun run smoke:screenshots",
 		"template:sync-plan": "bun scripts/template-sync-plan.ts",
+		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-mutation-denylist": "bun scripts/verify-mutation-denylist.ts",

@@ -51,14 +51,27 @@ export function defaultAppName(slug: string): string {
 }
 
 export function readTemplateVersion(source: string): string {
+	const packagePath = join(source, 'package.json');
 	try {
-		const pkg = JSON.parse(readFileSync(join(source, 'package.json'), 'utf8')) as {
+		const pkg = JSON.parse(readFileSync(packagePath, 'utf8')) as {
 			spernakit_version?: string;
 			version?: string;
 		};
-		return pkg.spernakit_version ?? pkg.version ?? 'latest';
-	} catch {
-		return 'latest';
+		const version = pkg.spernakit_version ?? pkg.version;
+		if (
+			typeof version === 'string' &&
+			/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(version)
+		) {
+			return version;
+		}
+		throw new Error('package.json has no concrete semantic version');
+	} catch (err) {
+		throw new Error(
+			`Unable to determine a concrete version from ${packagePath}: ${
+				err instanceof Error ? err.message : String(err)
+			}`,
+			{ cause: err },
+		);
 	}
 }
 

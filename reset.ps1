@@ -35,7 +35,7 @@ $escapedVersion = $version -replace "'", "''"
 $command = "Push-Location -LiteralPath '$escapedAppPath'; bun run setup --slug $Application --name '$escapedName' --description '$escapedDescription' --frontend-port $frontendPort --backend-port $backendPort --version '$escapedVersion'; Pop-Location"
 
 if ($DryRun) {
-	Write-Host $command
+	Write-Output $command
 } else {
 	Push-Location -LiteralPath $appPath
 	try {
