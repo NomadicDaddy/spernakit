@@ -48,9 +48,10 @@ class WebSocketManager {
 		this.setConnectionState = setConnectionState;
 		this.clearDisconnectTimer();
 
-		if (this.ws?.readyState === WebSocket.OPEN) {
+		const socket = this.ws;
+		if (socket && socket.readyState === socket.OPEN) {
 			setConnectionState('connected');
-		} else if (this.ws?.readyState === WebSocket.CONNECTING) {
+		} else if (socket && socket.readyState === socket.CONNECTING) {
 			setConnectionState('connecting');
 		}
 
@@ -116,9 +117,9 @@ class WebSocketManager {
 	}
 
 	private hasActiveSocket(): boolean {
-		return (
-			this.ws?.readyState === WebSocket.OPEN || this.ws?.readyState === WebSocket.CONNECTING
-		);
+		const socket = this.ws;
+		if (!socket) return false;
+		return socket.readyState === socket.OPEN || socket.readyState === socket.CONNECTING;
 	}
 
 	private handleMessage(event: MessageEvent): void {
@@ -218,28 +219,28 @@ class WebSocketManager {
 	}
 
 	private sendHeartbeatPing(): void {
-		if (this.ws?.readyState !== WebSocket.OPEN) return;
+		const socket = this.ws;
+		if (socket === null || socket.readyState !== socket.OPEN) return;
 		if (this.pongTimeout) return;
 
 		try {
-			this.ws.send(JSON.stringify({ type: 'ping' }));
+			socket.send(JSON.stringify({ type: 'ping' }));
 		} catch {
-			this.ws.close();
+			socket.close();
 			return;
 		}
 
-		this.pongTimeout = setTimeout(() => {
-			this.ws?.close();
-		}, PONG_TIMEOUT);
+		this.pongTimeout = setTimeout(() => this.ws?.close(), PONG_TIMEOUT);
 	}
 
 	private sendChannelCommand(type: 'subscribe' | 'unsubscribe', channel: string): void {
-		if (this.ws?.readyState !== WebSocket.OPEN) return;
+		const socket = this.ws;
+		if (socket === null || socket.readyState !== socket.OPEN) return;
 
 		try {
-			this.ws.send(JSON.stringify({ channel, type }));
+			socket.send(JSON.stringify({ channel, type }));
 		} catch {
-			this.ws.close();
+			socket.close();
 		}
 	}
 
@@ -253,11 +254,12 @@ class WebSocketManager {
 
 			if (!isVisibleSignal && !isOnlineSignal) return;
 			if (this.intentionalClose) return;
-			if (this.ws?.readyState === WebSocket.OPEN) {
+			const socket = this.ws;
+			if (socket && socket.readyState === socket.OPEN) {
 				this.sendHeartbeatPing();
 				return;
 			}
-			if (this.ws?.readyState === WebSocket.CONNECTING) return;
+			if (socket && socket.readyState === socket.CONNECTING) return;
 
 			void this.probeBackendAndReconnect();
 		};
