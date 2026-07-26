@@ -162,8 +162,13 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run test:fleet-manifest",
+					"description": "Fleet manifest validator regression self-test",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:fleet-manifest",
-					"description": "spernakit.psd1 per-app versions match each app's package.json",
+					"description": "Fleet manifest matches packages and runtime configs",
 					"templateOnly": true
 				},
 				{

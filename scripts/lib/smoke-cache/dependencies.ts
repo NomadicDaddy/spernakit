@@ -29,7 +29,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	'check:drift',
 	'check:fleet-manifest',
 	'check:fresh-release',
+	'test:fleet-manifest',
 ]);
+
 const GENERATED_OUTPUT_EXCLUDES = COMMON_EXCLUDES.filter((pattern) => pattern !== '**/dist/**');
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
@@ -138,12 +140,8 @@ export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/check-destructive-confirmation.ts',
 		],
 	},
-	// 'check:drift' intentionally has NO entry: the drift gate compares every
-	// template file enumerated from git ls-tree of the template (plus the
-	// template repo's own state), which cannot be captured by a static glob
-	// list — a stale list let the cache skip the step while files it didn't
-	// cover had drifted. Steps without an entry always run (smoke-cache.ts
-	// hashes them with Date.now()).
+	// check:drift has no static entry because it compares every template file from git.
+	// A stale glob list once skipped real drift; missing entries intentionally always run.
 	'check:feature-integration': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

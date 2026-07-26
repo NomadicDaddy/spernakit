@@ -135,6 +135,9 @@ export function isFileExcluded(filePath: string): boolean {
 	// refused rather than silently succeeding.
 	if (filePath === 'scripts/check-leak-guard.sh') return true;
 	if (filePath === 'scripts/check-fleet-manifest.ts') return true;
+	if (filePath === 'scripts/read-fleet-manifest.ps1') return true;
+	if (filePath === 'scripts/test-fleet-manifest.ts') return true;
+	if (filePath.startsWith('scripts/lib/fleet/')) return true;
 
 	// Drift-only directory exclusions (generated/app-specific content copied into apps but not
 	// drift-checked).

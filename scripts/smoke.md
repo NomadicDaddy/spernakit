@@ -169,45 +169,47 @@ Steps (in order):
     - Third-party license inventory matches the installed graph.
 11. `bun run licenses:sync-core:check`
     - License core copies in sibling repositories match Spernakit (when present).
-12. `bun run check:fleet-manifest`
-    - spernakit.psd1 per-app versions match each app's package.json.
-13. `bun run check:image-publication`
+12. `bun run test:fleet-manifest`
+    - Fleet manifest validator regression self-test.
+13. `bun run check:fleet-manifest`
+    - Fleet manifest matches packages and runtime configs.
+14. `bun run check:image-publication`
     - Template image publication guard.
-14. `bun run check:process-env`
+15. `bun run check:process-env`
     - Process environment access check.
-15. `bun run check:max-lines`
+16. `bun run check:max-lines`
     - 300-line max-lines gate.
-16. `bun run check-application`
+17. `bun run check-application`
     - Application check.
-17. `bun run check:destructive-confirmation`
+18. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-18. `bun run verify-mutation-denylist`
+19. `bun run verify-mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-19. `bun run check-docs`
+20. `bun run check-docs`
     - Documentation consistency check.
-20. `bun run check:smoke-docs`
+21. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-21. `bun run typecheck`
+22. `bun run typecheck`
     - Typecheck.
-22. `bun run lint`
+23. `bun run lint`
     - Lint.
-23. `bun run build`
+24. `bun run build`
     - Build.
-24. `bun run verify-minification`
+25. `bun run verify-minification`
     - Verify bundle minification and total size budget.
-25. `bun run check:critical-path`
+26. `bun run check:critical-path`
     - Verify critical-path size, React runtime placement, and no preload waterfall.
-26. `bun run check:api-types`
+27. `bun run check:api-types`
     - API type contract validation.
-27. `bun run check:feature-integration`
+28. `bun run check:feature-integration`
     - Feature integration check.
-28. `bun run check:schema-parity`
+29. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-29. `bun run format:check`
+30. `bun run format:check`
     - Format check.
-30. `bun run check-deps`
+31. `bun run check-deps`
     - Check dependency versions.
-31. `bun run check:dead-code`
+32. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
