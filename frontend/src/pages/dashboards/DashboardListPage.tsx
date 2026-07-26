@@ -1,6 +1,6 @@
 import { LayoutGrid, Plus, Upload } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { PageHeader } from '@/components/shared/PageHeader';

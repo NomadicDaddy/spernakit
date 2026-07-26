@@ -1,7 +1,7 @@
-import type { Blocker } from 'react-router-dom';
+import type { Blocker } from 'react-router';
 
 import { useEffect } from 'react';
-import { useBlocker } from 'react-router-dom';
+import { useBlocker } from 'react-router';
 
 /**
  * Warns the user before navigating away when there are unsaved changes.

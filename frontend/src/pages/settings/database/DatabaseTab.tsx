@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { type Database, Eye, LayoutGrid, Play, Table } from 'lucide-react';
 import { lazy, Suspense } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 
 import { ApiError } from '@/api/client';
 import { getSchema } from '@/api/databaseAdmin';

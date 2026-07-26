@@ -1,5 +1,5 @@
 import { useActionState, useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { getMe } from '@/api/auth';

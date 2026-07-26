@@ -10,7 +10,7 @@ This frontend provides:
 - **shadcn/ui** component library (Radix UI primitives)
 - **TanStack Query** for server state management
 - **Zustand** for client state management
-- **React Router v7** for navigation
+- **React Router v8** for navigation
 - **Real-time** WebSocket integration
 - **Code splitting** with lazy loading
 - **Web Vitals** reporting
@@ -24,7 +24,7 @@ This frontend provides:
 | Styling      | Tailwind CSS 4 + shadcn/ui |
 | Server State | TanStack Query v5          |
 | Client State | Zustand                    |
-| Routing      | React Router v7            |
+| Routing      | React Router v8            |
 | Icons        | Lucide React               |
 | Toasts       | sonner (via shadcn/ui)     |
 | Forms        | Native (controlled inputs) |

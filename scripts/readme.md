@@ -88,7 +88,7 @@ If you run scripts in a derived application repo, ensure:
 - **Purpose**
     - Checks that critical dependencies are pinned to exact versions (no `^` or `~` prefixes).
     - Prevents surprise breaking changes from `bun update` pulling in incompatible versions of core dependencies.
-    - Validates backend dependencies (elysia, drizzle-orm, jsonwebtoken, @sinclair/typebox, pino, etc.) and frontend dependencies (react, react-router-dom, @tanstack/react-query, zustand, vite, etc.).
+    - Validates backend dependencies (elysia, drizzle-orm, jsonwebtoken, @sinclair/typebox, pino, etc.) and frontend dependencies (react, react-router, @tanstack/react-query, zustand, vite, etc.).
 - **Run**
     - `bun run check-deps`
     - `bun scripts/check-dependency-versions.ts`

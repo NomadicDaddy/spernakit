@@ -124,7 +124,7 @@ export default defineConfig({
 						{
 							name: 'react-routing',
 							priority: 95,
-							test: /node_modules[\\/]react-router(?:-dom)?[\\/]/,
+							test: /node_modules[\\/]react-router[\\/]/,
 						},
 						// TanStack Query is needed at boot (App.tsx creates the QueryClient).
 						{

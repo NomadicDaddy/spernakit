@@ -1,5 +1,5 @@
 import { CheckCircle2, Circle, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import type { OnboardingStep } from '@/api/onboarding';
 

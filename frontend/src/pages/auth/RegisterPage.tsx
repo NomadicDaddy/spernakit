@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useActionState, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { getRegistrationStatus, register } from '@/api/auth';

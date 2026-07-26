@@ -1,6 +1,6 @@
 import { Check, Keyboard, LogOut, Monitor, Moon, Settings2, Sun, User } from 'lucide-react';
 import { startTransition } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import type { ThemeMode } from '@/stores/themeStore';
 

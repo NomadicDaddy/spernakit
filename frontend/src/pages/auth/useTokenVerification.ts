@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router';
 
 /**
  * Hook encapsulating the common token-verification flow shared by

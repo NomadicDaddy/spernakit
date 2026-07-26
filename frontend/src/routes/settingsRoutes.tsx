@@ -1,4 +1,4 @@
-import { Navigate, type RouteObject } from 'react-router-dom';
+import { Navigate, type RouteObject } from 'react-router';
 
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { LazyPage } from '@/routes/LazyPage';
