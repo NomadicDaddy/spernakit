@@ -2,7 +2,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import { validateFreshRelease, type FreshReleaseFile } from './lib/fresh-release/validation.ts';
+import {
+	FRESH_RELEASE_VERSION,
+	type FreshReleaseFile,
+	validateFreshRelease,
+} from './lib/fresh-release/validation.ts';
 
 function trackedFiles(root: string): string[] {
 	const result = Bun.spawnSync(['git', '-C', root, 'ls-files'], {
@@ -43,7 +47,7 @@ function main(): void {
 		process.exit(1);
 	}
 
-	console.log('Fresh-release contract passed for Spernakit v3.28.2.');
+	console.log(`Fresh-release contract passed for Spernakit v${FRESH_RELEASE_VERSION}.`);
 }
 
 main();

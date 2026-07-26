@@ -108,7 +108,7 @@ function renderEntry(commit: ParsedCommit): string {
 
 function packageMetadata(): PackageMetadata {
 	return JSON.parse(
-		readFileSync(new URL('../package.json', import.meta.url), 'utf8')
+		readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
 	) as PackageMetadata;
 }
 
@@ -140,7 +140,7 @@ export function renderBaselineNotes(changelog: string, tag: string): string {
 		throw new Error(`CHANGELOG.md has no entry for ${version}.`);
 	}
 	const nextHeading = lines.findIndex(
-		(line, index) => index > headingIndex && /^## \[\d+\.\d+\.\d+]/.test(line)
+		(line, index) => index > headingIndex && /^## \[\d+\.\d+\.\d+]/.test(line),
 	);
 	const body = lines
 		.slice(headingIndex + 1, nextHeading === -1 ? undefined : nextHeading)
@@ -153,7 +153,7 @@ export function renderBaselineNotes(changelog: string, tag: string): string {
 function buildBaselineNotes(tag: string): string {
 	const changelog = readFileSync(
 		new URL('../docs/template/CHANGELOG.md', import.meta.url),
-		'utf8'
+		'utf8',
 	);
 	return renderBaselineNotes(changelog, tag);
 }
@@ -212,7 +212,7 @@ function buildNotes(tag: string, previous: null | string): string {
 	lines.push(
 		previous
 			? `**Full Changelog**: ${url}/compare/${previous}...${tag}`
-			: `**Repository at release**: ${url}/commits/${tag}`
+			: `**Repository at release**: ${url}/commits/${tag}`,
 	);
 
 	return `${lines.join('\n')}\n`;
@@ -230,11 +230,11 @@ function main(): void {
 	// Skip both the flags and the values they consume. Without this, `--out notes.md` with no
 	// tag would silently treat "notes.md" as the tag and fail with a confusing ref error.
 	const tag = args.find(
-		(arg, index) => !arg.startsWith('--') && !VALUE_FLAGS.has(args[index - 1] ?? '')
+		(arg, index) => !arg.startsWith('--') && !VALUE_FLAGS.has(args[index - 1] ?? ''),
 	);
 	if (!tag) {
 		console.error(
-			'usage: bun scripts/release-notes.ts <tag> [--prev <tag> | --no-previous] [--out <file>]'
+			'usage: bun scripts/release-notes.ts <tag> [--prev <tag> | --no-previous] [--out <file>]',
 		);
 		exit(1);
 	}
@@ -257,7 +257,8 @@ function main(): void {
 			? previousTag(tag)
 			: (args[prevFlag + 1] ?? null);
 
-	if (!refExists(tag)) {
+	const unpublishedTemplateBaseline = noPrevious && isSpernakitTemplate();
+	if (!refExists(tag) && !unpublishedTemplateBaseline) {
 		console.error(`release-notes: tag "${tag}" does not resolve in this clone.`);
 		exit(1);
 	}

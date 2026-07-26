@@ -1,4 +1,4 @@
-export const FRESH_RELEASE_VERSION = '3.28.2';
+export const FRESH_RELEASE_VERSION = '3.29.0';
 
 export interface FreshReleaseFile {
 	path: string;
@@ -51,7 +51,7 @@ function olderVersionReferences(file: FreshReleaseFile): string[] {
 	];
 	if (RELEASE_SURFACES.has(file.path)) {
 		contextualPatterns.push(
-			/\b(?:tag|release|previous|compare|commits)[^\r\n]{0,80}?\bv(\d+\.\d+\.\d+)\b/gi
+			/\b(?:tag|release|previous|compare|commits)[^\r\n]{0,80}?\bv(\d+\.\d+\.\d+)\b/gi,
 		);
 	}
 
@@ -68,7 +68,7 @@ function olderVersionReferences(file: FreshReleaseFile): string[] {
 
 function changelogIssues(text: string): string[] {
 	const headings = [...text.matchAll(/^## \[(\d+\.\d+\.\d+)](?:\s+-\s+.+)?$/gm)].map(
-		(match) => match[1]
+		(match) => match[1],
 	);
 	if (headings.length !== 1 || headings[0] !== FRESH_RELEASE_VERSION) {
 		return [
@@ -83,7 +83,7 @@ export function validateFreshRelease(snapshot: FreshReleaseSnapshot): string[] {
 	const issues: string[] = [];
 	if (snapshot.packageVersion !== FRESH_RELEASE_VERSION) {
 		issues.push(
-			`package.json version must be ${FRESH_RELEASE_VERSION}; found ${snapshot.packageVersion}`
+			`package.json version must be ${FRESH_RELEASE_VERSION}; found ${snapshot.packageVersion}`,
 		);
 	}
 
@@ -108,13 +108,13 @@ export function validateFreshRelease(snapshot: FreshReleaseSnapshot): string[] {
 		const olderVersions = olderVersionReferences(file);
 		if (olderVersions.length > 0) {
 			issues.push(
-				`${file.path}: older Spernakit release reference(s): ${olderVersions.join(', ')}`
+				`${file.path}: older Spernakit release reference(s): ${olderVersions.join(', ')}`,
 			);
 		}
 		for (const pattern of HISTORICAL_NARRATIVE) {
 			if (pattern.test(file.text)) {
 				issues.push(
-					`${file.path}: fresh-release historical narrative matches ${pattern.source}`
+					`${file.path}: fresh-release historical narrative matches ${pattern.source}`,
 				);
 			}
 		}

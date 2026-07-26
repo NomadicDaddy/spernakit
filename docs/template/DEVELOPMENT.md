@@ -186,7 +186,7 @@ Derived apps sync template changes using a manual cherry-pick workflow driven by
 `/template-upgrade` slash command. Automatic application is unsupported because it can overwrite
 domain extensions. Drift detection (`bun run check:drift`) is the source of truth for sync status,
 and `bun run template:sync-plan -- --app ../<app>` generates a read-only review packet. The source
-version must be v3.28.2 or later. Apps without that baseline must be initialized from the current
+version must be v3.29.0 or later. Apps without that baseline must be initialized from the current
 template instead of using the sync workflow.
 
 **Steps** (for each derived app):
@@ -460,7 +460,7 @@ const productRoutes = new Elysia({ prefix: '/products' })
 		},
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('VIEWER')({ set, user }),
-		}
+		},
 	)
 	.post(
 		'/',
@@ -474,7 +474,7 @@ const productRoutes = new Elysia({ prefix: '/products' })
 				name: t.String({ minLength: 1 }),
 				price: t.Number({ minimum: 0 }),
 			}),
-		}
+		},
 	);
 
 export { productRoutes };

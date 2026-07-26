@@ -1,6 +1,6 @@
 # Spernakit Documentation
 
-These documents describe the Spernakit v3.28.2 application template as it ships today. Start with
+These documents describe the Spernakit v3.29.0 application template as it ships today. Start with
 the guides that match the work you are doing, then use the reference documents for details.
 
 ## Start here
@@ -35,7 +35,7 @@ the guides that match the work you are doing, then use the reference documents f
 
 - [Troubleshooting](TROUBLESHOOTING.md): common problems and diagnostic steps.
 - [Known Issues](KNOWN_ISSUES.md): current limitations and workarounds.
-- [Changelog](CHANGELOG.md): the v3.28.2 public baseline and future release changes.
+- [Changelog](CHANGELOG.md): the v3.29.0 public baseline and future release changes.
 
 ## Current architecture
 
@@ -52,7 +52,7 @@ gate. SQLite and PostgreSQL schemas are maintained in parallel and checked for p
 
 ## Template lifecycle
 
-Spernakit v3.28.2 is the minimum supported template synchronization source. For a derived app at
+Spernakit v3.29.0 is the minimum supported template synchronization source. For a derived app at
 that baseline or later, generate a read-only review packet with:
 
 ```bash

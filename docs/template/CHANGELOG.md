@@ -3,7 +3,7 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
-## [3.28.2] - 2026-07-21
+## [3.29.0] - 2026-07-26
 
 ### Application foundation
 
@@ -42,6 +42,10 @@ this release.
 - Blocking checks for configuration, schema parity, API contracts, feature wiring, documentation,
   dependency policy, formatting, linting, type safety, dead code, build output, and critical-path
   budgets.
+- ESLint flat configs, strict TypeScript settings, Prettier formatting with Tailwind class ordering,
+  and Knip dead-code analysis form one source-quality contract.
+- `bun run deploy` builds and starts the local production stack through the same deployment script
+  used for explicit local production operations.
 - Template drift classification for pure, branded, infrastructure, and security-infrastructure
   files.
 - Cross-platform setup and initialization scripts that create a branded derived application,
@@ -55,3 +59,5 @@ this release.
   application.
 - Releases without a predecessor use this complete baseline as their release notes. Future
   releases use conventional-commit ranges and resolvable comparison links.
+- Version tag pushes require a matching local screenshot capture with at least five PNG files before
+  the tag can be published.

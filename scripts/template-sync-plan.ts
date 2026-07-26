@@ -7,7 +7,7 @@
  * It never writes to the target app source.
  *
  * Usage:
- *   bun scripts/template-sync-plan.ts --app ../acme-monitor --from 3.28.2 --to 3.29.0
+ *   bun scripts/template-sync-plan.ts --app ../acme-monitor --from 3.29.0 --to 3.30.0
  *   bun scripts/template-sync-plan.ts --app ../acme-monitor
  */
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -18,7 +18,9 @@ import {
 	applyTemplateOverrides,
 	checkFile,
 	classifyFile,
+	type DriftCategory,
 	enumerateTemplateFiles,
+	type FileResult,
 	gitTagExists,
 	loadAppBrandingValues,
 	loadClassificationOverrides,
@@ -26,8 +28,6 @@ import {
 	normalizeLineEndings,
 	readLocalFile,
 	readSpernakitVersion,
-	type DriftCategory,
-	type FileResult,
 } from './template-shared.ts';
 
 interface Args {
@@ -37,7 +37,7 @@ interface Args {
 	toVersion: string | undefined;
 }
 
-export const MIN_SUPPORTED_TEMPLATE_VERSION = '3.28.2';
+export const MIN_SUPPORTED_TEMPLATE_VERSION = '3.29.0';
 
 function parseCliArgs(): Args {
 	const { values } = parseArgs({
@@ -106,7 +106,7 @@ function writeInfrastructureDiff(
 	toVersion: string,
 	appPath: string,
 	filePath: string,
-	diffDir: string
+	diffDir: string,
 ): void {
 	const templateRef = `v${toVersion}:${filePath}`;
 	const template = Bun.spawnSync(['git', '-C', spernakitPath, 'show', templateRef], {
@@ -128,7 +128,7 @@ function writeInfrastructureDiff(
 
 	const diff = Bun.spawnSync(
 		['git', 'diff', '--no-index', '--unified=3', '--', templateTemp, appTemp],
-		{ stderr: 'pipe', stdout: 'pipe' }
+		{ stderr: 'pipe', stdout: 'pipe' },
 	);
 	const output = diff.stdout.toString() || diff.stderr.toString();
 	writeFileSync(diffPath, output, 'utf-8');
@@ -152,7 +152,7 @@ function main(): void {
 
 	const spernakitPath = resolve(join(dirname(import.meta.path), '..'));
 	const fromVersion = normalizeVersion(
-		args.fromVersion ?? readSpernakitVersion(args.appPath) ?? ''
+		args.fromVersion ?? readSpernakitVersion(args.appPath) ?? '',
 	);
 	const toVersion = normalizeVersion(args.toVersion ?? readPackageVersion(spernakitPath) ?? '');
 	if (!fromVersion || !toVersion) {
@@ -195,10 +195,10 @@ function main(): void {
 				filePath,
 				classifyFile(filePath, overridesResult.overrides),
 				appBranding,
-				args.appPath
-			)
+				args.appPath,
+			),
 		),
-		loadTemplateOverrides(args.appPath)
+		loadTemplateOverrides(args.appPath),
 	).filter((r) => r.status !== 'missing-in-template');
 
 	const pure = groupFiles(results, 'pure');
@@ -206,14 +206,14 @@ function main(): void {
 	const infrastructureResults = results.filter(
 		(r) =>
 			(r.category === 'infrastructure' || r.category === 'security-infrastructure') &&
-			r.status !== 'identical'
+			r.status !== 'identical',
 	);
 	const infrastructure = infrastructureResults.map((r) => `${r.filePath} (${r.status})`).sort();
 	const blocked = results
 		.filter((r) => r.status === 'suppressed')
 		.map(
 			(r) =>
-				`${r.filePath} [${r.suppression?.action ?? 'SKIP'}] ${r.suppression?.reason ?? ''}`
+				`${r.filePath} [${r.suppression?.action ?? 'SKIP'}] ${r.suppression?.reason ?? ''}`,
 		)
 		.sort();
 
@@ -224,7 +224,7 @@ function main(): void {
 				toVersion,
 				args.appPath,
 				result.filePath,
-				diffDir
+				diffDir,
 			);
 		}
 	}

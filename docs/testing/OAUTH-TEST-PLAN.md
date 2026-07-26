@@ -1,6 +1,6 @@
 # OAuth End-to-End Test Plan
 
-**Template version**: Spernakit v3.28.2
+**Template version**: Spernakit v3.29.0
 **Tracks**: `audit-20260423-oauth-providers-untested`
 **Status**: Manual plan; scenarios defined, execution pending
 
@@ -118,7 +118,7 @@ For any scenario marked FAIL, file a feature under `.aidd/features/` referencing
 When all 8 scenarios are PASS, append this line to `docs/template/DEVELOPMENT.md` (OAuth subsection):
 
 ```
-OAuth providers exercised end-to-end in Spernakit v3.28.2 on YYYY-MM-DD; see
+OAuth providers exercised end-to-end in Spernakit v3.29.0 on YYYY-MM-DD; see
 docs/testing/OAUTH-TEST-PLAN.md for results.
 ```
 

@@ -16,7 +16,7 @@
 #   spernakit_version   - Template version this app has been synced to. Special value
 #                         'latest' marks an app waiting to be initialized from the
 #                         current template. Concrete versions at the supported floor
-#                         or later (for example, '3.28.2') mark an active synced app.
+#                         or later (for example, '3.29.0') mark an active synced app.
 #
 @{
 	ExpectedConfigs = @{
