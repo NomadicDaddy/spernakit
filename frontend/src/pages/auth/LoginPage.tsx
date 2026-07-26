@@ -158,7 +158,7 @@ function LoginPage() {
 			{registrationEnabled && (
 				<AuthFooterLink
 					className="pb-6 text-center"
-					label="Don't have an account?"
+					label="Don’t have an account?"
 					linkText="Sign up"
 					to="/register"
 				/>

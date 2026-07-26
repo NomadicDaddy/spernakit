@@ -71,7 +71,7 @@ export function BroadcastDialog({ isOpen, onOpenChange }: BroadcastDialogProps) 
 							autoComplete="off"
 							id="broadcast-title"
 							onChange={(e) => setTitle(e.target.value)}
-							placeholder="Notification title"
+							placeholder="e.g. Scheduled maintenance…"
 							required
 							value={title}
 						/>
@@ -83,7 +83,7 @@ export function BroadcastDialog({ isOpen, onOpenChange }: BroadcastDialogProps) 
 							className="resize-y"
 							id="broadcast-message"
 							onChange={(e) => setMessage(e.target.value)}
-							placeholder="Notification message"
+							placeholder="e.g. Maintenance starts soon…"
 							required
 							rows={4}
 							value={message}
