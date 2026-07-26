@@ -3,6 +3,29 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.30.0] - 2026-07-26
+
+### Changed
+
+- Migrated the frontend router from React Router 7 to React Router 8. The `react-router-dom`
+  package no longer exists upstream in v8; all 41 import sites now resolve from `react-router`
+  directly, and `react-router-dom` has been dropped from `frontend/package.json`.
+- `scripts/check-dependency-versions.ts` pins `react-router` in place of `react-router-dom` as a
+  critical frontend dependency.
+- The `react-routing` manual chunk in `frontend/vite.config.ts` no longer matches the removed
+  `react-router-dom` directory.
+- Updated `lucide-react` to 1.27.0 and `recharts` to 3.10.1.
+- The fresh-release contract now treats the 3.29.0 public baseline as a floor rather than an exact
+  pin: the package version must be at or above it, and `docs/template/CHANGELOG.md` must lead with
+  the version being released, retain the baseline entry, and carry no heading that predates it.
+  Previously any release after the baseline failed `bun run check:fresh-release` by construction.
+
+### Security
+
+- Resolves GHSA-qwww-vcr4-c8h2 (HIGH), a CSRF-protection bypass affecting React Router 7 in RSC
+  mode. The container image is clean under the CI Trivy CRITICAL/HIGH gate without a suppression,
+  so `.trivyignore` and its `trivyignores` wiring in the CI workflow have been removed.
+
 ## [3.29.0] - 2026-07-26
 
 ### Application foundation
