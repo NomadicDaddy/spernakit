@@ -29,6 +29,7 @@ export function DataTableToolbar<TData>({
 			{searchColumn && (
 				<Input
 					aria-label={filterPlaceholder}
+					autoComplete="off"
 					className="max-w-sm"
 					onChange={(e) => table.getColumn(searchColumn)?.setFilterValue(e.target.value)}
 					placeholder={filterPlaceholder}
