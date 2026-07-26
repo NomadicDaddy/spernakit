@@ -145,10 +145,10 @@ function RuntimeConfigTab() {
 				<AlertTitle>Read-only runtime configuration</AlertTitle>
 				<AlertDescription>
 					The effective startup configuration loaded from{' '}
-					<code>config/&lt;slug&gt;.json</code> merged with defaults. These values change
-					only on restart and cannot be edited here - settings that require a restart stay
-					in the config file. Secrets (keys, cookie and webhook secrets, database and
-					storage credentials) are redacted and never sent to the browser.
+					<code translate="no">config/&lt;slug&gt;.json</code> merged with defaults. These
+					values change only on restart and cannot be edited here - settings that require
+					a restart stay in the config file. Secrets (keys, cookie and webhook secrets,
+					database and storage credentials) are redacted and never sent to the browser.
 				</AlertDescription>
 			</Alert>
 
