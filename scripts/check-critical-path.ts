@@ -10,7 +10,8 @@
  * cannot see that. These three checks can:
  *
  *   1. BUDGET    — brotli bytes of everything the browser must fetch before first
- *                  render (entry + modulepreloads + blocking CSS) stays under budget.
+ *                  render stay under budget, and blocking JS stays at or below the
+ *                  feature's fixed 170 KiB gzip ceiling.
  *   2. RUNTIME   — the React runtime sits in a chunk that index.html preloads, so it
  *                  is never discovered late.
  *   3. WATERFALL — the entry chunk never statically imports a chunk that is not
@@ -23,6 +24,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { gzipSync } from 'node:zlib';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..');
@@ -30,7 +32,6 @@ const DIST_DIR = join(ROOT_DIR, 'frontend', 'dist');
 const ASSETS_DIR = join(DIST_DIR, 'assets');
 const INDEX_HTML = join(DIST_DIR, 'index.html');
 const BUDGET_PATH = join(__dirname, 'critical-path-budget.json');
-
 /** Headroom applied when writing a new budget so hash/chunk churn doesn't flap the gate. */
 const BUDGET_HEADROOM = 1.1;
 
@@ -52,26 +53,22 @@ const colors: Record<string, string> = {
 	reset: '\x1b[0m',
 	yellow: '\x1b[33m',
 };
-
 function log(message: string, color = 'reset'): void {
 	console.log(`${colors[color] ?? colors['reset']}${message}${colors['reset']}`);
 }
-
 function kb(bytes: number): string {
 	return `${(bytes / 1024).toFixed(2)} KB`;
 }
-
 interface CriticalPathBudget {
 	maxCriticalPathBrotliBytes: number;
+	maxCriticalPathGzipJsBytes: number;
 }
-
 interface CriticalAsset {
-	/** Bytes actually sent: the precompressed sibling when nginx has one, else raw. */
 	brotliBytes: number;
+	gzipBytes: number;
 	name: string;
 	rawBytes: number;
 }
-
 /**
  * Assets the browser must fetch before it can render: the entry module, everything
  * index.html asks it to modulepreload, and the render-blocking stylesheets.
@@ -109,7 +106,11 @@ function sizeOf(assetName: string): CriticalAsset {
 	// Fall back to raw: vite-plugin-compression2 skips files under its 1 KB threshold,
 	// and nginx compresses those on the fly instead.
 	const brotliBytes = existsSync(br) ? statSync(br).size : rawBytes;
-	return { brotliBytes, name: assetName, rawBytes };
+	const gz = `${raw}.gz`;
+	const gzipBytes = existsSync(gz)
+		? statSync(gz).size
+		: gzipSync(readFileSync(raw), { level: 6 }).byteLength;
+	return { brotliBytes, gzipBytes, name: assetName, rawBytes };
 }
 
 /**
@@ -143,7 +144,6 @@ function staticImportsOf(entryName: string): string[] {
 	}
 	return [...imports];
 }
-
 function findReactRuntimeChunk(): null | string {
 	// Only .js chunks can hold the runtime; skip .br/.gz/.map siblings and CSS.
 	// Sorted so the result cannot depend on platform readdir order.
@@ -155,15 +155,18 @@ function findReactRuntimeChunk(): null | string {
 	}
 	return null;
 }
-
-function checkBudget(totalBrotli: number, updateBudget: boolean): boolean {
+function checkBudget(totalBrotli: number, totalGzipJs: number, updateBudget: boolean): boolean {
+	const existing = existsSync(BUDGET_PATH)
+		? (JSON.parse(readFileSync(BUDGET_PATH, 'utf-8')) as CriticalPathBudget)
+		: null;
 	if (updateBudget) {
 		const budget: CriticalPathBudget = {
 			maxCriticalPathBrotliBytes: Math.ceil(totalBrotli * BUDGET_HEADROOM),
+			maxCriticalPathGzipJsBytes: existing?.maxCriticalPathGzipJsBytes ?? 170 * 1024,
 		};
 		writeFileSync(BUDGET_PATH, `${JSON.stringify(budget, null, '\t')}\n`);
 		log(
-			`\nBudget written to scripts/critical-path-budget.json (${kb(budget.maxCriticalPathBrotliBytes)}, +${Math.round((BUDGET_HEADROOM - 1) * 100)}% headroom)`,
+			`\nBrotli budget written (${kb(budget.maxCriticalPathBrotliBytes)}, +${Math.round((BUDGET_HEADROOM - 1) * 100)}% headroom); gzip JS remains ${kb(budget.maxCriticalPathGzipJsBytes)}`,
 			'cyan',
 		);
 		return true;
@@ -174,9 +177,10 @@ function checkBudget(totalBrotli: number, updateBudget: boolean): boolean {
 		log('Create one with: bun scripts/check-critical-path.ts --update-budget', 'yellow');
 		return true;
 	}
-
-	const budget = JSON.parse(readFileSync(BUDGET_PATH, 'utf-8')) as CriticalPathBudget;
-	if (totalBrotli > budget.maxCriticalPathBrotliBytes) {
+	const budget = existing as CriticalPathBudget;
+	const brotliOk = totalBrotli <= budget.maxCriticalPathBrotliBytes;
+	const gzipOk = totalGzipJs <= budget.maxCriticalPathGzipJsBytes;
+	if (!brotliOk) {
 		log(
 			`✗ Critical path ${kb(totalBrotli)} exceeds budget ${kb(budget.maxCriticalPathBrotliBytes)}`,
 			'red',
@@ -185,18 +189,21 @@ function checkBudget(totalBrotli: number, updateBudget: boolean): boolean {
 			'If the growth is intentional, regenerate: bun scripts/check-critical-path.ts --update-budget',
 			'yellow',
 		);
-		return false;
+	} else {
+		log(
+			`✓ Critical path ${kb(totalBrotli)} within budget ${kb(budget.maxCriticalPathBrotliBytes)}`,
+			'green',
+		);
 	}
 	log(
-		`✓ Critical path ${kb(totalBrotli)} within budget ${kb(budget.maxCriticalPathBrotliBytes)}`,
-		'green',
+		`${gzipOk ? '✓' : '✗'} Critical-path JS ${kb(totalGzipJs)} ${gzipOk ? 'within' : 'exceeds'} gzip budget ${kb(budget.maxCriticalPathGzipJsBytes)}`,
+		gzipOk ? 'green' : 'red',
 	);
-	return true;
+	return brotliOk && gzipOk;
 }
 
 function main(): void {
 	const updateBudget = process.argv.includes('--update-budget');
-
 	log('\n=== Critical-Path Verification ===\n', 'blue');
 
 	if (!existsSync(INDEX_HTML)) {
@@ -214,6 +221,9 @@ function main(): void {
 
 	const assets = criticalNames.map(sizeOf).sort((a, b) => b.brotliBytes - a.brotliBytes);
 	const totalBrotli = assets.reduce((s, a) => s + a.brotliBytes, 0);
+	const totalGzipJs = assets
+		.filter((asset) => asset.name.endsWith('.js'))
+		.reduce((sum, asset) => sum + asset.gzipBytes, 0);
 	const totalRaw = assets.reduce((s, a) => s + a.rawBytes, 0);
 
 	for (const a of assets) {
@@ -224,7 +234,7 @@ function main(): void {
 		'cyan',
 	);
 
-	const budgetOk = checkBudget(totalBrotli, updateBudget);
+	const budgetOk = checkBudget(totalBrotli, totalGzipJs, updateBudget);
 
 	// --- Check 2: the React runtime must be preloaded, not discovered late ---
 	const entryName = findEntryChunk(html);

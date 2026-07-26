@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router';
 
 import { HeaderBarActions } from '@/components/layout/HeaderBarActions';
-import { MobileNav } from '@/components/layout/MobileNav';
+import { LazyMobileNav } from '@/components/layout/LazyMobileNav';
 import { WorkspaceSwitcher } from '@/components/workspace/WorkspaceSwitcher';
 import { useLayoutActions } from '@/hooks/layout/useLayoutActions';
 import { useAppFeatures } from '@/hooks/useAppFeatures';
@@ -40,7 +40,7 @@ function TopBar() {
 				)}>
 				{/* Left: hamburger (mobile) + app name + nav links */}
 				<div className="flex min-w-0 items-center gap-1">
-					<MobileNav />
+					<LazyMobileNav />
 					<span
 						className="hidden text-lg font-semibold tracking-tight md:inline"
 						translate="no">

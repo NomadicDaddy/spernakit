@@ -1,3 +1,4 @@
 {
-	"maxCriticalPathBrotliBytes": 183620
+	"maxCriticalPathBrotliBytes": 183620,
+	"maxCriticalPathGzipJsBytes": 174080
 }
