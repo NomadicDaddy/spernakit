@@ -138,7 +138,6 @@ jobs:
                   exit-code: '1'
                   ignore-unfixed: true
                   scanners: 'vuln'
-                  trivyignores: .trivyignore
 
             - name: Scan local image with Trivy (report to Security tab)
               if: always()

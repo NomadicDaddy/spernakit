@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ScrollText } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import type { AuditLog, PaginatedResponse } from '@/api/types';
 

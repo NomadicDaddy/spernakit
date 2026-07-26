@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 
 import { HeaderBarActions } from '@/components/layout/HeaderBarActions';
 import { MobileNav } from '@/components/layout/MobileNav';

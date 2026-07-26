@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { type ReactNode, useEffect } from 'react';
 import { lazy, Suspense } from 'react';
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+import { Navigate, Outlet, useNavigate } from 'react-router';
 
 import { SkipLink } from '@/components/layout/SkipLink';
 import { Spinner } from '@/components/shared/Spinner';

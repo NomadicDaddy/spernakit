@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 import { registerShortcut } from '@/hooks/useKeyboardShortcuts';
 import { useCommandStore } from '@/stores/commandStore';

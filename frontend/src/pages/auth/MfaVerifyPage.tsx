@@ -1,5 +1,5 @@
 import { useActionState, useEffect, useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import { ApiError } from '@/api/client';

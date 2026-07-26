@@ -55,13 +55,13 @@ by license family, and it does not inventory the Alpine base system.
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.26.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.27.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
 | [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.3   | MIT        |
-| [react-router-dom](https://www.npmjs.com/package/react-router-dom)                           | 7.18.1  | MIT        |
-| [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.0  | MIT        |
+| [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.0   | MIT        |
+| [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
 | [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.7   | MIT        |
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
 | [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.0.0   | Apache-2.0 |
@@ -109,7 +109,7 @@ Applies to: lucide-react.
 
 ### MIT License
 
-Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router-dom, recharts, sonner, tailwind-merge, zustand.
+Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
 
 Each MIT-licensed dependency is provided under the standard MIT License, with
 copyright held by the respective package authors as stated in that package.
@@ -156,8 +156,8 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **239**
-third-party package versions (221 unique names). It includes backend runtime
+closure follows everything they pull in transitively and covers **238**
+third-party package versions (220 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
 package-directory count in the Linux image, but it must never be smaller. Development-only
@@ -165,7 +165,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 204      |
+| MIT              | 203      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |

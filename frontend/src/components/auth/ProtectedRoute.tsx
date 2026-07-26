@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router';
 
 import type { UserRole } from '@/types/roles';
 
@@ -22,7 +22,7 @@ interface ProtectedRouteProps {
  * Redirects to login page if user is not authenticated.
  * Optionally enforces role-based access control.
  *
- * NOTE: This component uses `useLocation` from react-router-dom for redirect state,
+ * NOTE: This component uses `useLocation` from react-router for redirect state,
  * which is acceptable for auth guard components that are explicitly designed as global UI.
  * Per SSOC guidelines: "No navigation or route coupling unless explicitly designed as global UI."
  * This is a global security component that handles route protection.

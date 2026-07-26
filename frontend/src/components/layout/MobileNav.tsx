@@ -1,6 +1,6 @@
 import { Menu, Monitor, Moon, Settings2, Sun, User } from 'lucide-react';
 import { startTransition, useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router';
 
 import type { ThemeMode } from '@/stores/themeStore';
 

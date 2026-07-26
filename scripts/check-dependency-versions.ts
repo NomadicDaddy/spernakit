@@ -56,7 +56,7 @@ const CRITICAL_FRONTEND_DEPS = [
 	'react',
 	'react-dom',
 	// Routing
-	'react-router-dom',
+	'react-router',
 	// Data fetching & state
 	'@tanstack/react-query',
 	'zustand',
