@@ -1,3 +1,8 @@
+/**
+ * The public baseline: the first release published from this repository. It is a floor, not a
+ * pin. Releases at or above it are expected; anything below it belongs to history that this
+ * repository deliberately does not carry, so referencing it is a contract violation.
+ */
 export const FRESH_RELEASE_VERSION = '3.29.0';
 
 export interface FreshReleaseFile {
@@ -66,24 +71,62 @@ function olderVersionReferences(file: FreshReleaseFile): string[] {
 	return [...references].sort();
 }
 
-function changelogIssues(text: string): string[] {
+function changelogIssues(text: string, packageVersion: string): string[] {
+	const issues: string[] = [];
 	const headings = [...text.matchAll(/^## \[(\d+\.\d+\.\d+)](?:\s+-\s+.+)?$/gm)].map(
-		(match) => match[1],
+		(match) => match[1] ?? '',
 	);
-	if (headings.length !== 1 || headings[0] !== FRESH_RELEASE_VERSION) {
-		return [
-			`docs/template/CHANGELOG.md must contain only the ${FRESH_RELEASE_VERSION} ` +
-				`release heading; found ${headings.length === 0 ? 'none' : headings.join(', ')}`,
-		];
+	if (headings.length === 0) {
+		return ['docs/template/CHANGELOG.md has no release heading'];
 	}
-	return [];
+
+	const predating = headings.filter(
+		(version) => compareVersions(version, FRESH_RELEASE_VERSION) < 0,
+	);
+	if (predating.length > 0) {
+		issues.push(
+			`docs/template/CHANGELOG.md: release heading(s) predating the ` +
+				`${FRESH_RELEASE_VERSION} public baseline: ${predating.join(', ')}`,
+		);
+	}
+	if (!headings.includes(FRESH_RELEASE_VERSION)) {
+		issues.push(
+			`docs/template/CHANGELOG.md must retain the ${FRESH_RELEASE_VERSION} baseline heading`,
+		);
+	}
+	if (headings[0] !== packageVersion) {
+		issues.push(
+			`docs/template/CHANGELOG.md must lead with the ${packageVersion} heading; ` +
+				`found ${headings[0]}`,
+		);
+	}
+	// Descending order with no repeats: the leading heading is the release being cut, and
+	// release-notes.ts reads an entry by slicing to the next heading, so a stray duplicate or
+	// out-of-order entry silently truncates published notes.
+	if (
+		headings.some(
+			(version, index) =>
+				index > 0 && compareVersions(headings[index - 1] ?? '', version) <= 0,
+		)
+	) {
+		issues.push(
+			'docs/template/CHANGELOG.md release headings must be newest first, with no duplicates',
+		);
+	}
+	return issues;
 }
 
 export function validateFreshRelease(snapshot: FreshReleaseSnapshot): string[] {
 	const issues: string[] = [];
-	if (snapshot.packageVersion !== FRESH_RELEASE_VERSION) {
+	if (!/^\d+\.\d+\.\d+$/.test(snapshot.packageVersion)) {
 		issues.push(
-			`package.json version must be ${FRESH_RELEASE_VERSION}; found ${snapshot.packageVersion}`,
+			`package.json version must be a three-part version; ` +
+				`found ${snapshot.packageVersion || '(none)'}`,
+		);
+	} else if (compareVersions(snapshot.packageVersion, FRESH_RELEASE_VERSION) < 0) {
+		issues.push(
+			`package.json version must be at least the ${FRESH_RELEASE_VERSION} public baseline; ` +
+				`found ${snapshot.packageVersion}`,
 		);
 	}
 
@@ -98,7 +141,7 @@ export function validateFreshRelease(snapshot: FreshReleaseSnapshot): string[] {
 	if (!changelog) {
 		issues.push('docs/template/CHANGELOG.md is missing');
 	} else {
-		issues.push(...changelogIssues(changelog.text));
+		issues.push(...changelogIssues(changelog.text, snapshot.packageVersion));
 	}
 
 	for (const file of snapshot.files) {

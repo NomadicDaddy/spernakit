@@ -47,7 +47,10 @@ function main(): void {
 		process.exit(1);
 	}
 
-	console.log(`Fresh-release contract passed for Spernakit v${FRESH_RELEASE_VERSION}.`);
+	console.log(
+		`Fresh-release contract passed for Spernakit v${packageJson.version} ` +
+			`(public baseline v${FRESH_RELEASE_VERSION}).`,
+	);
 }
 
 main();
