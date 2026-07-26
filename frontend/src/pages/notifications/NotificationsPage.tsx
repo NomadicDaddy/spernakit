@@ -78,7 +78,7 @@ function NotificationDeleteDialogs({
 		<>
 			<ConfirmAlertDialog
 				confirmText="Delete"
-				description={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+				description={`Are you sure you want to delete “${deleteTarget?.title}”? This action cannot be undone.`}
 				isOpen={!!deleteTarget}
 				isPending={deleteMutation.isPending}
 				onConfirm={() => {

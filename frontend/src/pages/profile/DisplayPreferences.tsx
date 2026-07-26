@@ -36,7 +36,7 @@ function DisplayPreferences({
 							}
 							value={uiSettings?.density ?? 'comfortable'}>
 							<SelectTrigger id="density">
-								<SelectValue placeholder="Select density" />
+								<SelectValue placeholder="Select density…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="compact">Compact</SelectItem>
@@ -52,7 +52,7 @@ function DisplayPreferences({
 							onValueChange={(value) => onChange('timezone', value)}
 							value={uiSettings?.timezone ?? ''}>
 							<SelectTrigger id="timezone">
-								<SelectValue placeholder="Select timezone" />
+								<SelectValue placeholder="Select timezone…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="UTC">UTC</SelectItem>
@@ -75,7 +75,7 @@ function DisplayPreferences({
 							onValueChange={(value) => onChange('language', value)}
 							value={uiSettings?.language ?? ''}>
 							<SelectTrigger id="language">
-								<SelectValue placeholder="Select language" />
+								<SelectValue placeholder="Select language…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="en">English</SelectItem>
@@ -94,7 +94,7 @@ function DisplayPreferences({
 							onValueChange={(value) => onChange('dateFormat', value)}
 							value={uiSettings?.dateFormat ?? ''}>
 							<SelectTrigger id="dateFormat">
-								<SelectValue placeholder="Select date format" />
+								<SelectValue placeholder="Select date format…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
@@ -110,7 +110,7 @@ function DisplayPreferences({
 							onValueChange={(value) => onChange('timeFormat', value)}
 							value={uiSettings?.timeFormat ?? ''}>
 							<SelectTrigger id="timeFormat">
-								<SelectValue placeholder="Select time format" />
+								<SelectValue placeholder="Select time format…" />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="HH:mm">24-hour (14:30)</SelectItem>
@@ -132,7 +132,7 @@ function DisplayPreferences({
 						onValueChange={(value) => onChange('itemsPerPage', Number(value))}
 						value={String(uiSettings?.itemsPerPage ?? 25)}>
 						<SelectTrigger id="itemsPerPage">
-							<SelectValue placeholder="Select items per page" />
+							<SelectValue placeholder="Select items per page…" />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="10">10</SelectItem>

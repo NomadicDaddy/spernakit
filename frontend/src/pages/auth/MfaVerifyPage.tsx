@@ -88,7 +88,7 @@ function MfaVerifyPage() {
 								autoComplete="one-time-code"
 								id="recoveryCode"
 								name="recoveryCode"
-								placeholder="ABCD-EFGH"
+								placeholder="e.g. ABCD-EFGH…"
 								required
 								spellCheck={false}
 								type="text"
@@ -105,7 +105,7 @@ function MfaVerifyPage() {
 								minLength={6}
 								name="code"
 								pattern="[0-9]{6}"
-								placeholder="123456"
+								placeholder="e.g. 123456…"
 								required
 								spellCheck={false}
 								type="text"

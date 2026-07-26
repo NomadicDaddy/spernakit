@@ -25,7 +25,7 @@ function WorkspaceConfirmDialogs({
 		<>
 			<ConfirmAlertDialog
 				confirmText="Delete"
-				description={`Are you sure you want to delete workspace "${deleteTarget?.name}"? This action cannot be undone.`}
+				description={`Are you sure you want to delete workspace “${deleteTarget?.name}”? This action cannot be undone.`}
 				isOpen={!!deleteTarget}
 				onConfirm={() => {
 					if (deleteTarget) {

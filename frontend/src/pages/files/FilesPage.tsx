@@ -121,7 +121,7 @@ function FilesPage() {
 
 			<ConfirmAlertDialog
 				confirmText="Delete"
-				description={`Are you sure you want to delete "${deleteTarget?.originalName}"? This action cannot be undone.`}
+				description={`Are you sure you want to delete “${deleteTarget?.originalName}”? This action cannot be undone.`}
 				isOpen={deleteTarget !== null}
 				isPending={deleteMutation.isPending}
 				onConfirm={() => {

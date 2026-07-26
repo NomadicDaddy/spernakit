@@ -25,7 +25,7 @@ function WorkspaceFormFields({
 					autoComplete="off"
 					id={`${idPrefix}-name`}
 					onChange={(e) => onFieldChange('name', e.target.value)}
-					placeholder="My Workspace"
+					placeholder="e.g. Acme Operations…"
 					value={name}
 				/>
 			</div>
@@ -36,7 +36,7 @@ function WorkspaceFormFields({
 						autoComplete="off"
 						id={`${idPrefix}-slug`}
 						onChange={(e) => onFieldChange('slug', e.target.value)}
-						placeholder="my-workspace"
+						placeholder="e.g. acme-operations…"
 						value={slug}
 					/>
 				</div>
@@ -48,7 +48,7 @@ function WorkspaceFormFields({
 					className="resize-y"
 					id={`${idPrefix}-description`}
 					onChange={(e) => onFieldChange('description', e.target.value)}
-					placeholder="Optional description"
+					placeholder="e.g. Shared workspace for operations…"
 					rows={3}
 					value={description}
 				/>

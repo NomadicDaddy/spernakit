@@ -76,7 +76,7 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					header on any authenticated endpoint:
 				</p>
 				<pre className="overflow-x-auto rounded bg-muted/50 p-2 font-mono" translate="no">
-					curl -H &quot;X-API-Key: {result.apiKey.slice(0, 8)}...&quot;
+					curl -H &quot;X-API-Key: &lt;api-key&gt;&quot;
 					{' \\\n'}
 					{'  '}$API_BASE_URL/users
 				</pre>
