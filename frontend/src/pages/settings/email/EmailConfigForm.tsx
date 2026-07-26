@@ -41,6 +41,7 @@ export function EmailConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="host">SMTP Host *</Label>
 							<Input
+								autoComplete="off"
 								defaultValue={config.host}
 								id="host"
 								name="host"
@@ -53,6 +54,7 @@ export function EmailConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="port">SMTP Port *</Label>
 							<Input
+								autoComplete="off"
 								defaultValue={config.port}
 								id="port"
 								inputMode="numeric"
@@ -110,6 +112,7 @@ export function EmailConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="fromAddress">From Email Address *</Label>
 							<Input
+								autoComplete="off"
 								defaultValue={config.fromAddress}
 								id="fromAddress"
 								name="fromAddress"
@@ -122,6 +125,7 @@ export function EmailConfigForm({
 						<div className="space-y-2">
 							<Label htmlFor="fromName">From Name</Label>
 							<Input
+								autoComplete="off"
 								defaultValue={config.fromName}
 								id="fromName"
 								name="fromName"

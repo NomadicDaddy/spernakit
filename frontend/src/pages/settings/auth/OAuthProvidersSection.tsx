@@ -120,11 +120,13 @@ function ProviderRow({ settings }: { settings: OAuthProviderSettings }) {
 				<div className="grid gap-1.5">
 					<Label htmlFor={`oauth-${settings.provider}-client-id`}>Client ID</Label>
 					<Input
+						autoComplete="off"
 						defaultValue={settings.clientId}
 						disabled={disabled}
 						id={`oauth-${settings.provider}-client-id`}
 						onBlur={handleClientIdBlur}
 						placeholder="Enter client ID"
+						spellCheck={false}
 					/>
 				</div>
 
@@ -133,6 +135,7 @@ function ProviderRow({ settings }: { settings: OAuthProviderSettings }) {
 						Client Secret
 					</Label>
 					<Input
+						autoComplete="off"
 						defaultValue=""
 						disabled={disabled}
 						id={`oauth-${settings.provider}-client-secret`}
@@ -142,6 +145,7 @@ function ProviderRow({ settings }: { settings: OAuthProviderSettings }) {
 								? `••••••••${settings.clientSecretLast4}`
 								: 'Enter client secret'
 						}
+						spellCheck={false}
 						type="password"
 					/>
 				</div>
@@ -151,11 +155,13 @@ function ProviderRow({ settings }: { settings: OAuthProviderSettings }) {
 						Callback URL Override
 					</Label>
 					<Input
+						autoComplete="off"
 						defaultValue={settings.callbackUrlOverride ?? ''}
 						disabled={disabled}
 						id={`oauth-${settings.provider}-callback-url`}
 						onBlur={handleCallbackUrlBlur}
 						placeholder="Optional"
+						spellCheck={false}
 					/>
 				</div>
 			</div>

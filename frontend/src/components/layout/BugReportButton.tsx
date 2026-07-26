@@ -170,6 +170,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					<div className="space-y-2">
 						<Label htmlFor="bug-description">{copy.descriptionLabel}</Label>
 						<Textarea
+							autoComplete="off"
 							className="min-h-[100px] resize-none"
 							id="bug-description"
 							onChange={(e) => setDescription(e.target.value)}
@@ -182,6 +183,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					<div className="space-y-2">
 						<Label htmlFor="bug-email">Email (optional)</Label>
 						<Input
+							autoComplete="email"
 							id="bug-email"
 							onChange={(e) => setEmail(e.target.value)}
 							placeholder="your@email.com"

@@ -71,6 +71,7 @@ function CreateRowDialog({
 								</span>
 							</Label>
 							<Input
+								autoComplete="off"
 								id={`create-row-${col.name}`}
 								onChange={(e) =>
 									setValues((prev) => ({ ...prev, [col.name]: e.target.value }))

@@ -28,6 +28,7 @@ export function UserTableFilters({
 		<div className="flex items-center gap-2">
 			<Input
 				aria-label="Search users"
+				autoComplete="off"
 				className="max-w-sm"
 				onChange={(e) => {
 					onSearchChange(e.target.value);

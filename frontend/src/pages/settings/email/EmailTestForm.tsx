@@ -74,6 +74,7 @@ export function EmailTestForm({ onSendTest, status, testPending }: EmailTestForm
 					<div className="space-y-2">
 						<Label htmlFor="testSubject">Subject (optional)</Label>
 						<Input
+							autoComplete="off"
 							disabled={!status.configured}
 							id="testSubject"
 							name="testSubject"
@@ -86,6 +87,7 @@ export function EmailTestForm({ onSendTest, status, testPending }: EmailTestForm
 					<div className="space-y-2">
 						<Label htmlFor="testMessage">Message (optional)</Label>
 						<Textarea
+							autoComplete="off"
 							className="resize-y"
 							disabled={!status.configured}
 							id="testMessage"
