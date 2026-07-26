@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import {
 	AlertDialog,
@@ -32,13 +32,22 @@ export function CreateWorkspaceDialog({
 	onCreate,
 	onOpenChange,
 }: CreateWorkspaceDialogProps) {
+	const nameInputRef = useRef<HTMLInputElement>(null);
 	const [form, setForm] = useState<CreateWorkspaceForm>({
 		description: '',
 		name: '',
 		slug: '',
 	});
+	const [nameError, setNameError] = useState<null | string>(null);
 
 	const handleCreate = () => {
+		if (isPending) return;
+		if (!form.name.trim()) {
+			setNameError('Workspace name is required');
+			nameInputRef.current?.focus();
+			return;
+		}
+		setNameError(null);
 		const slug =
 			form.slug ||
 			form.name
@@ -50,11 +59,15 @@ export function CreateWorkspaceDialog({
 
 	function handleFieldChange(field: string, value: string) {
 		setForm((prev) => ({ ...prev, [field]: value }));
+		if (field === 'name' && value.trim()) {
+			setNameError(null);
+		}
 	}
 
 	function handleOpenChange(open: boolean) {
 		if (!open) {
 			setForm({ description: '', name: '', slug: '' });
+			setNameError(null);
 		}
 		onOpenChange(open);
 	}
@@ -73,8 +86,10 @@ export function CreateWorkspaceDialog({
 						description={form.description}
 						idPrefix="workspace"
 						name={form.name}
+						nameInputRef={nameInputRef}
 						onFieldChange={handleFieldChange}
 						slug={form.slug}
+						{...(nameError ? { nameError } : {})}
 					/>
 				</div>
 				<AlertDialogFooter>
@@ -82,7 +97,7 @@ export function CreateWorkspaceDialog({
 						onClick={() => setForm({ description: '', name: '', slug: '' })}>
 						Cancel
 					</AlertDialogCancel>
-					<Button disabled={!form.name || isPending} onClick={handleCreate}>
+					<Button disabled={isPending} onClick={handleCreate}>
 						{isPending ? 'Creating…' : 'Create'}
 					</Button>
 				</AlertDialogFooter>

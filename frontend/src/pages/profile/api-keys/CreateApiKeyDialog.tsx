@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { generateApiKey } from '@/api/apiKeys';
@@ -38,8 +38,10 @@ interface CreateApiKeyDialogProps {
 
 function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) {
 	const queryClient = useQueryClient();
+	const keyNameInputRef = useRef<HTMLInputElement>(null);
 
 	const [keyName, setKeyName] = useState('');
+	const [keyNameError, setKeyNameError] = useState<null | string>(null);
 	const [keyScope, setKeyScope] = useState<ApiKeyScope>('read');
 	const [createdResult, setCreatedResult] = useState<ApiKeyCreateResponse | null>(null);
 
@@ -54,13 +56,20 @@ function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) 
 	});
 
 	function handleCreate() {
-		if (!keyName.trim()) return;
+		if (createMutation.isPending) return;
+		if (!keyName.trim()) {
+			setKeyNameError('Key name is required');
+			keyNameInputRef.current?.focus();
+			return;
+		}
+		setKeyNameError(null);
 		createMutation.mutate();
 	}
 
 	function handleOpenChange(newOpen: boolean) {
 		if (!newOpen) {
 			setKeyName('');
+			setKeyNameError(null);
 			setKeyScope('read');
 			setCreatedResult(null);
 			onClose();
@@ -88,13 +97,30 @@ function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) 
 						<div className="space-y-2">
 							<Label htmlFor="keyName">Key Name</Label>
 							<Input
+								aria-describedby={keyNameError ? 'keyName-error' : undefined}
 								autoComplete="off"
 								id="keyName"
 								maxLength={100}
-								onChange={(e) => setKeyName(e.target.value)}
+								onChange={(e) => {
+									setKeyName(e.target.value);
+									if (e.target.value.trim()) {
+										setKeyNameError(null);
+									}
+								}}
 								placeholder="e.g. Production API Key"
+								ref={keyNameInputRef}
+								required
 								value={keyName}
+								{...(keyNameError ? { 'aria-invalid': true } : {})}
 							/>
+							{keyNameError && (
+								<p
+									aria-live="polite"
+									className="text-sm text-destructive"
+									id="keyName-error">
+									{keyNameError}
+								</p>
+							)}
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="keyScope">Scope</Label>
@@ -124,9 +150,7 @@ function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) 
 					{createdResult ? (
 						<Button onClick={() => handleOpenChange(false)}>Done</Button>
 					) : (
-						<Button
-							disabled={!keyName.trim() || createMutation.isPending}
-							onClick={handleCreate}>
+						<Button disabled={createMutation.isPending} onClick={handleCreate}>
 							{createMutation.isPending ? 'Creating…' : 'Generate'}
 						</Button>
 					)}
