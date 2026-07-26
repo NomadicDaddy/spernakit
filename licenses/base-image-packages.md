@@ -72,8 +72,8 @@ application. Their licenses apply to those components rather than the applicatio
 | musl-utils             | 1.2.5-r12        | MIT AND BSD-2-Clause AND GPL-2.0-or-later                         |
 | musl                   | 1.2.5-r12        | MIT                                                               |
 | ncurses-terminfo-base  | 6.5_p20250503-r0 | X11                                                               |
-| nginx-mod-http-brotli  | 1.28.3-r6        | BSD-2-Clause                                                      |
-| nginx                  | 1.28.3-r6        | BSD-2-Clause                                                      |
+| nginx-mod-http-brotli  | 1.28.3-r7        | BSD-2-Clause                                                      |
+| nginx                  | 1.28.3-r7        | BSD-2-Clause                                                      |
 | pcre2                  | 10.46-r0         | BSD-3-Clause                                                      |
 | py3-packaging-pyc      | 25.0-r0          | Apache-2.0 AND BSD-2-Clause                                       |
 | py3-packaging          | 25.0-r0          | Apache-2.0 AND BSD-2-Clause                                       |
