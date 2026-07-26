@@ -282,6 +282,7 @@
 	input,
 	select,
 	textarea {
+		-webkit-tap-highlight-color: oklch(from var(--foreground) l c h / 18%);
 		touch-action: manipulation;
 	}
 	h1,
