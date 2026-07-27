@@ -4,7 +4,7 @@
  *
  * Extracted from scripts/setup.ts.
  */
-import { readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 import type { SetupSettings } from './config-writer.ts';
 
@@ -106,6 +106,19 @@ export function updateLicenseFiles(s: SetupSettings): void {
 		"Derived-project owners should obtain legal advice for their own distribution model. Spernakit's\nlocal build and image checks prove buildability and inventory coverage; they do not grant a\nderived project permission to publish an image or fulfill that project's source obligations.": `If you publish an image, complete \`licenses/SOURCE-OFFER.md\` first: \`check:image-publication\`\nand \`docker:image:push\` both refuse to ship an image while it is missing or still contains\nplaceholders. If you never publish, delete that file and the publication scripts instead —\nnothing obliges you to make an offer for software you do not distribute. Obtain legal advice for\nyour own distribution model; the build and image checks prove buildability and inventory\ncoverage, not compliance.`,
 		'Spernakit builds container images only as local verification artifacts. The template project\ndoes not publish, supply, or offer those images to downstream users. This document is guidance,\nnot a corresponding-source offer by NomadicDaddy.': `${s.appName} builds container images with \`bun run docker:image:build\`. Whether it publishes\nthem is this project's decision. This document is guidance, not a corresponding-source offer by\nthe Spernakit template or its author.`,
 	});
+
+	// Consuming the template is a one-way step, so this pass has to survive being re-run. `reset`
+	// re-invokes setup on an already-initialized project, where the template is long gone and the
+	// offer may carry the owner's real legal entity and contact address. Regenerating from a
+	// missing template would throw; regenerating from a present one would silently discard those
+	// answers. Once the offer exists, it is the owner's file and setup leaves it alone.
+	if (!existsSync('licenses/SOURCE-OFFER.template.md')) {
+		if (existsSync('licenses/SOURCE-OFFER.md')) return;
+		throw new Error(
+			'licenses/SOURCE-OFFER.md and licenses/SOURCE-OFFER.template.md are both missing; ' +
+				'restore one from the template before running setup.',
+		);
+	}
 
 	// The offer arrives unfilled on purpose: it only binds a project that actually distributes,
 	// and the remaining placeholders (<LEGAL ENTITY>, <CONTACT ADDRESS>) are decisions its owner
