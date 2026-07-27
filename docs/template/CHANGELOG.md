@@ -3,6 +3,13 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.31.1] - 2026-07-27
+
+### Fixed
+
+- Derived apps now ignore `.aidd/skills/`. The directory is materialized by the aidd runtime, so
+  every derived app had added the rule by hand and then reported it as template drift forever.
+
 ## [3.31.0] - 2026-07-26
 
 ### Added

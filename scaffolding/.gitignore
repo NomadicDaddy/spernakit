@@ -18,6 +18,7 @@ ps_modules/
 .aidd/reports/
 .aidd/response-review.md
 .aidd/screenshots/
+.aidd/skills/
 # runtime — meaningful only for the run that wrote it
 .aidd/active-runs/
 .aidd/dev-server*.log
