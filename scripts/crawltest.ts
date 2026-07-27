@@ -47,6 +47,7 @@ import {
 } from './crawltest-config';
 import { WebCrawler } from './crawltest-crawler';
 import { getVersionedScreenshotDir, printReport } from './crawltest-reporting';
+import { writeCrawlResult } from './crawltest-screenshots';
 import { flushRateLimits } from './crawltest-session';
 import { getFrontendUrl, loadJsonConfig } from './load-json-config';
 
@@ -80,6 +81,12 @@ async function run(): Promise<void> {
 	const screenshotDir = rawScreenshotDir
 		? getVersionedScreenshotDir(rawScreenshotDir, ROOT_DIR)
 		: null;
+
+	// The versioned directory is the release artifact, so its verdict is stamped before the crawl
+	// starts: a run that dies partway leaves `started` behind and the pre-push guard refuses it.
+	if (screenshotDir) {
+		await writeCrawlResult(screenshotDir, { status: 'started', success: false });
+	}
 
 	// Get configuration values
 	const baseUrl = getFrontendUrl(config, mode);
@@ -176,6 +183,14 @@ async function run(): Promise<void> {
 		report.servedBuild = servedBuild;
 		const reportPath = path.join(__dirname, '../logs/crawltest.json');
 		await Bun.write(reportPath, JSON.stringify(report, null, 2));
+		// Before printReport — it ends the process, so anything after it never runs.
+		if (screenshotDir) {
+			await writeCrawlResult(screenshotDir, {
+				screenshots: report.summary.screenshotsTaken,
+				status: report.summary.success ? 'passed' : 'failed',
+				success: report.summary.success,
+			});
+		}
 		printReport(report, reportPath);
 	}
 }

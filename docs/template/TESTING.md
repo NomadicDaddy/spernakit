@@ -126,7 +126,9 @@ is listening on that port is what gets measured.
 
 - Console summary with pass/fail status
 - Detailed JSON report: `logs/crawltest.json`
-- Screenshots (when enabled): `screenshots/*.png`
+- Screenshots (when enabled): `screenshots/v<version>/*.png`, alongside a `crawl-result.json`
+  recording whether that crawl passed. The pre-push screenshot guard reads it and refuses a release
+  tag whose capture came from a failed crawl, so a directory full of PNGs is not enough.
 
 See `scripts/readme.md` for complete CLI reference and configuration options.
 
