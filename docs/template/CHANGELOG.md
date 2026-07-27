@@ -3,6 +3,16 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.31.2] - 2026-07-27
+
+### Fixed
+
+- `setup` can now be re-run on an initialized project. It consumed
+  `licenses/SOURCE-OFFER.template.md` and deleted it, so every later run — including every
+  `reset.ps1` — threw `ENOENT` on the missing template. Once `licenses/SOURCE-OFFER.md` exists it
+  belongs to the project owner, who may have filled in the legal entity and contact address, so
+  setup now leaves it untouched rather than regenerating it.
+
 ## [3.31.1] - 2026-07-27
 
 ### Fixed
