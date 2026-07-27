@@ -3,6 +3,34 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.31.0] - 2026-07-26
+
+### Added
+
+- Added a shared fleet-manifest loader, regression tests, and a PowerShell reader. Reset,
+  initialization, drift classification, and QC now validate registered app versions, ports,
+  package metadata, and active runtime configuration against `spernakit.psd1`.
+- Split the mobile navigation into a lazy-loaded chunk so desktop sessions do not load it on the
+  initial path.
+
+### Changed
+
+- File cleanup jobs now remove eligible files concurrently while retaining per-file failure
+  reporting.
+- Critical-path checks now account for Brotli and gzip output separately, verify the entry chunk's
+  static imports, and enforce the restored gzip budget.
+
+### Fixed
+
+- Required fields in dashboard, API key, user, and workspace dialogs now expose validation errors
+  when submitted empty.
+- Added explicit autocomplete policies to non-authentication forms and corrected placeholder and
+  action copy across authentication, files, notifications, profile, and workspace screens.
+- The file upload drop zone now uses the native file input as its interactive control.
+- Added an intentional touch highlight policy and protected technical identifiers from browser
+  translation.
+- WebSocket state checks now handle wrapped sockets consistently during connection and cleanup.
+
 ## [3.30.0] - 2026-07-26
 
 ### Changed
