@@ -212,4 +212,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-backup-compression.ts',
 		],
 	},
+	'test:bundle-budget': {
+		// The classifier is an input because the test also pins the budget file's drift/init
+		// classification, not just the budget evaluator's behavior.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/defaults.json',
+			'scripts/bundle-budget.json',
+			'scripts/lib/bundle-budget.ts',
+			'scripts/lib/template/classify.ts',
+			'scripts/test-bundle-budget.ts',
+		],
+	},
 };

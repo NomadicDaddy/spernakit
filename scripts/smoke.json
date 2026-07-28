@@ -241,6 +241,10 @@
 					"description": "Backup decompression guard rejects high-ratio archives and cleans up"
 				},
 				{
+					"command": "bun run test:bundle-budget",
+					"description": "Bundle budget stays app-owned and is only enforced with matching provenance"
+				},
+				{
 					"command": "bun run format:check",
 					"description": "Format check"
 				},

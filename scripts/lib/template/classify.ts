@@ -66,10 +66,12 @@ const INIT_EXCLUDED_PATTERNS = [
 ];
 
 // Patterns excluded from DRIFT only (copied into apps, then diverge per-app): the license inventories
-// are generated from each app's own dependency graph, and bun.lock resolves per-app.
+// are generated from each app's own dependency graph, bun.lock resolves per-app, and the bundle
+// budget is measured from each app's own build output (see scripts/lib/bundle-budget.ts).
 const DRIFT_EXCLUDED_PATTERNS = [
 	/^THIRD_PARTY_LICENSES\.md$/,
 	/^THIRD_PARTY_NOTICES\.md$/,
+	/^scripts\/bundle-budget\.json$/,
 	/\.lock$/,
 ];
 

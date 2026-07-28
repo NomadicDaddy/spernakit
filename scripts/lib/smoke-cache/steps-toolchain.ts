@@ -94,6 +94,8 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'frontend/dist/**/*',
 			'scripts/bundle-budget.json',
+			'scripts/lib/bundle-budget.ts',
+			'scripts/load-json-config.ts',
 			'scripts/verify-minification.ts',
 		],
 		outputs: ['frontend/dist'],
