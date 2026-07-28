@@ -279,6 +279,10 @@
 					"description": "Override report names the template content each .templateoverrides entry withholds"
 				},
 				{
+					"command": "bun run test:reset-packages",
+					"description": "Package reset preserves dependencies when the frozen-install preflight fails"
+				},
+				{
 					"command": "bun run test:template-drift",
 					"description": "Drift reports build-critical structural lines and files removed by the template"
 				},

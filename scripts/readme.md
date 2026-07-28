@@ -284,7 +284,10 @@ If you run scripts in a derived application repo, ensure:
 ### `reset-packages.ts`
 
 - **Purpose**
-    - Removes `node_modules`, `dist`, and lock files, then reinstalls.
+    - Verifies `bun.lock` with a frozen install before removing `node_modules`, `dist`, and legacy
+      lock files, then reinstalls.
+    - Preserves existing dependency directories when the preflight fails and directs maintainers
+      to repair the lockfile with `bun install`.
 - **Run**
     - `bun run reset-packages`
 - **Warning**

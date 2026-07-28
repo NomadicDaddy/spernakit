@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Reset packages script - removes node_modules, dist, and legacy lock files,
- * then reinstalls with --frozen-lockfile.
+ * Reset packages script - verifies the frozen install first, removes node_modules, dist, and
+ * legacy lock files, then reinstalls with --frozen-lockfile.
  *
  * bun.lock is intentionally preserved: deleting it and reinstalling unfrozen
  * would silently float dependency versions.
@@ -27,6 +27,30 @@ const targets: CleanupTarget[] = [
 	{ name: 'package.lock', type: 'file' },
 	{ name: 'bun.lockb', type: 'file' },
 ];
+
+function preflightFrozenInstall(): void {
+	console.log('📦 Preflighting bun.lock with bun install --frozen-lockfile...\n');
+
+	const result = Bun.spawnSync(['bun', 'install', '--frozen-lockfile'], {
+		cwd: projectRoot,
+		stderr: 'pipe',
+		stdout: 'pipe',
+	});
+
+	if (result.exitCode === 0) {
+		console.log('  ✅ Frozen install preflight passed.\n');
+		return;
+	}
+
+	console.error(
+		[
+			'❌ Package reset preflight failed: bun.lock does not match the current package manifests.',
+			'Existing dependency directories were preserved; no reset steps were run.',
+			'Run `bun install`, review and commit bun.lock, then rerun the package reset.',
+		].join('\n'),
+	);
+	process.exit(result.exitCode);
+}
 
 function findItems(dir: string, targetName: string, targetType: 'directory' | 'file'): string[] {
 	const results: string[] = [];
@@ -86,6 +110,7 @@ function removeItems(items: string[]): boolean {
 
 async function main(): Promise<void> {
 	console.log('🧹 Resetting packages...\n');
+	preflightFrozenInstall();
 
 	for (const target of targets) {
 		console.log(`\n📦 Finding ${target.name} (${target.type})...`);

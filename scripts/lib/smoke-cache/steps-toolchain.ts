@@ -82,6 +82,15 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	'test:reset-packages': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'package.json',
+			'scripts/reset-packages.ts',
+			'scripts/smoke.json',
+			'scripts/test-reset-packages.ts',
+		],
+	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,
 		globs: [

@@ -223,17 +223,19 @@ Steps (in order):
     - Upgrade audit reports app-authored lines the template copy deleted.
 38. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-39. `bun run test:template-drift`
+39. `bun run test:reset-packages`
+    - Package reset preserves dependencies when the frozen-install preflight fails.
+40. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-40. `bun run format:check`
+41. `bun run format:check`
     - Format check.
-41. `bun run test:aidd-format`
+42. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-42. `bun run check:aidd-format`
+43. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-43. `bun run check-deps`
+44. `bun run check-deps`
     - Check dependency versions.
-44. `bun run check:dead-code`
+45. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
