@@ -82,6 +82,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'frontend/dist/**/*',
 			'scripts/check-critical-path.ts',
 			'scripts/critical-path-budget.json',
+			'scripts/lib/critical-path-budget.ts',
 		],
 		outputs: ['frontend/dist'],
 	},
@@ -219,6 +220,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'backend/src/config/defaults.json',
 			'scripts/bundle-budget.json',
+			'scripts/critical-path-budget.json',
 			'scripts/lib/bundle-budget.ts',
 			'scripts/lib/template/classify.ts',
 			'scripts/test-bundle-budget.ts',
@@ -234,6 +236,17 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'config/example.json',
 			'scripts/crawltest-config.ts',
 			'scripts/test-crawl-credentials.ts',
+		],
+	},
+	'test:critical-path-budget': {
+		// The classifier is an input because the test also pins the budget file's drift/init
+		// classification, not just the budget evaluator's behavior.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/critical-path-budget.json',
+			'scripts/lib/critical-path-budget.ts',
+			'scripts/lib/template/classify.ts',
+			'scripts/test-critical-path-budget.ts',
 		],
 	},
 };

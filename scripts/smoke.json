@@ -249,6 +249,10 @@
 					"description": "Crawl login resolves from the seed account and never from a tracked config file"
 				},
 				{
+					"command": "bun run test:critical-path-budget",
+					"description": "Critical-path budget stays app-owned and regenerates both recorded limits"
+				},
+				{
 					"command": "bun run format:check",
 					"description": "Format check"
 				},

@@ -35,7 +35,7 @@ import {
 import { isFileExcluded, isInitExcluded } from './lib/template/classify.ts';
 
 const BUDGET_FILE = 'scripts/bundle-budget.json';
-/** Owned by remediation-20260727-critical-path-budget-overrides, deliberately untouched here. */
+/** Behavior owned by scripts/test-critical-path-budget.ts; only the boundary is asserted here. */
 const CRITICAL_PATH_FILE = 'scripts/critical-path-budget.json';
 
 const THIS_APP = 'spernakit';
@@ -81,10 +81,22 @@ try {
 		`${BUDGET_FILE} must still be copied into a new app as its starting budget`,
 	);
 
-	// 2. The neighbouring budget stays template-owned: this change is scoped to the bundle budget.
+	// 2. The neighbouring critical-path budget is app-owned on the same terms, but the appSlug
+	//    provenance stamp is deliberately NOT extended to it: its limits are dominated by the shared
+	//    framework runtime every app inherits, so the template's numbers are a meaningful starting
+	//    ceiling rather than a verdict from someone else's build. Asserting that boundary here keeps
+	//    a future "make it consistent" change from silently disabling the critical-path gate for
+	//    every derived app. Its behavior is owned by scripts/test-critical-path-budget.ts.
 	assert(
-		!isFileExcluded(CRITICAL_PATH_FILE),
-		`${CRITICAL_PATH_FILE} must remain template-managed (owned by its own remediation)`,
+		isFileExcluded(CRITICAL_PATH_FILE) && !isInitExcluded(CRITICAL_PATH_FILE),
+		`${CRITICAL_PATH_FILE} must be app-owned generated state on the same terms as ${BUDGET_FILE}`,
+	);
+	const criticalPathShipped = JSON.parse(
+		readFileSync(join(repoRoot, CRITICAL_PATH_FILE), 'utf-8'),
+	) as Record<string, unknown>;
+	assert(
+		!('appSlug' in criticalPathShipped),
+		`${CRITICAL_PATH_FILE} must not carry an appSlug — it is enforced for every app, not skipped`,
 	);
 
 	// 3. The template's committed budget carries provenance matching its own slug — otherwise the

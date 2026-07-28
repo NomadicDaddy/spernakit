@@ -66,12 +66,13 @@ const INIT_EXCLUDED_PATTERNS = [
 ];
 
 // Patterns excluded from DRIFT only (copied into apps, then diverge per-app): the license inventories
-// are generated from each app's own dependency graph, bun.lock resolves per-app, and the bundle
-// budget is measured from each app's own build output (see scripts/lib/bundle-budget.ts).
+// are generated from each app's own dependency graph, bun.lock resolves per-app, and both size
+// budgets are measured from each app's own build (scripts/lib/{bundle,critical-path}-budget.ts).
 const DRIFT_EXCLUDED_PATTERNS = [
 	/^THIRD_PARTY_LICENSES\.md$/,
 	/^THIRD_PARTY_NOTICES\.md$/,
 	/^scripts\/bundle-budget\.json$/,
+	/^scripts\/critical-path-budget\.json$/,
 	/\.lock$/,
 ];
 
@@ -146,8 +147,7 @@ export function isFileExcluded(filePath: string): boolean {
 	for (const dir of DRIFT_EXCLUDED_DIRS) {
 		if (filePath.startsWith(dir)) return true;
 	}
-	// Drift-only file patterns (bun.lock and the generated license inventories are copied, then
-	// diverge per-app).
+	// Drift-only file patterns: copied into apps, then diverge per-app (see DRIFT_EXCLUDED_PATTERNS).
 	for (const pattern of DRIFT_EXCLUDED_PATTERNS) {
 		if (pattern.test(filePath)) return true;
 	}
