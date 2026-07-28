@@ -8,7 +8,6 @@
  */
 
 import {
-	AIDD_METADATA_EXCLUDES,
 	APPLICATION_CHECK_DIRECTORY_GLOBS,
 	APPLICATION_CHECK_FILE_GLOBS,
 	COMMON_EXCLUDES,
@@ -41,21 +40,6 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		// cache skip the step when an unlisted .md file gains a broken link.
 		excludes: [...COMMON_EXCLUDES, '.github/**', 'coverage/**', 'data/**', 'screenshots/**'],
 		globs: ['**/*.md', 'scripts/check-docs.ts'],
-	},
-	'check:aidd-format': {
-		// The metadata is itself an input: a derived app rewrites feature.json on every iteration,
-		// and the shape of what it wrote is exactly what this step grades. `.gitignore` is an input
-		// too, because it decides whether the step runs at all or takes its skip branch.
-		dot: true,
-		excludes: AIDD_METADATA_EXCLUDES,
-		globs: [
-			'.aidd/features/*/feature.json',
-			'.aidd/roadmap.json',
-			'.gitignore',
-			'.prettierrc',
-			'scripts/aidd-prettierignore',
-			'scripts/check-aidd-format.ts',
-		],
 	},
 	'check:api-types': {
 		excludes: COMMON_EXCLUDES,
