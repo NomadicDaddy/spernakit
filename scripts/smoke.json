@@ -213,7 +213,7 @@
 				},
 				{
 					"command": "bun run test:vendored-browser-gates",
-					"description": "Vendored browser tool stays exempt from project-owned source gates",
+					"description": "Vendored browser entry points and source gates remain enforced",
 					"templateOnly": true
 				},
 				{

@@ -681,8 +681,8 @@ frontend/src/
 
 ### **File Size Limit (Enforced)**
 
-- Every app-owned `.ts`/`.tsx` source file under `backend/src`, `frontend/src`, `shared/src`, and `scripts` is hard-capped at **300 lines** - `check:max-lines` runs in `smoke:qc` and fails the build on any file over the limit, with no grandfather list
-- The vendored `scripts/spernakit-browser/` subtree is excluded because it is consumed as external tooling and its self-contained browser-evaluation modules are not app-owned refactor targets; files everywhere else retain the 300-line ceiling
+- Every `.ts`/`.tsx` source file under `backend/src`, `frontend/src`, `shared/src`, and `scripts` is hard-capped at **300 lines** - `check:max-lines` runs in `smoke:qc` and fails the build on any file over the limit, with no exemptions
+- The standalone [spernakit-browser](https://github.com/NomadicDaddy/spernakit-browser) project owns that tool's canonical source; derived apps that copy it under `scripts/spernakit-browser/` must update from the canonical project instead of adding local source-gate exclusions
 - Components over the limit should be decomposed into sub-components; extract reusable sub-components to the same directory (co-located) or to `components/shared/` if used across pages
 - Services, routes, and scripts should be split into cohesive submodules behind a facade so the original import path and entrypoint stay stable
 

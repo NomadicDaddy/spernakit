@@ -1,11 +1,10 @@
 #!/usr/bin/env bun
 /**
- * Regression for the derived-app gate treatment of the vendored spernakit-browser tool.
+ * Regression for the derived-app gate treatment of the separately maintained browser tool.
  *
  * `scripts/sb.ts` is covered by the root `scripts/*.ts` Knip entry, while the daemon starts as a
- * separate process and must be declared explicitly. The tool remains analyzable by Knip, but its
- * intentionally self-contained browser-evaluation modules are outside the app-owned max-lines
- * policy.
+ * separate process and must be declared explicitly. Derived apps may copy the canonical tool into
+ * `scripts/spernakit-browser/`, where it remains subject to the same source gates as other scripts.
  */
 
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -105,9 +104,9 @@ try {
 	writeFixtureFile(
 		fixtureRoot,
 		'scripts/spernakit-browser/daemon.ts',
-		`import './snapshot.ts';\n${lines(329, 'daemon')}`,
+		`import './snapshot.ts';\n${lines(198, 'daemon')}`,
 	);
-	writeFixtureFile(fixtureRoot, 'scripts/spernakit-browser/snapshot.ts', lines(330, 'snapshot'));
+	writeFixtureFile(fixtureRoot, 'scripts/spernakit-browser/snapshot.ts', lines(200, 'snapshot'));
 	writeFixtureFile(fixtureRoot, 'scripts/app-owned.ts', lines(300, 'app-owned'));
 	writeFixtureFile(
 		fixtureRoot,
@@ -136,10 +135,13 @@ try {
 	);
 
 	result = await runPackageCommand(fixtureRoot, 'check:max-lines');
-	assert(result.code === 0, `Vendored tool must pass check:max-lines:\n${result.output}`);
+	assert(
+		result.code === 0,
+		`Compliant vendored tool must pass check:max-lines:\n${result.output}`,
+	);
 	assert(
 		!result.output.includes('spernakit-browser/'),
-		'Passing max-lines output must not report the vendored browser subtree',
+		'Passing max-lines output must not report compliant vendored browser files',
 	);
 	assert(
 		!existsSync(join(fixtureRoot, '.templateoverrides')),
@@ -166,9 +168,14 @@ try {
 		result.output.includes('scripts/app-owned.ts:301'),
 		'The max-lines failure must identify the oversized app-owned script',
 	);
+
+	writeFixtureFile(fixtureRoot, 'scripts/app-owned.ts', lines(300, 'app-owned'));
+	writeFixtureFile(fixtureRoot, 'scripts/spernakit-browser/snapshot.ts', lines(301, 'snapshot'));
+	result = await runPackageCommand(fixtureRoot, 'check:max-lines');
+	assert(result.code === 1, 'An oversized vendored browser script must fail check:max-lines');
 	assert(
-		!result.output.includes('spernakit-browser/'),
-		'The max-lines failure must not include oversized vendored browser files',
+		result.output.includes('scripts/spernakit-browser/snapshot.ts:301'),
+		'The max-lines failure must identify the oversized vendored browser script',
 	);
 
 	console.log(`vendored browser gate regression passed (${checks} assertions).`);

@@ -190,7 +190,7 @@ Steps (in order):
 21. `bun run check:max-lines`
     - 300-line max-lines gate.
 22. `bun run test:vendored-browser-gates`
-    - Vendored browser tool stays exempt from project-owned source gates.
+    - Vendored browser entry points and source gates remain enforced.
 23. `bun run check-application`
     - Application check.
 24. `bun run check:destructive-confirmation`
