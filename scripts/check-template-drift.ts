@@ -213,7 +213,15 @@ function main(): void {
 		for (const filePath of templateFiles) {
 			const category = classifyFile(filePath, overrides);
 			results.push(
-				checkFile(spernakitPath, version, filePath, category, appBranding, repoRoot),
+				checkFile(
+					spernakitPath,
+					version,
+					filePath,
+					category,
+					appBranding,
+					repoRoot,
+					overrides.buildCriticalBranded.includes(filePath),
+				),
 			);
 		}
 

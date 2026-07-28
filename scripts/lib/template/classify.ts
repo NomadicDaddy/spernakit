@@ -254,6 +254,7 @@ function parseOverrides(parsed: Record<string, unknown>): ClassificationOverride
 		Array.isArray(value) ? (value as string[]) : [];
 	return {
 		branded: asStringArray(parsed['branded']),
+		buildCriticalBranded: asStringArray(parsed['buildCriticalBranded']),
 		infrastructure: asStringArray(parsed['infrastructure']),
 		securityInfrastructure: [...SECURITY_INFRASTRUCTURE_FILES],
 	};

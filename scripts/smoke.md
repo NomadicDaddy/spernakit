@@ -219,8 +219,8 @@ Steps (in order):
     - Upgrade audit reports app-authored lines the template copy deleted.
 36. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-37. `bun run test:template-deletions`
-    - Drift detects files the template removed that a derived app still carries.
+37. `bun run test:template-drift`
+    - Drift reports build-critical structural lines and files removed by the template.
 38. `bun run format:check`
     - Format check.
 39. `bun run test:aidd-format`

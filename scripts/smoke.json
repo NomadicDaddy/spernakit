@@ -266,8 +266,8 @@
 					"description": "Override report names the template content each .templateoverrides entry withholds"
 				},
 				{
-					"command": "bun run test:template-deletions",
-					"description": "Drift detects files the template removed that a derived app still carries"
+					"command": "bun run test:template-drift",
+					"description": "Drift reports build-critical structural lines and files removed by the template"
 				},
 				{
 					"command": "bun run format:check",

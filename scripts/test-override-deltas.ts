@@ -255,7 +255,12 @@ EXPOSE 3330
 	// ===== 13. Ordering the CLI fixture cannot isolate: two security paths sort by path. =====
 	const ordered = computeOverrideDeltas({
 		appBranding: null,
-		classification: { branded: [], infrastructure: [], securityInfrastructure: [] },
+		classification: {
+			branded: [],
+			buildCriticalBranded: [],
+			infrastructure: [],
+			securityInfrastructure: [],
+		},
 		overrides: {
 			deleted: new Map(),
 			keep: new Map([['docker/start.sh', '']]),
