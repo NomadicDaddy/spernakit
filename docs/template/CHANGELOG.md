@@ -3,6 +3,25 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.32.1] - 2026-07-28
+
+### Fixed
+
+- Template drift now distinguishes build-critical branded files and prints the missing structural
+  lines, so a derived-app Dockerfile cannot lose a required build instruction behind an ordinary
+  branding difference.
+- Docker production checks reject placeholder secrets before building an image. Readiness failures
+  now report the stopped container's exit code and a bounded log tail instead of ending with only a
+  timeout.
+- Quality gates now find exported Elysia route modules that are not reachable from the API
+  assembly, including flat files and children of unmounted barrels. Package reset also checks the
+  frozen lockfile before removing installed dependencies.
+- The template verifies that every template-owned feature has an introduction-version marker.
+  Freshly scaffolded apps now receive the screenshot pre-push guard and its two-guard wrapper
+  together.
+- Copied `spernakit-browser` tools keep their separately spawned daemon visible to Knip while
+  remaining subject to the same 300-line source limit as the rest of the repository.
+
 ## [3.32.0] - 2026-07-28
 
 ### Added
