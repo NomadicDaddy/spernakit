@@ -262,6 +262,17 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-fleet-manifest-sync.ts',
 		],
 	},
+	'test:lost-lines': {
+		// The test drives the real CLI against a purpose-built template/app pair of git repos, so the
+		// whole drift library is an input: the audit reaches classify.ts for scaffold mapping and
+		// exclusion, and repo.ts for template resolution.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/audit-lost-lines.ts',
+			'scripts/lib/template/*.ts',
+			'scripts/test-lost-lines.ts',
+		],
+	},
 	'test:template-deletions': {
 		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is
 		// an input: enumeration, scaffold mapping, overrides and reporting all decide the verdict.

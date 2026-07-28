@@ -202,11 +202,30 @@ template instead of using the sync workflow.
 6. Bump `spernakit_version` in `package.json`
 7. Run `bun run smoke:qc`
 8. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
+9. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
 
 Plan for ~3-5 minutes per app for small deltas. The manual process is deterministic and cannot silently clobber domain code, at the cost of per-file judgment.
 
 The review packet is intentionally read-only. Template changes are applied manually after each
 classification has been checked against the derived app's domain code.
+
+### Lost App Lines Audit
+
+Drift detection asks whether the app still matches what the template ships. This audit asks the inverse question, which nothing else answers: did the copy delete a line the app wrote that the template never had?
+
+Nothing in `smoke:qc` can catch that. During the 2026-07-27 upgrade round one derived app lost twenty lines and nine commits of navigation entries and every gate stayed green, because a dropped nav entry typechecks, lints, builds and serves. Another lost an app-added field from a shared API type and was caught only because one page happened to consume it. A green `smoke:qc` is not evidence that app-owned work survived an upgrade.
+
+**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 9 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+
+**A non-zero exit is blocking.** Every reported line is app-authored content the copy removed, and each one is either restored or dropped deliberately before the release is cut.
+
+**How a line is classified**: for each line the commit removed from a template-managed path, the audit asks whether _any_ revision of the corresponding template path ever contained it (scaffold-mapped paths resolve through `scaffolding/`, so `.prettierignore` is compared against `scaffolding/.prettierignore`). A line the template once shipped is stale content the upgrade exists to replace. A line the template never had was written by the app. Trailing commas are normalized on both sides of that comparison only - the v3.31.0 switch to `trailingComma: all` would otherwise rewrite the last line of every multi-line list in the tree and drown the signal - and findings still print the line as the file actually had it.
+
+That test alone is too loud, because a file seeded from a pre-3.28.2 template carries lines no surviving template blob contains: those tags were squashed away. The app's own history settles it. A path is only reported when a post-init app commit touched it, and template syncs do not count - a `chore(template):` commit is the copy, not the work. Without that second exclusion the trim of `docs/template/CHANGELOG.md` to its last five releases reports as 2209 lost lines in every app that has ever been upgraded.
+
+**Expected findings on a clean upgrade**: the audit compares whole lines, so a line the formatter rewrote in place reads as removed. On the real 3.24.1 -> 3.31.2 upgrades that is the `"spernakit_version"` bump in `package.json` plus a handful of Tailwind class-order and import-member-order reflows - roughly twenty lines, each dismissible by reading it next to the added line beside it. Anything that is not obviously a reflow is a real loss.
+
+**Self-test**: `bun run test:lost-lines` drives the shipped CLI against a purpose-built template/app pair of git repositories (`scripts/lib/template/lost-lines-fixture.ts`), including an upgrade that preserved the same app work as a control.
 
 ### Module System
 

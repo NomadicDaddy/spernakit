@@ -258,6 +258,10 @@
 					"description": "Critical-path budget stays app-owned and regenerates both recorded limits"
 				},
 				{
+					"command": "bun run test:lost-lines",
+					"description": "Upgrade audit reports app-authored lines the template copy deleted"
+				},
+				{
 					"command": "bun run test:template-deletions",
 					"description": "Drift detects files the template removed that a derived app still carries"
 				},

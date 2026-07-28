@@ -52,6 +52,7 @@
 		"url": "https://github.com/NomadicDaddy/spernakit.git"
 	},
 	"scripts": {
+		"audit:lost-lines": "bun scripts/audit-lost-lines.ts",
 		"build": "bun run build:backend && bun run build:frontend",
 		"build:backend": "bun run --cwd backend build",
 		"build:frontend": "bun run --cwd frontend build",
@@ -153,6 +154,7 @@
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fleet-manifest-sync": "bun scripts/test-fleet-manifest-sync.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
+		"test:lost-lines": "bun scripts/test-lost-lines.ts",
 		"test:template-deletions": "bun scripts/test-template-deletions.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-mutation-denylist": "bun scripts/verify-mutation-denylist.ts",
