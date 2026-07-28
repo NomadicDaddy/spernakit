@@ -33,4 +33,19 @@ export const INTEGRATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-feature-integration.ts',
 		],
 	},
+	'test:scaffolded-hooks': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'.githooks/pre-push',
+			'.githooks/screenshot-guard.sh',
+			'package.json',
+			'scaffolding/.githooks/aidd-history-guard.sh',
+			'scaffolding/.githooks/pre-push',
+			'scaffolding/.githooks/screenshot-guard.sh',
+			'scripts/check-template-drift.ts',
+			'scripts/lib/init/scaffold.ts',
+			'scripts/lib/template/*.ts',
+			'scripts/test-scaffolded-hooks.ts',
+		],
+	},
 };
