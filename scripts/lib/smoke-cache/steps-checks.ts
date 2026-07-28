@@ -224,4 +224,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-bundle-budget.ts',
 		],
 	},
+	'test:crawl-credentials': {
+		// The tracked config files are inputs because the test also pins them as credential-free,
+		// not just the resolver's behavior.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/defaults.json',
+			'backend/src/utils/auth/passwordGenerator.ts',
+			'config/example.json',
+			'scripts/crawltest-config.ts',
+			'scripts/test-crawl-credentials.ts',
+		],
+	},
 };

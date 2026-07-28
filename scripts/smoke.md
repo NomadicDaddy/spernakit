@@ -209,15 +209,17 @@ Steps (in order):
     - Backup decompression guard rejects high-ratio archives and cleans up.
 31. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-32. `bun run format:check`
+32. `bun run test:crawl-credentials`
+    - Crawl login resolves from the seed account and never from a tracked config file.
+33. `bun run format:check`
     - Format check.
-33. `bun run test:aidd-format`
+34. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-34. `bun run check:aidd-format`
+35. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-35. `bun run check-deps`
+36. `bun run check-deps`
     - Check dependency versions.
-36. `bun run check:dead-code`
+37. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

@@ -157,27 +157,6 @@ export async function loginSession(
 }
 
 // ---------------------------------------------------------------------------
-// Navigate to start page (no-login mode)
-// ---------------------------------------------------------------------------
-
-export async function navigateSessionToStart(
-	session: CrawlSession,
-	results: TestResults,
-	opts: CrawlerOpts,
-): Promise<void> {
-	if (!session.page) throw new Error('Browser not initialized');
-
-	console.log(`🏠 Navigating to ${opts.baseUrl}/...`);
-	await session.page.goto(opts.baseUrl, {
-		timeout: opts.timeout,
-		waitUntil: 'networkidle2',
-	});
-	await waitForContent(session.page, opts.pageSettleDelay);
-	console.log('✅ Start page loaded');
-	results.visitedUrls.add(opts.baseUrl);
-}
-
-// ---------------------------------------------------------------------------
 // Browser recycling — prevent CDP degradation on long crawls
 // ---------------------------------------------------------------------------
 

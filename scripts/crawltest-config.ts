@@ -1,6 +1,70 @@
 /**
  * CLI parsing and configuration for crawltest.
  */
+import type { SeedCredential } from '../backend/src/utils/auth/passwordGenerator.ts';
+import type { AppConfig } from './lib/app-config-types.ts';
+
+// ---------------------------------------------------------------------------
+// Login credential resolution
+// ---------------------------------------------------------------------------
+
+export interface CrawlLogin {
+	email: string;
+	password: string;
+}
+
+export interface CrawlLoginResolution {
+	/** Config keys that fell back to the seed credential, named as they appear in the config file. */
+	fromSeed: string[];
+	/** Resolved credentials, or null when a key could not be resolved from any source. */
+	login: CrawlLogin | null;
+	/** Config keys that resolved to nothing, named as they appear in the config file. */
+	unresolved: string[];
+}
+
+/**
+ * Resolve the crawl login from config, falling back per key to the development-seed credential.
+ *
+ * `backend/src/config/defaults.json` is tracked, so it can never carry a concrete credential and
+ * ships both keys blank. Every derived app then filled them with its own SYSOP seed account by
+ * hand, and several pinned the whole file as a template override to keep doing so. The values were
+ * never app-specific — they were whatever that app's seed script creates — so they are resolved
+ * here instead of stored.
+ *
+ * Each key falls back independently: a config that sets only the email keeps that email and takes
+ * the seed password, so an app that renamed its crawl account is not silently given back the seed
+ * one.
+ *
+ * @param testing - The `testing` section of the loaded config; either key may be absent or blank.
+ * @param seedCredential - The development-seed credential to fall back to, or undefined when there
+ *   is none to trust (no seed user holds the role, or the target was seeded in production, where
+ *   seed passwords are random). Passed in rather than looked up here so the caller owns that
+ *   judgement.
+ * @returns Resolved credentials plus the keys that came from the seed, or — when a key resolved to
+ *   nothing — a null login and the list of keys that could not be resolved.
+ */
+export function resolveCrawlLogin(
+	testing: AppConfig['testing'],
+	seedCredential: SeedCredential | undefined,
+): CrawlLoginResolution {
+	const configuredEmail = testing?.crawlLoginEmail;
+	const configuredPassword = testing?.crawlLoginPassword;
+	const email = configuredEmail || seedCredential?.email;
+	const password = configuredPassword || seedCredential?.password;
+
+	const fromSeed: string[] = [];
+	if (!configuredEmail) fromSeed.push('testing.crawlLoginEmail');
+	if (!configuredPassword) fromSeed.push('testing.crawlLoginPassword');
+
+	const unresolved: string[] = [];
+	if (!email) unresolved.push('testing.crawlLoginEmail');
+	if (!password) unresolved.push('testing.crawlLoginPassword');
+	if (!email || !password) {
+		return { fromSeed: [], login: null, unresolved };
+	}
+
+	return { fromSeed, login: { email, password }, unresolved };
+}
 
 // ---------------------------------------------------------------------------
 // CLI argument parsers

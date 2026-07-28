@@ -258,7 +258,7 @@ bun run generate-keys
 	"testing": {
 		"crawlContentMinLength": 50,
 		"crawlInteractionDelay": 400,
-		"crawlLoginEmail": "sysop@example.com",
+		"crawlLoginEmail": "",
 		"crawlLoginPassword": "",
 		"crawlMaxDepth": 6,
 		"crawlPageSettleDelay": 500,
@@ -279,6 +279,20 @@ bun run generate-keys
 	}
 }
 ```
+
+### Crawl login credentials
+
+`testing.crawlLoginEmail` and `testing.crawlLoginPassword` ship blank on purpose. `defaults.json`
+is tracked, so it must never carry a concrete credential; leave both keys empty and `crawltest`
+resolves them per key from the SYSOP account the development seed creates
+(`backend/src/utils/auth/passwordGenerator.ts`). Setting either key in your gitignored
+`config/{appname}.json` — or in `config/testing.local.json` — overrides just that key.
+
+Two cases have no fallback and stop the crawl with a non-zero exit before it starts: a seed that
+defines no SYSOP user, and `server.nodeEnv` set to `production`, where the seed generates a random
+password for that account. Configure both keys explicitly there. `crawltest` never falls back to
+crawling anonymously, because an unauthenticated crawl reaches only the public routes and reports
+a shallow pass.
 
 ---
 

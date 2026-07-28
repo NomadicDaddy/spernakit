@@ -15,6 +15,7 @@ import {
 	formatCredentialsForDisplay,
 	getCredentials,
 	getSeedUsersWithPasswords,
+	resolveCrawlEmail,
 } from '../utils/auth/passwordGenerator.ts';
 import { logDatabase } from '../utils/logger.ts';
 import { closeDatabase, initializeDatabase } from './index.ts';
@@ -68,7 +69,7 @@ async function seed(): Promise<void> {
 
 	const createdUsers = await executeSeedOrchestration(db, {
 		bcryptRounds,
-		crawlEmail: config.testing.crawlLoginEmail,
+		crawlEmail: resolveCrawlEmail(config.testing.crawlLoginEmail, isProduction),
 		seedUsers: seedUserList,
 	});
 

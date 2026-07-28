@@ -24,8 +24,8 @@
     derived apps:          screenshots/v{version}-sv{spernakit_version}/
 
   Config (from JSON config file):
-    testing.crawlLoginEmail       -> login email
-    testing.crawlLoginPassword    -> login password
+    testing.crawlLoginEmail       -> login email    (falls back to the SYSOP dev-seed account)
+    testing.crawlLoginPassword    -> login password (falls back to the SYSOP dev-seed account)
     testing.crawlMaxDepth        -> discovery passes (default 3)
     testing.crawlTimeout         -> timeout per action in ms (default 30000)
     testing.crawlInteractionDelay -> ms between element interactions (default 400)
@@ -35,6 +35,7 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { getSeedCredential } from '../backend/src/utils/auth/passwordGenerator.ts';
 import {
 	detectServedBuild,
 	logCrawlConfig,
@@ -44,6 +45,7 @@ import {
 	parseStartFrom,
 	parseTest404,
 	parseTestBug,
+	resolveCrawlLogin,
 } from './crawltest-config';
 import { WebCrawler } from './crawltest-crawler';
 import { getVersionedScreenshotDir, printReport } from './crawltest-reporting';
@@ -75,7 +77,44 @@ async function run(): Promise<void> {
 	}
 
 	// Load JSON config
-	const { config } = loadJsonConfig(ROOT_DIR);
+	const { appSlug, config } = loadJsonConfig(ROOT_DIR);
+
+	// Resolve the login before anything else runs. An unauthenticated crawl does not fail loudly —
+	// it reports a shallow public site, which reads as a successful test run — so an unresolvable
+	// login has to stop the run here, before the screenshot directory is stamped `started` and
+	// before a browser is launched.
+	//
+	// The dev-seed fallback is only trustworthy against a development seed: a production seed gives
+	// the same account a random password, so offer nothing there and let the keys report as unset.
+	const isProduction = config.server?.nodeEnv === 'production';
+	const { fromSeed, login, unresolved } = resolveCrawlLogin(
+		config.testing,
+		isProduction ? undefined : getSeedCredential('SYSOP'),
+	);
+	if (!login) {
+		const reason = isProduction
+			? [
+					'   nodeEnv is "production", where the seed generates a random password for',
+					'   that account, so there is no development-seed credential to fall back to.',
+				]
+			: ['   No SYSOP development-seed account is defined to fall back to either.'];
+		console.error(
+			[
+				'❌ Cannot resolve the crawl login; these config keys are unset:',
+				...unresolved.map((key) => `   - ${key}`),
+				...reason,
+				`   Set them in config/${appSlug}.json or config/testing.local.json — crawling`,
+				'   anonymously would only reach the public routes and report a shallow pass.',
+			].join('\n'),
+		);
+		process.exit(1);
+	}
+	if (fromSeed.length > 0) {
+		console.log(
+			`ℹ️  Resolved ${fromSeed.join(' and ')} from the SYSOP development-seed account; ` +
+				`crawling as ${login.email}`,
+		);
+	}
 
 	// Compute versioned screenshot directory
 	const screenshotDir = rawScreenshotDir
@@ -118,15 +157,12 @@ async function run(): Promise<void> {
 				'   field metrics the app POSTs to /api/v1/system/web-vitals.\n',
 		);
 	}
-	const loginEmail = config.testing?.crawlLoginEmail;
-	const loginPassword = config.testing?.crawlLoginPassword;
 	const maxDepth = config.testing?.crawlMaxDepth ?? 3;
 	const timeout = config.testing?.crawlTimeout ?? 30000;
 	const interactionDelay = config.testing?.crawlInteractionDelay ?? 400;
 	const pageSettleDelay = config.testing?.crawlPageSettleDelay ?? 500;
 	const contentMinLength = config.testing?.crawlContentMinLength ?? 50;
 	const seedRoutes = config.testing?.crawlSeedRoutes ?? [];
-	const requiresLogin = Boolean(loginEmail && loginPassword);
 
 	logCrawlConfig({
 		baseUrl,
@@ -160,13 +196,8 @@ async function run(): Promise<void> {
 	try {
 		await crawler.init();
 		flushRateLimits();
-		if (requiresLogin) {
-			await crawler.screenshotPreLoginPages();
-			await crawler.login(loginEmail!, loginPassword!);
-		} else {
-			console.log('ℹ️  No login credentials configured — crawling as anonymous user');
-			await crawler.navigateToStart();
-		}
+		await crawler.screenshotPreLoginPages();
+		await crawler.login(login.email, login.password);
 		await crawler.crawl();
 
 		console.log('\n✅ Crawl completed!');

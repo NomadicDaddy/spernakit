@@ -147,6 +147,7 @@
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
 		"test:backup-compression": "bun scripts/test-backup-compression.ts",
 		"test:bundle-budget": "bun scripts/test-bundle-budget.ts",
+		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",

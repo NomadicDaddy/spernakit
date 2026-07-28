@@ -245,6 +245,10 @@
 					"description": "Bundle budget stays app-owned and is only enforced with matching provenance"
 				},
 				{
+					"command": "bun run test:crawl-credentials",
+					"description": "Crawl login resolves from the seed account and never from a tracked config file"
+				},
+				{
 					"command": "bun run format:check",
 					"description": "Format check"
 				},
