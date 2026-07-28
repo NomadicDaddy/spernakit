@@ -249,6 +249,19 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-critical-path-budget.ts',
 		],
 	},
+	'test:fleet-manifest-sync': {
+		// The test drives both fleet CLIs against a self-contained two-app fixture, so the reader,
+		// the validator, and the writer are all inputs. Unlike `test:fleet-manifest` it never reads
+		// the real fleet, which is what makes it cacheable.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-fleet-manifest.ts',
+			'scripts/lib/fleet/*.ts',
+			'scripts/read-fleet-manifest.ps1',
+			'scripts/sync-fleet-manifest.ts',
+			'scripts/test-fleet-manifest-sync.ts',
+		],
+	},
 	'test:template-deletions': {
 		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is
 		// an input: enumeration, scaffold mapping, overrides and reporting all decide the verdict.

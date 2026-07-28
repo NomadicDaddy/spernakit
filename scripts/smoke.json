@@ -167,6 +167,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run test:fleet-manifest-sync",
+					"description": "Fleet manifest writer regression self-test",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:fleet-manifest",
 					"description": "Fleet manifest matches packages and runtime configs",
 					"templateOnly": true
