@@ -205,15 +205,17 @@ Steps (in order):
     - Feature integration check.
 29. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-30. `bun run format:check`
+30. `bun run test:backup-compression`
+    - Backup decompression guard rejects high-ratio archives and cleans up.
+31. `bun run format:check`
     - Format check.
-31. `bun run test:aidd-format`
+32. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-32. `bun run check:aidd-format`
+33. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-33. `bun run check-deps`
+34. `bun run check-deps`
     - Check dependency versions.
-34. `bun run check:dead-code`
+35. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

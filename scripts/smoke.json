@@ -237,6 +237,10 @@
 					"description": "SQLite/PG schema parity check"
 				},
 				{
+					"command": "bun run test:backup-compression",
+					"description": "Backup decompression guard rejects high-ratio archives and cleans up"
+				},
+				{
 					"command": "bun run format:check",
 					"description": "Format check"
 				},

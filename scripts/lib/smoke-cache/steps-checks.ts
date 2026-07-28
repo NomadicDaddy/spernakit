@@ -1,6 +1,7 @@
 /**
  * Cache dependencies for the project-invariant guards: the `check-*` / `check:*` qc steps that
- * assert something about the repository rather than compiling or formatting it.
+ * assert something about the repository rather than compiling or formatting it, plus the `test:*`
+ * self-tests whose inputs are a fixed, enumerable set of source files.
  *
  * Split from the toolchain steps in `steps-toolchain.ts` to keep each map inside the 300-line
  * modularity gate; `dependencies.ts` merges the two into the single map the cache consumes.
@@ -199,5 +200,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'check:smoke-docs': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/smoke.json', 'scripts/smoke.md', 'scripts/sync-smoke-docs.ts'],
+	},
+	'test:backup-compression': {
+		// The branding lib is an input because the test also pins the backup HKDF info string
+		// against the drift tooling's normalizer, which runs over the encryption service.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/backup/backupCompressionService.ts',
+			'backend/src/services/backup/backupEncryptionService.ts',
+			'scripts/lib/template/*.ts',
+			'scripts/test-backup-compression.ts',
+		],
 	},
 };

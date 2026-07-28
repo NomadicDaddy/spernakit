@@ -145,6 +145,7 @@
 		"supertest": "bun run smoke:reset && bun run smoke:docker-prod && bun run smoke:screenshots",
 		"template:sync-plan": "bun scripts/template-sync-plan.ts",
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
+		"test:backup-compression": "bun scripts/test-backup-compression.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
