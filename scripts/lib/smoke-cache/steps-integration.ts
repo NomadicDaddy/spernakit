@@ -48,4 +48,13 @@ export const INTEGRATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-scaffolded-hooks.ts',
 		],
 	},
+	'test:wait-for-http': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'package.json',
+			'scripts/smoke.json',
+			'scripts/test-wait-for-http.ts',
+			'scripts/wait-for-http.ts',
+		],
+	},
 };

@@ -154,6 +154,10 @@
 					"description": "Production config preflight rejects placeholder secrets without disclosing values"
 				},
 				{
+					"command": "bun run test:wait-for-http",
+					"description": "Docker readiness failures print bounded container log diagnostics"
+				},
+				{
 					"command": "bun run check:db-location",
 					"description": "Database location guard (ASSERT-010: DB files only under data/)"
 				},
