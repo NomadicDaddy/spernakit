@@ -150,6 +150,7 @@
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
 		"test:backup-compression": "bun scripts/test-backup-compression.ts",
 		"test:bundle-budget": "bun scripts/test-bundle-budget.ts",
+		"test:config-preflight": "bun scripts/test-config-preflight.ts",
 		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",

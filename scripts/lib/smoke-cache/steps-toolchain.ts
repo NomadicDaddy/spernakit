@@ -47,7 +47,11 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'config:validate': {
 		excludes: COMMON_EXCLUDES,
-		globs: [...CONFIG_SCHEMA_GLOBS, 'scripts/validate-config.ts'],
+		globs: [
+			...CONFIG_SCHEMA_GLOBS,
+			'scripts/lib/config-validation.ts',
+			'scripts/validate-config.ts',
+		],
 	},
 	'format:check': {
 		collector: 'prettier',
@@ -66,6 +70,17 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	lint: {
 		excludes: COMMON_EXCLUDES,
 		globs: LINT_GLOBS,
+	},
+	'test:config-preflight': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			...CONFIG_SCHEMA_GLOBS,
+			'scripts/lib/config-validation.ts',
+			'scripts/lib/crypto-keys.ts',
+			'scripts/smoke.json',
+			'scripts/test-config-preflight.ts',
+			'scripts/validate-config.ts',
+		],
 	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,

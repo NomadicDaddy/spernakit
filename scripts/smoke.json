@@ -65,6 +65,10 @@
 		"docker-prod": {
 			"steps": [
 				{
+					"command": "bun run config:validate -- --node-env production",
+					"description": "Preflight production config and placeholder secrets"
+				},
+				{
 					"command": "bun run docker:image:build",
 					"description": "Build the production image"
 				},
@@ -134,6 +138,10 @@
 				{
 					"command": "bun run config:validate",
 					"description": "Config schema validation (defaults + example + instance)"
+				},
+				{
+					"command": "bun run test:config-preflight",
+					"description": "Production config preflight rejects placeholder secrets without disclosing values"
 				},
 				{
 					"command": "bun run check:db-location",

@@ -157,79 +157,81 @@ Steps (in order):
     - Config schema artifact drift check.
 5. `bun run config:validate`
     - Config schema validation (defaults + example + instance).
-6. `bun run check:db-location`
+6. `bun run test:config-preflight`
+    - Production config preflight rejects placeholder secrets without disclosing values.
+7. `bun run check:db-location`
     - Database location guard (ASSERT-010: DB files only under data/).
-7. `bun run check:no-inline-references`
+8. `bun run check:no-inline-references`
     - Inline .references() ban (ASSERT-012).
-8. `bun run check:secrets-shape`
+9. `bun run check:secrets-shape`
     - Secrets file shape parity.
-9. `bun run check:leak-guard`
+10. `bun run check:leak-guard`
     - Leak-guard hook self-test (synthetic fixtures).
-10. `bun run check:licenses`
+11. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
-11. `bun run licenses:sync-core:check`
+12. `bun run licenses:sync-core:check`
     - License core copies in sibling repositories match Spernakit (when present).
-12. `bun run test:fleet-manifest`
+13. `bun run test:fleet-manifest`
     - Fleet manifest validator regression self-test.
-13. `bun run test:fleet-manifest-sync`
+14. `bun run test:fleet-manifest-sync`
     - Fleet manifest writer regression self-test.
-14. `bun run check:fleet-manifest`
+15. `bun run check:fleet-manifest`
     - Fleet manifest matches packages and runtime configs.
-15. `bun run check:image-publication`
+16. `bun run check:image-publication`
     - Template image publication guard.
-16. `bun run check:process-env`
+17. `bun run check:process-env`
     - Process environment access check.
-17. `bun run check:max-lines`
+18. `bun run check:max-lines`
     - 300-line max-lines gate.
-18. `bun run check-application`
+19. `bun run check-application`
     - Application check.
-19. `bun run check:destructive-confirmation`
+20. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-20. `bun run verify-mutation-denylist`
+21. `bun run verify-mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-21. `bun run check-docs`
+22. `bun run check-docs`
     - Documentation consistency check.
-22. `bun run check:smoke-docs`
+23. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-23. `bun run typecheck`
+24. `bun run typecheck`
     - Typecheck.
-24. `bun run lint`
+25. `bun run lint`
     - Lint.
-25. `bun run build`
+26. `bun run build`
     - Build.
-26. `bun run verify-minification`
+27. `bun run verify-minification`
     - Verify bundle minification and total size budget.
-27. `bun run check:critical-path`
+28. `bun run check:critical-path`
     - Verify critical-path size, React runtime placement, and no preload waterfall.
-28. `bun run check:api-types`
+29. `bun run check:api-types`
     - API type contract validation.
-29. `bun run check:feature-integration`
+30. `bun run check:feature-integration`
     - Feature integration check.
-30. `bun run check:schema-parity`
+31. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-31. `bun run test:backup-compression`
+32. `bun run test:backup-compression`
     - Backup decompression guard rejects high-ratio archives and cleans up.
-32. `bun run test:bundle-budget`
+33. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-33. `bun run test:crawl-credentials`
+34. `bun run test:crawl-credentials`
     - Crawl login resolves from the seed account and never from a tracked config file.
-34. `bun run test:critical-path-budget`
+35. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-35. `bun run test:lost-lines`
+36. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-36. `bun run test:override-deltas`
+37. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-37. `bun run test:template-drift`
+38. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-38. `bun run format:check`
+39. `bun run format:check`
     - Format check.
-39. `bun run test:aidd-format`
+40. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-40. `bun run check:aidd-format`
+41. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-41. `bun run check-deps`
+42. `bun run check-deps`
     - Check dependency versions.
-42. `bun run check:dead-code`
+43. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
@@ -246,21 +248,23 @@ bun scripts/smoke.ts --mode docker-prod
 
 Steps (in order):
 
-1. `bun run docker:image:build`
+1. `bun run config:validate -- --node-env production`
+    - Preflight production config and placeholder secrets.
+2. `bun run docker:image:build`
     - Build the production image.
-2. `bun run check:image-licenses`
+3. `bun run check:image-licenses`
     - License notices present in the built image; base-image inventory current.
-3. `bun scripts/reset-database.ts --force`
+4. `bun scripts/reset-database.ts --force`
     - Reset database for clean Docker state.
-4. `docker compose -f docker-compose.production.yml up -d`
+5. `docker compose -f docker-compose.production.yml up -d`
     - docker compose up (prod).
-5. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}}/api/v1/health --timeoutMs 60000 --container {{APP_SLUG}}`
+6. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}}/api/v1/health --timeoutMs 60000 --container {{APP_SLUG}}`
     - Wait for docker-prod stack to be ready.
-6. `bun scripts/crawltest.ts --mode docker-prod`
+7. `bun scripts/crawltest.ts --mode docker-prod`
     - Crawl test (docker-prod).
-7. `bun run verify-compression --mode docker-prod`
+8. `bun run verify-compression --mode docker-prod`
     - Verify gzip compression on backend responses (required).
-8. `docker compose -f docker-compose.production.yml down`
+9. `docker compose -f docker-compose.production.yml down`
     - docker compose down (prod).
 
 ### 6. Reset
