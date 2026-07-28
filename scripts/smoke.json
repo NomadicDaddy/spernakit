@@ -208,6 +208,11 @@
 					"description": "300-line max-lines gate"
 				},
 				{
+					"command": "bun run test:vendored-browser-gates",
+					"description": "Vendored browser tool stays exempt from project-owned source gates",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check-application",
 					"description": "Application check"
 				},

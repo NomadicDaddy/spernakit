@@ -267,4 +267,12 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-template-drift.ts',
 		],
 	},
+	'test:vendored-browser-gates': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'knip.json',
+			'scripts/check-max-lines.ts',
+			'scripts/test-vendored-browser-gates.ts',
+		],
+	},
 };

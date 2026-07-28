@@ -11,7 +11,7 @@
 	},
 	"workspaces": {
 		".": {
-			"entry": ["scripts/*.ts"],
+			"entry": ["scripts/{*,spernakit-browser/daemon}.ts"],
 			"ignoreBinaries": ["netstat"],
 			"project": ["scripts/**/*.ts"]
 		},
