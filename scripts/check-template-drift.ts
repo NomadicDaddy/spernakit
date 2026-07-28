@@ -18,7 +18,8 @@
  * Preconditions that cannot be met (no spernakit_version, template repo or
  * tag unavailable, missing manifest) are reported as labeled SKIPPED lines
  * and exit 0, unless DRIFT_REQUIRED=1 is set (dance runs), in which case a
- * skip becomes a failure.
+ * skip becomes a failure. An unresolvable `--target-version` is not one of
+ * those: it is a caller error and always fails (see `fail` below).
  *
  * File enumeration is derived dynamically from git ls-tree of the template,
  * matching the same exclusions used during app initialization.
@@ -125,6 +126,24 @@ function skip(reason: string): never {
 	process.exit(0);
 }
 
+/**
+ * Report a caller error and exit non-zero, whatever DRIFT_REQUIRED says.
+ *
+ * A skip means the environment could not answer the question, which is routine for the unattended
+ * `smoke:qc` run. This is the other case: the caller asked an unanswerable question. Only
+ * `--target-version` reaches here, and only by naming a tag the template repo does not have.
+ *
+ * Skipping that would exit 0 — and because the skip aborts the whole run, a single mistyped version
+ * would also suppress the ORDINARY drift verdict, silently, during the upgrade where drift matters
+ * most. An argument the operator typed is theirs to correct, so it is reported as an error rather
+ * than absorbed. `check-template-overrides.ts` fails on every precondition for the same reason, and
+ * `--target-version` with no value at all already exits 1 a few lines above.
+ */
+function fail(reason: string): never {
+	console.error(`   FAILED: ${reason}`);
+	process.exit(1);
+}
+
 // ===== MAIN =====
 
 function main(): void {
@@ -151,13 +170,17 @@ function main(): void {
 			skip('spernakit template repo not available');
 		}
 
-		// Validate git tags. The target tag is validated here, before any comparison work, so an
-		// unreachable target cannot skip out of a run that has already found real drift.
+		// Validate git tags. Both are checked here, before any comparison work, so neither can abort
+		// a run that has already found real drift. The recorded version is environmental and skips;
+		// the target version was typed by the caller and fails.
 		if (!gitTagExists(spernakitPath, version)) {
 			skip(`git tag v${version} not found in spernakit repo`);
 		}
 		if (targetVersion !== undefined && !gitTagExists(spernakitPath, targetVersion)) {
-			skip(`git tag v${targetVersion} not found in spernakit repo`);
+			fail(
+				`--target-version v${targetVersion} not found in spernakit repo ` +
+					'(check the version you typed; a skip here would hide ordinary drift too)',
+			);
 		}
 
 		// Load classification overrides from spernakit at the declared version

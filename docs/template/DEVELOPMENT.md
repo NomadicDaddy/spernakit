@@ -193,22 +193,41 @@ template instead of using the sync workflow.
 
 1. `bun run template:sync-plan -- --app ../{app} --from {source} --to {target}` - generate `upgrade-review/{app}/` review artifacts
 2. From the app: `bun run check:override-deltas -- --target-version {target}` - read what each `.templateoverrides` entry is holding back at the target before any file is copied, because the copy pass never touches those paths. See [Override Delta Report](#override-delta-report).
-3. For each **added** file: `cp` from spernakit to the app
-4. For each **deleted** file: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
-5. For each **modified** file:
+3. From the app: `bun run check:drift -- --target-version {target}` - list the files `v{target}` no longer ships that the app still carries. Ordinary drift cannot see these, and the sync packet only names what changed between `{source}` and `{target}`, so a file dropped in an _earlier_ upgrade and never removed appears in neither. See [Retained Template Deletions](#retained-template-deletions).
+4. For each **added** file: `cp` from spernakit to the app
+5. For each **deleted** file - from step 3's report and the sync packet both: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
+6. For each **modified** file:
     - **Pure** (build configs, `scripts/*.ts`, `docs/template/*`, `shared/src/*.ts`, `components/ui/*`): `cp` and overwrite - but always diff against `v{source}` first to detect silent domain extensions (e.g., `backend/src/constants/responseExamples.ts` with custom helpers like `routeDetail`, `backend/src/db/seed/index.ts` with domain re-exports). If extensions exist, treat as infrastructure.
     - **Branded** (`Dockerfile`, `README.md`, `package.json`): `cp` then re-apply branding
     - **Infrastructure** (`backend/src/app.ts`, `frontend/src/routes.tsx`, navigation, re-export shims): do not `cp`; diff the three versions (`v{source}`, `v{target}`, current app) and hand-apply only the template delta, preserving app extensions
-6. Run `bun install` if dependencies changed
-7. Bump `spernakit_version` in `package.json`
-8. Run `bun run smoke:qc`
-9. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
-10. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
+7. Run `bun install` if dependencies changed
+8. Bump `spernakit_version` in `package.json`
+9. Run `bun run smoke:qc`
+10. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
+11. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
 
 Plan for ~3-5 minutes per app for small deltas. The manual process is deterministic and cannot silently clobber domain code, at the cost of per-file judgment.
 
 The review packet is intentionally read-only. Template changes are applied manually after each
 classification has been checked against the derived app's domain code.
+
+### Retained Template Deletions
+
+Drift detection asks whether the app still matches what the template ships, one file at a time, at the app's recorded version. It is blind in the other direction: when the template **removes** a file, that path simply stops being enumerated, so an app that still carries the removed module reads as perfectly clean. Nothing fails, nothing warns, and the dead file survives every subsequent upgrade.
+
+`backend/src/routes/auth/mfa-rate-limit.ts` - 34 lines, zero importers, superseded by `backend/src/services/auth/mfaRateLimit.ts` - rode three derived apps' init commits from the version that shipped it all the way to v3.31.2, through every intervening upgrade, and was found by hand rather than by a gate. The sync packet would not have caught it either: it names what changed between `{source}` and `{target}`, and this file was dropped before `{source}`.
+
+**Running**: `bun run check:drift -- --target-version <version>` from the derived app, against the version being upgraded **to** - step 3 of [Template Upgrade](#template-upgrade), before the copy pass, so the removals are handled in the same pass as the sync packet's deletions. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+
+Without `--target-version` the scan does not run at all, and `check:drift` behaves exactly as it always has - which is what `smoke:qc` invokes. There is no default target on purpose: comparing the app against the version it already declares can only report that the template has removed nothing.
+
+**What it reports**: a `Template Deletion Report (v{recorded} -> v{target})` banner, separate from the drift report and from `missing-in-app`, because the remedy is the opposite one - **delete** the file, do not restore it. Candidates are drawn only from paths the recorded version shipped, so app-authored code can never enter the set, and both sides are compared as app-relative paths (a scaffold-mapped file such as `.gitignore` resolves through `scaffolding/` first). Paths the target dropped are handed to this report exclusively and filtered out of the drift report, where they would otherwise read as `drifted` or `missing-in-app` and prescribe restoring a file the target no longer ships.
+
+**Retained files fail the gate.** To keep one deliberately, add a `DELETED` line for it in `.templateoverrides` with a reason; it then prints under "Retained after template removal" instead of failing. That action now covers both directions of the same question - template ships it and the app dropped it, or the template dropped it and the app still has it.
+
+A `--target-version` naming a tag the template repo does not have is a **failure**, not a skip, unlike the environmental preconditions (`check:drift`'s other exits). The check aborts the whole run, so a typo that skipped would exit 0 while also withholding the ordinary drift verdict.
+
+**Self-test**: `bun run test:template-deletions` drives the shipped CLI against a two-tag template/app fixture pair (`scripts/lib/template/deletions-fixture.ts`), covering a retained deletion, an overridden one, a scaffold-mapped one, a mistyped target version, and ordinary drift as a negative control.
 
 ### Lost App Lines Audit
 
@@ -216,7 +235,7 @@ Drift detection asks whether the app still matches what the template ships. This
 
 Nothing in `smoke:qc` can catch that. During the 2026-07-27 upgrade round one derived app lost twenty lines and nine commits of navigation entries and every gate stayed green, because a dropped nav entry typechecks, lints, builds and serves. Another lost an app-added field from a shared API type and was caught only because one page happened to consume it. A green `smoke:qc` is not evidence that app-owned work survived an upgrade.
 
-**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 10 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 11 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
 
 **A non-zero exit is blocking.** Every reported line is app-authored content the copy removed, and each one is either restored or dropped deliberately before the release is cut.
 

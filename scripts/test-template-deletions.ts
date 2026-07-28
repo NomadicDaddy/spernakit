@@ -185,16 +185,24 @@ try {
 	);
 	fixture.restore(KEPT_FILE);
 
-	// ===== 9. An unreachable target tag skips; DRIFT_REQUIRED=1 turns that skip into a failure. =====
+	// ===== 9. A mistyped target tag fails; it must never exit 0. =====
+	// The caller typed this version, so an unresolvable one is their error, not an unmet environmental
+	// precondition. It matters because the check aborts the whole run: were this a skip, one typo
+	// would exit 0 while also withholding the ordinary drift verdict, in the workflow where drift
+	// matters most. Asserted with DRIFT_REQUIRED unset, since that is the case a skip would hide.
 	const missingTag = fixture.runDrift(['--target-version', '99.0.0']);
 	assert(
-		missingTag.exitCode === 0 && missingTag.output.includes('SKIPPED'),
-		`An unknown target tag must skip rather than fail:\n${missingTag.output}`,
+		missingTag.exitCode !== 0 && missingTag.output.includes('99.0.0'),
+		`An unknown target tag must fail and name the version, not skip:\n${missingTag.output}`,
+	);
+	assert(
+		!missingTag.output.includes('SKIPPED'),
+		`An unknown target tag must not report itself as skipped:\n${missingTag.output}`,
 	);
 	const requiredSkip = fixture.runDrift(['--target-version', '99.0.0'], { DRIFT_REQUIRED: '1' });
 	assert(
 		requiredSkip.exitCode !== 0,
-		'DRIFT_REQUIRED=1 must turn an unverifiable deletion check into a failure',
+		'DRIFT_REQUIRED=1 must also reject an unresolvable target tag',
 	);
 	const noValue = fixture.runDrift(['--target-version']);
 	assert(
