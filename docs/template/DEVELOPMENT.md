@@ -192,17 +192,18 @@ template instead of using the sync workflow.
 **Steps** (for each derived app):
 
 1. `bun run template:sync-plan -- --app ../{app} --from {source} --to {target}` - generate `upgrade-review/{app}/` review artifacts
-2. For each **added** file: `cp` from spernakit to the app
-3. For each **deleted** file: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
-4. For each **modified** file:
+2. From the app: `bun run check:override-deltas -- --target-version {target}` - read what each `.templateoverrides` entry is holding back at the target before any file is copied, because the copy pass never touches those paths. See [Override Delta Report](#override-delta-report).
+3. For each **added** file: `cp` from spernakit to the app
+4. For each **deleted** file: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
+5. For each **modified** file:
     - **Pure** (build configs, `scripts/*.ts`, `docs/template/*`, `shared/src/*.ts`, `components/ui/*`): `cp` and overwrite - but always diff against `v{source}` first to detect silent domain extensions (e.g., `backend/src/constants/responseExamples.ts` with custom helpers like `routeDetail`, `backend/src/db/seed/index.ts` with domain re-exports). If extensions exist, treat as infrastructure.
     - **Branded** (`Dockerfile`, `README.md`, `package.json`): `cp` then re-apply branding
     - **Infrastructure** (`backend/src/app.ts`, `frontend/src/routes.tsx`, navigation, re-export shims): do not `cp`; diff the three versions (`v{source}`, `v{target}`, current app) and hand-apply only the template delta, preserving app extensions
-5. Run `bun install` if dependencies changed
-6. Bump `spernakit_version` in `package.json`
-7. Run `bun run smoke:qc`
-8. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
-9. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
+6. Run `bun install` if dependencies changed
+7. Bump `spernakit_version` in `package.json`
+8. Run `bun run smoke:qc`
+9. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
+10. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
 
 Plan for ~3-5 minutes per app for small deltas. The manual process is deterministic and cannot silently clobber domain code, at the cost of per-file judgment.
 
@@ -215,7 +216,7 @@ Drift detection asks whether the app still matches what the template ships. This
 
 Nothing in `smoke:qc` can catch that. During the 2026-07-27 upgrade round one derived app lost twenty lines and nine commits of navigation entries and every gate stayed green, because a dropped nav entry typechecks, lints, builds and serves. Another lost an app-added field from a shared API type and was caught only because one page happened to consume it. A green `smoke:qc` is not evidence that app-owned work survived an upgrade.
 
-**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 9 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 10 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
 
 **A non-zero exit is blocking.** Every reported line is app-authored content the copy removed, and each one is either restored or dropped deliberately before the release is cut.
 
@@ -226,6 +227,24 @@ That test alone is too loud, because a file seeded from a pre-3.28.2 template ca
 **Expected findings on a clean upgrade**: the audit compares whole lines, so a line the formatter rewrote in place reads as removed. On the real 3.24.1 -> 3.31.2 upgrades that is the `"spernakit_version"` bump in `package.json` plus a handful of Tailwind class-order and import-member-order reflows - roughly twenty lines, each dismissible by reading it next to the added line beside it. Anything that is not obviously a reflow is a real loss.
 
 **Self-test**: `bun run test:lost-lines` drives the shipped CLI against a purpose-built template/app pair of git repositories (`scripts/lib/template/lost-lines-fixture.ts`), including an upgrade that preserved the same app work as a control.
+
+### Override Delta Report
+
+A `SKIP` or `KEEP` line in `.templateoverrides` tells drift detection to stop asking about a path. From that moment the template's own later changes to the file are invisible: `bun run check:drift` prints the path as suppressed with whatever reason its author typed, every gate stays green, and nothing states what the app has stopped receiving. This report performs the comparison the override suppressed.
+
+During the 2026-07-27 dance a `SKIP docker/nginx.conf` taken for one CSP token - `font-src` needed `data:` for base64 woff2 fonts - had also withheld the template's `location ~ \.map$` deny block, the one that stops a stray source map exposing the original TypeScript. It was recovered because a human re-read the override text against the new target. Every entry in every app is one unread reason away from the same outcome.
+
+**Running**: `bun run check:override-deltas -- --target-version <version> [--fail-on-delta]`. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). Run it from the derived app, against the version being upgraded **to**, before the copy pass - step 2 of [Template Upgrade](#template-upgrade) - so each entry can be re-merged or deliberately kept while there is still a decision to make.
+
+`--target-version` has no default on purpose. Comparing an override against the version the app is already on can only report that it withholds nothing, which is a clean answer to a question nobody asked.
+
+**What it reports**: for each entry, the lines `v{target}` has that the app's copy does not, printed beside the reason recorded in `.templateoverrides` so stale reason text is visible next to what it failed to mention. `KEEP` and `SKIP` are treated alike. `branded` paths are compared after branding normalization, so an app's own name never reads as withheld content while a structural delta still does. Scaffold-mapped paths resolve through `scaffolding/`, and the report names the template path it read. Entries classified security-relevant - `SECURITY_INFRASTRUCTURE_FILES`, anything under `docker/`, and plugin or guard paths - are tagged `SECURITY` and sort first.
+
+Two other sections matter as much as the deltas. **WITHHOLDING NOTHING** names every entry whose withheld delta is empty: those overrides are obsolete and can be deleted. **UNRESOLVED** names entries that could not be compared at all, because the app or the target no longer has the path; those exit non-zero regardless of flags, since an entry the report cannot substantiate is not a clean entry.
+
+**Exit codes**: advisory by default - withheld deltas are review items, not failures, because an override may be withholding exactly what its reason says it should. `--fail-on-delta` makes any withheld delta blocking, for a release gate that wants every entry re-merged or re-justified first. Unresolved entries always fail.
+
+**Self-test**: `bun run test:override-deltas` drives the shipped CLI against a two-tag template repository paired with an app frozen by its own overrides (`scripts/lib/template/override-deltas-fixture.ts`), reconstructing the nginx case beside a branded file, a scaffold-mapped file, an obsolete entry and a stale one, with a re-merged copy as the negative control.
 
 ### Module System
 

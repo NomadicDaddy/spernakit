@@ -273,6 +273,17 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-lost-lines.ts',
 		],
 	},
+	'test:override-deltas': {
+		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is an
+		// input: overrides.ts parses the entries, classify.ts decides branding and security relevance,
+		// text.ts performs the line comparison, and repo.ts reads the target version.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-template-overrides.ts',
+			'scripts/lib/template/*.ts',
+			'scripts/test-override-deltas.ts',
+		],
+	},
 	'test:template-deletions': {
 		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is
 		// an input: enumeration, scaffold mapping, overrides and reporting all decide the verdict.

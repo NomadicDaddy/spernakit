@@ -8,6 +8,7 @@ import type { BrandingValues, ClassificationOverrides, DriftCategory } from './t
 
 import { loadJsonConfig } from '../../load-json-config.ts';
 import { getTemplateFileAtVersion } from './repo.ts';
+import { SECURITY_INFRASTRUCTURE_FILES } from './security.ts';
 
 // Directories the initializer does NOT copy into a derived app. Shared source of truth: the copier
 // (isInitExcluded → enumerateInitFiles) and the drift checker (isFileExcluded) both derive from it,
@@ -244,25 +245,9 @@ export function loadClassificationOverrides(
 }
 
 /**
- * Security-critical template-managed files whose drift or removal must FAIL the
- * drift gate in derived apps (a gutted auth route cannot pass silently), rather
- * than being reported as advisory `infrastructure` warnings.
- *
- * This set is a property of the drift checker itself, deliberately not a key in
- * scripts/template-manifest.json. Keeping the list here lets the security gate
- * harden across all derived apps without reclassifying the template manifest.
- * Files here take precedence over their `infrastructure` listing in the manifest.
- */
-const SECURITY_INFRASTRUCTURE_FILES: readonly string[] = [
-	'backend/src/config/configSchemas/security.ts',
-	'backend/src/create-api-app.ts',
-	'backend/src/routes/auth/index.ts',
-];
-
-/**
  * Build a ClassificationOverrides from a parsed template-manifest.json. The
  * security-infrastructure set is injected from the checker's own constant
- * (see SECURITY_INFRASTRUCTURE_FILES) rather than read from the manifest.
+ * (see SECURITY_INFRASTRUCTURE_FILES in ./security.ts) rather than read from the manifest.
  */
 function parseOverrides(parsed: Record<string, unknown>): ClassificationOverrides {
 	const asStringArray = (value: unknown): string[] =>

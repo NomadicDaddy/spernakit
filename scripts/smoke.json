@@ -262,6 +262,10 @@
 					"description": "Upgrade audit reports app-authored lines the template copy deleted"
 				},
 				{
+					"command": "bun run test:override-deltas",
+					"description": "Override report names the template content each .templateoverrides entry withholds"
+				},
+				{
 					"command": "bun run test:template-deletions",
 					"description": "Drift detects files the template removed that a derived app still carries"
 				},

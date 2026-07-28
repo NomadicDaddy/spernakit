@@ -39,11 +39,10 @@ import {
 } from './lib/template/lost-lines-fixture.ts';
 import {
 	collectTemplateLines,
-	findRemovedLines,
 	isTemplateManagedPath,
 	isTemplateSyncSubject,
-	normalizeLine,
 } from './lib/template/lost-lines.ts';
+import { findRemovedLines, normalizeLine } from './lib/template/text.ts';
 
 let checks = 0;
 

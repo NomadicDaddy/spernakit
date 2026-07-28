@@ -217,17 +217,19 @@ Steps (in order):
     - Critical-path budget stays app-owned and regenerates both recorded limits.
 35. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-36. `bun run test:template-deletions`
+36. `bun run test:override-deltas`
+    - Override report names the template content each .templateoverrides entry withholds.
+37. `bun run test:template-deletions`
     - Drift detects files the template removed that a derived app still carries.
-37. `bun run format:check`
+38. `bun run format:check`
     - Format check.
-38. `bun run test:aidd-format`
+39. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-39. `bun run check:aidd-format`
+40. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-40. `bun run check-deps`
+41. `bun run check-deps`
     - Check dependency versions.
-41. `bun run check:dead-code`
+42. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
