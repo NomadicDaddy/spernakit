@@ -241,6 +241,15 @@
 					"description": "Format check"
 				},
 				{
+					"command": "bun run test:aidd-format",
+					"description": "aidd metadata format gate self-test (synthetic fixtures)",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:aidd-format",
+					"description": "Tracked .aidd metadata matches the repository Prettier shape"
+				},
+				{
 					"command": "bun run check-deps",
 					"description": "Check dependency versions"
 				},

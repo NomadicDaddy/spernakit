@@ -1,0 +1,109 @@
+/**
+ * Cache dependencies for the toolchain qc steps: the ones that compile, lint, format, validate
+ * config, or measure the produced bundle.
+ *
+ * Split from the project-invariant guards in `steps-checks.ts` to keep each map inside the
+ * 300-line modularity gate; `dependencies.ts` merges the two into the single map the cache
+ * consumes.
+ */
+
+import {
+	APPLICATION_CHECK_DIRECTORY_GLOBS,
+	APPLICATION_CHECK_FILE_GLOBS,
+	COMMON_EXCLUDES,
+	CONFIG_SCHEMA_GLOBS,
+	FORMAT_GLOBS,
+	GENERATED_OUTPUT_EXCLUDES,
+	LINT_GLOBS,
+	PACKAGE_GLOBS,
+} from './globs.ts';
+import { type StepDependencies } from './types.ts';
+
+export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
+	build: {
+		directoryGlobs: APPLICATION_CHECK_DIRECTORY_GLOBS,
+		excludes: [...COMMON_EXCLUDES, 'data/**'],
+		globs: [
+			...APPLICATION_CHECK_FILE_GLOBS,
+			'frontend/src/**/*.ts',
+			'frontend/src/**/*.tsx',
+			'frontend/src/**/*.css',
+			'frontend/index.html',
+			'frontend/vite.config.ts',
+			'frontend/vite-plugins/**/*.ts',
+			'frontend/tsconfig.json',
+			'frontend/tsconfig.app.json',
+			'frontend/tsconfig.build.json',
+			'frontend/package.json',
+			'shared/src/**/*.ts',
+			'shared/tsconfig.json',
+			'shared/package.json',
+			'backend/src/**/*.ts',
+			'backend/tsconfig.json',
+			'backend/package.json',
+			...PACKAGE_GLOBS,
+		],
+		outputs: ['frontend/dist'],
+	},
+	'config:validate': {
+		excludes: COMMON_EXCLUDES,
+		globs: [...CONFIG_SCHEMA_GLOBS, 'scripts/validate-config.ts'],
+	},
+	'format:check': {
+		collector: 'prettier',
+		excludes: COMMON_EXCLUDES,
+		globs: FORMAT_GLOBS,
+	},
+	'licenses:sync-core:check': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'license-core-targets.json',
+			'scripts/check-license-core.ts',
+			'scripts/lib/license-core/**/*.ts',
+			'scripts/sync-license-core.ts',
+		],
+	},
+	lint: {
+		excludes: COMMON_EXCLUDES,
+		globs: LINT_GLOBS,
+	},
+	typecheck: {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**/*.ts',
+			'backend/package.json',
+			'backend/tsconfig.json',
+			'frontend/src/**/*.ts',
+			'frontend/src/**/*.tsx',
+			'frontend/package.json',
+			'frontend/tsconfig.json',
+			'frontend/tsconfig.app.json',
+			'frontend/tsconfig.node.json',
+			'frontend/tsconfig.build.json',
+			'shared/src/**/*.ts',
+			'shared/package.json',
+			'shared/tsconfig.json',
+			'scripts/**/*.ts',
+			'scripts/tsconfig.json',
+			'package.json',
+			'bun.lock',
+		],
+	},
+	'verify-minification': {
+		excludes: GENERATED_OUTPUT_EXCLUDES,
+		globs: [
+			'frontend/dist/**/*',
+			'scripts/bundle-budget.json',
+			'scripts/verify-minification.ts',
+		],
+		outputs: ['frontend/dist'],
+	},
+	'verify-mutation-denylist': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/database-admin/schemaIntrospection.ts',
+			'backend/src/services/database-admin/dataValidation.ts',
+			'scripts/verify-mutation-denylist.ts',
+		],
+	},
+};

@@ -207,9 +207,13 @@ Steps (in order):
     - SQLite/PG schema parity check.
 30. `bun run format:check`
     - Format check.
-31. `bun run check-deps`
+31. `bun run test:aidd-format`
+    - aidd metadata format gate self-test (synthetic fixtures).
+32. `bun run check:aidd-format`
+    - Tracked .aidd metadata matches the repository Prettier shape.
+33. `bun run check-deps`
     - Check dependency versions.
-32. `bun run check:dead-code`
+34. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
