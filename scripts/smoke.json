@@ -246,6 +246,11 @@
 					"description": "Feature integration check"
 				},
 				{
+					"command": "bun run test:feature-integration",
+					"description": "Feature integration rejects unmounted flat route modules",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:schema-parity",
 					"description": "SQLite/PG schema parity check"
 				},

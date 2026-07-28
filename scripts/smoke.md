@@ -207,31 +207,33 @@ Steps (in order):
     - API type contract validation.
 30. `bun run check:feature-integration`
     - Feature integration check.
-31. `bun run check:schema-parity`
+31. `bun run test:feature-integration`
+    - Feature integration rejects unmounted flat route modules.
+32. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-32. `bun run test:backup-compression`
+33. `bun run test:backup-compression`
     - Backup decompression guard rejects high-ratio archives and cleans up.
-33. `bun run test:bundle-budget`
+34. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-34. `bun run test:crawl-credentials`
+35. `bun run test:crawl-credentials`
     - Crawl login resolves from the seed account and never from a tracked config file.
-35. `bun run test:critical-path-budget`
+36. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-36. `bun run test:lost-lines`
+37. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-37. `bun run test:override-deltas`
+38. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-38. `bun run test:template-drift`
+39. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-39. `bun run format:check`
+40. `bun run format:check`
     - Format check.
-40. `bun run test:aidd-format`
+41. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-41. `bun run check:aidd-format`
+42. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-42. `bun run check-deps`
+43. `bun run check-deps`
     - Check dependency versions.
-43. `bun run check:dead-code`
+44. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

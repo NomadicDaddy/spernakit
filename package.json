@@ -153,6 +153,7 @@
 		"test:config-preflight": "bun scripts/test-config-preflight.ts",
 		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
+		"test:feature-integration": "bun scripts/test-feature-integration.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fleet-manifest-sync": "bun scripts/test-fleet-manifest-sync.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",

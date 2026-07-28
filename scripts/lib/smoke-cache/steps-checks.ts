@@ -118,19 +118,6 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	// check:drift has no static entry because it compares every template file from git.
 	// A stale glob list once skipped real drift; missing entries intentionally always run.
-	'check:feature-integration': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/src/create-api-app.ts',
-			'backend/src/routes/**/*.ts',
-			'frontend/src/components/**/*.ts',
-			'frontend/src/components/**/*.tsx',
-			'frontend/src/pages/**/*.ts',
-			'frontend/src/pages/**/*.tsx',
-			'frontend/src/routes/lazyPages.ts',
-			'scripts/check-feature-integration.ts',
-		],
-	},
 	'check:image-publication': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
