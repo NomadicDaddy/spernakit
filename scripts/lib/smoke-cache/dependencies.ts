@@ -19,6 +19,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	'check:drift',
 	'check:fleet-manifest',
 	'check:fresh-release',
+	// Its inputs are the sibling spernakit checkout's `.aidd/`, not this tree — the same reason
+	// `check:drift` cannot be cached. A local hash would report "unchanged" across a template bump.
+	'check:template-features',
 	'test:aidd-format',
 	'test:fleet-manifest',
 ]);

@@ -128,6 +128,10 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run check:feature-id-directory",
+					"description": "Feature id matches its directory"
+				},
+				{
 					"command": "bun run check:template-feature-versions",
 					"description": "Template feature ownership version markers",
 					"templateOnly": true
@@ -135,6 +139,15 @@
 				{
 					"command": "bun run test:template-feature-versions",
 					"description": "Template feature ownership marker regression",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:template-features",
+					"description": "Template feature records match the template"
+				},
+				{
+					"command": "bun run test:template-features",
+					"description": "Template feature sync regression",
 					"templateOnly": true
 				},
 				{

@@ -16,6 +16,11 @@ import { SECURITY_INFRASTRUCTURE_FILES } from './security.ts';
 const INIT_EXCLUDED_DIRS = [
 	'.agents/',
 	'.git/',
+	// Keep `.aidd/` here. Removing it would not seed feature records anyway — enumerateInitFiles goes
+	// through `git ls-files` and `/.aidd/` is gitignored in the template, so it is invisible to this
+	// list — and if it did work it would ship CHANGELOG.md, assertions.md and run artifacts along with
+	// them. Feature records are seeded by `seedTemplateFeatures` (lib/init/scaffold.ts), which selects
+	// durable records deliberately, and kept current by `sync-template-features.ts`.
 	'.aidd/',
 	'.claude/',
 	'.windsurf/',

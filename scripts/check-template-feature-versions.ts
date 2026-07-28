@@ -138,7 +138,9 @@ function projectRootFromArgs(args: string[]): string {
 	const index = args.indexOf('--project-dir');
 	if (index === -1) return cwd();
 	const value = args[index + 1];
-	if (value === undefined || value.startsWith('--')) {
+	// An empty value must not fall through to resolve(''), which silently returns the current
+	// working directory and grades the wrong repository.
+	if (value === undefined || value.trim() === '' || value.startsWith('--')) {
 		throw new Error('--project-dir requires a path.');
 	}
 	return resolve(value);

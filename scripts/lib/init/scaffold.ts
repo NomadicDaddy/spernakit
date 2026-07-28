@@ -14,6 +14,9 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import { applyPlan } from '../template-features/apply.ts';
+import { validateTemplateCorpus } from '../template-features/source.ts';
+import { buildSyncPlan } from '../template-features/sync.ts';
 import { enumerateInitFiles, toTemplatePath } from '../template/classify.ts';
 
 export function log(message: string): void {
@@ -126,6 +129,48 @@ export function seedTemplateOverrides(target: string): void {
 	const path = join(target, '.templateoverrides');
 	if (existsSync(path)) return;
 	writeFileSync(path, `${TEMPLATE_OVERRIDES.join('\n')}\n`);
+}
+
+/**
+ * Copy the template's durable feature records and roadmap into a freshly scaffolded app.
+ *
+ * `copyTemplateTree` cannot do this: it enumerates through git, and `.aidd/` is gitignored in the
+ * template, so every derived app was born with an empty feature corpus and stayed that way until
+ * someone ran the upgrade skill's Phase 9a by hand. Seeding here is what makes
+ * `check:template-features` a meaningful gate on day one rather than a wall of missing records.
+ *
+ * The source corpus is validated first and any problem throws: an init that produced an app failing
+ * its own quality gate would be worse than one that stopped and said why.
+ *
+ * Returns `null` when the source carries no `.aidd/features/` at all, which is not a corpus problem
+ * but a property of the checkout: `/.aidd/` is gitignored here, so a clone of the published
+ * repository has none. Scaffolding an app is the thing this repository exists to do, and it must not
+ * stop because the optional blueprint is unavailable — the caller says so loudly and continues.
+ */
+export async function seedTemplateFeatures(source: string, target: string): Promise<null | number> {
+	if (!existsSync(join(source, '.aidd', 'features'))) return null;
+
+	const problems = validateTemplateCorpus(source);
+	if (problems.length > 0) {
+		throw new Error(`Template feature corpus at ${source} is not fit to seed from:
+  ${problems.join('\n  ')}`);
+	}
+
+	const outcome = buildSyncPlan(source, target, { adopt: false, prune: true });
+	if (outcome.plan.errors.length > 0) {
+		throw new Error(`Seeding template features failed:
+  ${outcome.plan.errors.join('\n  ')}`);
+	}
+
+	const result = await applyPlan(target, outcome.plan, { overwriteAppText: false });
+	// A freshly copied app has no authored text yet, so a blocked record means the plan is not the
+	// one this function thinks it is building.
+	if (result.blocked.length > 0) {
+		throw new Error(
+			`Seeding declined to overwrite app text in a new app: ${result.blocked.join(', ')}`,
+		);
+	}
+	return result.written.length;
 }
 
 /**

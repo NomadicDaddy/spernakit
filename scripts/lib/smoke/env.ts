@@ -32,6 +32,10 @@ const CHILD_ENV_KEYS = [
 	'SYSTEMDRIVE',
 	'SYSTEMROOT',
 	'TEMP',
+	// Same contract as DRIFT_REQUIRED, for the feature-record gate: a dance sets it so a missing
+	// sibling template fails a fleet run instead of skipping. Stripped here it would silently do
+	// nothing, which is worse than not offering the switch.
+	'TEMPLATE_FEATURES_REQUIRED',
 	'TMP',
 	'USERPROFILE',
 	'WINDIR',
