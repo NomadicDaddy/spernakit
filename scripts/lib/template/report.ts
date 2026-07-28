@@ -7,6 +7,7 @@
  * missing files); advisory `infrastructure` drift is reported as a non-failing
  * WARNING and excluded from the total.
  */
+import type { RetainedDeletion } from './deletions.ts';
 import type { FileResult } from './types.ts';
 
 const countByStatus = (items: FileResult[], status: FileResult['status']): number =>
@@ -35,7 +36,10 @@ function printCategoryCounts(
 }
 
 /** List a set of result files with a trailing parenthetical label. */
-function printFileList(results: FileResult[], label: (r: FileResult) => string): void {
+function printFileList<T extends { filePath: string }>(
+	results: T[],
+	label: (r: T) => string,
+): void {
 	for (const r of results) {
 		console.log(`     ${r.filePath.padEnd(40)} (${label(r)})`);
 	}
@@ -175,4 +179,52 @@ export function printReport(
 		console.log('   Run /template-refactor to review and fix drift.');
 	}
 	return totalDrift;
+}
+
+/**
+ * Render files the template removed but the app still carries, and return the failing count.
+ *
+ * Kept in its own section and its own banner rather than folded into the drift report: a retained
+ * deletion is neither drift (the file has no baseline left to differ from) nor `missing-in-app`
+ * (which means the opposite — the template ships it and the app does not). Reusing either label
+ * would point the operator at the wrong remedy; the fix here is to DELETE the file, not restore it.
+ */
+export function printRetainedDeletions(
+	deletions: RetainedDeletion[],
+	recordedVersion: string,
+	targetVersion: string,
+): number {
+	const retained = deletions.filter((d) => d.status === 'retained');
+	const suppressed = deletions.filter((d) => d.status === 'suppressed');
+
+	console.log(`Template Deletion Report (v${recordedVersion} -> v${targetVersion})`);
+	console.log('');
+
+	if (retained.length > 0) {
+		console.log(`   REMOVED FROM TEMPLATE (${retained.length} file(s), FAILING):`);
+		printFileList(
+			retained,
+			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
+		);
+		console.log('     Delete these files, or acknowledge an intentional retention with a');
+		console.log('     DELETED line in .templateoverrides to suppress it.');
+		console.log('');
+	}
+
+	if (suppressed.length > 0) {
+		console.log(
+			`   Retained after template removal (${suppressed.length}, per .templateoverrides):`,
+		);
+		for (const d of suppressed) {
+			const reason = d.suppression?.reason ?? '';
+			console.log(`     ${d.filePath.padEnd(40)} [DELETED]${reason ? ` — ${reason}` : ''}`);
+		}
+		console.log('');
+	}
+
+	if (retained.length === 0) {
+		console.log('   No files retained from removed template paths.');
+		console.log('');
+	}
+	return retained.length;
 }

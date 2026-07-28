@@ -151,6 +151,7 @@
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
+		"test:template-deletions": "bun scripts/test-template-deletions.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-mutation-denylist": "bun scripts/verify-mutation-denylist.ts",
 		"verify-compression": "bun scripts/verify-compression.ts",

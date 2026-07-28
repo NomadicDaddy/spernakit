@@ -253,6 +253,10 @@
 					"description": "Critical-path budget stays app-owned and regenerates both recorded limits"
 				},
 				{
+					"command": "bun run test:template-deletions",
+					"description": "Drift detects files the template removed that a derived app still carries"
+				},
+				{
 					"command": "bun run format:check",
 					"description": "Format check"
 				},

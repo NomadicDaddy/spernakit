@@ -24,8 +24,15 @@
  * matching the same exclusions used during app initialization.
  * Classification (branded/infrastructure/pure) comes from template-manifest.json.
  *
+ * `--target-version` additionally reports the reverse direction: files the template REMOVED between
+ * the app's recorded version and the target, which the app still carries. Ordinary drift cannot see
+ * these — a removed path simply stops being enumerated, so a dead module inherited at init survives
+ * every upgrade looking clean. Retained deletions fail the gate and are reported separately from
+ * drift and from `missing-in-app`, because the remedy is the opposite one: delete, not restore.
+ *
  * Usage:
  *   bun scripts/check-template-drift.ts [--template /path/to/spernakit]
+ *   bun scripts/check-template-drift.ts --target-version 3.31.2   # also report removed files
  *   DRIFT_REQUIRED=1 bun scripts/check-template-drift.ts   # skips become failures
  */
 import path from 'node:path';
@@ -34,16 +41,22 @@ import {
 	applyTemplateOverrides,
 	checkFile,
 	classifyFile,
+	detectRetainedDeletions,
 	enumerateTemplateFiles,
+	fileExistsInApp,
 	type FileResult,
+	findRemovedPaths,
 	gitTagExists,
 	isSpernakitItself,
 	loadAppBrandingValues,
 	loadClassificationOverrides,
 	loadTemplateOverrides,
 	printReport,
+	printRetainedDeletions,
 	readSpernakitVersion,
 	resolveSpernakitPath,
+	type RetainedDeletion,
+	type TemplateOverrides,
 } from './template-shared.js';
 
 // ===== CONSTANTS =====
@@ -52,12 +65,50 @@ const repoRoot = path.resolve(process.cwd());
 
 // ===== HELPERS =====
 
-function parseArgs(): { templatePath: string | undefined } {
+function parseArgs(): { targetVersion: string | undefined; templatePath: string | undefined } {
 	const args = process.argv.slice(2);
-	const templateIdx = args.indexOf('--template');
-	const templatePath =
-		templateIdx !== -1 && args[templateIdx + 1] ? args[templateIdx + 1] : undefined;
-	return { templatePath };
+	const valueOf = (flag: string): string | undefined => {
+		const idx = args.indexOf(flag);
+		return idx !== -1 && args[idx + 1] ? args[idx + 1] : undefined;
+	};
+	if (args.includes('--target-version') && !valueOf('--target-version')) {
+		console.error('   --target-version requires a version (e.g. --target-version 3.31.2)');
+		process.exit(1);
+	}
+	return { targetVersion: valueOf('--target-version'), templatePath: valueOf('--template') };
+}
+
+interface DeletionScan {
+	deletions: RetainedDeletion[];
+	/** Recorded-version paths the target no longer ships — excluded from the drift report. */
+	removed: Set<string>;
+	targetVersion: string;
+}
+
+/**
+ * Compare the drift-managed path sets at the two versions.
+ *
+ * Both sides come from `enumerateTemplateFiles`, so both are app-relative: scaffold-mapped paths
+ * (`scaffolding/.gitignore`) are already resolved through `toTemplatePath` to the app path they
+ * land on, on both sides, before anything is compared.
+ */
+function scanTemplateDeletions(
+	spernakitPath: string,
+	targetVersion: string,
+	recordedPaths: string[],
+	overrides: TemplateOverrides,
+): DeletionScan {
+	const input = {
+		existsInApp: (filePath: string): boolean => fileExistsInApp(repoRoot, filePath),
+		overrides,
+		recordedPaths,
+		targetPaths: enumerateTemplateFiles(spernakitPath, targetVersion),
+	};
+	return {
+		deletions: detectRetainedDeletions(input),
+		removed: findRemovedPaths(input),
+		targetVersion,
+	};
 }
 
 /**
@@ -94,15 +145,19 @@ function main(): void {
 		}
 
 		// Resolve spernakit repo
-		const { templatePath } = parseArgs();
+		const { targetVersion, templatePath } = parseArgs();
 		const spernakitPath = resolveSpernakitPath(templatePath, repoRoot);
 		if (!spernakitPath) {
 			skip('spernakit template repo not available');
 		}
 
-		// Validate git tag
+		// Validate git tags. The target tag is validated here, before any comparison work, so an
+		// unreachable target cannot skip out of a run that has already found real drift.
 		if (!gitTagExists(spernakitPath, version)) {
 			skip(`git tag v${version} not found in spernakit repo`);
+		}
+		if (targetVersion !== undefined && !gitTagExists(spernakitPath, targetVersion)) {
+			skip(`git tag v${targetVersion} not found in spernakit repo`);
 		}
 
 		// Load classification overrides from spernakit at the declared version
@@ -145,8 +200,23 @@ function main(): void {
 		const templateOverrides = loadTemplateOverrides(repoRoot);
 		const adjusted = applyTemplateOverrides(results, templateOverrides);
 
+		// Paths the target version dropped belong to the deletion report exclusively: judged against
+		// the recorded version they read as drifted or missing, and both of those labels tell the
+		// operator to restore a file the target no longer ships.
+		const scan =
+			targetVersion === undefined
+				? null
+				: scanTemplateDeletions(
+						spernakitPath,
+						targetVersion,
+						templateFiles,
+						templateOverrides,
+					);
+
 		// Filter out files that don't exist in template at this version
-		const actionable = adjusted.filter((r) => r.status !== 'missing-in-template');
+		const actionable = adjusted.filter(
+			(r) => r.status !== 'missing-in-template' && scan?.removed.has(r.filePath) !== true,
+		);
 
 		// DRIFT_BRANDED_ADVISORY=1 (set by init.ps1 for its scaffold-time gate) makes
 		// branded drift advisory: init's own transforms exceed branding normalization
@@ -154,7 +224,12 @@ function main(): void {
 		const totalDrift = printReport(actionable, version, {
 			brandedAdvisory: process.env['DRIFT_BRANDED_ADVISORY'] === '1',
 		});
-		process.exit(totalDrift > 0 ? 1 : 0);
+
+		// The reverse direction: paths the target version no longer ships that the app still has.
+		const retained =
+			scan === null ? 0 : printRetainedDeletions(scan.deletions, version, scan.targetVersion);
+
+		process.exit(totalDrift + retained > 0 ? 1 : 0);
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));
 		console.error(`Template drift check failed: ${typedErr.message}`);

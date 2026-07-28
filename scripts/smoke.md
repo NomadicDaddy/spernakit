@@ -213,15 +213,17 @@ Steps (in order):
     - Crawl login resolves from the seed account and never from a tracked config file.
 33. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-34. `bun run format:check`
+34. `bun run test:template-deletions`
+    - Drift detects files the template removed that a derived app still carries.
+35. `bun run format:check`
     - Format check.
-35. `bun run test:aidd-format`
+36. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-36. `bun run check:aidd-format`
+37. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-37. `bun run check-deps`
+38. `bun run check-deps`
     - Check dependency versions.
-38. `bun run check:dead-code`
+39. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod
