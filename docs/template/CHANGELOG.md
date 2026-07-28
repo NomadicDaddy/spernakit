@@ -3,6 +3,85 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.32.0] - 2026-07-28
+
+### Added
+
+- `bun run check:override-deltas -- --target-version <version>` reads every `.templateoverrides`
+  entry and prints the lines the target template version has that the app does not, beside the
+  reason the entry's author recorded. A `SKIP` or `KEEP` tells drift detection to stop asking about
+  a path, so from that point the template's own later changes to the file were invisible and every
+  gate stayed green. Entries that withhold nothing are named as obsolete, and an entry that cannot
+  be compared exits non-zero regardless of flags.
+- `bun run audit:lost-lines -- --app-dir <path>` checks an upgrade commit for app-authored lines
+  the template copy deleted. Drift detection asks whether the app still matches what the template
+  ships; this asks the inverse question an upgrade actually raises. A dropped navigation entry
+  typechecks, lints, builds, and serves, so one derived app lost twenty of them during the
+  2026-07-27 upgrade round with nothing to show for it. Lines that some template revision once
+  shipped are the stale content the upgrade exists to replace, so only lines no revision ever had
+  are reported.
+- `bun run check:drift -- --target-version <version>` now reports files the template removed that a
+  derived app still carries, and Template Upgrade runs it as step 3, ahead of the copy pass. A path
+  the template dropped simply stopped being enumerated, so an app carrying the dead module looked
+  clean through every upgrade. `.templateoverrides`' `DELETED` action existed but was only ever a
+  declaration an operator wrote by hand; it now suppresses a detected path and prints its recorded
+  reason. `docs/template/DEVELOPMENT.md` gained a Retained Template Deletions section.
+- `bun run fleet-manifest:sync` restates every `spernakit.psd1` entry from the app's tracked
+  `package.json` and its runtime `config/<slug>.json`, rewriting only the scalar values that moved.
+  It refuses the whole write when any app directory is missing, any `package.json` is unreadable,
+  or any entry has no config file to verify it against.
+- `bun run check:aidd-format` and `bun run format:aidd` format-check `.aidd/` metadata. Both
+  `.prettierignore` and, since Prettier 3, `.gitignore` are default ignore paths, and both exclude
+  `/.aidd/`, so a targeted `prettier --check` at that glob matched zero files and reported success.
+  Derived apps track `.aidd`, so unformatted metadata reached their history and every later diff on
+  it was churn. The gate skips when `.aidd` is absent or the root `.gitignore` excludes it, and
+  fails rather than passes when it enumerates nothing.
+
+### Changed
+
+- `scripts/bundle-budget.json` and `scripts/critical-path-budget.json` are app-owned generated
+  state rather than template files. Both are excluded from drift detection and both stay in the
+  init copy set, so a new app still starts from the template's committed numbers. The bundle budget
+  now records the app slug it was measured from and is enforced only when that slug matches the
+  running app, skipping with a regenerate instruction otherwise. The critical-path budget carries
+  no slug and is enforced everywhere.
+- Crawl login credentials resolve from the seeded account instead of
+  `backend/src/config/defaults.json`. That file is tracked, so it could never hold a real
+  credential and had always shipped `testing.crawlLoginEmail` and `testing.crawlLoginPassword`
+  blank; every derived app hand-filled them and two pinned the whole file as an override to keep
+  doing so. The seed and the crawl now read the same named lookup, and production is excluded on
+  both ends because a production seed gives that account a random password. The anonymous-crawl
+  fallback is gone: an unauthenticated crawl does not fail loudly, it reports a shallow public site
+  that reads as a successful run. An unresolvable login exits 1 naming each unset key, before the
+  screenshot directory is stamped or a browser launched.
+- `bun run check:fleet-manifest` names its authoritative sources and the repair command when it
+  fails.
+- `bun run smoke:qc` picked up gates for backup compression, both budget files, crawl credentials,
+  fleet manifest sync, lost lines, override deltas, retained template deletions, and `.aidd`
+  formatting.
+
+### Fixed
+
+- Backup decompression removes its partial output on every failure path before rethrowing. The
+  streaming zip-bomb guard aborts mid-stream, so the bytes that had already passed it were on disk
+  and nothing downstream knew the path. Restore preparation now registers each temporary path
+  before awaiting the operation that writes it, for decryption as well as decompression.
+- `bun run check:critical-path -- --update-budget` recalculates the gzip limit alongside the brotli
+  one, with the same headroom, instead of writing only brotli and carrying the old gzip ceiling
+  forward. That had left the gzip leg unregenerable. A budget file recording only one limit now
+  fails with a regenerate instruction rather than comparing against an undefined value.
+- The pre-push screenshot guard judges a capture by the crawl's own verdict rather than by how many
+  PNGs landed, since a crawl that failed on its last page left a directory that looked complete.
+  The crawl stamps `crawl-result.json` before it begins and again when the report lands. A capture
+  with no such file still falls back to the PNG count, so directories from earlier releases keep
+  working.
+- A mistyped `--target-version` on `bun run check:drift` fails instead of exiting 0. It routed
+  through the skip path, and because a skip aborts the whole run, one typo also suppressed the
+  ordinary drift verdict, during the upgrade where drift matters most. The recorded
+  `spernakit_version` tag is an environmental precondition and still skips.
+- The crawler counts `net::ERR_BLOCKED_BY_CLIENT` as a client-cancelled request alongside
+  `net::ERR_ABORTED`. Neither reached a server, so neither is a network error.
+
 ## [3.31.2] - 2026-07-27
 
 ### Fixed
