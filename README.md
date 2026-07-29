@@ -1,14 +1,14 @@
-# Spernakit v3.29.0
+# Spernakit v3.33.0
 
 Self-hosted admin application template built from scratch with Bun-native tooling.
 
-Spernakit v3.29.0 is the current template baseline. Changes must follow the architecture rules in the
+Spernakit v3.33.0 is the current template baseline. Changes must follow the architecture rules in the
 template docs, stay wired end to end, and pass the quality gates before they are treated as
 complete.
 
 ## Overview
 
-Spernakit v3.29.0 is a full-stack self-hosted admin application template for building
+Spernakit v3.33.0 is a full-stack self-hosted admin application template for building
 Spernakit-derived apps. It provides authentication, RBAC, multi-tenancy via workspaces,
 audit logging, real-time notifications, file uploads, scheduled tasks, health monitoring,
 and an admin UI covering all of it.
@@ -146,7 +146,10 @@ spernakit/
 ├── data/             # SQLite database files
 ├── docker/           # Docker deployment files
 ├── scripts/          # TypeScript utility, smoke, sync, and validation scripts
+├── scaffolding/      # Dotfiles copied into derived apps at init (.gitignore, .githooks)
 ├── docs/             # Template documentation
+├── licenses/         # License texts, base-image inventory, and distribution guidance
+├── site/             # Static landing page published to GitHub Pages
 └── spernakit.psd1.example # Fleet manifest template (copy to spernakit.psd1)
 ```
 
@@ -173,14 +176,21 @@ Do not add `.env` files.
 
 Primary config files:
 
-| File                                    | Purpose                                                                |
-| --------------------------------------- | ---------------------------------------------------------------------- |
-| `backend/src/config/defaults.json`      | Built-in default values for every registered config section            |
-| `config/example.json`                   | Example instance config                                                |
-| `config/spernakit.json`                 | Local app config                                                       |
-| `config/spernakit.secrets.json`         | Optional split secrets file for operator-owned third-party credentials |
-| `config/spernakit.secrets.json.example` | Shape example for optional split secrets                               |
-| `config/config-schema.json`             | Generated JSON schema for editor validation                            |
+| File                               | Purpose                                                     |
+| ---------------------------------- | ----------------------------------------------------------- |
+| `backend/src/config/defaults.json` | Built-in default values for every registered config section |
+| `config/example.json`              | Example instance config                                     |
+| `config/spernakit.json`            | Local app config (gitignored)                               |
+| `config/config-schema.json`        | Generated JSON schema for editor validation                 |
+
+Spernakit itself uses the inline secrets pattern: its cryptographic material lives in
+`config/spernakit.json` directly, and the template ships no `*Ref` config fields and no
+`getSecret()` call sites. Derived apps that need operator-provided third-party credentials
+can opt into the split pattern by adding a gitignored `config/{slug}.secrets.json` alongside
+a committed `config/{slug}.secrets.json.example` holding placeholder values only. When both
+exist, `bun run check:secrets-shape` enforces that their key structures match, so operators
+can discover every secret path from the example alone. See "Secrets file pattern" in
+[docs/template/STACK.md](docs/template/STACK.md) for how to choose between the two.
 
 Run config validation without starting the server:
 

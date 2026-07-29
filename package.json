@@ -86,6 +86,7 @@
 		"check:secrets-shape": "bun scripts/check-secrets-shape.ts",
 		"check:template-feature-versions": "bun scripts/check-template-feature-versions.ts",
 		"check:template-features": "bun scripts/sync-template-features.ts --check",
+		"check:version-refs": "bun scripts/check-version-refs.ts",
 		"check:process-env": "bun scripts/check-process-env.ts",
 		"check:destructive-confirmation": "bun scripts/check-destructive-confirmation.ts",
 		"config:schema": "bun scripts/generate-config-schema.ts && bunx prettier --write --log-level warn config/config-schema.json",

@@ -173,6 +173,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/smoke.json', 'scripts/smoke.md', 'scripts/sync-smoke-docs.ts'],
 	},
+	'check:version-refs': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'README.md',
+			'docs/template/CHANGELOG.md',
+			'docs/template/README.md',
+			'package.json',
+			'scripts/check-version-refs.ts',
+		],
+	},
 	'test:backup-compression': {
 		// The branding lib is an input because the test also pins the backup HKDF info string
 		// against the drift tooling's normalizer, which runs over the encryption service.
