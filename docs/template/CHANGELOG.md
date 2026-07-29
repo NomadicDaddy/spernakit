@@ -3,6 +3,17 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.33.0] - 2026-07-28
+
+### Added
+
+- Derived apps can now synchronize template-owned `.aidd/features` records while preserving
+  app-owned priority, release, and run state. The sync refuses overwrites that would discard
+  app-authored feature text unless the operator explicitly allows them.
+- New quality gates verify that feature IDs match their directories and that each derived app has
+  the current template feature corpus. Project initialization seeds the same corpus before its
+  first quality check and commit.
+
 ## [3.32.1] - 2026-07-28
 
 ### Fixed
