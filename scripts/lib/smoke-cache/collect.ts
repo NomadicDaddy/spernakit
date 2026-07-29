@@ -7,8 +7,8 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { type StepDependencies } from './dependencies.ts';
 import { PRETTIER_CANDIDATE_GLOBS } from './globs.ts';
+import { type StepDependencies } from './types.ts';
 
 function normalizePath(filePath: string): string {
 	return filePath.replace(/\\/g, '/');
@@ -18,6 +18,7 @@ async function collectFiles(
 	projectRoot: string,
 	globs: string[],
 	excludes: string[],
+	dot = false,
 ): Promise<string[]> {
 	const allFiles = new Set<string>();
 
@@ -27,6 +28,7 @@ async function collectFiles(
 		for await (const file of glob.scan({
 			absolute: false,
 			cwd: projectRoot,
+			dot,
 			onlyFiles: true,
 		})) {
 			const normalizedFile = normalizePath(file);
@@ -163,7 +165,7 @@ export async function collectDependencyFiles(
 		return collectPrettierFiles(projectRoot, deps);
 	}
 
-	return collectFiles(projectRoot, deps.globs, deps.excludes);
+	return collectFiles(projectRoot, deps.globs, deps.excludes, deps.dot);
 }
 
 export async function hashFile(projectRoot: string, filePath: string): Promise<string> {

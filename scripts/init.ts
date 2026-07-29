@@ -33,6 +33,7 @@ import {
 	prepareTarget,
 	readTemplateVersion,
 	run,
+	seedTemplateFeatures,
 	seedTemplateOverrides,
 } from './lib/init/scaffold.ts';
 
@@ -104,7 +105,7 @@ function parseArgs(argv: string[]): Args {
 	return args;
 }
 
-function main(): void {
+async function main(): Promise<void> {
 	const args = parseArgs(process.argv.slice(2));
 	const source = resolve(args.source ?? join(import.meta.dir, '..'));
 	if (!args.application) fail('--application <slug> is required');
@@ -196,6 +197,16 @@ function main(): void {
 		run(['bun', 'run', '--cwd', 'backend', 'db:seed'], target);
 		run(['bun', 'run', 'licenses:generate'], target);
 		seedTemplateOverrides(target);
+		// Before `format` and `smoke:qc` so the new gates grade the records, and before `git add -A`
+		// so they land in the init commit — `scaffolding/.gitignore` tracks `.aidd/features`.
+		const seeded = await seedTemplateFeatures(source, target);
+		log(
+			seeded === null
+				? `⚠ No feature records seeded: ${source} carries no .aidd/features/. The app is` +
+						' complete but starts without the template blueprint; run' +
+						' `bun run template:sync-features -- --app <path>` from a checkout that has one.'
+				: `Seeded ${seeded} template feature records.`,
+		);
 		run(['bun', 'run', 'format'], target);
 		// Branded drift is advisory at scaffold time: init's own transforms exceed the drift
 		// checker's branding normalization. Pure/security/missing drift stays strict.
@@ -221,7 +232,7 @@ function main(): void {
 
 if (import.meta.main) {
 	try {
-		main();
+		await main();
 	} catch (err) {
 		console.error(`\n❌ init failed: ${err instanceof Error ? err.message : String(err)}`);
 		process.exit(1);

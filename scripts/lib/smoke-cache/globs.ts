@@ -13,6 +13,17 @@ export const COMMON_EXCLUDES = [
 	'.claude/**',
 ];
 
+/**
+ * For steps whose inputs are themselves build output: `**\/dist\/**` must stay visible or the step
+ * would never notice its own input changing.
+ */
+export const GENERATED_OUTPUT_EXCLUDES = COMMON_EXCLUDES.filter(
+	(pattern) => pattern !== '**/dist/**',
+);
+
+/** For the one step whose inputs live under `.aidd/`, which COMMON_EXCLUDES otherwise hides. */
+export const AIDD_METADATA_EXCLUDES = COMMON_EXCLUDES.filter((pattern) => pattern !== '.aidd/**');
+
 export const PACKAGE_GLOBS = [
 	'package.json',
 	'bun.lock',

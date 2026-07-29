@@ -425,7 +425,8 @@ The Content Security Policy uses `style-src 'self' 'unsafe-inline'`. The `'unsaf
 ### Default User Accounts
 
 ```javascript
-// Default users for testing (passwords sourced from config.testing.crawlLoginPassword)
+// Default users for testing; the dev seed gives each the password `{username}123`, and
+// crawltest resolves its SYSOP login from here when config.testing.crawlLogin* is blank
 // Username: role
 sysop: SYSOP; // System administration
 admin: ADMIN; // Application administration

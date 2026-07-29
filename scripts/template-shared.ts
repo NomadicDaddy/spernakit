@@ -19,9 +19,16 @@ export {
 	loadAppBrandingValues,
 	loadClassificationOverrides,
 } from './lib/template/classify.ts';
+export {
+	detectRetainedDeletions,
+	findRemovedPaths,
+	type RetainedDeletion,
+	type RetainedDeletionInput,
+} from './lib/template/deletions.ts';
 export { checkFile } from './lib/template/drift.ts';
 export { applyTemplateOverrides, loadTemplateOverrides } from './lib/template/overrides.ts';
 export {
+	fileExistsInApp,
 	getTemplateFileAtVersion,
 	gitTagExists,
 	isSpernakitItself,
@@ -29,7 +36,7 @@ export {
 	readSpernakitVersion,
 	resolveSpernakitPath,
 } from './lib/template/repo.ts';
-export { printReport } from './lib/template/report.ts';
+export { printReport, printRetainedDeletions } from './lib/template/report.ts';
 export { escapeRegex, normalizeLineEndings } from './lib/template/text.ts';
 export {
 	type BrandingValues,

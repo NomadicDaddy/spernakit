@@ -19,6 +19,7 @@
 		"licenses/SOURCE-OFFER.template.md",
 		"package.json"
 	],
+	"buildCriticalBranded": ["Dockerfile"],
 	"infrastructure": [
 		"knip.json",
 		"scripts/lib/third-party-licenses/notices.ts",

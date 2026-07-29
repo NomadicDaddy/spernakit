@@ -65,13 +65,22 @@ function validateSecurityRequirements(validated: AppConfig): void {
  * Collect all security validation issues as data.
  * Used by config:validate script for standalone validation without process.exit.
  */
-function collectSecurityIssues(validated: AppConfig): ValidationIssue[] {
+function collectSecurityIssues(
+	validated: AppConfig,
+	placeholderNodeEnv = validated.server.nodeEnv,
+): ValidationIssue[] {
 	const nodeEnv = validated.server.nodeEnv;
 	const secretFields = getSecretFields(validated);
 	const pemKeyFields = getPemKeyFields(validated);
 
 	return [
-		...collectSecretIssues(nodeEnv, secretFields, pemKeyFields, validated.security),
+		...collectSecretIssues(
+			nodeEnv,
+			secretFields,
+			pemKeyFields,
+			validated.security,
+			placeholderNodeEnv,
+		),
 		...collectServerIssues(nodeEnv, validated),
 	];
 }

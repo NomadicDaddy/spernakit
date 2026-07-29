@@ -42,6 +42,44 @@ interface ContainerState {
 	running: boolean;
 }
 
+const DOCKER_LOG_TAIL_LINES = 50;
+
+/**
+ * Print a bounded Docker log tail without inspecting container configuration or environment.
+ *
+ * @param containerName - Docker container name or ID
+ */
+async function printContainerLogs(containerName: string): Promise<void> {
+	console.error(
+		`[wait-for-http] Last ${DOCKER_LOG_TAIL_LINES} Docker log lines for "${containerName}":`,
+	);
+
+	try {
+		const proc = Bun.spawn(
+			['docker', 'logs', '--tail', String(DOCKER_LOG_TAIL_LINES), containerName],
+			{
+				stderr: 'pipe',
+				stdout: 'pipe',
+			},
+		);
+		const [exitCode, stderr, stdout] = await Promise.all([
+			proc.exited,
+			new Response(proc.stderr).text(),
+			new Response(proc.stdout).text(),
+		]);
+		const output = [stdout.trim(), stderr.trim()].filter(Boolean).join('\n');
+		if (output) console.error(output);
+		if (exitCode !== 0) {
+			console.error(
+				`[wait-for-http] Docker log collection failed with exit code ${exitCode}.`,
+			);
+		}
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : String(err);
+		console.error(`[wait-for-http] Docker log collection failed: ${message}`);
+	}
+}
+
 /**
  * Inspect a Docker container's state for OOM kills, crashes, and restarts.
  *
@@ -86,18 +124,23 @@ async function checkContainerHealth(containerName: string): Promise<boolean> {
 
 	if (state.oomKilled) {
 		console.error(
-			`[wait-for-http] FATAL: Container "${containerName}" was OOM-killed.` +
+			`[wait-for-http] FATAL: Container "${containerName}" was OOM-killed` +
+				` (exit code: ${state.exitCode}).` +
 				' The process exceeded the container memory limit.' +
 				' Check for unbounded memory allocation (large file reads, uncapped collections, etc).',
 		);
+		await printContainerLogs(containerName);
 		return true;
 	}
 
-	if (!state.running && state.exitCode === 137) {
+	if (!state.running && state.exitCode !== 0) {
+		const exitReason =
+			state.exitCode === 137 ? ' This typically indicates an OOM kill by the kernel.' : '';
 		console.error(
-			`[wait-for-http] FATAL: Container "${containerName}" exited with code 137 (SIGKILL).` +
-				' This typically indicates an OOM kill by the kernel.',
+			`[wait-for-http] FATAL: Container "${containerName}" exited with code` +
+				` ${state.exitCode}.${exitReason}`,
 		);
+		await printContainerLogs(containerName);
 		return true;
 	}
 
@@ -159,7 +202,11 @@ async function main(): Promise<void> {
 		await Bun.sleep(intervalMs);
 	}
 
-	console.error(`[wait-for-http] Timed out waiting for ${url} after ${timeoutMs}ms`);
+	const timedOutContainer = containerName ? ` (container: "${containerName}")` : '';
+	console.error(
+		`[wait-for-http] Timed out waiting for ${url} after ${timeoutMs}ms${timedOutContainer}`,
+	);
+	if (containerName) await printContainerLogs(containerName);
 	process.exit(1);
 }
 

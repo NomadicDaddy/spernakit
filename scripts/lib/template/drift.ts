@@ -4,7 +4,7 @@
 import { normalizeBranding } from './branding.ts';
 import { isScaffoldMapped, toTemplatePath } from './classify.ts';
 import { getTemplateFileAtVersion, readLocalFile } from './repo.ts';
-import { normalizeLineEndings } from './text.ts';
+import { findRemovedLines, normalizeLineEndings } from './text.ts';
 import {
 	type BrandingValues,
 	type DriftCategory,
@@ -19,7 +19,10 @@ export function checkFile(
 	category: DriftCategory,
 	appBranding: BrandingValues | null,
 	repoRoot: string,
+	buildCritical = false,
 ): FileResult {
+	const classifyResult = (result: FileResult): FileResult =>
+		buildCritical ? { ...result, severity: 'build-critical' } : result;
 	// An app's ignore files and hooks are compared against scaffolding/, not against spernakit's own
 	// copies — those are the published-repo versions and are deliberately the opposite of an app's.
 	const templateContent = getTemplateFileAtVersion(
@@ -35,32 +38,44 @@ export function checkFile(
 		// .gitignore into the app — the exact propagation this mapping exists to stop. Treat the
 		// file as app-owned until the app is on a version that ships the scaffold.
 		if (isScaffoldMapped(filePath)) {
-			return { category, filePath, status: 'identical' };
+			return classifyResult({ category, filePath, status: 'identical' });
 		}
-		return { category, filePath, status: 'missing-in-template' };
+		return classifyResult({ category, filePath, status: 'missing-in-template' });
 	}
 
 	if (!localContent) {
-		return { category, filePath, status: 'missing-in-app' };
+		return classifyResult({ category, filePath, status: 'missing-in-app' });
 	}
 
 	if (category === 'branded' && appBranding) {
 		const normalizedTemplate = normalizeBranding(templateContent, TEMPLATE_BRANDING, filePath);
 		const normalizedLocal = normalizeBranding(localContent, appBranding, filePath);
-		return {
+		const status = normalizedTemplate === normalizedLocal ? 'identical' : 'drifted';
+		const structuralMissingLines =
+			buildCritical && status === 'drifted'
+				? findRemovedLines(normalizedTemplate, normalizedLocal)
+				: [];
+		return classifyResult({
 			category,
 			filePath,
-			status: normalizedTemplate === normalizedLocal ? 'identical' : 'drifted',
-		};
+			...(structuralMissingLines.length > 0 ? { structuralMissingLines } : {}),
+			status,
+		});
 	}
 
 	// Pure and infrastructure: direct content comparison after line ending normalization
 	const normalizedTemplate = normalizeLineEndings(templateContent);
 	const normalizedLocal = normalizeLineEndings(localContent);
 
-	return {
+	const status = normalizedTemplate === normalizedLocal ? 'identical' : 'drifted';
+	const structuralMissingLines =
+		buildCritical && status === 'drifted'
+			? findRemovedLines(normalizedTemplate, normalizedLocal)
+			: [];
+	return classifyResult({
 		category,
 		filePath,
-		status: normalizedTemplate === normalizedLocal ? 'identical' : 'drifted',
-	};
+		...(structuralMissingLines.length > 0 ? { structuralMissingLines } : {}),
+		status,
+	});
 }

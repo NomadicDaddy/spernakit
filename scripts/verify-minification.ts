@@ -8,13 +8,19 @@
  *     threshold for files larger than 5 KB)
  *   - the total bundle size exceeds the budget in scripts/bundle-budget.json
  *
+ * The budget is per-app generated state, so it is only enforced when it was measured from THIS
+ * app's build (see scripts/lib/bundle-budget.ts for the provenance rule).
+ *
  * Regenerate the budget after intentional bundle growth:
  *   bun scripts/verify-minification.ts --update-budget
  */
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+import { evaluateBundleBudget, kb, writeBundleBudget } from './lib/bundle-budget.ts';
+import { getAppSlug } from './load-json-config.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT_DIR = join(__dirname, '..');
@@ -25,8 +31,6 @@ const BUDGET_PATH = join(__dirname, 'bundle-budget.json');
 /** Files >5KB with an average line length below this look unminified. */
 const MIN_AVG_LINE_LENGTH = 200;
 const MINIFY_CHECK_MIN_BYTES = 5 * 1024;
-/** Headroom applied when writing a new budget so hash/chunk churn doesn't flap the gate. */
-const BUDGET_HEADROOM = 1.1;
 
 // ANSI color codes
 const colors: Record<string, string> = {
@@ -47,11 +51,6 @@ interface AssetInfo {
 	name: string;
 	sizeBytes: number;
 	type: 'css' | 'js';
-}
-
-interface BundleBudget {
-	maxCssBytes: number;
-	maxJsBytes: number;
 }
 
 function rawAvgLineLength(content: string): number {
@@ -117,54 +116,16 @@ async function collectAssets(dir: string, found: AssetInfo[] = []): Promise<Asse
 	return found;
 }
 
-function kb(bytes: number): string {
-	return `${(bytes / 1024).toFixed(2)} KB`;
-}
-
 function checkBudget(totalJs: number, totalCss: number, updateBudget: boolean): boolean {
-	if (updateBudget) {
-		const budget: BundleBudget = {
-			maxCssBytes: Math.ceil(totalCss * BUDGET_HEADROOM),
-			maxJsBytes: Math.ceil(totalJs * BUDGET_HEADROOM),
-		};
-		writeFileSync(BUDGET_PATH, `${JSON.stringify(budget, null, '\t')}\n`, 'utf-8');
-		log(
-			`\nBudget written to scripts/bundle-budget.json (${BUDGET_HEADROOM}x headroom)`,
-			'cyan',
-		);
-		return true;
-	}
-
-	if (!existsSync(BUDGET_PATH)) {
-		log('\nNo scripts/bundle-budget.json found — budget check skipped.', 'yellow');
-		log('Create one with: bun scripts/verify-minification.ts --update-budget', 'yellow');
-		return true;
-	}
-
-	const budget = JSON.parse(readFileSync(BUDGET_PATH, 'utf-8')) as BundleBudget;
-	let ok = true;
-
-	if (totalJs > budget.maxJsBytes) {
-		log(`✗ JS bundle ${kb(totalJs)} exceeds budget ${kb(budget.maxJsBytes)}`, 'red');
-		ok = false;
-	} else {
-		log(`✓ JS bundle ${kb(totalJs)} within budget ${kb(budget.maxJsBytes)}`, 'green');
-	}
-
-	if (totalCss > budget.maxCssBytes) {
-		log(`✗ CSS bundle ${kb(totalCss)} exceeds budget ${kb(budget.maxCssBytes)}`, 'red');
-		ok = false;
-	} else {
-		log(`✓ CSS bundle ${kb(totalCss)} within budget ${kb(budget.maxCssBytes)}`, 'green');
-	}
-
-	if (!ok) {
-		log(
-			'If the growth is intentional, regenerate: bun scripts/verify-minification.ts --update-budget',
-			'yellow',
-		);
-	}
-	return ok;
+	const input = {
+		appSlug: getAppSlug(ROOT_DIR),
+		budgetPath: BUDGET_PATH,
+		totalCssBytes: totalCss,
+		totalJsBytes: totalJs,
+	};
+	const result = updateBudget ? writeBundleBudget(input) : evaluateBundleBudget(input);
+	for (const line of result.lines) log(line.text, line.color);
+	return result.ok;
 }
 
 async function main(): Promise<void> {

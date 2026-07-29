@@ -2,6 +2,7 @@ import {
 	createReadStream,
 	createWriteStream,
 	readFileSync,
+	rmSync,
 	statSync,
 	writeFileSync,
 } from 'node:fs';
@@ -39,12 +40,26 @@ async function decompressBackupFile(inputPath: string, outputPath: string): Prom
 		},
 	});
 
-	await pipeline(
-		createReadStream(inputPath),
-		createGunzip(),
-		sizeGuard,
-		createWriteStream(outputPath),
-	);
+	try {
+		await pipeline(
+			createReadStream(inputPath),
+			createGunzip(),
+			sizeGuard,
+			createWriteStream(outputPath),
+		);
+	} catch (err) {
+		// The guard aborts mid-stream, so whatever passed it is already on disk. Callers record the
+		// output path only after this resolves, which means nothing downstream knows the partial file
+		// exists — a decompression bomb would otherwise leave the guard's own limit worth of bytes in
+		// the backup directory on every rejected attempt. Clean it up here, where the path is known.
+		try {
+			rmSync(outputPath, { force: true });
+		} catch {
+			// Best effort: the partial output is unusable either way, and the decompression failure
+			// below is the error the caller needs to see.
+		}
+		throw err;
+	}
 }
 
 export { compressBackupFile, decompressBackupFile };

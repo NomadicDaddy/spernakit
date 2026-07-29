@@ -104,17 +104,20 @@ async function prepareForRestore(
 	const backupDir = getBackupDirectory();
 
 	try {
+		// Each temp path is registered BEFORE the operation that writes it. Registering after the
+		// await left a partial file orphaned whenever decrypt or decompress threw: the catch below
+		// only cleans up paths already in tempFiles, and nothing else ever learns the path.
 		if (currentPath.endsWith('.enc')) {
 			const decryptedPath = join(backupDir, `_restore_${Date.now()}.decrypted`);
-			await decryptBackupFile(currentPath, decryptedPath);
 			tempFiles.push(decryptedPath);
+			await decryptBackupFile(currentPath, decryptedPath);
 			currentPath = decryptedPath;
 		}
 
 		if (backupPath.endsWith('.gz.enc') || backupPath.endsWith('.gz')) {
 			const decompressedPath = join(backupDir, `_restore_${Date.now()}.raw.db`);
-			await decompressBackupFile(currentPath, decompressedPath);
 			tempFiles.push(decompressedPath);
+			await decompressBackupFile(currentPath, decompressedPath);
 			currentPath = decompressedPath;
 		}
 
