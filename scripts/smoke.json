@@ -246,6 +246,11 @@
 					"description": "Documentation consistency check"
 				},
 				{
+					"command": "bun run check:version-refs",
+					"description": "Current-state version claims in docs match package.json",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:smoke-docs",
 					"description": "Smoke runbook matches scripts/smoke.json"
 				},
