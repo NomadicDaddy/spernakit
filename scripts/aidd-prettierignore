@@ -1,0 +1,12 @@
+# Intentionally empty: this file exists so that it ignores nothing.
+#
+# `.prettierignore` (and, since Prettier 3, `.gitignore`) both exclude `/.aidd/`, which is correct
+# for `bun run format` — agent-written artifacts are not the repository's to reformat wholesale.
+# The side effect is that any targeted `prettier --check ".aidd/features/*/feature.json"` matches
+# zero files and reports success without examining anything.
+#
+# `scripts/check-aidd-format.ts` passes `--ignore-path scripts/aidd-prettierignore` so Prettier
+# uses this file *instead of* those two, and therefore actually reads the metadata it was handed.
+#
+# Do not add patterns here. Adding one would silently shrink the set of `.aidd` metadata files the
+# gate examines, which is the exact vacuous pass the gate exists to prevent.

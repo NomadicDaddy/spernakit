@@ -172,14 +172,16 @@ function collectSecretIssues(
 	secretFields: SecretField[],
 	pemKeyFields: PemKeyField[],
 	security: AppConfig['security'],
+	placeholderNodeEnv = nodeEnv,
 ): ValidationIssue[] {
 	const isDev = nodeEnv === 'development';
 	const isDevOrTest = isDev || nodeEnv === 'test';
+	const placeholdersAreWarnings = placeholderNodeEnv === 'development';
 
 	return [
-		...checkPlaceholderSecrets(isDev, secretFields),
+		...checkPlaceholderSecrets(placeholdersAreWarnings, secretFields),
 		...(isDev ? [] : checkSecretStrength(secretFields)),
-		...checkPlaceholderPemKeys(isDev, pemKeyFields),
+		...checkPlaceholderPemKeys(placeholdersAreWarnings, pemKeyFields),
 		...(isDev ? [] : checkPemKeyFormat(pemKeyFields)),
 		...checkMfaKeyPair(nodeEnv, security),
 		...(isDevOrTest ? [] : checkKnownDevKeys(security)),

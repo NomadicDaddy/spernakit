@@ -3,10 +3,11 @@
  *
  * Extracted from check-template-drift.ts so the entry script stays under the
  * 300-line gate. `printReport` renders the per-category summary and returns the
- * failing drift count (pure/branded drift + security-infrastructure drift +
- * missing files); advisory `infrastructure` drift is reported as a non-failing
- * WARNING and excluded from the total.
+ * failing drift count (pure/branded/build-critical drift + security-infrastructure
+ * drift + missing files); advisory `infrastructure` drift is reported as a
+ * non-failing WARNING and excluded from the total.
  */
+import type { RetainedDeletion } from './deletions.ts';
 import type { FileResult } from './types.ts';
 
 const countByStatus = (items: FileResult[], status: FileResult['status']): number =>
@@ -35,9 +36,26 @@ function printCategoryCounts(
 }
 
 /** List a set of result files with a trailing parenthetical label. */
-function printFileList(results: FileResult[], label: (r: FileResult) => string): void {
+function printFileList<T extends { filePath: string }>(
+	results: T[],
+	label: (r: T) => string,
+): void {
 	for (const r of results) {
 		console.log(`     ${r.filePath.padEnd(40)} (${label(r)})`);
+	}
+}
+
+/** List build-critical paths and the normalized template lines absent from each app copy. */
+function printBuildCriticalFiles(results: FileResult[]): void {
+	for (const result of results) {
+		const label =
+			result.status === 'missing-in-app'
+				? 'build-critical branded — missing in app'
+				: 'build-critical branded — structural drift';
+		console.log(`     ${result.filePath.padEnd(40)} (${label})`);
+		for (const line of result.structuralMissingLines ?? []) {
+			console.log(`       missing: ${line.trimStart()}`);
+		}
 	}
 }
 
@@ -53,7 +71,10 @@ export function printReport(
 	// files stay strict in every mode.
 	const brandedAdvisory = options.brandedAdvisory === true;
 	const pure = results.filter((r) => r.category === 'pure');
-	const branded = results.filter((r) => r.category === 'branded');
+	const branded = results.filter(
+		(r) => r.category === 'branded' && r.severity !== 'build-critical',
+	);
+	const buildCritical = results.filter((r) => r.severity === 'build-critical');
 	const infra = results.filter((r) => r.category === 'infrastructure');
 	const security = results.filter((r) => r.category === 'security-infrastructure');
 
@@ -61,6 +82,12 @@ export function printReport(
 	console.log('');
 
 	printCategoryCounts('Pure Template Files', pure, 'identical', 'drifted');
+	printCategoryCounts(
+		'Build-Critical Branded Files',
+		buildCritical,
+		'identical (after normalization)',
+		brandedAdvisory ? 'structurally drifted (advisory)' : 'structurally drifted (failing)',
+	);
 	printCategoryCounts('Branded Files', branded, 'identical (after normalization)', 'drifted');
 	printCategoryCounts(
 		'Infrastructure Files',
@@ -83,10 +110,15 @@ export function printReport(
 			r.status === 'drifted' &&
 			r.category !== 'infrastructure' &&
 			r.category !== 'security-infrastructure' &&
+			r.severity !== 'build-critical' &&
 			!(brandedAdvisory && r.category === 'branded'),
 	);
+	const buildCriticalDriftedFiles = brandedAdvisory
+		? []
+		: buildCritical.filter((r) => r.status === 'drifted');
+	const buildCriticalMissingFiles = buildCritical.filter((r) => r.status === 'missing-in-app');
 	const brandedAdvisoryFiles = brandedAdvisory
-		? branded.filter((r) => r.status === 'drifted')
+		? [...branded, ...buildCritical].filter((r) => r.status === 'drifted')
 		: [];
 	const securityDriftedFiles = security.filter((r) => r.status === 'drifted');
 	const securityMissingFiles = security.filter((r) => r.status === 'missing-in-app');
@@ -100,6 +132,18 @@ export function printReport(
 				? `${r.category} — should match template`
 				: `${r.category} — differs beyond branding`,
 		);
+		console.log('');
+	}
+
+	if (buildCriticalDriftedFiles.length > 0 || buildCriticalMissingFiles.length > 0) {
+		console.log(
+			`   BUILD-CRITICAL DRIFT (${
+				buildCriticalDriftedFiles.length + buildCriticalMissingFiles.length
+			} file(s), FAILING):`,
+		);
+		printBuildCriticalFiles([...buildCriticalDriftedFiles, ...buildCriticalMissingFiles]);
+		console.log('     Restore the missing build instructions, or acknowledge an intentional');
+		console.log('     change via .templateoverrides (SKIP/KEEP) to suppress it.');
 		console.log('');
 	}
 
@@ -126,7 +170,11 @@ export function printReport(
 		console.log(
 			`   WARNING: Branded drift (${brandedAdvisoryFiles.length} file(s), advisory at scaffold time):`,
 		);
-		printFileList(brandedAdvisoryFiles, () => 'branded — differs beyond branding');
+		printFileList(brandedAdvisoryFiles, (r) =>
+			r.severity === 'build-critical'
+				? 'build-critical branded — structural drift'
+				: 'branded — differs beyond branding',
+		);
 		console.log('     Expected from init transforms (dependency refresh, version, ports).');
 		console.log('');
 	}
@@ -145,7 +193,9 @@ export function printReport(
 
 	// Security-infrastructure misses are already reported (and counted) under
 	// the SECURITY DRIFT banner above; list the rest here.
-	const otherMissing = missing.filter((r) => r.category !== 'security-infrastructure');
+	const otherMissing = missing.filter(
+		(r) => r.category !== 'security-infrastructure' && r.severity !== 'build-critical',
+	);
 	if (otherMissing.length > 0) {
 		console.log('   Missing files:');
 		printFileList(otherMissing, () => 'exists in template but not in app');
@@ -164,10 +214,13 @@ export function printReport(
 		console.log('');
 	}
 
-	// Failing total: pure/branded drift + security-infrastructure drift +
-	// all missing files (missing already includes security-infrastructure
-	// misses). Advisory infrastructure drift is intentionally excluded.
-	const totalDrift = drifted.length + securityDriftedFiles.length + missing.length;
+	// Failing total: pure/branded/build-critical drift + security-infrastructure drift + all
+	// missing files. Advisory infrastructure and scaffold-time branded drift are excluded.
+	const totalDrift =
+		drifted.length +
+		buildCriticalDriftedFiles.length +
+		securityDriftedFiles.length +
+		missing.length;
 	if (totalDrift === 0) {
 		console.log('   No template drift detected.');
 	} else {
@@ -175,4 +228,52 @@ export function printReport(
 		console.log('   Run /template-refactor to review and fix drift.');
 	}
 	return totalDrift;
+}
+
+/**
+ * Render files the template removed but the app still carries, and return the failing count.
+ *
+ * Kept in its own section and its own banner rather than folded into the drift report: a retained
+ * deletion is neither drift (the file has no baseline left to differ from) nor `missing-in-app`
+ * (which means the opposite — the template ships it and the app does not). Reusing either label
+ * would point the operator at the wrong remedy; the fix here is to DELETE the file, not restore it.
+ */
+export function printRetainedDeletions(
+	deletions: RetainedDeletion[],
+	recordedVersion: string,
+	targetVersion: string,
+): number {
+	const retained = deletions.filter((d) => d.status === 'retained');
+	const suppressed = deletions.filter((d) => d.status === 'suppressed');
+
+	console.log(`Template Deletion Report (v${recordedVersion} -> v${targetVersion})`);
+	console.log('');
+
+	if (retained.length > 0) {
+		console.log(`   REMOVED FROM TEMPLATE (${retained.length} file(s), FAILING):`);
+		printFileList(
+			retained,
+			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
+		);
+		console.log('     Delete these files, or acknowledge an intentional retention with a');
+		console.log('     DELETED line in .templateoverrides to suppress it.');
+		console.log('');
+	}
+
+	if (suppressed.length > 0) {
+		console.log(
+			`   Retained after template removal (${suppressed.length}, per .templateoverrides):`,
+		);
+		for (const d of suppressed) {
+			const reason = d.suppression?.reason ?? '';
+			console.log(`     ${d.filePath.padEnd(40)} [DELETED]${reason ? ` — ${reason}` : ''}`);
+		}
+		console.log('');
+	}
+
+	if (retained.length === 0) {
+		console.log('   No files retained from removed template paths.');
+		console.log('');
+	}
+	return retained.length;
 }

@@ -34,6 +34,10 @@ function main(): void {
 	if (problems.length > 0) {
 		console.error('spernakit.psd1 is not consistent with the live fleet:');
 		for (const problem of problems) console.error(`  - ${problem}`);
+		console.error(
+			"Each app's package.json and config/<slug>.json are authoritative; spernakit.psd1 follows them.",
+		);
+		console.error('Repair with: bun run fleet-manifest:sync');
 		exit(1);
 	}
 

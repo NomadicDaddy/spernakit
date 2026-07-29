@@ -3,8 +3,8 @@
  * check-feature-integration.ts
  *
  * Fails the build when:
- *   1 - A backend route plugin exported from backend route index files
- *       that is not registered in create-api-app.ts
+ *   1 - An Elysia instance exported from a backend route module that is not
+ *       reachable from create-api-app.ts through .use() calls
  *   2 - A page component under frontend/src/pages/ with a route
  *       is missing from frontend/src/routes/lazyPages.ts
  *   3 - A file under frontend/src/pages/ or frontend/src/components/
@@ -14,41 +14,23 @@
  *
  * Run: bun scripts/check-feature-integration.ts
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-const ROOT = resolve(import.meta.dir, '..');
+import { checkBackendRoutes } from './lib/feature-integration/backend-routes.ts';
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+function resolveProjectRoot(): string {
+	const rootFlag = process.argv.indexOf('--root');
+	if (rootFlag === -1) return resolve(import.meta.dir, '..');
+	const root = process.argv[rootFlag + 1];
+	if (!root) throw new Error('--root requires a project directory');
+	return resolve(root);
+}
+
+const ROOT = resolveProjectRoot();
 
 function readText(relPath: string): string {
 	return readFileSync(resolve(ROOT, relPath), 'utf8');
-}
-
-/** Extract all named exports matching `export { X, Y }` from source text. */
-function extractNamedExports(source: string): string[] {
-	const names: string[] = [];
-	for (const line of source.matchAll(/export\s*\{([^}]+)\}/g)) {
-		const items = line[1]!.split(',').map((s) =>
-			s
-				.trim()
-				.split(/\s+as\s+/)[0]!
-				.trim(),
-		);
-		names.push(...items.filter(Boolean));
-	}
-	return names;
-}
-
-/** Extract `.use(xxxRoutes)` identifiers from the route registration block. */
-function extractUseCalls(source: string): string[] {
-	const names: string[] = [];
-	for (const m of source.matchAll(/\.use\(([A-Za-z_][A-Za-z0-9_]*)\)/g)) {
-		names.push(m[1]!);
-	}
-	return names;
 }
 
 /** Extract `lazyNamed(() => import('@/pages/XXX/YYY'), 'ZZZ')` page references. */
@@ -59,73 +41,6 @@ function extractLazyPageImports(source: string): string[] {
 		pages.push(m[1]!.replace('@/', ''));
 	}
 	return pages;
-}
-
-/** Recursively list index.ts barrel files under route directories. */
-function listRouteBarrelFiles(dir: string): string[] {
-	const results: string[] = [];
-	const entries = readdirSync(dir, { withFileTypes: true });
-	for (const entry of entries) {
-		const full = resolve(dir, entry.name);
-		if (entry.isDirectory()) {
-			const indexPath = resolve(full, 'index.ts');
-			try {
-				if (statSync(indexPath).isFile()) {
-					results.push(indexPath);
-				}
-			} catch {
-				// no index.ts in this subdirectory
-			}
-		} else if (entry.isFile() && entry.name === 'index.ts') {
-			results.push(full);
-		}
-	}
-	return results;
-}
-
-// ---------------------------------------------------------------------------
-// Check 1: Backend route registration
-// ---------------------------------------------------------------------------
-
-function checkBackendRoutes(): string[] {
-	const errors: string[] = [];
-
-	const createApiApp = readText('backend/src/create-api-app.ts');
-	const registeredRoutes = new Set(extractUseCalls(createApiApp));
-
-	// Find all route barrel index.ts files
-	const routesDir = resolve(ROOT, 'backend/src/routes');
-	const barrelFiles = listRouteBarrelFiles(routesDir);
-
-	// Domain barrels may aggregate leaf routes via internal .use(...) calls and
-	// export only the composed aggregator. Any leaf .use()'d inside a barrel
-	// counts as registered as long as the aggregator that owns it is itself
-	// .use()'d in create-api-app.ts — which the per-export check below verifies.
-	for (const barrelFile of barrelFiles) {
-		const source = readFileSync(barrelFile, 'utf8');
-		extractUseCalls(source).forEach((name) => registeredRoutes.add(name));
-	}
-
-	for (const barrelFile of barrelFiles) {
-		const source = readFileSync(barrelFile, 'utf8');
-		const exported = extractNamedExports(source);
-		// Filter to route-like exports (ending in "Routes")
-		const routeExports = exported.filter((e) => e.endsWith('Routes'));
-		for (const routeExport of routeExports) {
-			// wsRoutes is registered via WebSocket upgrade handler, not .use()
-			if (routeExport === 'wsRoutes') continue;
-			if (!registeredRoutes.has(routeExport)) {
-				const rel = barrelFile
-					.replace(resolve(ROOT, 'backend/src/routes/'), '')
-					.replace(/\\/g, '/');
-				errors.push(
-					`  Route "${routeExport}" exported from backend/src/routes/${rel} but not .use()'d in create-api-app.ts (or any domain aggregator)`,
-				);
-			}
-		}
-	}
-
-	return errors;
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +139,7 @@ function checkSkeletonImportPaths(): string[] {
 
 const allErrors: string[] = [];
 
-const backendErrors = checkBackendRoutes();
+const backendErrors = checkBackendRoutes(ROOT);
 if (backendErrors.length > 0) {
 	allErrors.push('Backend route registration mismatches:', ...backendErrors);
 }

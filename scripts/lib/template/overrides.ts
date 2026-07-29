@@ -17,7 +17,12 @@ const VALID_OVERRIDE_ACTIONS = new Set<TemplateOverrideAction>(['DELETED', 'KEEP
  *
  * Where ACTION is one of: DELETED, SKIP, KEEP.
  *   - SKIP / KEEP: drift detection treats this file as 'suppressed' instead of 'drifted'
- *   - DELETED:     drift detection treats a missing-in-app file as 'suppressed' instead of 'missing'
+ *   - DELETED:     acknowledges that this path's absence from one side is intentional, in whichever
+ *                  direction it points. The template ships it and the app dropped it: 'missing-in-app'
+ *                  becomes 'suppressed'. The template dropped it and the app keeps it (only detected
+ *                  under --target-version, see lib/template/deletions.ts): 'retained' becomes
+ *                  'suppressed'. One path is only ever in one of those two states, so a single
+ *                  DELETED line is never ambiguous.
  *
  * Returns empty maps if the file is absent, blank, or unparseable.
  */

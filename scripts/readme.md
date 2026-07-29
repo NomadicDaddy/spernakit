@@ -25,6 +25,7 @@
     - [`verify-minification.ts`](#verify-minificationts)
     - [`optimize-images.ts`](#optimize-imagests)
     - [`reset-packages.ts`](#reset-packagests)
+    - [`sync-fleet-manifest.ts`](#sync-fleet-manifestts)
     - [`tsconfig.json`](#tsconfigjson)
 
 ## Quick Reference
@@ -59,6 +60,7 @@
 | Generate JSON schema for editor intellisense     | `bun run config:schema`                               | `scripts/generate-config-schema.ts`       |
 | Dev crawltest with screenshot capture            | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json` |
 | Generate read-only template sync packet          | `bun run template:sync-plan -- --app ../acme-monitor` | `scripts/template-sync-plan.ts`           |
+| Restate the fleet manifest after a version bump  | `bun run fleet-manifest:sync`                         | `scripts/sync-fleet-manifest.ts`          |
 
 ## Common Configuration
 
@@ -282,7 +284,10 @@ If you run scripts in a derived application repo, ensure:
 ### `reset-packages.ts`
 
 - **Purpose**
-    - Removes `node_modules`, `dist`, and lock files, then reinstalls.
+    - Verifies `bun.lock` with a frozen install before removing `node_modules`, `dist`, and legacy
+      lock files, then reinstalls.
+    - Preserves existing dependency directories when the preflight fails and directs maintainers
+      to repair the lockfile with `bun install`.
 - **Run**
     - `bun run reset-packages`
 - **Warning**
@@ -297,6 +302,26 @@ If you run scripts in a derived application repo, ensure:
 - **Run**
     - `bun run template:sync-plan -- --app ../acme-monitor`
     - `bun run template:sync-plan -- --app ../acme-monitor --from 3.7.0 --to 3.7.1`
+
+### `sync-fleet-manifest.ts`
+
+- **Purpose**
+    - Rewrites `spernakit.psd1` from the values that own it: each app's tracked `package.json`
+      (`version`, `spernakit_version`) and its runtime `config/<slug>.json` (`app.name`,
+      `app.description`, `server.backendPort`, `server.frontendPort`).
+    - Only the scalar values that moved are rewritten. The comment header, entry order, field order,
+      and `=` alignment come from the existing file.
+    - Fails closed: if any app directory is missing, any `package.json` is unreadable, or any entry
+      has no `config/<slug>.json` to verify it against, nothing is written at all.
+- **Run**
+    - `bun run fleet-manifest:sync`
+- **When**
+    - In the template release (`spernakit-bump`): immediately after `package.json` is bumped and
+      before the release commit.
+    - In a derived-app upgrade (`template-upgrade` Phase 10): immediately after the app's
+      `spernakit_version` is stamped and before the upgrade commit.
+    - `spernakit.psd1` is gitignored, so nothing else keeps it current; reconciling it by hand after
+      `bun run check:fleet-manifest` has already failed is the failure this command exists to end.
 
 ### `tsconfig.json`
 

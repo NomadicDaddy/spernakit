@@ -22,29 +22,22 @@
  *
  * Usage:
  *   bun run config:validate
- *   bun run config:validate --json    # Output as JSON (for CI)
+ *   bun run config:validate --json
+ *   bun run config:validate -- --node-env production
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { appConfigSchema } from '../backend/src/config/configSchema.ts';
-import { replaceSecretsWithEnvVars } from '../backend/src/config/configSecrets.ts';
+import { getAppSlug, loadDefaults, projectRoot } from '../backend/src/config/configUtils.ts';
+import { type ValidationIssue } from '../backend/src/config/configValidator.ts';
 import {
-	deepMerge,
-	ensureFrontendOrigin,
-	getAppSlug,
-	loadDefaults,
-	projectRoot,
-} from '../backend/src/config/configUtils.ts';
-import {
-	collectSecurityIssues,
-	type ValidationIssue,
-} from '../backend/src/config/configValidator.ts';
-
-interface SchemaIssue {
-	message: string;
-	path: string;
-}
+	formatSecurityIssue,
+	type NodeEnvironment,
+	parseNodeEnvOverride,
+	type SchemaIssue,
+	validateMergedInstance,
+} from './lib/config-validation.ts';
 
 interface FileValidation {
 	errors: number;
@@ -109,7 +102,7 @@ function validateStandalone(label: string, path: string): FileValidation {
 	return result;
 }
 
-function validateInstance(): FileValidation {
+function validateInstance(nodeEnvOverride?: NodeEnvironment): FileValidation {
 	const defaults = loadDefaults();
 	const slug = getAppSlug(defaults);
 	const configPath = join(projectRoot, 'config', `${slug}.json`);
@@ -132,15 +125,9 @@ function validateInstance(): FileValidation {
 	}
 
 	const userConfig = loadJson(configPath);
-	const merged = deepMerge(defaults, userConfig);
-	const withEnvVars = replaceSecretsWithEnvVars(merged, slug);
-	ensureFrontendOrigin(withEnvVars);
-	delete withEnvVars['$schema'];
-
-	const parse = appConfigSchema.safeParse(withEnvVars);
-	result.schemaIssues = parseSchemaIssues(parse);
-
-	if (!parse.success) {
+	const validation = validateMergedInstance(defaults, userConfig, slug, nodeEnvOverride);
+	result.schemaIssues = validation.schemaIssues;
+	if (result.schemaIssues.length > 0) {
 		result.errors = result.schemaIssues.length;
 		result.status = 'fail';
 		return result;
@@ -148,7 +135,7 @@ function validateInstance(): FileValidation {
 
 	// Security validation only runs on the instance — it checks placeholder
 	// secrets, minimum key lengths, and production-safety invariants.
-	result.securityIssues = collectSecurityIssues(parse.data);
+	result.securityIssues = validation.securityIssues;
 	for (const issue of result.securityIssues) {
 		if (issue.level === 'error') result.errors++;
 		else result.warnings++;
@@ -157,14 +144,14 @@ function validateInstance(): FileValidation {
 	return result;
 }
 
-function validate(): ValidationReport {
+function validate(nodeEnvOverride?: NodeEnvironment): ValidationReport {
 	const defaultsPath = join(projectRoot, 'backend/src/config/defaults.json');
 	const examplePath = join(projectRoot, 'config/example.json');
 
 	const files: FileValidation[] = [
 		validateStandalone('defaults', defaultsPath),
 		validateStandalone('example', examplePath),
-		validateInstance(),
+		validateInstance(nodeEnvOverride),
 	];
 
 	const anyFailed = files.some((f) => f.status === 'fail');
@@ -195,8 +182,7 @@ function printFile(file: FileValidation): void {
 			console.log('    [PASS] All checks passed');
 		} else {
 			for (const issue of file.securityIssues) {
-				const tag = issue.level === 'error' ? 'ERROR' : 'WARN ';
-				console.log(`    [${tag}] ${issue.field}: ${issue.message}`);
+				console.log(formatSecurityIssue(issue));
 			}
 		}
 	}
@@ -225,7 +211,8 @@ function main(): void {
 	const jsonMode = process.argv.includes('--json');
 
 	try {
-		const report = validate();
+		const nodeEnvOverride = parseNodeEnvOverride(process.argv.slice(2));
+		const report = validate(nodeEnvOverride);
 		if (jsonMode) {
 			console.log(JSON.stringify(report, null, '\t'));
 		} else {

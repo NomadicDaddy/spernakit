@@ -24,7 +24,6 @@ import {
 	flushRateLimits,
 	launchSession,
 	loginSession,
-	navigateSessionToStart,
 	recycleBrowser,
 	screenshotPreLoginPages,
 } from './crawltest-session';
@@ -143,10 +142,6 @@ export class WebCrawler {
 
 	async login(email: string, password: string): Promise<void> {
 		await loginSession(this.session, this.results, this.opts, email, password);
-	}
-
-	async navigateToStart(): Promise<void> {
-		await navigateSessionToStart(this.session, this.results, this.opts);
 	}
 
 	// -----------------------------------------------------------------------

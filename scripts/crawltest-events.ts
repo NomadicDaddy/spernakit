@@ -103,13 +103,18 @@ function handlePageError(ctx: CrawlEventContext, err: unknown): void {
 	console.log(`❌ Page Error: ${error.message}`);
 }
 
+// A request the page itself cancelled reaches this handler without a server ever refusing it:
+// a query aborted on unmount, a poll superseded by navigation, an extension blocking a fetch.
+// Counting those as network errors fails a crawl over pages that merely poll while being left.
+const CLIENT_CANCELLED_FAILURES = new Set(['net::ERR_ABORTED', 'net::ERR_BLOCKED_BY_CLIENT']);
+
 function handleRequestFailed(ctx: CrawlEventContext, request: HTTPRequest): void {
 	const url = request.url();
 	if (isIgnoredUrl(url)) return;
 	if (url.startsWith('data:')) return;
 
 	const failure = request.failure();
-	if (failure && failure.errorText === 'net::ERR_ABORTED') return;
+	if (failure && CLIENT_CANCELLED_FAILURES.has(failure.errorText)) return;
 
 	ctx.results.addNetworkError(url, failure?.errorText ?? 'Unknown', 'Request Failed');
 	console.log(`❌ Network Error: ${url} - ${failure?.errorText}`);

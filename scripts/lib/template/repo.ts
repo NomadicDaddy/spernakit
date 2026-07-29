@@ -92,3 +92,8 @@ export function readLocalFile(repoRoot: string, filePath: string): null | string
 		return null;
 	}
 }
+
+/** Presence-only check for an app-relative path — the deletion detector never needs the contents. */
+export function fileExistsInApp(repoRoot: string, filePath: string): boolean {
+	return fs.existsSync(path.join(repoRoot, filePath));
+}

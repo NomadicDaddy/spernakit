@@ -7,6 +7,7 @@
 
 export interface ClassificationOverrides {
 	branded: string[];
+	buildCriticalBranded: string[];
 	infrastructure: string[];
 	securityInfrastructure: string[];
 }
@@ -24,7 +25,11 @@ export interface TemplateOverrides {
 export interface FileResult {
 	category: DriftCategory;
 	filePath: string;
+	/** Build-critical branded drift gets a distinct failing report without changing its category. */
+	severity?: 'build-critical';
 	status: 'drifted' | 'identical' | 'missing-in-app' | 'missing-in-template' | 'suppressed';
+	/** Template lines absent from a build-critical branded file after branding normalization. */
+	structuralMissingLines?: string[];
 	/** When status === 'suppressed', records why and which override action applied */
 	suppression?: { action: TemplateOverrideAction; reason: string };
 }

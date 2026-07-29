@@ -15,6 +15,11 @@
 #   version             - App-owned semver (independent of the template version)
 #   spernakit_version   - Exact template semver this app has been synced to
 #
+# Every field above is derived, not authoritative. Each app's package.json owns version and
+# spernakit_version; its config/<slug>.json owns the name, description, and port pair. Run
+# `bun run fleet-manifest:sync` to restate this file from them, and `bun run check:fleet-manifest`
+# to confirm it still matches.
+#
 @{
 	ExpectedConfigs = @{
 		'spernakit' = @{

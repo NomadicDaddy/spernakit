@@ -125,6 +125,20 @@ function mergeTestCredentials(config: AppConfig, configDir: string): void {
 }
 
 /**
+ * Resolve the app slug WITHOUT reading — or auto-creating — the config file. For callers that only
+ * need to know which app they are running in (the bundle budget's provenance stamp, for one),
+ * loading the full config would create a config/{slug}.json with fresh secrets as a side effect.
+ *
+ * @param rootDir - Repository root; defaults to the current working directory.
+ * @returns The resolved app slug.
+ */
+export function getAppSlug(rootDir?: string): string {
+	const repoRoot = rootDir || path.resolve(process.cwd());
+	const configDir = process.env['CONFIG_DIR'] || path.join(repoRoot, 'config');
+	return resolveAppSlug(repoRoot, configDir);
+}
+
+/**
  * Load JSON config and populate process.env
  * Returns the loaded config and appSlug for direct use by callers
  */

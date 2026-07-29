@@ -192,21 +192,105 @@ template instead of using the sync workflow.
 **Steps** (for each derived app):
 
 1. `bun run template:sync-plan -- --app ../{app} --from {source} --to {target}` - generate `upgrade-review/{app}/` review artifacts
-2. For each **added** file: `cp` from spernakit to the app
-3. For each **deleted** file: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
-4. For each **modified** file:
+2. From the app: `bun run check:override-deltas -- --target-version {target}` - read what each `.templateoverrides` entry is holding back at the target before any file is copied, because the copy pass never touches those paths. See [Override Delta Report](#override-delta-report).
+3. From the app: `bun run check:drift -- --target-version {target}` - list the files `v{target}` no longer ships that the app still carries. Ordinary drift cannot see these, and the sync packet only names what changed between `{source}` and `{target}`, so a file dropped in an _earlier_ upgrade and never removed appears in neither. See [Retained Template Deletions](#retained-template-deletions).
+4. For each **added** file: `cp` from spernakit to the app
+5. For each **deleted** file - from step 3's report and the sync packet both: diff the app's copy against `v{source}`; delete if it matches, ask the user if it has domain extensions
+6. For each **modified** file:
     - **Pure** (build configs, `scripts/*.ts`, `docs/template/*`, `shared/src/*.ts`, `components/ui/*`): `cp` and overwrite - but always diff against `v{source}` first to detect silent domain extensions (e.g., `backend/src/constants/responseExamples.ts` with custom helpers like `routeDetail`, `backend/src/db/seed/index.ts` with domain re-exports). If extensions exist, treat as infrastructure.
     - **Branded** (`Dockerfile`, `README.md`, `package.json`): `cp` then re-apply branding
     - **Infrastructure** (`backend/src/app.ts`, `frontend/src/routes.tsx`, navigation, re-export shims): do not `cp`; diff the three versions (`v{source}`, `v{target}`, current app) and hand-apply only the template delta, preserving app extensions
-5. Run `bun install` if dependencies changed
-6. Bump `spernakit_version` in `package.json`
-7. Run `bun run smoke:qc`
-8. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
+7. Run `bun install` if dependencies changed
+8. From the template: `bun run template:sync-features -- --app ../{app}` - copy the template's feature records into the app's `.aidd/`, then run `roadmap:apply` from aidd. The push form is the one to use here: the app has not been re-stamped yet, and the pull form skips on version mismatch. The file copy pass cannot do this at all - `.aidd/` is gitignored in the template, so it is invisible to every git-driven enumeration the other steps use. See [Template Feature Sync](#template-feature-sync).
+9. Bump `spernakit_version` in `package.json`
+10. Run `bun run smoke:qc`
+11. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
+12. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
 
 Plan for ~3-5 minutes per app for small deltas. The manual process is deterministic and cannot silently clobber domain code, at the cost of per-file judgment.
 
 The review packet is intentionally read-only. Template changes are applied manually after each
 classification has been checked against the derived app's domain code.
+
+### Retained Template Deletions
+
+Drift detection asks whether the app still matches what the template ships, one file at a time, at the app's recorded version. It is blind in the other direction: when the template **removes** a file, that path simply stops being enumerated, so an app that still carries the removed module reads as perfectly clean. Nothing fails, nothing warns, and the dead file survives every subsequent upgrade.
+
+`backend/src/routes/auth/mfa-rate-limit.ts` - 34 lines, zero importers, superseded by `backend/src/services/auth/mfaRateLimit.ts` - rode three derived apps' init commits from the version that shipped it all the way to v3.31.2, through every intervening upgrade, and was found by hand rather than by a gate. The sync packet would not have caught it either: it names what changed between `{source}` and `{target}`, and this file was dropped before `{source}`.
+
+**Running**: `bun run check:drift -- --target-version <version>` from the derived app, against the version being upgraded **to** - step 3 of [Template Upgrade](#template-upgrade), before the copy pass, so the removals are handled in the same pass as the sync packet's deletions. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+
+Without `--target-version` the scan does not run at all, and `check:drift` behaves exactly as it always has - which is what `smoke:qc` invokes. There is no default target on purpose: comparing the app against the version it already declares can only report that the template has removed nothing.
+
+**What it reports**: a `Template Deletion Report (v{recorded} -> v{target})` banner, separate from the drift report and from `missing-in-app`, because the remedy is the opposite one - **delete** the file, do not restore it. Candidates are drawn only from paths the recorded version shipped, so app-authored code can never enter the set, and both sides are compared as app-relative paths (a scaffold-mapped file such as `.gitignore` resolves through `scaffolding/` first). Paths the target dropped are handed to this report exclusively and filtered out of the drift report, where they would otherwise read as `drifted` or `missing-in-app` and prescribe restoring a file the target no longer ships.
+
+**Retained files fail the gate.** To keep one deliberately, add a `DELETED` line for it in `.templateoverrides` with a reason; it then prints under "Retained after template removal" instead of failing. That action now covers both directions of the same question - template ships it and the app dropped it, or the template dropped it and the app still has it.
+
+A `--target-version` naming a tag the template repo does not have is a **failure**, not a skip, unlike the environmental preconditions (`check:drift`'s other exits). The check aborts the whole run, so a typo that skipped would exit 0 while also withholding the ordinary drift verdict.
+
+**Self-test**: `bun run test:template-deletions` drives the shipped CLI against a two-tag template/app fixture pair (`scripts/lib/template/deletions-fixture.ts`), covering a retained deletion, an overridden one, a scaffold-mapped one, a mistyped target version, and ordinary drift as a negative control.
+
+### Template Feature Sync
+
+A `.aidd/features/<dir>/feature.json` record is the machine-checkable half of the template contract - the acceptance criteria a derived app inherits alongside the code it grades. Every other sync mechanism in this document is blind to them, because `.gitignore` excludes `/.aidd/` in the template and both file enumerations (`git ls-files` for init, `git ls-tree` for drift) therefore return nothing under it. Until v3.32.0 the only thing that ever copied a feature record downstream was a paragraph of prose in the upgrade skill, run by hand; it had reached four of eleven apps, and the other seven carried zero template feature records.
+
+Init now seeds the corpus (`seedTemplateFeatures` in `scripts/lib/init/scaffold.ts`, before the init commit), and this tool keeps it current. Seeding is best-effort by design: `/.aidd/` is gitignored, so a checkout that never carried the corpus - a clone of the published repository - still initializes a complete app, and init reports that the blueprint was not seeded rather than refusing to scaffold. Sync it in afterwards from a checkout that has one.
+
+**Records named like process artifacts are never synced** - `remediation-<date>-…` and `audit-<slug>-<digits>-…`. Those are findings from the _template's own_ development; their content reaches apps by being folded into a durable feature, and the finding record is deleted upstream once folded. The pattern is deliberately narrower than a bare `audit-` prefix, which would swallow the durable `audit-logs` capability record.
+
+**Running**: from the derived app, `bun run template:sync-features` (write) or `bun run check:template-features` (plan only, exit 1 on anything actionable - this is what `smoke:qc` invokes). From the template, `bun run template:sync-features -- --app ../{app}` pushes into one app and `--all` pushes to every app in `spernakit.psd1`. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). `--adopt` is required to overwrite an unmarked app copy that carries authored text; `--overwrite-app-text` is its marked-record sibling (below); `--no-prune` keeps records the template no longer ships; `--json` prints the plan instead of the report and exits on the same condition `--check` does in the printed form.
+
+**Run `roadmap:apply` from aidd afterwards.** The sync writes `.aidd/roadmap.json` but never shells into aidd, so the dependency graph is only rebuilt on the next apply. `roadmap:apply --dry-run` reporting `updated: 0` immediately after a sync is the sharpest available evidence that the merge was correct; a non-zero count means the app is about to re-drift. Then `bun run check:aidd-format` must report zero changed files - records are serialized through Prettier's API against the destination's config precisely so that holds.
+
+**What it reports**: a count of durable records considered, then one line per action - `added`, `updated`, `adopted`, `adopted-with-loss`, `pruned`, `prune-blocked`, `unchanged` - with the changed field names beside each entry, and whether `roadmap.json` needs updating. Two entries are stops rather than results: `adopted-with-loss` (an unmarked app copy whose text differs from the template's) and `prune-blocked` (a stale record whose directory holds more than `feature.json`, so deleting it would destroy something else). A `prune-blocked` entry keeps failing `check:template-features` until a human reviews that directory - that is the intent, not a bug.
+
+**Ownership is decided by the template corpus, not by the app copy's marker.** A directory present upstream and not matching the ephemeral pattern is template-owned; the app-side `spernakit_version` only separates `updated` from `adopted`. Template-owned fields (`spec`, `notes`, `description`, `summary`, `dependencies`, `affectedFiles`, …) are overwritten. `priority`, `shippedVersion`, `updatedAt` and per-run state are app-local and preserved - `priority` is seeded from the template on a new copy only, and `roadmap:apply` corrects it from the app's own milestone immediately after. Milestone _names_ are app-owned, so `roadmap.milestones` is never touched; a new entry resolves the template's milestone through exact name, then equal priority, then the app's current milestone, and fails the app if it defines none.
+
+**When the app's text is the better text**, the report says so at the moment of loss, next to the entry, and **a write run leaves that record alone**. Any `updated` entry whose changed fields include `spec`, `notes`, `description` or `summary` is skipped, listed under `NOT OVERWRITTEN`, and makes the run exit 1 - the rest of the plan is still applied, so the app is never left half-synced with no way forward. Resolve each one: backport the text to spernakit, or record the difference as an app-owned feature whose `notes` begin `DEVIATES: <template-dir> — …` and which lists that directory in its roadmap dependencies. An app-owned feature is absent from the template corpus, so the sync never touches it. `--overwrite-app-text` discards the app's text in favour of the template's; the four populated apps carry 29-33 such records each, which is exactly why discarding them cannot be the default.
+
+**Skips**: the pull-mode gate is silent where it cannot answer honestly - run inside spernakit itself, unresolvable template, or an app whose `spernakit_version` does not match the template's `package.json` version. That last one is load-bearing: with `.aidd/` gitignored there is no tagged baseline, so the comparison is against a moving HEAD, and without version parity every app would go red the moment spernakit bumped. The gate is meaningful exactly when it can be - after an upgrade. `TEMPLATE_FEATURES_REQUIRED=1` turns skips into failures for dance runs, matching `DRIFT_REQUIRED=1`.
+
+**Two defects fail ahead of every skip**, because they are wrong at any version and the parity skip would otherwise hide them for the whole window between a template bump and the app's next upgrade - which is precisely how two leaked process records survived in four apps for months. A resident record whose directory matches the ephemeral pattern is always a leak (this one needs no template checkout at all), and a record whose `spernakit_version` differs from the template's value for the same directory was hand-edited - the field marks the version that _introduced_ the record and is never bumped on revision, so it is identical across template versions. Deliberately not in this tier: a marked record with no counterpart upstream. That is a defect at parity and ordinary at skew, since the template may have deleted it after the version the app is on.
+
+**The source corpus is validated before any app is touched** - missing `.aidd/features`, zero records, zero durable records after the ephemeral filter, an unmarked record, `id !== <dir>`, or a roadmap orphan all abort with exit 1. The refusal conditions are the same functions as `check:template-feature-versions` and `check:feature-id-directory`, so the sync can never run against a corpus its own gates reject.
+
+**Self-test**: `bun run test:template-features` drives the shipped CLI against a synthetic template/app corpus pair (`scripts/lib/template-features/fixture.ts`), covering every row of the classification table, all three milestone ladder rungs plus the zero-milestone failure, the ephemeral filter in both directions, `notes` array/string normalization, an `updatedAt`-only diff reading as `unchanged`, idempotence, the version-parity skip and its `TEMPLATE_FEATURES_REQUIRED=1` failure, a wrong-way run, and both source-corpus refusals.
+
+### Lost App Lines Audit
+
+Drift detection asks whether the app still matches what the template ships. This audit asks the inverse question, which nothing else answers: did the copy delete a line the app wrote that the template never had?
+
+Nothing in `smoke:qc` can catch that. During the 2026-07-27 upgrade round one derived app lost twenty lines and nine commits of navigation entries and every gate stayed green, because a dropped nav entry typechecks, lints, builds and serves. Another lost an app-added field from a shared API type and was caught only because one page happened to consume it. A green `smoke:qc` is not evidence that app-owned work survived an upgrade.
+
+**Running**: `bun run audit:lost-lines -- --app-dir <path> [--rev <commit>]`. `--rev` defaults to `HEAD` and is compared against its first parent, so run it against the sync commit itself - step 12 of [Template Upgrade](#template-upgrade), after the copy and before the release commit. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`).
+
+**A non-zero exit is blocking.** Every reported line is app-authored content the copy removed, and each one is either restored or dropped deliberately before the release is cut.
+
+**How a line is classified**: for each line the commit removed from a template-managed path, the audit asks whether _any_ revision of the corresponding template path ever contained it (scaffold-mapped paths resolve through `scaffolding/`, so `.prettierignore` is compared against `scaffolding/.prettierignore`). A line the template once shipped is stale content the upgrade exists to replace. A line the template never had was written by the app. Trailing commas are normalized on both sides of that comparison only - the v3.31.0 switch to `trailingComma: all` would otherwise rewrite the last line of every multi-line list in the tree and drown the signal - and findings still print the line as the file actually had it.
+
+That test alone is too loud, because a file seeded from a pre-3.28.2 template carries lines no surviving template blob contains: those tags were squashed away. The app's own history settles it. A path is only reported when a post-init app commit touched it, and template syncs do not count - a `chore(template):` commit is the copy, not the work. Without that second exclusion the trim of `docs/template/CHANGELOG.md` to its last five releases reports as 2209 lost lines in every app that has ever been upgraded.
+
+**Expected findings on a clean upgrade**: the audit compares whole lines, so a line the formatter rewrote in place reads as removed. On the real 3.24.1 -> 3.31.2 upgrades that is the `"spernakit_version"` bump in `package.json` plus a handful of Tailwind class-order and import-member-order reflows - roughly twenty lines, each dismissible by reading it next to the added line beside it. Anything that is not obviously a reflow is a real loss.
+
+**Self-test**: `bun run test:lost-lines` drives the shipped CLI against a purpose-built template/app pair of git repositories (`scripts/lib/template/lost-lines-fixture.ts`), including an upgrade that preserved the same app work as a control.
+
+### Override Delta Report
+
+A `SKIP` or `KEEP` line in `.templateoverrides` tells drift detection to stop asking about a path. From that moment the template's own later changes to the file are invisible: `bun run check:drift` prints the path as suppressed with whatever reason its author typed, every gate stays green, and nothing states what the app has stopped receiving. This report performs the comparison the override suppressed.
+
+During the 2026-07-27 dance a `SKIP docker/nginx.conf` taken for one CSP token - `font-src` needed `data:` for base64 woff2 fonts - had also withheld the template's `location ~ \.map$` deny block, the one that stops a stray source map exposing the original TypeScript. It was recovered because a human re-read the override text against the new target. Every entry in every app is one unread reason away from the same outcome.
+
+**Running**: `bun run check:override-deltas -- --target-version <version> [--fail-on-delta]`. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). Run it from the derived app, against the version being upgraded **to**, before the copy pass - step 2 of [Template Upgrade](#template-upgrade) - so each entry can be re-merged or deliberately kept while there is still a decision to make.
+
+`--target-version` has no default on purpose. Comparing an override against the version the app is already on can only report that it withholds nothing, which is a clean answer to a question nobody asked.
+
+**What it reports**: for each entry, the lines `v{target}` has that the app's copy does not, printed beside the reason recorded in `.templateoverrides` so stale reason text is visible next to what it failed to mention. `KEEP` and `SKIP` are treated alike. `branded` paths are compared after branding normalization, so an app's own name never reads as withheld content while a structural delta still does. Scaffold-mapped paths resolve through `scaffolding/`, and the report names the template path it read. Entries classified security-relevant - `SECURITY_INFRASTRUCTURE_FILES`, anything under `docker/`, and plugin or guard paths - are tagged `SECURITY` and sort first.
+
+Two other sections matter as much as the deltas. **WITHHOLDING NOTHING** names every entry whose withheld delta is empty: those overrides are obsolete and can be deleted. **UNRESOLVED** names entries that could not be compared at all, because the app or the target no longer has the path; those exit non-zero regardless of flags, since an entry the report cannot substantiate is not a clean entry.
+
+**Exit codes**: advisory by default - withheld deltas are review items, not failures, because an override may be withholding exactly what its reason says it should. `--fail-on-delta` makes any withheld delta blocking, for a release gate that wants every entry re-merged or re-justified first. Unresolved entries always fail.
+
+**Self-test**: `bun run test:override-deltas` drives the shipped CLI against a two-tag template repository paired with an app frozen by its own overrides (`scripts/lib/template/override-deltas-fixture.ts`), reconstructing the nginx case beside a branded file, a scaffold-mapped file, an obsolete entry and a stale one, with a re-merged copy as the negative control.
 
 ### Module System
 
@@ -625,6 +709,7 @@ frontend/src/
 ### **File Size Limit (Enforced)**
 
 - Every `.ts`/`.tsx` source file under `backend/src`, `frontend/src`, `shared/src`, and `scripts` is hard-capped at **300 lines** - `check:max-lines` runs in `smoke:qc` and fails the build on any file over the limit, with no exemptions
+- The standalone [spernakit-browser](https://github.com/NomadicDaddy/spernakit-browser) project owns that tool's canonical source; derived apps that copy it under `scripts/spernakit-browser/` must update from the canonical project instead of adding local source-gate exclusions
 - Components over the limit should be decomposed into sub-components; extract reusable sub-components to the same directory (co-located) or to `components/shared/` if used across pages
 - Services, routes, and scripts should be split into cohesive submodules behind a facade so the original import path and entrypoint stay stable
 
