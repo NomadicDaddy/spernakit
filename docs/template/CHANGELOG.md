@@ -3,6 +3,44 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.34.0] - 2026-08-03
+
+### Added
+
+- `bun run check:version-refs` fails when the template's current-state version claims disagree with
+  `package.json`. The README title and its two baseline sentences had sat at v3.29.0 across seven
+  releases, because `release:notes` writes the changelog and nothing watched the prose around it.
+  Support floors, historical prose, and provenance stamps are left alone, since those stay correct
+  while frozen. The gate runs in the template only: derived apps keep branded READMEs behind a
+  `KEEP README.md` override, so the sentences it matches do not exist there.
+
+### Changed
+
+- `@typescript-eslint/unbound-method` is enforced for shared, backend, and scripts, not the frontend
+  alone. A method passed as a bare value fails lint now rather than losing its receiver at runtime.
+  The one real site is the deliberate native setter detach in `scripts/crawltest-bugreport.ts`,
+  which supplies its own receiver and carries a scoped disable.
+- `bun run smoke:qc:fast` lints through a new `lint:fast` that passes ESLint's `--cache`, while the
+  full `smoke:qc` keeps running the uncached `lint`. That cache keys on each file's own content,
+  which the type-aware rules outlive: a type change in one file can create a violation in another
+  that the cache then treats as unchanged and skips. The fast variant records under its own smoke
+  cache key as well, so a fast pass can never let the full gate skip its uncached lint.
+- The shared leak guard counts `starsync` as a public repository name alongside `aidd` and
+  `spernakit`, and no longer counts `aidd-web`. The four shared hook files are kept byte-identical
+  across three repositories now rather than two.
+
+### Fixed
+
+- The screenshot push guard no longer fails a version-tag push in a repository that never captures
+  screenshots. A missing `screenshots/` directory means the repository does not capture at all, and
+  a tag with no capture under an existing directory still fails. Scaffolded apps receive the
+  corrected guard: their copy had drifted from the template's and was still failing the opted-out
+  case.
+- The license inventory finds packages nested under a scope directory. `@octokit/` is a directory of
+  packages rather than a package, so a nested copy at
+  `node_modules/@octokit/endpoint/node_modules/@octokit/types` was unreachable, and a hoisted
+  install that kept a second version there reported the package as not installed at all.
+
 ## [3.33.0] - 2026-07-28
 
 ### Added
