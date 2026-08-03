@@ -71,6 +71,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: LINT_GLOBS,
 	},
+	// The inner loop's ESLint-cached variant. Same dependency set as `lint`, deliberately a separate
+	// cache entry: a fast pass must never satisfy the full gate's uncached lint.
+	'lint:fast': {
+		excludes: COMMON_EXCLUDES,
+		globs: LINT_GLOBS,
+	},
 	'test:config-preflight': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

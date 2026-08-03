@@ -63,13 +63,24 @@ interface ParsedArguments {
 	screenshotPages: boolean;
 }
 
+// The inner loop swaps in ESLint's --cache; the full gate must not have it. That cache keys on a
+// file's own content, which type-aware rules outlive: a type change in one file can create a
+// violation in another the cache then considers unchanged and skips. Running under its own command
+// also gives it its own smoke-cache key, so a fast run can never record a result that lets the full
+// `smoke:qc` skip the uncached lint. The name being replaced is still looked up in smoke.json
+// below, so the subset relationship cannot drift unnoticed.
+const FAST_QC_COMMAND_OVERRIDES: Record<string, string> = {
+	'bun run lint': 'bun run lint:fast',
+};
+
 function selectFastQcSteps(steps: Step[]): Step[] {
 	const stepsByCommand = new Map(steps.map((step) => [step.command, step]));
 	return FAST_QC_COMMANDS.map((command) => {
 		const step = stepsByCommand.get(command);
 		if (step === undefined)
 			throw new Error(`Fast QC step is missing from smoke.json: ${command}`);
-		return step;
+		const override = FAST_QC_COMMAND_OVERRIDES[command];
+		return override === undefined ? step : { ...step, command: override };
 	});
 }
 

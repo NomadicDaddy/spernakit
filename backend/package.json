@@ -40,6 +40,7 @@
 		"db:studio": "bunx drizzle-kit studio",
 		"dev": "bun --watch src/app.ts",
 		"lint": "bunx eslint src --report-unused-disable-directives --max-warnings 0",
+		"lint:fast": "bunx eslint src --cache --cache-location ../node_modules/.cache/eslint-backend/ --report-unused-disable-directives --max-warnings 0",
 		"lint:fix": "bunx eslint src --report-unused-disable-directives --max-warnings 0 --fix",
 		"start": "bun src/app.ts",
 		"stop": "bun run --cwd .. stop:backend",
