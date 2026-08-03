@@ -145,6 +145,18 @@ export default defineConfig([
 		},
 	},
 	{
+		files: ['**/*.{ts,tsx}'],
+		languageOptions: {
+			parserOptions: {
+				projectService: true,
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
+		rules: {
+			'@typescript-eslint/unbound-method': 'error',
+		},
+	},
+	{
 		files: ['frontend/**/*.{ts,tsx}'],
 		plugins: {
 			'react-hooks': reactHooks,

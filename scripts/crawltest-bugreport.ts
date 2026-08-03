@@ -151,6 +151,10 @@ export async function testBugReport(
 					'textarea#bug-description',
 				) as HTMLTextAreaElement | null;
 				if (textarea) {
+					// Detaching the setter from the prototype is the point: React installs its
+					// own value setter on the element, so the only way to write the underlying
+					// value is to reach past it. The receiver is supplied by the .call below.
+					// eslint-disable-next-line @typescript-eslint/unbound-method
 					const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
 						window.HTMLTextAreaElement.prototype,
 						'value',
