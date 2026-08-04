@@ -193,67 +193,69 @@ Steps (in order):
     - Template image publication guard.
 23. `bun run check:process-env`
     - Process environment access check.
-24. `bun run check:max-lines`
+24. `bun run check:git-window-hide`
+    - Direct Git subprocesses hide their Windows console window.
+25. `bun run check:max-lines`
     - 300-line max-lines gate.
-25. `bun run test:vendored-browser-gates`
+26. `bun run test:vendored-browser-gates`
     - Vendored browser entry points and source gates remain enforced.
-26. `bun run check-application`
+27. `bun run check-application`
     - Application check.
-27. `bun run check:destructive-confirmation`
+28. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-28. `bun run verify-mutation-denylist`
+29. `bun run verify-mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-29. `bun run check-docs`
+30. `bun run check-docs`
     - Documentation consistency check.
-30. `bun run check:version-refs`
+31. `bun run check:version-refs`
     - Current-state version claims in docs match package.json.
-31. `bun run check:smoke-docs`
+32. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-32. `bun run typecheck`
+33. `bun run typecheck`
     - Typecheck.
-33. `bun run lint`
+34. `bun run lint`
     - Lint.
-34. `bun run build`
+35. `bun run build`
     - Build.
-35. `bun run verify-minification`
+36. `bun run verify-minification`
     - Verify bundle minification and total size budget.
-36. `bun run check:critical-path`
+37. `bun run check:critical-path`
     - Verify critical-path size, React runtime placement, and no preload waterfall.
-37. `bun run check:api-types`
+38. `bun run check:api-types`
     - API type contract validation.
-38. `bun run check:feature-integration`
+39. `bun run check:feature-integration`
     - Feature integration check.
-39. `bun run test:feature-integration`
+40. `bun run test:feature-integration`
     - Feature integration rejects unmounted flat route modules.
-40. `bun run check:schema-parity`
+41. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-41. `bun run test:backup-compression`
+42. `bun run test:backup-compression`
     - Backup decompression guard rejects high-ratio archives and cleans up.
-42. `bun run test:bundle-budget`
+43. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-43. `bun run test:crawl-credentials`
+44. `bun run test:crawl-credentials`
     - Crawl login resolves from the seed account and never from a tracked config file.
-44. `bun run test:critical-path-budget`
+45. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-45. `bun run test:lost-lines`
+46. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-46. `bun run test:override-deltas`
+47. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-47. `bun run test:reset-packages`
+48. `bun run test:reset-packages`
     - Package reset preserves dependencies when the frozen-install preflight fails.
-48. `bun run test:scaffolded-hooks`
+49. `bun run test:scaffolded-hooks`
     - Scaffolded pre-push hook replays refs through both release guards.
-49. `bun run test:template-drift`
+50. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-50. `bun run format:check`
+51. `bun run format:check`
     - Format check.
-51. `bun run test:aidd-format`
+52. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-52. `bun run check:aidd-format`
+53. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-53. `bun run check-deps`
+54. `bun run check-deps`
     - Check dependency versions.
-54. `bun run check:dead-code`
+55. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

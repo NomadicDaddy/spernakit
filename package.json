@@ -75,6 +75,7 @@
 		"check:override-deltas": "bun scripts/check-template-overrides.ts",
 		"check:license-core": "bun scripts/check-license-core.ts",
 		"check:licenses": "bun run check:license-core && bun scripts/generate-third-party-licenses.ts --check",
+		"check:git-window-hide": "bun scripts/check-git-window-hide.ts",
 		"check:max-lines": "bun scripts/check-max-lines.ts",
 		"check:no-inline-references": "bun scripts/check-no-inline-references.ts",
 		"check:feature-id-directory": "bun scripts/check-feature-id-directory.ts",

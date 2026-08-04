@@ -57,7 +57,11 @@ export interface LostLinesInput {
 }
 
 function git(cwd: string, args: string[]): null | string {
-	const result = Bun.spawnSync(['git', '-C', cwd, ...args], { stderr: 'pipe', stdout: 'pipe' });
+	const result = Bun.spawnSync(['git', '-C', cwd, ...args], {
+		stderr: 'pipe',
+		stdout: 'pipe',
+		windowsHide: true,
+	});
 	if (result.exitCode !== 0) return null;
 	return result.stdout.toString();
 }
@@ -150,6 +154,7 @@ export function collectTemplateLines(
 		stderr: 'pipe',
 		stdin: Buffer.from(`${shas.map((sha) => `${sha}:${templatePath}`).join('\n')}\n`),
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (result.exitCode !== 0) return null;
 

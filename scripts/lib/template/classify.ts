@@ -163,7 +163,7 @@ export function isFileExcluded(filePath: string): boolean {
 export function enumerateTemplateFiles(spernakitPath: string, version: string): string[] {
 	const result = Bun.spawnSync(
 		['git', '-C', spernakitPath, 'ls-tree', '--name-only', '-r', `v${version}`],
-		{ stderr: 'pipe', stdout: 'pipe' },
+		{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
 	);
 
 	if (result.exitCode !== 0) {
@@ -196,6 +196,7 @@ export function enumerateInitFiles(sourcePath: string): string[] {
 	const result = Bun.spawnSync(['git', '-C', sourcePath, 'ls-files'], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (result.exitCode !== 0) {
 		throw new Error(`git ls-files failed in ${sourcePath}: ${result.stderr.toString().trim()}`);

@@ -96,6 +96,7 @@ function hasUncommittedChanges(targetRoot: string, relativePath: string): boolea
 		{
 			stderr: 'pipe',
 			stdout: 'pipe',
+			windowsHide: true,
 		},
 	);
 	if (result.exitCode !== 0) {

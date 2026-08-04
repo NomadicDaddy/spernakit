@@ -112,6 +112,7 @@ function writeInfrastructureDiff(
 	const template = Bun.spawnSync(['git', '-C', spernakitPath, 'show', templateRef], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (template.exitCode !== 0) return;
 
@@ -128,7 +129,7 @@ function writeInfrastructureDiff(
 
 	const diff = Bun.spawnSync(
 		['git', 'diff', '--no-index', '--unified=3', '--', templateTemp, appTemp],
-		{ stderr: 'pipe', stdout: 'pipe' },
+		{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
 	);
 	const output = diff.stdout.toString() || diff.stderr.toString();
 	writeFileSync(diffPath, output, 'utf-8');

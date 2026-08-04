@@ -12,6 +12,7 @@ function trackedFiles(root: string): string[] {
 	const result = Bun.spawnSync(['git', '-C', root, 'ls-files'], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (result.exitCode !== 0) {
 		throw new Error(`git ls-files failed: ${result.stderr.toString().trim()}`);
