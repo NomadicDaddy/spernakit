@@ -3,6 +3,49 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.35.0] - 2026-08-04
+
+### Added
+
+- `scaffolding/.githooks/` carries `leak-guard.sh`, `leak-guard-setup.sh`, and the current
+  `pre-commit`, so a freshly initialized app is born with the commit-time secret guard wired. The
+  initializer had been copying a hook that chains `.githooks/leak-guard.sh` without copying the
+  guard itself, and that hook was two generations behind the root one: it still enumerated
+  `format:check`, `lint`, `typecheck`, and `check:max-lines` inline instead of delegating to
+  `smoke:qc:fast`, and it had no license check. Every app scaffolded since the guard landed got a
+  hook naming a file it did not have.
+- `bun run check:git-window-hide` fails when a direct git subprocess spawn omits
+  `windowsHide: true`. Without the flag each spawn flashes a console window on Windows, which reads
+  as a crash in a packaged app. The flag does nothing on other platforms, so it is applied
+  unconditionally rather than behind a platform test. The existing spawns were fixed in the same
+  change.
+
+### Changed
+
+- The leak guard drops the tier-2 patterns that match the repository's own directory name before
+  scanning, and keeps the rest. The pattern file is per-machine rather than per-repo, so it names
+  every private sibling including the one being committed to. Measured against a real pattern file,
+  8 of 11 derived apps had their own name flagged, so installing the guard there would have blocked
+  ordinary commits. A repository cannot leak its identity to itself, since the name is already its
+  directory, its remote URL, and its package name, while its siblings' names stay guarded. A
+  pattern that grep cannot compile is kept rather than dropped, so the filter fails closed. This
+  reverses the 3.23.0 decision to keep the guard out of derived apps, which existed only because of
+  that failure mode.
+- `bun run test:scaffolded-hooks` covers the commit-time chain end to end, and reads the guard list
+  out of the hook text instead of a list of its own. A guard added to a hook without a matching
+  scaffold copy now fails there rather than shipping silently. The fixture moved into
+  `scripts/lib/scaffolded-hooks/` to stay under the 300-line file cap.
+
+### Fixed
+
+- `check:leak-guard` and the `prepare` hook no longer invoke a bare `bash`. On Windows the
+  System32 `bash.exe` is the WSL launcher, and it shadows Git's bash for every process whose PATH
+  does not already prepend Git's `usr/bin`, which is every PowerShell and cmd session. With no WSL
+  distribution installed, both `bun install` and `smoke:qc` died on a relay error naming neither
+  the script nor the shell it wanted. `scripts/run-bash.ts` resolves the interpreter explicitly,
+  preferring the bash that ships beside the running git and never the System32 launcher.
+  `check:config` now rejects a bare `bash` in any package script.
+
 ## [3.34.0] - 2026-08-03
 
 ### Added
