@@ -11,6 +11,15 @@
  *    `spernakit_version`. Application and template versions have separate
  *    meanings and must not be synchronized by template upgrades.
  *
+ * 3. `package.json` — no script may invoke a bare `bash`. On Windows,
+ *    C:\Windows\System32\bash.exe is the WSL launcher and shadows Git's bash
+ *    for every process whose PATH does not prepend Git's usr/bin, which is
+ *    every PowerShell and cmd session. A bare `bash` therefore passes from Git
+ *    Bash and fails from PowerShell on the same machine — the failure that
+ *    broke `bun install` and smoke:qc with an execvpe(/bin/bash) relay error
+ *    naming neither the script nor the shell it wanted. Shell scripts are
+ *    invoked through scripts/run-bash.ts, which resolves Git's own bash.
+ *
  * Scope is intentionally narrow. Expand only with a documented justification.
  *
  * Usage:
@@ -89,8 +98,28 @@ function checkPackageJsonInvariants(): string[] {
 	return failures;
 }
 
+function checkScriptShellInvariants(): string[] {
+	const raw = readFileSync(packageJsonPath, 'utf-8');
+	const pkg = JSON.parse(raw) as Record<string, unknown>;
+	const scripts = (pkg['scripts'] ?? {}) as Record<string, string>;
+
+	return Object.entries(scripts)
+		.filter(([, command]) => /(?:^|\s|\()bash\s/.test(command))
+		.map(
+			([name, command]) =>
+				`package.json scripts.${name} invokes a bare "bash": ${command}\n    ` +
+				'On Windows that resolves to the System32 WSL launcher, not Git Bash, so the ' +
+				'script passes from Git Bash and fails from PowerShell on the same machine. ' +
+				'Invoke it as `bun ./scripts/run-bash.ts <script.sh>` instead.',
+		);
+}
+
 function main(): void {
-	const failures: string[] = [...checkDefaultsInvariants(), ...checkPackageJsonInvariants()];
+	const failures: string[] = [
+		...checkDefaultsInvariants(),
+		...checkPackageJsonInvariants(),
+		...checkScriptShellInvariants(),
+	];
 
 	if (failures.length === 0) {
 		console.log('[OK] Config invariants passed.');
