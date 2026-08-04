@@ -115,7 +115,12 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'check:leak-guard': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['.githooks/leak-guard.sh', 'package.json', 'scripts/check-leak-guard.sh'],
+		globs: [
+			'.githooks/leak-guard.sh',
+			'package.json',
+			'scripts/check-leak-guard.sh',
+			'scripts/run-bash.ts',
+		],
 	},
 	'check:licenses': {
 		excludes: COMMON_EXCLUDES,
