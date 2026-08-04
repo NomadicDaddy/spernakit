@@ -1,22 +1,33 @@
 #!/usr/bin/env bun
 /**
- * Regression test for derived-app pre-push hook scaffolding.
+ * Regression test for derived-app hook scaffolding, both chains.
  *
- * Drives the real initializer copy surface, tagged-template drift check, and Bash hook against an
- * isolated fixture. This prevents the scaffold hook from chaining a guard that the initializer
- * does not copy, or from consuming the ref stream before every guard receives it.
+ * Drives the real initializer copy surface, tagged-template drift check, and Bash hooks against an
+ * isolated fixture. This prevents a scaffold hook from chaining a guard that the initializer does
+ * not copy, or from consuming the ref stream before every guard receives it.
+ *
+ * The commit-time half exists because that failure already happened: the leak guard shipped to the
+ * template but never to `scaffolding/.githooks/`, so every app scaffolded after it landed got a
+ * pre-commit hook with no leak guard beside it and nothing noticed. The reference scan is
+ * deliberately derived from the hook text rather than a hardcoded list — a guard added to a hook
+ * without a matching scaffold copy must fail here, including guards that do not exist yet.
  */
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import { copyTemplateTree } from './lib/init/scaffold.ts';
-
-interface RunResult {
-	exitCode: number;
-	output: string;
-	stdout: Uint8Array;
-}
+import { assertCommitChain } from './lib/scaffolded-hooks/commit-chain.ts';
+import {
+	assert,
+	assertionCount,
+	commandLines,
+	equalBytes,
+	referencedGuards,
+	run,
+	type RunResult,
+	write,
+} from './lib/scaffolded-hooks/harness.ts';
 
 const TEMPLATE_VERSION = '9.0.0';
 const ZERO = '0'.repeat(40);
@@ -27,45 +38,6 @@ mkdirSync(fixtureParent, { recursive: true });
 const fixtureRoot = mkdtempSync(join(fixtureParent, 'scaffolded-hooks-'));
 const templateDir = join(fixtureRoot, 'template');
 const appDir = join(fixtureRoot, 'app');
-let checks = 0;
-
-function assert(condition: boolean, message: string): void {
-	if (!condition) throw new Error(message);
-	checks++;
-}
-
-function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
-	return left.length === right.length && left.every((byte, index) => byte === right[index]);
-}
-
-function write(root: string, relativePath: string, content: string | Uint8Array): void {
-	const target = join(root, relativePath);
-	mkdirSync(dirname(target), { recursive: true });
-	writeFileSync(target, content);
-}
-
-function run(
-	command: string[],
-	cwd: string,
-	stdin?: string,
-	env?: Record<string, string>,
-): RunResult {
-	const base = {
-		cwd,
-		stderr: 'pipe',
-		stdin: stdin === undefined ? 'ignore' : new TextEncoder().encode(stdin),
-		stdout: 'pipe',
-	} as const;
-	const result = Bun.spawnSync(
-		command,
-		env === undefined ? base : { ...base, env: { ...process.env, ...env } },
-	);
-	return {
-		exitCode: result.exitCode,
-		output: `${result.stdout.toString()}${result.stderr.toString()}`,
-		stdout: result.stdout,
-	};
-}
 
 function git(...args: string[]): RunResult {
 	return run(
@@ -89,30 +61,62 @@ function assertGit(...args: string[]): RunResult {
 	return result;
 }
 
+/** Reads a hook or guard from both the repo root and `scaffolding/`, which must never diverge. */
+function readPair(name: string) {
+	return {
+		root: readFileSync(join(repoRoot, '.githooks', name)),
+		scaffold: readFileSync(join(repoRoot, 'scaffolding', '.githooks', name)),
+	};
+}
+
 try {
-	const rootHook = readFileSync(join(repoRoot, '.githooks', 'pre-push'));
-	const scaffoldHook = readFileSync(join(repoRoot, 'scaffolding', '.githooks', 'pre-push'));
-	const rootScreenshotGuard = readFileSync(join(repoRoot, '.githooks', 'screenshot-guard.sh'));
-	const scaffoldScreenshotGuard = readFileSync(
-		join(repoRoot, 'scaffolding', '.githooks', 'screenshot-guard.sh'),
-	);
+	const prePush = readPair('pre-push');
+	const screenshotGuard = readPair('screenshot-guard.sh');
+	const preCommit = readPair('pre-commit');
+	const leakGuard = readPair('leak-guard.sh');
+	const leakGuardSetup = readPair('leak-guard-setup.sh');
 	const scaffoldHistoryGuard = readFileSync(
 		join(repoRoot, 'scaffolding', '.githooks', 'aidd-history-guard.sh'),
 	);
 
+	for (const [name, pair] of [
+		['pre-push hook', prePush],
+		['screenshot guard', screenshotGuard],
+		['pre-commit hook', preCommit],
+		['leak guard', leakGuard],
+		['leak-guard setup', leakGuardSetup],
+	] as const) {
+		assert(
+			equalBytes(pair.root, pair.scaffold),
+			`The scaffold ${name} must byte-match the root copy.`,
+		);
+	}
+
+	const prePushText = commandLines(prePush.scaffold.toString('utf8'));
+	const preCommitText = commandLines(preCommit.scaffold.toString('utf8'));
 	assert(
-		equalBytes(rootHook, scaffoldHook),
-		'The scaffold pre-push hook must byte-match the root two-guard wiring.',
-	);
-	assert(
-		equalBytes(rootScreenshotGuard, scaffoldScreenshotGuard),
-		'The scaffold screenshot guard must byte-match the root guard.',
-	);
-	const hookText = scaffoldHook.toString('utf8');
-	assert(
-		hookText.indexOf('aidd history guard') < hookText.indexOf('screenshot guard'),
+		prePushText.indexOf('aidd history guard') < prePushText.indexOf('screenshot guard'),
 		'The scaffold hook must run the history guard before the screenshot guard.',
 	);
+	// The leak guard scans the staged index and is uncacheable-by-design, so it runs first: a commit
+	// carrying a secret must be rejected before any cached qc step can let it through.
+	assert(
+		preCommitText.indexOf('leak-guard.sh') < preCommitText.indexOf('smoke:qc:fast'),
+		'The scaffold pre-commit must run the leak guard before the cached qc subset.',
+	);
+	// Both scaffold hooks are copied into an app together, so the guards they chain must be
+	// enumerable from the hook text alone — a guard added without a scaffold copy fails here.
+	const chained = [...referencedGuards(prePushText), ...referencedGuards(preCommitText)];
+	assert(
+		chained.includes('leak-guard.sh'),
+		`The scaffold pre-commit must chain the leak guard; found ${chained.join(', ')}.`,
+	);
+	for (const guard of chained) {
+		assert(
+			existsSync(join(repoRoot, 'scaffolding', '.githooks', guard)),
+			`The scaffold hooks chain ${guard}, which scaffolding/.githooks/ does not carry.`,
+		);
+	}
 
 	const manifest = `${JSON.stringify(
 		{
@@ -124,10 +128,19 @@ try {
 		null,
 		'\t',
 	)}\n`;
+	// The three script names the scaffolded pre-commit chains. The template defines them and the app
+	// inherits them verbatim — `package.json` is branded, so only name/description/version may
+	// differ, which is exactly what makes the contract survive branding.
+	const contractScripts = {
+		'check:leak-guard': "echo 'fixture check:leak-guard'",
+		'check:licenses': "echo 'fixture check:licenses'",
+		'smoke:qc:fast': "echo 'fixture smoke:qc:fast'",
+	};
 	const templatePackage = `${JSON.stringify(
 		{
 			description: 'Fixture template',
 			name: 'spernakit',
+			scripts: contractScripts,
 			version: TEMPLATE_VERSION,
 		},
 		null,
@@ -137,6 +150,7 @@ try {
 		{
 			description: 'Fixture app',
 			name: 'fixture-app',
+			scripts: contractScripts,
 			spernakit_version: TEMPLATE_VERSION,
 			version: '1.0.0',
 		},
@@ -146,35 +160,52 @@ try {
 
 	mkdirSync(templateDir, { recursive: true });
 	assertGit('init', '-b', 'main');
-	write(templateDir, '.githooks/pre-push', rootHook);
-	write(templateDir, '.githooks/screenshot-guard.sh', rootScreenshotGuard);
+	write(templateDir, '.githooks/leak-guard-setup.sh', leakGuardSetup.root);
+	write(templateDir, '.githooks/leak-guard.sh', leakGuard.root);
+	write(templateDir, '.githooks/pre-commit', preCommit.root);
+	write(templateDir, '.githooks/pre-push', prePush.root);
+	write(templateDir, '.githooks/screenshot-guard.sh', screenshotGuard.root);
 	write(templateDir, 'package.json', templatePackage);
 	write(templateDir, 'scaffolding/.githooks/aidd-history-guard.sh', scaffoldHistoryGuard);
-	write(templateDir, 'scaffolding/.githooks/pre-push', scaffoldHook);
-	write(templateDir, 'scaffolding/.githooks/screenshot-guard.sh', scaffoldScreenshotGuard);
+	write(templateDir, 'scaffolding/.githooks/leak-guard-setup.sh', leakGuardSetup.scaffold);
+	write(templateDir, 'scaffolding/.githooks/leak-guard.sh', leakGuard.scaffold);
+	write(templateDir, 'scaffolding/.githooks/pre-commit', preCommit.scaffold);
+	write(templateDir, 'scaffolding/.githooks/pre-push', prePush.scaffold);
+	write(templateDir, 'scaffolding/.githooks/screenshot-guard.sh', screenshotGuard.scaffold);
 	write(templateDir, 'scripts/template-manifest.json', manifest);
 	assertGit('add', '-A');
 	assertGit('commit', '-m', `v${TEMPLATE_VERSION}`);
 	assertGit('tag', `v${TEMPLATE_VERSION}`);
 
 	const copied = copyTemplateTree(templateDir, appDir);
-	assert(copied === 5, `Expected five app-facing files, copied ${copied}.`);
+	assert(copied === 8, `Expected eight app-facing files, copied ${copied}.`);
 	const taggedHook = assertGit(
 		'show',
 		`v${TEMPLATE_VERSION}:scaffolding/.githooks/pre-push`,
 	).stdout;
-	const appHook = readFileSync(join(appDir, '.githooks', 'pre-push'));
 	assert(
-		equalBytes(appHook, taggedHook),
+		equalBytes(readFileSync(join(appDir, '.githooks', 'pre-push')), taggedHook),
 		'The freshly scaffolded hook must byte-match the tagged scaffold baseline.',
 	);
-	assert(
-		equalBytes(
-			readFileSync(join(appDir, '.githooks', 'screenshot-guard.sh')),
-			scaffoldScreenshotGuard,
-		),
-		'The initializer must copy the screenshot guard beside the hook that invokes it.',
-	);
+	// This is the regression the leak guard actually hit: it lived in the template's own .githooks/
+	// but never in scaffolding/, so every app scaffolded after it landed got a pre-commit hook with
+	// no guard beside it. Assert against the copied tree, not the scaffold source.
+	for (const guard of chained) {
+		assert(
+			existsSync(join(appDir, '.githooks', guard)),
+			`The initializer must copy ${guard}, which a scaffolded hook chains.`,
+		);
+	}
+	for (const [name, expected] of [
+		['screenshot-guard.sh', screenshotGuard.scaffold],
+		['leak-guard.sh', leakGuard.scaffold],
+		['leak-guard-setup.sh', leakGuardSetup.scaffold],
+	] as const) {
+		assert(
+			equalBytes(readFileSync(join(appDir, '.githooks', name)), expected),
+			`The initializer must copy ${name} unchanged beside the hook that needs it.`,
+		);
+	}
 
 	write(appDir, 'package.json', appPackage);
 	write(
@@ -199,6 +230,9 @@ try {
 
 	const appGit = run(['git', 'init', '-b', 'main'], appDir);
 	assert(appGit.exitCode === 0, `Fixture app git init failed:\n${appGit.output}`);
+
+	assertCommitChain(appDir);
+
 	const screenshotPath = `screenshots/v${TEMPLATE_VERSION}/unreviewed.png`;
 	write(appDir, screenshotPath, 'fixture');
 	const staged = run(['git', 'add', screenshotPath], appDir);
@@ -217,7 +251,7 @@ try {
 		`The scaffolded hook must reach the screenshot guard failure:\n${hook.output}`,
 	);
 
-	console.log(`Scaffolded pre-push hook test passed (${checks} assertions).`);
+	console.log(`Scaffolded hook test passed (${assertionCount()} assertions).`);
 } catch (err: unknown) {
 	console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
 	exit(1);
