@@ -137,12 +137,12 @@ export function isFileExcluded(filePath: string): boolean {
 	if (filePath.startsWith('docs/template/')) return false;
 
 	// Scripts that only spernakit runs (drift-only exclusion — init copies them inertly, but a
-	// derived app never invokes them). Each backs a smoke step marked templateOnly. The leak-guard's
-	// self-test tests a guard only this published repo has, and the fleet-manifest check reads a
-	// registry only this repo keeps. Not every spernakit-authored script belongs here:
-	// sync-license-core.ts ships deliberately, because an app having it is how a wrong-way run gets
-	// refused rather than silently succeeding.
-	if (filePath === 'scripts/check-leak-guard.sh') return true;
+	// derived app never invokes them). Each backs a smoke step marked templateOnly: the
+	// fleet-manifest check reads a registry only this repo keeps. Not every spernakit-authored
+	// script belongs here: sync-license-core.ts ships deliberately, because an app having it is how
+	// a wrong-way run gets refused rather than silently succeeding. check-leak-guard.sh left this
+	// list in 3.35.0 — every app runs the guard now, so its self-test has to stay in step with the
+	// hook rather than being allowed to rot at whatever version the app was scaffolded from.
 	if (filePath === 'scripts/check-fleet-manifest.ts') return true;
 	if (filePath === 'scripts/read-fleet-manifest.ps1') return true;
 	if (filePath === 'scripts/test-fleet-manifest.ts') return true;

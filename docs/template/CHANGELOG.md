@@ -31,6 +31,10 @@ this release.
   pattern that grep cannot compile is kept rather than dropped, so the filter fails closed. This
   reverses the 3.23.0 decision to keep the guard out of derived apps, which existed only because of
   that failure mode.
+- The leak-guard self-test runs in every derived app rather than the template alone. Its smoke step
+  lost `templateOnly` and `scripts/check-leak-guard.sh` left the drift-exclusion list, so an app's
+  copy of the test now has to stay in step with its copy of the hook instead of rotting at whatever
+  version it was scaffolded from.
 - `bun run test:scaffolded-hooks` covers the commit-time chain end to end, and reads the guard list
   out of the hook text instead of a list of its own. A guard added to a hook without a matching
   scaffold copy now fails there rather than shipping silently. The fixture moved into
