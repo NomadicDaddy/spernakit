@@ -191,7 +191,7 @@ function gitRunner(dir: string): (...args: string[]) => string {
 	return (...args: string[]): string => {
 		const result = Bun.spawnSync(
 			['git', '-C', dir, '-c', 'user.email=t@t', '-c', 'user.name=t', ...args],
-			{ stderr: 'pipe', stdout: 'pipe' },
+			{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
 		);
 		if (result.exitCode !== 0) {
 			throw new Error(`git ${args.join(' ')} failed: ${result.stderr.toString().trim()}`);

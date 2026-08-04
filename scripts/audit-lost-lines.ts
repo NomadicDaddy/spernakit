@@ -69,6 +69,7 @@ function describeCommit(appDir: string, rev: string): null | string {
 	const result = Bun.spawnSync(['git', '-C', appDir, 'log', '-1', '--format=%h %s', rev], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (result.exitCode !== 0) return null;
 	const described = result.stdout.toString().trim();

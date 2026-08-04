@@ -67,6 +67,7 @@ export function gitTagExists(spernakitPath: string, version: string): boolean {
 	const result = Bun.spawnSync(['git', '-C', spernakitPath, 'rev-parse', `v${version}`], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	return result.exitCode === 0;
 }
@@ -79,6 +80,7 @@ export function getTemplateFileAtVersion(
 	const result = Bun.spawnSync(['git', '-C', spernakitPath, 'show', `v${version}:${filePath}`], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	if (result.exitCode !== 0) return null;
 	return result.stdout.toString();

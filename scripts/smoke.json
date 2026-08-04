@@ -221,6 +221,10 @@
 					"description": "Process environment access check"
 				},
 				{
+					"command": "bun run check:git-window-hide",
+					"description": "Direct Git subprocesses hide their Windows console window"
+				},
+				{
 					"command": "bun run check:max-lines",
 					"description": "300-line max-lines gate"
 				},

@@ -54,6 +54,7 @@ function isGitIgnored(path: string): boolean {
 	const result = Bun.spawnSync(['git', 'check-ignore', '-q', path], {
 		stderr: 'ignore',
 		stdout: 'ignore',
+		windowsHide: true,
 	});
 	return result.exitCode === 0;
 }
