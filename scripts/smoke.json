@@ -184,8 +184,7 @@
 				},
 				{
 					"command": "bun run check:leak-guard",
-					"description": "Leak-guard hook self-test (synthetic fixtures)",
-					"templateOnly": true
+					"description": "Leak-guard hook self-test (synthetic fixtures)"
 				},
 				{
 					"command": "bun run check:licenses",
