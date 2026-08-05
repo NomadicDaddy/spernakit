@@ -3,6 +3,54 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.36.0] - 2026-08-05
+
+### Added
+
+- `scripts/lib/third-party-licenses/image-inventory.ts` holds the parts of the image license check
+  that need a docker daemon and a built image: running a script inside the image, reading its apk
+  database and bun store, and rendering the base-package inventory. The rest of that directory
+  answers questions about the lockfile and the development tree and runs in `smoke:qc`; these
+  answer questions about the artifact and run only in the docker smoke modes.
+- The runtime license closure records which packages the lockfile gates to a platform. A gated
+  package that is not installed here is named in a new "Packages built for another platform"
+  section of `THIRD_PARTY_NOTICES.md` rather than failing the generator, and
+  `bun run check:image-licenses` confirms each one carries its own license file inside the image,
+  which is the only artifact that ships it. The gate is presence of an `os`, `cpu`, or `libc`
+  constraint rather than whether it matches this host: bun records `os` and `cpu` but not `libc`,
+  so a musl build and a glibc build are indistinguishable in the lockfile, and evaluating the
+  constraint would call one of them installable on a Linux runner that will never install it.
+
+### Fixed
+
+- `/assets/` returned 403 instead of the application. The SPA fallback resolved `$uri/` before
+  falling through, so any route whose name matches a real directory in `dist` resolved to that
+  directory, and with `autoindex off` and no index file inside it nginx answered 403. The `$uri/`
+  term is gone, an exact-match `location = /assets/` settles the one case that collides with the
+  build-output prefix, and the static-file location now falls through to a named `@spa` location
+  instead of dead-ending. Response headers are repeated per location because nginx does not
+  inherit `add_header` into a block that sets any of its own, and the CSP is hoisted into a
+  `map` so the two copies cannot drift.
+- Workspace `optionalDependencies` are seeded as roots of the runtime license closure. An optional
+  dependency that installs is distributed like any other, so a native image processor lands in the
+  container carrying the same attribution obligation as a required package. Omitting the field left
+  those packages out of the notices entirely; the image check caught it and the npm-only checks
+  could not. No workspace in the template declares `optionalDependencies`, so the generated
+  documents here are unchanged.
+- `bun run licenses:image` writes the base-image inventory before asserting npm coverage rather
+  than after, so the inventory can be refreshed while a coverage gap is open, including a gap whose
+  repair is regenerating that very file. The assertion still runs on the way out, so `--update`
+  cannot pass a check it should fail.
+
+### Changed
+
+- `scripts/tsconfig.json` includes `**/*.ts` rather than `*.ts`. The top-level scripts seed the
+  program and tsc follows their imports, so `lib/` was already covered; the widening adds only
+  what no script imports, such as a vendored subtree or a helper reached at runtime. That is the
+  code most worth checking, because nothing else looks at it. Measured on the template it is a
+  no-op: 198 files and zero errors either way. Derived apps that carry a vendored tree under
+  `scripts/` should drop their `.templateoverrides` SKIP for this file.
+
 ## [3.35.0] - 2026-08-04
 
 ### Added
