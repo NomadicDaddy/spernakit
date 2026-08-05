@@ -25,5 +25,9 @@
 		"verbatimModuleSyntax": true
 	},
 	"exclude": ["node_modules"],
-	"include": ["*.ts"]
+	// `*.ts` seeds the program with the top-level scripts and tsc follows their imports, so
+	// `lib/` is already covered either way. `**/*.ts` adds only what no script imports: a
+	// vendored subtree, a helper reached at runtime. That is the code most worth checking,
+	// because nothing else looks at it.
+	"include": ["**/*.ts"]
 }
