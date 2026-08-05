@@ -228,11 +228,6 @@
 					"description": "300-line max-lines gate"
 				},
 				{
-					"command": "bun run test:vendored-browser-gates",
-					"description": "Vendored browser entry points and source gates remain enforced",
-					"templateOnly": true
-				},
-				{
 					"command": "bun run check-application",
 					"description": "Application check"
 				},
