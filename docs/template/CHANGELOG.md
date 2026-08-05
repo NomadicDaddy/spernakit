@@ -3,6 +3,38 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.37.0] - 2026-08-05
+
+### Fixed
+
+- Platform gating is inherited across dependency edges when the runtime license closure is walked.
+  A package that declares no `os`, `cpu`, or `libc` constraint of its own can still be unreachable
+  on every ordinary install, because the only paths to it run through parents that are gated.
+  `@img/sharp-wasm32` is reached only through `@img/sharp-freebsd-wasm32` and
+  `@img/sharp-webcontainers-wasm32`, and reading its own entry alone called it, and its dependency
+  `@emnapi/runtime`, missing installs. Gating is now carried along each edge, and an unrestricted
+  arrival at a package overwrites a gated one, so the result does not depend on which edge the
+  traversal happened to walk first. Only that downgrade re-enqueues a key, so the walk still
+  terminates.
+- `bun run check:image-licenses` no longer fails a package that ships no license file when the
+  image already carries the text of the license it declares. sharp's prebuilt libvips binaries
+  publish their terms in the `license` field of `package.json` rather than as a file, and the image
+  ships the full text of every GPL and LGPL variant under `/app/licenses`, so the manifest names
+  the terms and the artifact supplies them. A package whose terms reach the image nowhere at all
+  still fails, and the declared identifier is read as a whole so a compound expression cannot pass
+  by matching one of its halves.
+
+### Removed
+
+- `scripts/test-vendored-browser-gates.ts` and the qc step that ran it. The gate existed so the
+  template stayed safe for an app that vendored the separately maintained browser tool into
+  `scripts/spernakit-browser/`, and it asserted against a synthetic fixture rather than against any
+  real vendored tree. The tool moved to its own project and the four apps that carried a copy have
+  deleted it, so the accommodation now guards nothing. The Knip entry for the workspace root drops
+  its browser arm and reads `scripts/*.ts`, and `docs/template/DEVELOPMENT.md` no longer describes
+  the standalone-project layout. Derived apps still carrying `scripts/test-vendored-browser-gates.ts`
+  should delete it; the drift checker reports it as a retained deletion.
+
 ## [3.36.0] - 2026-08-05
 
 ### Added
