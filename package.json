@@ -1,6 +1,6 @@
 {
 	"name": "spernakit",
-	"version": "3.36.0",
+	"version": "3.37.0",
 	"private": true,
 	"author": "NomadicDaddy",
 	"license": "MIT",
@@ -173,7 +173,6 @@
 		"test:template-drift": "bun scripts/test-template-drift.ts && bun scripts/test-template-deletions.ts",
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
-		"test:vendored-browser-gates": "bun scripts/test-vendored-browser-gates.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-mutation-denylist": "bun scripts/verify-mutation-denylist.ts",
