@@ -99,10 +99,59 @@ async function assertNoticesPresent(image: string): Promise<void> {
 	console.log(`${image}: notices present (${REQUIRED_IN_IMAGE.length} files).`);
 }
 
+/** The name half of the `<name>@<version>` identity the attribution uses throughout. */
+function packageNameOf(entry: string): string {
+	return entry.slice(0, entry.lastIndexOf('@'));
+}
+
+/**
+ * The file under `/app/licenses` that carries this SPDX identifier's text. `-only` and `-or-later`
+ * choose which versions of the licence may be applied; both point at the same document.
+ */
+function licenseTextPath(spdx: string): string {
+	return `/app/licenses/${spdx.replace(/-(?:only|or-later)$/, '')}.txt`;
+}
+
+/**
+ * Reads the `license` field each package declares in the image. Deliberately takes the whole
+ * remainder of the line rather than the first word, so a compound SPDX expression stays intact and
+ * fails the coverage test below instead of silently matching on one of its halves.
+ */
+async function readDeclaredLicenses(
+	image: string,
+	entries: string[],
+): Promise<Map<string, string>> {
+	const script = entries
+		.map((entry) => {
+			const dir = `/app/node_modules/.bun/${storeDirName(entry)}/node_modules`;
+			const manifest = `${dir}/${packageNameOf(entry)}/package.json`;
+			const read = `sed -n 's/.*"license": *"\\([^"]*\\)".*/\\1/p' ${manifest} 2>/dev/null | head -1`;
+			return `echo "DECLARED ${entry} $(${read})"`;
+		})
+		.join('; ');
+
+	const declared = new Map<string, string>();
+	for (const line of (await runInImage(image, script)).split('\n')) {
+		if (!line.startsWith('DECLARED ')) continue;
+		const rest = line.slice('DECLARED '.length).trim();
+		const separator = rest.indexOf(' ');
+		if (separator > 0) declared.set(rest.slice(0, separator), rest.slice(separator + 1).trim());
+	}
+	return declared;
+}
+
 /**
  * For a package the generating machine cannot install, the attribution has to be verified where it
  * actually ships. Bun lays each package out at `.bun/<name>@<version>/node_modules/<name>/`, so the
  * package's own LICENSE travels with the binary; this confirms it arrived.
+ *
+ * Shipping no license file is not by itself a gap. sharp's prebuilt libvips binaries publish `lib`,
+ * `versions.json` and a README carrying the third-party table, and name their terms only in the
+ * `license` field of package.json. The image already carries the full text of every GPL and LGPL
+ * variant, so that pairing is complete: the manifest names the terms and the artifact supplies
+ * them. Accept it rather than demanding a file the publisher does not produce, and fail when the
+ * terms reach the image nowhere at all. Membership in `REQUIRED_IN_IMAGE` is proof the text is
+ * present because `assertNoticesPresent` has already checked every one of those paths on disk.
  */
 async function assertImageCarriesLicenses(image: string, entries: string[]): Promise<void> {
 	const script = entries
@@ -118,17 +167,36 @@ async function assertImageCarriesLicenses(image: string, entries: string[]): Pro
 		.filter((line) => line.startsWith('MISSING'))
 		.map((line) => line.replace('MISSING ', '').trim());
 
-	if (missing.length > 0) {
-		console.error(`${image} ships ${missing.length} package(s) with no license file at all:`);
-		for (const entry of missing) console.error(`  - ${entry}`);
+	if (missing.length === 0) return;
+
+	const declared = await readDeclaredLicenses(image, missing);
+	const uncovered = missing.filter((entry) => {
+		const spdx = declared.get(entry);
+		return spdx === undefined || !REQUIRED_IN_IMAGE.includes(licenseTextPath(spdx));
+	});
+
+	if (uncovered.length > 0) {
+		console.error(
+			`${image} ships ${uncovered.length} package(s) with no license terms at all:`,
+		);
+		for (const entry of uncovered) {
+			console.error(`  - ${entry} (declares ${declared.get(entry) ?? 'nothing'})`);
+		}
 		console.error('');
 		console.error('These are built for a platform this machine does not install, so the');
 		console.error(
 			'notices name them rather than reproducing their terms. The image is then the',
 		);
-		console.error('only place their license text can travel, and it did not arrive.');
+		console.error('only place their license text can travel, and it did not arrive. Either');
+		console.error('the package must carry its own license file or the image must ship the');
+		console.error('text of the licence it declares under /app/licenses.');
 		exit(1);
 	}
+
+	console.log(
+		`${image}: ${missing.length} package(s) ship no license file; /app/licenses carries their terms:`,
+	);
+	for (const entry of missing) console.log(`  - ${entry} (${declared.get(entry)})`);
 }
 
 /**
@@ -174,7 +242,7 @@ async function assertNoticesCoverImage(root: string, image: string): Promise<voi
 	if (fromOtherPlatform.length > 0) {
 		await assertImageCarriesLicenses(image, fromOtherPlatform);
 		console.log(
-			`${image}: ${fromOtherPlatform.length} platform-gated package(s) carry their own license file:`,
+			`${image}: ${fromOtherPlatform.length} platform-gated package(s) verified against the image:`,
 		);
 		for (const entry of fromOtherPlatform) console.log(`  - ${entry}`);
 	}
