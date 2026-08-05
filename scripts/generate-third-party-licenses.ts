@@ -67,11 +67,11 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 		exit(1);
 	}
 
-	const { closure, unresolved: unresolvedClosure } = await collectRuntimeClosure(
-		root,
-		WORKSPACES,
-		await workspaceNames(root, WORKSPACES),
-	);
+	const {
+		closure,
+		elsewhere,
+		unresolved: unresolvedClosure,
+	} = await collectRuntimeClosure(root, WORKSPACES, await workspaceNames(root, WORKSPACES));
 
 	// A package we ship but cannot locate is a package whose license we never read. That is a
 	// hole in the attribution, so it fails the generator rather than shrinking the appendix.
@@ -121,6 +121,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 
 	const notices = renderNotices({
 		closure,
+		elsewhere,
 		intro: NOTICES_INTRO,
 		title: 'Third-Party Notices',
 	});

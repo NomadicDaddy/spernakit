@@ -41,29 +41,39 @@ export async function collectRuntimeClosure(
 	root: string,
 	workspaces: string[],
 	internal: Set<string>,
-): Promise<{ closure: ClosurePackage[]; unresolved: string[] }> {
+): Promise<{ closure: ClosurePackage[]; elsewhere: string[]; unresolved: string[] }> {
 	const locked = await collectLockfileClosure(root, {
 		internal,
-		rootFields: ['dependencies'],
+		// `optionalDependencies` is a root field because an optional dependency that installs is
+		// distributed like any other: a native image processor lands in the container and carries
+		// the same attribution obligation as a required package. Omitting the field left those
+		// packages out of the notices entirely, which the image check caught and the npm-only
+		// checks could not.
+		rootFields: ['dependencies', 'optionalDependencies'],
 		workspaces: ['', ...workspaces],
 	});
 	const seen = new Map<string, ClosurePackage>();
 	const unresolved = new Set(locked.unresolved);
+	const elsewhere = new Set<string>();
 	for (const pkg of locked.packages) {
-		await record(root, workspaces, pkg, { seen, unresolved });
+		await record(root, workspaces, pkg, { elsewhere, seen, unresolved });
 	}
 
 	const closure = [...seen.values()].sort(
 		(a, b) => byCodepoint(a.name, b.name) || byCodepoint(a.version, b.version),
 	);
-	return { closure, unresolved: [...unresolved].sort(byCodepoint) };
+	return {
+		closure,
+		elsewhere: [...elsewhere].sort(byCodepoint),
+		unresolved: [...unresolved].sort(byCodepoint),
+	};
 }
 
 async function record(
 	root: string,
 	workspaces: string[],
 	pkg: LockedPackage,
-	state: { seen: Map<string, ClosurePackage>; unresolved: Set<string> },
+	state: { elsewhere: Set<string>; seen: Map<string, ClosurePackage>; unresolved: Set<string> },
 ): Promise<void> {
 	const key = `${pkg.name}@${pkg.version}`;
 	if (state.seen.has(key)) return;
@@ -71,6 +81,15 @@ async function record(
 	const dir = await resolveVersionedDir(root, workspaces, pkg.name, pkg.version);
 	const manifest = dir === null ? null : await readJson(join(dir, 'package.json'));
 	if (dir === null || manifest === null) {
+		if (pkg.platformGated) {
+			// A platform-gated package the install skipped. This machine does not distribute it,
+			// and its license text is not on disk to be read, so attributing it here would mean
+			// inventing the attribution. It is reported separately instead, and the artifact that
+			// does ship it — the container image — is where check-image-licenses.ts verifies the
+			// license file arrived.
+			state.elsewhere.add(key);
+			return;
+		}
 		// The lockfile says we distribute this exact version, so its license text must be
 		// readable here; a missing install is a hole in the attribution, not a detail to skip.
 		state.unresolved.add(`${key} (not installed; run bun install)`);

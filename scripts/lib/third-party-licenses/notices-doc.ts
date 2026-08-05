@@ -12,6 +12,8 @@ import { type ClosurePackage, packagesWithoutLicenseText } from './closure.ts';
 
 export interface NoticesOptions {
 	closure: ClosurePackage[];
+	/** Platform-gated packages the generating machine does not install. See `collectRuntimeClosure`. */
+	elsewhere: string[];
 	intro: string;
 	title: string;
 }
@@ -27,7 +29,7 @@ function fence(text: string): string {
 }
 
 export function renderNotices(options: NoticesOptions): string {
-	const { closure, intro, title } = options;
+	const { closure, elsewhere, intro, title } = options;
 	const missing = packagesWithoutLicenseText(closure);
 
 	const sections: string[] = [
@@ -48,6 +50,21 @@ export function renderNotices(options: NoticesOptions): string {
 			'reproduced in the summary document; the copyright holder is the package author.',
 			'',
 			...missing.map((pkg) => `- \`${pkg.name}@${pkg.version}\` (${pkg.license})`),
+			'',
+		);
+	}
+
+	if (elsewhere.length > 0) {
+		sections.push(
+			'## Packages built for another platform',
+			'',
+			'The lockfile resolves these for an operating system or processor other than the one',
+			'this document was generated on, so they are not installed here and their license text',
+			'could not be read. They are named rather than reproduced. Where a build for one of',
+			'those platforms ships them, it carries each package directory with its own LICENSE',
+			'file, and `bun run check:image-licenses` verifies that against the built image.',
+			'',
+			...elsewhere.map((entry) => `- \`${entry}\``),
 			'',
 		);
 	}
