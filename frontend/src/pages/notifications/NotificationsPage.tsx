@@ -127,6 +127,7 @@ function NotificationsPage() {
 	const setTypeFilter = (filter: string) => setFilter('type', filter === 'all' ? '' : filter);
 
 	const [selectedRows, setSelectedRows] = useState<Notification[]>([]);
+	const [selectionResetToken, setSelectionResetToken] = useState(0);
 	const [deleteTarget, setDeleteTarget] = useState<Notification | null>(null);
 	const [showBulkDelete, setShowBulkDelete] = useState(false);
 
@@ -146,7 +147,16 @@ function NotificationsPage() {
 		staleTime: STALE_TIME_SHORT,
 	});
 
+	// Selection is held here but rendered by the table, and the table unmounts while a
+	// new page loads. Clearing both together keeps the header's Delete button from
+	// offering rows the user can no longer see or uncheck.
+	function clearSelection() {
+		setSelectedRows([]);
+		setSelectionResetToken((token) => token + 1);
+	}
+
 	const columns = useNotificationColumns({
+		enableSelection: true,
 		onDelete: (notification) => setDeleteTarget(notification),
 		onMarkAsRead: (id) => markReadMutation.mutate(id),
 	});
@@ -193,11 +203,15 @@ function NotificationsPage() {
 					onRowSelectionChange={setSelectedRows}
 					pagination={{
 						limit,
-						onPageChange: setPage,
+						onPageChange: (nextPage) => {
+							setPage(nextPage);
+							clearSelection();
+						},
 						onPageSizeChange: setLimit,
 						page,
 						total: data?.total ?? 0,
 					}}
+					selectionResetToken={selectionResetToken}
 				/>
 			)}
 
@@ -206,7 +220,7 @@ function NotificationsPage() {
 				deleteMutation={deleteMutation}
 				deleteTarget={deleteTarget}
 				onClearDeleteTarget={() => setDeleteTarget(null)}
-				onClearSelectedRows={() => setSelectedRows([])}
+				onClearSelectedRows={clearSelection}
 				onShowBulkDeleteChange={setShowBulkDelete}
 				selectedRows={selectedRows}
 				showBulkDelete={showBulkDelete}

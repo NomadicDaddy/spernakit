@@ -1,4 +1,5 @@
 import {
+	keepPreviousData,
 	type QueryClient,
 	type QueryKey,
 	useMutation,
@@ -97,6 +98,10 @@ export function useNotifications({ limit, page, readFilter, typeFilter }: UseNot
 
 	const { data, isLoading } = useQuery<PaginatedResponse<Notification>>({
 		enabled: activeWorkspaceId !== null,
+		// Every filter and pagination value is in the key, so without this each change
+		// empties `data` and swaps the table for a skeleton, unmounting it and discarding
+		// the row selection that drives the header's bulk delete.
+		placeholderData: keepPreviousData,
 		queryFn: () => listNotifications(params),
 		queryKey,
 	});

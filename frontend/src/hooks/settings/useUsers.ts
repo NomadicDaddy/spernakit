@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { PaginatedResponse, User } from '@/api/types';
 import type { CreateUserInput, UpdateUserInput } from '@/api/users';
@@ -22,6 +22,11 @@ export function useUsers(page: number, limit: number, search: string, roleFilter
 	if (roleFilter) queryParams.role = roleFilter;
 
 	const { data, isLoading } = useQuery<PaginatedResponse<User>>({
+		// Page, limit, search and role are all in the key, so without this every one of
+		// them empties `data` and drops UsersTab back to its skeleton, unmounting the
+		// table and taking the row selection with it. Holding the previous rows keeps a
+		// page-size change from discarding a selection the user is still working with.
+		placeholderData: keepPreviousData,
 		queryFn: () => listUsers(queryParams),
 		queryKey: ['users', page, limit, search, roleFilter],
 	});

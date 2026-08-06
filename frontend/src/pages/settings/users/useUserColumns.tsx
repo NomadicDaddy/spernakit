@@ -3,6 +3,7 @@ import { Eye, KeyRound, LockOpen, MoreHorizontal, Trash2, UserPen } from 'lucide
 
 import type { User, UserRole } from '@/api/types';
 
+import { createSelectColumn } from '@/components/shared/data-table/selectColumn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,6 +32,9 @@ function isUserLocked(user: User): boolean {
 }
 
 interface UserColumnsProps {
+	/** Prepend the row-selection column. Set this only when the table also passes
+	 * onRowSelectionChange, so the checkboxes and the bulk bar appear together. */
+	enableSelection?: boolean;
 	onDelete: (user: User) => void;
 	onEdit: (user: User) => void;
 	onImpersonate: (user: User) => void;
@@ -39,6 +43,7 @@ interface UserColumnsProps {
 }
 
 export function useUserColumns({
+	enableSelection = false,
 	onDelete,
 	onEdit,
 	onImpersonate,
@@ -50,6 +55,7 @@ export function useUserColumns({
 	const { formatDate } = useFormatters();
 
 	const columns: ColumnDef<User, unknown>[] = [
+		...(enableSelection ? [createSelectColumn<User>()] : []),
 		{
 			accessorKey: 'username',
 			header: 'Username',

@@ -3,6 +3,7 @@ import { Circle, CircleCheck, MailOpen, Trash2 } from 'lucide-react';
 
 import type { Notification } from '@/api/types';
 
+import { createSelectColumn } from '@/components/shared/data-table/selectColumn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFormatters } from '@/hooks/useFormatters';
@@ -18,14 +19,22 @@ const typeBadgeVariant: Record<string, 'default' | 'destructive' | 'outline' | '
 };
 
 interface NotificationColumnsProps {
+	/** Prepend the row-selection column. Set this only when the table also passes
+	 * onRowSelectionChange, so the checkboxes and the bulk delete button appear together. */
+	enableSelection?: boolean;
 	onDelete: (notification: Notification) => void;
 	onMarkAsRead: (id: number) => void;
 }
 
-export function useNotificationColumns({ onDelete, onMarkAsRead }: NotificationColumnsProps) {
+export function useNotificationColumns({
+	enableSelection = false,
+	onDelete,
+	onMarkAsRead,
+}: NotificationColumnsProps) {
 	const { formatTimestamp } = useFormatters();
 
 	const columns: ColumnDef<Notification, unknown>[] = [
+		...(enableSelection ? [createSelectColumn<Notification>()] : []),
 		{
 			accessorKey: 'readAt',
 			cell: ({ row }) =>
