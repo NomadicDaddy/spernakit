@@ -120,12 +120,24 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 	const apiApp = createApiApp();
 
 	// Root app: mounts API routes and WebSocket at root level
+	// Registration order below is load-bearing; see the comment on .onError.
 	const elysiaApp = new Elysia({
 		serve: { maxRequestBodySize: config.server.maxRequestBodySize },
 	})
+		.use(apiApp)
 		// Root-level error handler for surfaces outside the /api/v1 chain (ws upgrade,
 		// security.txt, unmatched paths). Returns the standard error envelope without
 		// leaking internal error messages.
+		//
+		// This MUST be registered after .use(apiApp) and before the root's own routes.
+		// An Elysia error handler swallows errors from every plugin mounted after it,
+		// so registering this first made it — not the /api/v1 handler in
+		// create-api-app.ts — answer every API failure: request-body validation came
+		// back as a 500 SERVER_INTERNAL_ERROR with no requestId, logged at ERROR level,
+		// instead of a 400 VALIDATION_FAILED logged at DEBUG. Moving it after the API
+		// chain is what lets the API handler run. It still has to precede the root's own
+		// routes: a handler registered after them does not catch what they throw, and
+		// the raw error message reaches the client.
 		.onError(({ code, error, set }) => {
 			if (code === 'NOT_FOUND') {
 				set.status = HTTP_STATUS.NOT_FOUND;
@@ -142,7 +154,6 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 				`Preferred-Languages: en`,
 			].join('\n');
 		})
-		.use(apiApp)
 		.use(wsRoutes)
 		.listen({ hostname: config.server.host, port: config.server.backendPort });
 
