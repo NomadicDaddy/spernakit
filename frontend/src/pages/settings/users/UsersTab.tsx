@@ -38,6 +38,7 @@ function UsersTab() {
 	const search = getFilter('search');
 	const roleFilter = getFilter('role');
 	const [selectedRows, setSelectedRows] = useState<User[]>([]);
+	const [selectionResetToken, setSelectionResetToken] = useState(0);
 	const [dialog, setDialog] = useState<DialogState>(null);
 
 	const { isAdmin } = useAuthorization();
@@ -54,6 +55,7 @@ function UsersTab() {
 	} = useUsers(page, limit, search, roleFilter);
 
 	const columns = useUserColumns({
+		enableSelection: isAdmin(),
 		onDelete: (user) => setDialog({ type: 'delete', user }),
 		onEdit: (user) => setDialog({ type: 'edit', user }),
 		onImpersonate: (user) => setDialog({ type: 'impersonate', user }),
@@ -64,11 +66,19 @@ function UsersTab() {
 	const users = data?.data ?? [];
 	const total = data?.total ?? 0;
 
+	// Selection is held here but rendered by the table, and the table unmounts while a
+	// new page loads. Clearing both together keeps the bulk bar from offering actions
+	// on rows the user can no longer see or uncheck.
+	function clearSelection() {
+		setSelectedRows([]);
+		setSelectionResetToken((token) => token + 1);
+	}
+
 	function handleBulkDelete() {
 		const ids = selectedRows.map((u) => u.id);
 		bulkDeleteMutation.mutate(ids, {
 			onSuccess: () => {
-				setSelectedRows([]);
+				clearSelection();
 				setDialog(null);
 			},
 		});
@@ -79,7 +89,7 @@ function UsersTab() {
 		const updates = selectedRows.map((u) => ({ id: u.id, role: dialog.newRole }));
 		bulkRoleMutation.mutate(updates, {
 			onSuccess: () => {
-				setSelectedRows([]);
+				clearSelection();
 				setDialog(null);
 			},
 		});
@@ -131,11 +141,15 @@ function UsersTab() {
 				{...(isAdmin() ? { onRowSelectionChange: setSelectedRows } : {})}
 				pagination={{
 					limit,
-					onPageChange: setPage,
+					onPageChange: (nextPage) => {
+						setPage(nextPage);
+						clearSelection();
+					},
 					onPageSizeChange: setLimit,
 					page,
 					total,
 				}}
+				selectionResetToken={selectionResetToken}
 			/>
 
 			<div className="ml-auto">

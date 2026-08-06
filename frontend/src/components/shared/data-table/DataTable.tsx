@@ -29,7 +29,12 @@ interface DataTableProps<TData, TValue> {
 	data: TData[];
 	/** Placeholder text for the search input (default: "Search…") */
 	filterPlaceholder?: string;
-	/** Callback fired when row selection changes (enables selection mode when provided) */
+	/**
+	 * Callback fired when row selection changes (enables selection mode when provided).
+	 *
+	 * Pair this with a column set that includes `createSelectColumn()`; without that
+	 * column nothing can toggle a row and the selection footer reads 0 forever.
+	 */
 	onRowSelectionChange?: (selectedRows: TData[]) => void;
 	/**
 	 * Server-side pagination configuration.
@@ -47,6 +52,15 @@ interface DataTableProps<TData, TValue> {
 	/** Column ID to use for the search filter input */
 	searchColumn?: string;
 	/**
+	 * Change this to clear the current row selection.
+	 *
+	 * The table owns the checkbox state, so a consumer that empties its own selected-row
+	 * list after a bulk action would otherwise leave the checkboxes checked and the
+	 * footer counting rows the bulk bar no longer offers to act on. Bump this in the
+	 * same place the list is cleared.
+	 */
+	selectionResetToken?: number | string;
+	/**
 	 * Virtual scrolling configuration for large datasets.
 	 *
 	 * When enabled, all rows are rendered in a virtualized container instead of
@@ -63,7 +77,8 @@ interface DataTableProps<TData, TValue> {
  * - Sorting (click column headers)
  * - Filtering (search input when `searchColumn` is provided)
  * - Pagination (server-side or client-side based on `pagination` prop)
- * - Row selection (when `onRowSelectionChange` is provided)
+ * - Row selection (when `onRowSelectionChange` is provided, and the column set
+ *   prepends `createSelectColumn()` from `./selectColumn` to render the checkboxes)
  * - Column visibility toggles
  * - Responsive horizontal scrolling
  *
@@ -98,6 +113,7 @@ function DataTable<TData, TValue>({
 	onRowSelectionChange,
 	pagination,
 	searchColumn,
+	selectionResetToken,
 	virtualize,
 }: DataTableProps<TData, TValue>) {
 	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
@@ -106,8 +122,13 @@ function DataTable<TData, TValue>({
 			data,
 			onRowSelectionChange,
 			pagination,
+			selectionResetToken,
 			virtualize,
 		});
+
+	// Column visibility toggles and the optional select column both move this away
+	// from columns.length, which the body span and the virtual row width depend on.
+	const visibleColumnCount = table.getVisibleLeafColumns().length;
 
 	return (
 		<div className="space-y-4">
@@ -137,7 +158,7 @@ function DataTable<TData, TValue>({
 					</TableHeader>
 					{isVirtual && virtualize ? (
 						<VirtualTableBody
-							colCount={columns.length}
+							colCount={visibleColumnCount}
 							containerHeight={virtualize.containerHeight ?? 400}
 							containerRef={virtualContainerRef}
 							overscan={virtualize.overscan ?? 5}
@@ -165,7 +186,7 @@ function DataTable<TData, TValue>({
 								<TableRow>
 									<TableCell
 										className="h-24 text-center"
-										colSpan={columns.length}>
+										colSpan={visibleColumnCount}>
 										No results.
 									</TableCell>
 								</TableRow>
