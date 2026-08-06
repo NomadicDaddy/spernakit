@@ -21,6 +21,9 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 
+import { getWidgetHeightError, getWidgetWidthError } from './widgetSize';
+import { WidgetSizeFields } from './WidgetSizeFields';
+
 const WIDGET_TYPE_OPTIONS: { label: string; value: WidgetType }[] = [
 	{ label: 'Stat Card', value: 'stat_card' },
 	{ label: 'Gauge', value: 'gauge' },
@@ -70,7 +73,11 @@ export function AddWidgetDialog({
 	onUpdateWidget,
 }: AddWidgetDialogProps) {
 	const titleInputRef = useRef<HTMLInputElement>(null);
+	const widthInputRef = useRef<HTMLInputElement>(null);
+	const heightInputRef = useRef<HTMLInputElement>(null);
 	const [titleError, setTitleError] = useState<null | string>(null);
+	const [widthError, setWidthError] = useState<null | string>(null);
+	const [heightError, setHeightError] = useState<null | string>(null);
 	const isChartWidget =
 		newWidget.widgetType === 'line_chart' || newWidget.widgetType === 'bar_chart';
 	const metricOptions = isChartWidget
@@ -89,20 +96,37 @@ export function AddWidgetDialog({
 		});
 	};
 
+	// Every field is marked at once so the user sees the full set of corrections, but focus
+	// goes to the first invalid one in DOM order. Nothing is submitted while any check fails,
+	// so an out-of-range size never reaches the API.
 	const handleAddWidget = () => {
 		if (isPending) return;
-		if (!newWidget.title.trim()) {
-			setTitleError('Title is required');
+		const nextTitleError = newWidget.title.trim() ? null : 'Title is required';
+		const nextWidthError = getWidgetWidthError(newWidget.width);
+		const nextHeightError = getWidgetHeightError(newWidget.height);
+		setTitleError(nextTitleError);
+		setWidthError(nextWidthError);
+		setHeightError(nextHeightError);
+		if (nextTitleError) {
 			titleInputRef.current?.focus();
 			return;
 		}
-		setTitleError(null);
+		if (nextWidthError) {
+			widthInputRef.current?.focus();
+			return;
+		}
+		if (nextHeightError) {
+			heightInputRef.current?.focus();
+			return;
+		}
 		onAddWidget();
 	};
 
 	const handleOpenChange = (open: boolean) => {
 		if (!open) {
 			setTitleError(null);
+			setWidthError(null);
+			setHeightError(null);
 		}
 		onOpenChange(open);
 	};
@@ -186,41 +210,24 @@ export function AddWidgetDialog({
 						</div>
 					</div>
 					<div className="grid grid-cols-3 gap-4">
-						<div className="space-y-2">
-							<Label htmlFor="widget-width">Width (cols)</Label>
-							<Input
-								autoComplete="off"
-								id="widget-width"
-								inputMode="numeric"
-								max={12}
-								min={1}
-								onChange={(e) =>
-									onUpdateWidget({
-										...newWidget,
-										width: Number(e.target.value),
-									})
-								}
-								type="number"
-								value={newWidget.width}
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="widget-height">Height (rows)</Label>
-							<Input
-								autoComplete="off"
-								id="widget-height"
-								inputMode="numeric"
-								min={1}
-								onChange={(e) =>
-									onUpdateWidget({
-										...newWidget,
-										height: Number(e.target.value),
-									})
-								}
-								type="number"
-								value={newWidget.height}
-							/>
-						</div>
+						<WidgetSizeFields
+							height={newWidget.height}
+							heightError={heightError}
+							heightRef={heightInputRef}
+							onHeightChange={(height) => {
+								onUpdateWidget({ ...newWidget, height });
+								// Only ever clears, matching the title field: an error appears on
+								// submit, not while the user is still typing a value.
+								if (!getWidgetHeightError(height)) setHeightError(null);
+							}}
+							onWidthChange={(width) => {
+								onUpdateWidget({ ...newWidget, width });
+								if (!getWidgetWidthError(width)) setWidthError(null);
+							}}
+							width={newWidget.width}
+							widthError={widthError}
+							widthRef={widthInputRef}
+						/>
 						<div className="space-y-2">
 							<Label htmlFor="widget-time-range">Time Range</Label>
 							<Select
