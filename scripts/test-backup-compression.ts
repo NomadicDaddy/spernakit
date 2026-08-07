@@ -26,15 +26,26 @@ import { exit } from 'node:process';
 import {
 	compressBackupFile,
 	decompressBackupFile,
+	MAX_COMPRESSION_RATIO,
+	MAX_DECOMPRESSED_SIZE,
 } from '../backend/src/services/backup/backupCompressionService.ts';
 import { normalizeBranding } from './lib/template/branding.ts';
 import { type BrandingValues, TEMPLATE_BRANDING } from './lib/template/types.ts';
 
-/** Mirrors MAX_COMPRESSION_RATIO in the service under test. */
-const EXPECTED_RATIO = 100;
-/** Mirrors MAX_DECOMPRESSED_SIZE in the service under test. */
-const EXPECTED_CEILING = 1024 * 1024 * 1024;
+/**
+ * Both bounds come from the service rather than being restated here. They used to be local copies
+ * under comments saying they mirrored it, which holds only until one side changes: a raised ratio
+ * would have left this file sizing its bomb against the old bound and reporting a pass.
+ */
+const EXPECTED_RATIO = MAX_COMPRESSION_RATIO;
+const EXPECTED_CEILING = MAX_DECOMPRESSED_SIZE;
 
+/**
+ * The HKDF info string stays written out here on purpose. This is the one value the test must NOT
+ * import: the assertions below read the service's source text and check that this literal is in it
+ * and survives branding normalization, so importing the constant would compare the file with
+ * itself and pass no matter what the file said.
+ */
 const HKDF_INFO = 'spernakit-backup-encryption';
 const ENCRYPTION_SERVICE = 'backend/src/services/backup/backupEncryptionService.ts';
 

@@ -10,8 +10,13 @@ import { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { createGunzip } from 'node:zlib';
 
-const MAX_DECOMPRESSED_SIZE = 1024 * 1024 * 1024;
-const MAX_COMPRESSION_RATIO = 100;
+/**
+ * Exported so the guard's regression test asserts against the bound this module enforces rather
+ * than a copy of it. A restated limit only agrees until one side moves: raising the ratio here
+ * would otherwise leave the test pinning the old number and still passing.
+ */
+export const MAX_DECOMPRESSED_SIZE = 1024 * 1024 * 1024;
+export const MAX_COMPRESSION_RATIO = 100;
 
 function compressBackupFile(inputPath: string, outputPath: string): void {
 	const data = readFileSync(inputPath);
