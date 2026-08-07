@@ -46,8 +46,22 @@ export interface RosterTargets {
 }
 
 export interface DiscoveredTargets {
-	/** A directory whose presence in a sibling repository marks it as a target. */
-	marker: string;
+	/**
+	 * A path whose presence in a sibling repository marks it as a target, or ABSENT for every
+	 * sibling git repository.
+	 *
+	 * A discovered group's predicate must be the one its installer already sweeps by, or the gate
+	 * verifies a different population than the thing it is verifying. `install-history-guard.ts`
+	 * sweeps repositories carrying `.aidd`; `install-leak-guard.ts` sweeps every git repository
+	 * under the fleet root and takes no marker at all. Scoping the leak-guard groups to `.aidd`
+	 * made the gate blind to nineteen repositories the installer had already covered — it reported
+	 * thirty-two current out of fifty-one, and read as full coverage. Recorded as punchlist C5.
+	 *
+	 * The tempting alternative is a marker naming the guard itself. Do not: that predicate is the
+	 * outcome, so `uncovered` becomes unreachable for anything it selects, and the gate would go
+	 * green on a fleet where the guard is missing everywhere.
+	 */
+	marker?: string;
 	model: 'discovered';
 }
 
@@ -163,10 +177,10 @@ function asTargets(raw: unknown, where: string): DiscoveredTargets | RosterTarge
 	}
 	if (targets['model'] === 'discovered') {
 		const marker = targets['marker'];
-		if (typeof marker !== 'string' || marker.length === 0) {
-			fail(`${where} discovered targets need a marker directory.`);
+		if (marker !== undefined && (typeof marker !== 'string' || marker.length === 0)) {
+			fail(`${where} discovered marker must be a non-empty path when present.`);
 		}
-		return { marker, model: 'discovered' };
+		return { model: 'discovered', ...(typeof marker === 'string' ? { marker } : {}) };
 	}
 	return fail(`${where} targets.model must be 'roster' or 'discovered'.`);
 }
