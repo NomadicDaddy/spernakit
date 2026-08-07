@@ -13,7 +13,7 @@ does not obligate you to add a section here; leaving one out of `smoke.json` is 
 - [Common Configuration](#common-configuration)
 - [Scripts](#scripts)
     - [`check-application.ts`](#check-applicationts)
-    - [`check-dependency-versions.ts`](#check-dependency-versionsts)
+    - [`check-deps.ts`](#check-depsts)
     - [`setup.ts`](#setupts)
     - [`load-json-config.ts`](#load-json-configts)
     - [`dev-with-logs.ts`](#dev-with-logsts)
@@ -40,7 +40,7 @@ does not obligate you to add a section here; leaving one out of `smoke.json` is 
 | Goal                                             | Recommended command                                   | Script file                               |
 | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------- |
 | Validate repo identity/config/Docker consistency | `bun run check-application`                           | `scripts/check-application.ts`            |
-| Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-dependency-versions.ts`    |
+| Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-deps.ts`                   |
 | Initialize or re-template a derived app repo     | `bun run setup`                                       | `scripts/setup.ts`                        |
 | Run check-only local quality chain (mode-based)  | `bun run smoke:qc`                                    | `scripts/smoke.ts` + `scripts/smoke.json` |
 | Run the cached inner-loop quality subset         | `bun run smoke:qc:fast`                               | `scripts/smoke.ts` + `scripts/smoke.json` |
@@ -51,9 +51,9 @@ does not obligate you to add a section here; leaving one out of `smoke.json` is 
 | Clear log files                                  | `bun scripts/clear-logs.ts`                           | `scripts/clear-logs.ts`                   |
 | Crawl the app to catch errors                    | `bun run crawltest`                                   | `scripts/crawltest.ts`                    |
 | Crawl the preview build                          | `bun run crawltest:preview`                           | `scripts/crawltest.ts`                    |
-| Test password-reset API error paths              | `bun run check-auth-reset-api`                        | `scripts/test-auth-reset-api.ts`          |
-| Test auth/reset UI (dev)                         | `bun run check-auth-reset-ui-dev`                     | `scripts/test-auth-reset-ui.ts`           |
-| Test auth/reset UI (preview)                     | `bun run check-auth-reset-ui-preview`                 | `scripts/test-auth-reset-ui.ts`           |
+| Test password-reset API error paths              | `bun run test:auth-reset-api`                         | `scripts/test-auth-reset-api.ts`          |
+| Test auth/reset UI (dev)                         | `bun run test:auth-reset-ui-dev`                      | `scripts/test-auth-reset-ui.ts`           |
+| Test auth/reset UI (preview)                     | `bun run test:auth-reset-ui-preview`                  | `scripts/test-auth-reset-ui.ts`           |
 | Run database migrations                          | `bun run db:migrate`                                  | `scripts/migrate.ts`                      |
 | Show migration status                            | `bun run db:migrate:status`                           | `scripts/migrate.ts`                      |
 | Generate new secure keys in config JSON          | `bun run generate-keys`                               | `scripts/generate-keys.ts`                |
@@ -62,7 +62,7 @@ does not obligate you to add a section here; leaving one out of `smoke.json` is 
 | Optimize frontend images                         | `bun run optimize-images`                             | `scripts/optimize-images.ts`              |
 | Reset packages (destructive)                     | `bun run reset-packages`                              | `scripts/reset-packages.ts`               |
 | Template drift check                             | `bun run check:drift`                                 | `scripts/check-template-drift.ts`         |
-| API type contract validation                     | `bun run check:api-types`                             | `scripts/validate-api-types.ts`           |
+| API type contract validation                     | `bun run check:api-types`                             | `scripts/check-api-types.ts`              |
 | Validate config against schema                   | `bun run config:validate`                             | `scripts/validate-config.ts`              |
 | Generate JSON schema for editor intellisense     | `bun run config:schema`                               | `scripts/generate-config-schema.ts`       |
 | Dev crawltest with screenshot capture            | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json` |
@@ -96,7 +96,7 @@ If you run scripts in a derived application repo, ensure:
       rather than rejected. A `--verbose` flag was documented here until 2026-08-06 and never
       existed.
 
-### `check-dependency-versions.ts`
+### `check-deps.ts`
 
 - **Purpose**
     - Checks that critical dependencies are pinned to exact versions (no `^` or `~` prefixes).
@@ -104,7 +104,7 @@ If you run scripts in a derived application repo, ensure:
     - Validates backend dependencies (elysia, drizzle-orm, jsonwebtoken, @sinclair/typebox, pino, etc.) and frontend dependencies (react, react-router, @tanstack/react-query, zustand, vite, etc.).
 - **Run**
     - `bun run check-deps`
-    - `bun scripts/check-dependency-versions.ts`
+    - `bun scripts/check-deps.ts`
 
 ### `setup.ts`
 
@@ -219,7 +219,7 @@ If you run scripts in a derived application repo, ensure:
     - Lightweight HTTP checks for password reset endpoints against an already-running backend.
     - Focuses on validation/error paths (does not require SMTP).
 - **Run**
-    - `bun run check-auth-reset-api`
+    - `bun run test:auth-reset-api`
 
 ### `test-auth-reset-ui.ts`
 
@@ -227,8 +227,8 @@ If you run scripts in a derived application repo, ensure:
     - Focused Puppeteer UI checks for auth + password reset UX flows.
     - Complements `crawltest.ts`.
 - **Run**
-    - `bun run check-auth-reset-ui-dev`
-    - `bun run check-auth-reset-ui-preview`
+    - `bun run test:auth-reset-ui-dev`
+    - `bun run test:auth-reset-ui-preview`
 
 ### `migrate.ts`
 

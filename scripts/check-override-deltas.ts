@@ -19,7 +19,7 @@
  * Usage:
  *   bun run check:override-deltas -- --target-version 3.31.2
  *   bun run check:override-deltas -- --target-version 3.31.2 --fail-on-delta
- *   bun scripts/check-template-overrides.ts --target-version 3.31.2 --template ../spernakit
+ *   bun scripts/check-override-deltas.ts --target-version 3.31.2 --template ../spernakit
  */
 import path from 'node:path';
 import { argv, exit } from 'node:process';

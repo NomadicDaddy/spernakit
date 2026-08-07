@@ -1,7 +1,7 @@
 /**
  * Backend-vs-frontend enum consistency validation.
  *
- * Extracted from scripts/validate-api-types.ts (max-lines split). Compares
+ * Extracted from scripts/check-api-types.ts (max-lines split). Compares
  * TypeBox union schemas from backend/src/schemas/domain.ts against the
  * string-literal unions declared in frontend/shared source files.
  */

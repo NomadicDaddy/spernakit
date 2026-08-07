@@ -1,7 +1,7 @@
 /**
  * Result types and console/JSON reporting for API type contract validation.
  *
- * Extracted from scripts/validate-api-types.ts (max-lines split).
+ * Extracted from scripts/check-api-types.ts (max-lines split).
  */
 import type { EnumMismatch } from './enum-validate.ts';
 

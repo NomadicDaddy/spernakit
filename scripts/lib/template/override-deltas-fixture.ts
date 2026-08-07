@@ -151,7 +151,7 @@ function seedApp(write: (relPath: string, content: string) => void): void {
  * run exercises the security case, the branded case, the scaffold-mapped case, and the stale entry.
  */
 export function createOverrideDeltaFixture(repoRoot: string): OverrideDeltaFixture {
-	const script = join(repoRoot, 'scripts', 'check-template-overrides.ts');
+	const script = join(repoRoot, 'scripts', 'check-override-deltas.ts');
 	const fixtureParent = join(repoRoot, 'tmp');
 	mkdirSync(fixtureParent, { recursive: true });
 	const fixtureRoot = mkdtempSync(join(fixtureParent, 'override-deltas-'));

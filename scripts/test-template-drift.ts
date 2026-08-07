@@ -72,7 +72,7 @@ function runDrift(env: Record<string, string> = {}): RunResult {
 }
 
 function runOverrideReport(): RunResult {
-	return runCli('check-template-overrides.ts', [
+	return runCli('check-override-deltas.ts', [
 		'--template',
 		templateDir,
 		'--target-version',

@@ -136,6 +136,6 @@ async function run(): Promise<void> {
 }
 
 run().catch((err: unknown) => {
-	console.error('Fatal error in test-lockout-refresh-decouple:', err);
+	console.error('Fatal error in test-lockout-refresh:', err);
 	process.exit(1);
 });

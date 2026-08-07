@@ -1,7 +1,7 @@
 /**
  * Human-readable reporting for the override-delta check.
  *
- * Kept out of `check-template-overrides.ts` so the entry script stays under the 300-line gate, and
+ * Kept out of `check-override-deltas.ts` so the entry script stays under the 300-line gate, and
  * out of `report.ts` because it answers a different question: `report.ts` renders how an app differs
  * from the template, this renders what an accepted override is keeping the app from receiving.
  *

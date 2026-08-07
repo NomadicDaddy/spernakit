@@ -1,7 +1,7 @@
 /**
  * Enum value extraction primitives for API type contract validation.
  *
- * Extracted from scripts/validate-api-types.ts (max-lines split). Pure
+ * Extracted from scripts/check-api-types.ts (max-lines split). Pure
  * parsing helpers: TypeBox union schemas on the backend side, regex-based
  * string-literal union parsing on the frontend/shared source side.
  */
