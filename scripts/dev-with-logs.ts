@@ -171,7 +171,9 @@ function startServer(name: string, command: string, args: string[], color: strin
 	// Note: shell: false is more secure when passing args as array
 	const proc = spawn(command, args, {
 		cwd: rootDir,
-		env: { ...process.env, FORCE_COLOR: '1' },
+		// Spawns the app's own dev servers, which read the developer's whole environment (config
+		// overrides, proxy settings, editor integration) by design.
+		env: { ...process.env, FORCE_COLOR: '1' }, // allow-env-spread-policy
 		shell: false, // Enable colors in output
 	});
 

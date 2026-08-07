@@ -126,7 +126,9 @@ export function createDeletionFixture(repoRoot: string): DeletionFixture {
 		runDrift: (args, env = {}): DriftRun => {
 			const result = Bun.spawnSync(['bun', driftScript, '--template', templateDir, ...args], {
 				cwd: appDir,
-				env: { ...process.env, APP_SLUG: 'fixture-app', ...env },
+				// Runs the real drift CLI against a fixture app; it needs the developer toolchain
+				// environment to reach `git`, and only APP_SLUG is fixture-specific.
+				env: { ...process.env, APP_SLUG: 'fixture-app', ...env }, // allow-env-spread-policy
 				stderr: 'pipe',
 				stdout: 'pipe',
 			});

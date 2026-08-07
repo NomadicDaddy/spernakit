@@ -57,7 +57,9 @@ function writeApp(relativePath: string, content: string): void {
 function runCli(script: string, args: string[] = [], env: Record<string, string> = {}): RunResult {
 	const result = Bun.spawnSync(['bun', join(repoRoot, 'scripts', script), ...args], {
 		cwd: appDir,
-		env: { ...process.env, APP_SLUG: 'fixture-app', ...env },
+		// Runs the real drift CLI against a fixture app, so it needs the toolchain environment a
+		// developer would have (PATH to reach `git` and `bun`); only APP_SLUG is fixture-specific.
+		env: { ...process.env, APP_SLUG: 'fixture-app', ...env }, // allow-env-spread-policy
 		stderr: 'pipe',
 		stdout: 'pipe',
 	});

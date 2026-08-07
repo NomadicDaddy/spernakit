@@ -102,6 +102,13 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	// check:drift has no static entry because it compares every template file from git.
 	// A stale glob list once skipped real drift; missing entries intentionally always run.
+	'check:env-spread': {
+		// Same shape as check:git-window-hide: a scanner over source and scripts. `scripts/**/*.ts`
+		// is the whole tree rather than the gate's own file, because a new spawn site anywhere under
+		// it is exactly what the gate exists to catch, and a narrower list would cache past it.
+		excludes: COMMON_EXCLUDES,
+		globs: [...SOURCE_GLOBS, 'scripts/**/*.ts'],
+	},
 	'check:gate-conventions': {
 		// Every gate's own source is an input, because the gate reads all of them. `scripts/*.ts` is
 		// deliberately the whole directory rather than the current gate list: a task added to

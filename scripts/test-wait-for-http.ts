@@ -32,7 +32,9 @@ async function runWaitForHttp(fixtureBin: string, args: string[]): Promise<Comma
 	const startedAt = performance.now();
 	const proc = Bun.spawn(['bun', 'scripts/wait-for-http.ts', ...args], {
 		cwd: join(import.meta.dir, '..'),
-		env: { ...process.env, PATH: `${fixtureBin}${delimiter}${path}` },
+		// The child is `bun` running the script under test; it needs the real toolchain environment,
+		// and the point of the fixture is that only PATH differs from a normal invocation.
+		env: { ...process.env, PATH: `${fixtureBin}${delimiter}${path}` }, // allow-env-spread-policy
 		stderr: 'pipe',
 		stdout: 'pipe',
 	});
