@@ -50,7 +50,9 @@ export function run(
 	} as const;
 	const result = Bun.spawnSync(
 		command,
-		env === undefined ? base : { ...base, env: { ...process.env, ...env } },
+		// Runs scaffolded git hooks, which shell out to `git` and `bash` and expect the environment a
+		// real commit would give them; the caller's `env` layers fixture-specific keys on top.
+		env === undefined ? base : { ...base, env: { ...process.env, ...env } }, // allow-env-spread-policy
 	);
 	return {
 		exitCode: result.exitCode,

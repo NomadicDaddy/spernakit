@@ -8,12 +8,48 @@
  * run in the docker smoke modes.
  */
 
-import { exit } from 'node:process';
+import { exit, env as parentEnv } from 'node:process';
+
+/**
+ * What the `docker` CLI needs to find its daemon and its config, and nothing else (ASSERT-038).
+ *
+ * This used to spread the whole parent environment, which was both the widest possible answer and a
+ * no-op: `Bun.spawn` already inherits the parent environment when the `env` option is omitted, so
+ * the spread was spelling out the default rather than choosing it. The list below was verified
+ * against a running daemon before it replaced the spread — `docker version` answers with only these
+ * set, and nothing in the docker smoke modes depends on a variable outside it.
+ *
+ * The `DOCKER_*` entries are the CLI's documented context and TLS selectors. None of them is set in
+ * this development environment, which is exactly why they belong here: a machine that does set
+ * `DOCKER_HOST` would otherwise silently talk to the wrong daemon once the spread was narrowed.
+ */
+const DOCKER_ENV_KEYS = [
+	'DOCKER_CERT_PATH',
+	'DOCKER_CONFIG',
+	'DOCKER_CONTEXT',
+	'DOCKER_HOST',
+	'DOCKER_TLS_VERIFY',
+	'HOME',
+	'PATH',
+	'SystemRoot',
+	'TEMP',
+	'TMP',
+	'USERPROFILE',
+] as const;
+
+function dockerEnv(): Record<string, string> {
+	const selected: Record<string, string> = {};
+	for (const key of DOCKER_ENV_KEYS) {
+		const value = parentEnv[key];
+		if (value !== undefined) selected[key] = value;
+	}
+	return selected;
+}
 
 /** Runs a shell script inside the image and returns its stdout, failing loudly on a nonzero exit. */
 export async function runInImage(image: string, script: string): Promise<string> {
 	const proc = Bun.spawn(['docker', 'run', '--rm', '--entrypoint', 'sh', image, '-c', script], {
-		env: { ...process.env },
+		env: dockerEnv(),
 		stderr: 'pipe',
 		stdout: 'pipe',
 	});

@@ -197,7 +197,9 @@ export function createOverrideDeltaFixture(repoRoot: string): OverrideDeltaFixtu
 		run: (args): OverrideRun => {
 			const result = Bun.spawnSync(['bun', script, '--template', templateDir, ...args], {
 				cwd: appDir,
-				env: { ...process.env, APP_SLUG: 'fixture-app' },
+				// Runs the real override CLI against a fixture app; it needs the developer toolchain
+				// environment to reach `git`, and only APP_SLUG is fixture-specific.
+				env: { ...process.env, APP_SLUG: 'fixture-app' }, // allow-env-spread-policy
 				stderr: 'pipe',
 				stdout: 'pipe',
 			});

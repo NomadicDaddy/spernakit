@@ -225,6 +225,10 @@
 					"description": "Process environment access check"
 				},
 				{
+					"command": "bun run check:env-spread",
+					"description": "Child processes receive only the environment they need"
+				},
+				{
 					"command": "bun run check:git-window-hide",
 					"description": "Direct Git subprocesses hide their Windows console window"
 				},
