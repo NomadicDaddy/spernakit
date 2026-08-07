@@ -91,19 +91,6 @@ export function resolveTargets(
 		: discoveredTargets(group, fleetRoot, group.owner);
 }
 
-/**
- * The single value git dispatches hooks from. An empty string means unset, in which case git runs
- * .git/hooks and a file written to the group's targetRoot would never execute.
- */
-export function hooksPath(repoPath: string): string {
-	const result = Bun.spawnSync(['git', '-C', repoPath, 'config', '--local', 'core.hooksPath'], {
-		stderr: 'pipe',
-		stdout: 'pipe',
-		windowsHide: true,
-	});
-	return result.success ? result.stdout.toString().trim() : '';
-}
-
 /** Reads a target's package.json scripts. Returns null when the repository has no package.json. */
 export function readScripts(repoPath: string): null | Record<string, string> {
 	const path = join(repoPath, 'package.json');

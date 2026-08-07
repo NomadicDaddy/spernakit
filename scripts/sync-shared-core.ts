@@ -103,6 +103,7 @@ function order(findings: Finding[]): Finding[] {
 		drift: 0,
 		'foreign-hook': 1,
 		'local-chain': 4,
+		'not-applicable': 6,
 		uncovered: 3,
 		'unmanaged-dispatch': 5,
 		unwired: 2,
