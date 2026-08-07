@@ -5,21 +5,18 @@
  * `sync-shared-core.ts --write` overwrites files in other repositories across the whole fleet, and
  * on the real manifest it currently reports "0 file(s) would change" because nothing has drifted.
  * That is a good state for the fleet and a useless one for evidence: a writer never seen to write,
- * and never seen to refuse, is the vacuous gate this subsystem exists to argue against. So the
- * cases run against a synthetic fleet built in a temp directory, where drift, uncommitted work,
- * foreign hooks and hand-maintained chains can all be arranged on purpose.
+ * and never seen to refuse, is the vacuous gate this subsystem exists to argue against.
  *
- * The fixtures are real `git init` repositories because two of the guards are answered by git and
- * not by the filesystem. A mocked git would test the mock.
+ * The synthetic fleet these run against is built by lib/shared-core-write/fixture.ts, which is also
+ * where the reasoning about each arranged state lives. This file is the assertions alone: what the
+ * classifier must call each state, and what the writer must and must not then do with it.
  */
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
+import { build } from './lib/shared-core-write/fixture.ts';
 import { checkGroup } from './lib/shared-core/check.ts';
-import { loadManifest, type SharedCoreGroup } from './lib/shared-core/manifest.ts';
 import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
 
 let assertions = 0;
@@ -33,103 +30,6 @@ function check(label: string, condition: boolean): void {
 function equal(label: string, actual: unknown, expected: unknown): void {
 	assertions += 1;
 	if (actual !== expected) failures.push(`${label}: expected ${expected}, got ${actual}`);
-}
-
-function git(repo: string, ...args: string[]): void {
-	execFileSync('git', ['-C', repo, ...args], { stdio: 'pipe', windowsHide: true });
-}
-
-function write(path: string, body: string): void {
-	mkdirSync(join(path, '..'), { recursive: true });
-	writeFileSync(path, body);
-}
-
-/** A committed repository, so `git status --porcelain` has a baseline to answer against. */
-function makeRepo(root: string, files: Record<string, string>, name?: string): string {
-	mkdirSync(root, { recursive: true });
-	if (name !== undefined) {
-		write(join(root, 'package.json'), JSON.stringify({ name, scripts: {} }));
-	}
-	for (const [rel, body] of Object.entries(files)) write(join(root, rel), body);
-	git(root, 'init', '-q');
-	git(root, 'config', 'user.email', 'fixture@example.invalid');
-	git(root, 'config', 'user.name', 'fixture');
-	git(root, 'add', '-A');
-	git(root, 'commit', '-qm', 'fixture');
-	return root;
-}
-
-const MANIFEST = {
-	groups: [
-		{
-			files: [
-				{ disposition: 'synced', source: 'pre-push' },
-				{ disposition: 'synced', source: 'guard.sh' },
-				{ disposition: 'seeded', source: 'seed.txt' },
-			],
-			hook: 'pre-push',
-			hookMarker: 'OURS',
-			localChainMarker: 'LOCAL CHAIN',
-			name: 'fixture-hooks',
-			owner: 'aidd',
-			sourceRoot: '.githooks',
-			targetRoot: '.githooks',
-			targets: { marker: '.aidd', model: 'discovered' },
-		},
-	],
-};
-
-const OWNER_FILES = {
-	'.githooks/guard.sh': 'guard v2\n',
-	'.githooks/pre-push': '#!/bin/sh\n# OURS\nguard v2\n',
-	'.githooks/seed.txt': 'seed original\n',
-};
-
-function build(): { fleet: string; group: SharedCoreGroup; owner: string; scripts: string } {
-	const fleet = mkdtempSync(join(tmpdir(), 'shared-core-write-'));
-	const scripts = join(fleet, '_manifest');
-	mkdirSync(scripts, { recursive: true });
-	writeFileSync(join(scripts, 'shared-core-manifest.json'), JSON.stringify(MANIFEST));
-
-	const owner = makeRepo(join(fleet, 'aidd'), OWNER_FILES, 'aidd');
-
-	// Every target carries `.aidd` so discovery finds it, and every one is a committed repository.
-	makeRepo(join(fleet, 'absent-everything'), { '.aidd/keep': 'x' }, 'absent-everything');
-	makeRepo(
-		join(fleet, 'drifted'),
-		{
-			'.aidd/keep': 'x',
-			'.githooks/guard.sh': 'guard v1\n',
-			'.githooks/pre-push': '#!/bin/sh\n# OURS\nguard v1\n',
-			'.githooks/seed.txt': 'seed edited locally\n',
-		},
-		'drifted',
-	);
-	makeRepo(
-		join(fleet, 'dirty'),
-		{ '.aidd/keep': 'x', '.githooks/guard.sh': 'guard v1\n' },
-		'dirty',
-	);
-	makeRepo(
-		join(fleet, 'foreign'),
-		{ '.aidd/keep': 'x', '.githooks/pre-push': '#!/bin/sh\n# husky\n' },
-		'foreign',
-	);
-	makeRepo(
-		join(fleet, 'chained'),
-		{ '.aidd/keep': 'x', '.githooks/pre-push': '#!/bin/sh\n# OURS\n# LOCAL CHAIN\nlint\n' },
-		'chained',
-	);
-
-	for (const repo of ['drifted', 'dirty', 'foreign', 'chained', 'absent-everything']) {
-		git(join(fleet, repo), 'config', 'core.hooksPath', '.githooks');
-	}
-
-	// The uncommitted change the writer must refuse to destroy.
-	writeFileSync(join(fleet, 'dirty', '.githooks', 'guard.sh'), 'guard v1 + local work\n');
-
-	const group = loadManifest(scripts)[0] as SharedCoreGroup;
-	return { fleet, group, owner, scripts };
 }
 
 function run(): void {
@@ -147,6 +47,30 @@ function run(): void {
 		);
 		equal('drifted target reports drift', found('drift', 'drifted'), 2);
 		equal('absent target reports uncovered', found('uncovered', 'absent-everything'), 3);
+		// Applicability under a foreign dispatcher, which is the distinction that keeps `--write`
+		// from delivering a guard nothing will ever invoke. Both repositories are identical except
+		// for one line of a hook neither of them got from us.
+		equal(
+			'a guard the target dispatcher does not chain is not applicable',
+			found('not-applicable', 'unreached'),
+			1,
+		);
+		equal(
+			'a guard the target dispatcher does chain stays applicable',
+			found('not-applicable', 'reached'),
+			0,
+		);
+		equal(
+			'a guard reached through a foreign dispatcher is still delivered',
+			found('uncovered', 'reached'),
+			2, // guard.sh and seed.txt; pre-push itself is unmanaged-dispatch
+		);
+		equal(
+			'a file the hook never chains is unconditional even under a foreign dispatcher',
+			found('uncovered', 'unreached'),
+			1, // seed.txt alone
+		);
+
 		check(
 			'a seeded file that differs is not drift',
 			!before.findings.some((f) => f.kind === 'drift' && f.detail.includes('seed.txt')),
@@ -187,6 +111,16 @@ function run(): void {
 			'the seeded file was not overwritten',
 			readFileSync(join(fleet, 'drifted', '.githooks', 'seed.txt'), 'utf8'),
 			'seed edited locally\n',
+		);
+
+		check(
+			'the guard was never delivered to the repository that does not run it',
+			!existsSync(join(fleet, 'unreached', '.githooks', 'guard.sh')),
+		);
+		equal(
+			'the guard was delivered to the repository that does run it',
+			readFileSync(join(fleet, 'reached', '.githooks', 'guard.sh'), 'utf8'),
+			'guard v2\n',
 		);
 
 		equal('uncommitted work is refused', outcome.blocked.length, 1);

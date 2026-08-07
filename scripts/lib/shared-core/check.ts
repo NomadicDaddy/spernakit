@@ -16,18 +16,26 @@ import { join } from 'node:path';
 
 import type { SharedCoreFile, SharedCoreGroup } from './manifest.ts';
 
-import { hooksPath, readScripts, resolveTargets } from './targets.ts';
+import { chainedByHook, dispatcherBody, hooksPath, invokes } from './dispatch.ts';
+import { readScripts, resolveTargets } from './targets.ts';
 
 export type FindingKind =
-	'drift' | 'foreign-hook' | 'local-chain' | 'uncovered' | 'unmanaged-dispatch' | 'unwired';
+	| 'drift'
+	| 'foreign-hook'
+	| 'local-chain'
+	| 'not-applicable'
+	| 'uncovered'
+	| 'unmanaged-dispatch'
+	| 'unwired';
 
 /**
  * `destination` and `source` are absolute paths, set only on the two kinds a write path may act on:
  * `uncovered` (deliver it) and `drift` (replace it). Every other kind leaves them undefined, which
  * is the mechanism rather than a convenience — the writer takes its worklist from these fields and
  * therefore cannot touch a file this checker did not already classify as writable. A foreign hook,
- * a hand-maintained chain, and a repository whose dispatcher is not ours are unwritable by
- * construction, not by a second copy of the rules that could fall out of step with these.
+ * a hand-maintained chain, a repository whose dispatcher is not ours, and a guard that repository's
+ * dispatcher does not chain are unwritable by construction, not by a second copy of the rules that
+ * could fall out of step with these.
  */
 export interface Finding {
 	destination?: string;
@@ -82,6 +90,7 @@ export function checkGroup(
 	ownerRoot: string,
 ): GroupReport {
 	assertSourcesExist(group, ownerRoot);
+	const chained = chainedByHook(group, ownerRoot);
 
 	const report: GroupReport = {
 		findings: [],
@@ -120,9 +129,18 @@ export function checkGroup(
 		// is conditional on the script contract. One repository in this fleet reaches leak-guard.sh
 		// through simple-git-hooks and never sets core.hooksPath; it IS covered, and writing a
 		// .githooks/pre-commit there would install a file git never executes while reporting the
-		// repository as current. The guards themselves stay unconditional — they need only bash and
-		// git, which is why they already work under a foreign dispatcher.
-		const dispatches = group.hook === undefined || hooksPath(target.path) === group.targetRoot;
+		// repository as current.
+		//
+		// The guards are unconditional on the REPOSITORY — they need only bash and git, which is why
+		// they already work under a foreign dispatcher — but not on the DISPATCHER, which has to
+		// actually call them. Where dispatch is ours that is settled by construction. Where it is
+		// not, `foreign` holds whatever git really runs, and the guard's applicability is read out of
+		// it below instead of assumed in either direction.
+		const configured = group.hook === undefined ? '' : hooksPath(target.path);
+		const dispatches = group.hook === undefined || configured === group.targetRoot;
+		const foreign = dispatches
+			? null
+			: dispatcherBody(target.path, configured, group.hook as string);
 
 		for (const file of group.files) {
 			const name = file.target ?? file.source;
@@ -136,6 +154,28 @@ export function checkGroup(
 					detail: `${name}: core.hooksPath does not resolve to ${group.targetRoot}; dispatch is not managed here`,
 					group: group.name,
 					kind: 'unmanaged-dispatch',
+					target: target.directory,
+				});
+				continue;
+			}
+			// A guard is delivered where something runs it, and nowhere else. Under a foreign
+			// dispatcher only that dispatcher can answer which of our guards it chains, and it
+			// answers differently per file: in the repository named above, the pre-commit that
+			// dispatcher runs calls leak-guard.sh, so that guard is covered and verified here,
+			// while its pre-push calls only aidd-history-guard.sh and never screenshot-guard.sh.
+			//
+			// Both assumptions are wrong. Treating every guard as applicable classifies
+			// screenshot-guard.sh as `uncovered` — which carries a source and a destination, so
+			// `--write` delivers a guard nothing will ever invoke and the note goes green while the
+			// repository is no safer. Treating none as applicable stops verifying the guards a
+			// foreign dispatcher genuinely does run, which is most of the coverage such a repository
+			// has. So this reads the dispatcher rather than guessing, and a guard it does not name
+			// gets a classification with no destination, which is what makes it unwritable.
+			if (!dispatches && chained.has(name) && !invokes(foreign ?? '', name)) {
+				report.findings.push({
+					detail: `${group.targetRoot}/${name} does not apply: ${group.hook} here is the target's own and does not run it`,
+					group: group.name,
+					kind: 'not-applicable',
 					target: target.directory,
 				});
 				continue;
