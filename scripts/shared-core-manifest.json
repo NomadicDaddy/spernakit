@@ -47,7 +47,7 @@
 			"targets": { "marker": ".aidd", "model": "discovered" },
 			"wiring": {
 				"check:leak-guard": "bun ./scripts/run-bash.ts scripts/check-leak-guard.sh",
-				"prepare": "(git config core.hooksPath .githooks && bun ./scripts/run-bash.ts .githooks/leak-guard-setup.sh) || true"
+				"prepare": "bun ./scripts/run-bash.ts .githooks/leak-guard-setup.sh"
 			}
 		},
 		{

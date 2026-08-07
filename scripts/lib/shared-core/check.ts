@@ -207,10 +207,13 @@ export function checkGroup(
 			});
 		}
 
-		for (const [key, command] of Object.entries(group.wiring ?? {})) {
-			if (scripts !== null && scripts[key] !== command) {
+		// Contains, not equals — see SharedCoreGroup.wiring for why, and for what each value has to
+		// name so that a passing substring is real evidence rather than a looser test.
+		for (const [key, required] of Object.entries(group.wiring ?? {})) {
+			const script = scripts === null ? undefined : scripts[key];
+			if (scripts !== null && (script === undefined || !script.includes(required))) {
 				report.findings.push({
-					detail: `package.json script '${key}' ${scripts[key] === undefined ? 'is missing' : 'differs'}`,
+					detail: `package.json script '${key}' ${script === undefined ? 'is missing' : `does not run \`${required}\``}`,
 					group: group.name,
 					kind: 'unwired',
 					target: target.directory,

@@ -78,7 +78,18 @@ export interface SharedCoreGroup {
 	sourceRoot: string;
 	targetRoot: string;
 	targets: DiscoveredTargets | RosterTargets;
-	/** Reported and never written. See gatesync.md 3a. */
+	/**
+	 * Script name to a substring that script must CONTAIN. Reported and never written; see
+	 * gatesync.md 3a. Substring rather than equality because the canonical command is the smallest
+	 * thing that has to happen, not the whole of what a target's script may legitimately do. Two
+	 * carriers proved that: one composes the guard's setup into a longer `prepare` that also runs
+	 * its Bun check and its build, and one dispatches hooks through simple-git-hooks instead of
+	 * `core.hooksPath` and still seeds the pattern file. Both satisfy the contract, and an equality
+	 * test reported both identically to a repository that had never wired anything — which makes
+	 * the count untrustworthy in the one direction that matters. What each substring must name is
+	 * therefore the load-bearing invocation alone. `prepare` names only the setup script; whether
+	 * dispatch reaches .githooks is a separate question, already answered by the dispatch check.
+	 */
 	wiring?: Record<string, string>;
 }
 
@@ -209,6 +220,11 @@ function asGroup(raw: unknown, index: number): SharedCoreGroup {
 		}
 		if (group['requiresPackageJson'] !== true) {
 			fail(`${where} declares wiring but not requiresPackageJson: true.`);
+		}
+		for (const [key, required] of Object.entries(wiring as Record<string, unknown>)) {
+			if (typeof required !== 'string' || required.length === 0) {
+				fail(`${where} wiring ${key} must be a non-empty string.`);
+			}
 		}
 	}
 
