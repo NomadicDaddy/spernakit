@@ -2292,7 +2292,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-virtual@3.14.8
+### @tanstack/react-virtual@3.14.9
 
 License: MIT
 
@@ -2348,7 +2348,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/virtual-core@3.17.6
+### @tanstack/virtual-core@3.17.7
 
 License: MIT
 
@@ -2628,7 +2628,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/node@26.1.1
+### @types/node@26.1.2
 
 License: MIT
 
@@ -2656,7 +2656,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/pg@8.20.0
+### @types/pg@8.20.4
 
 License: MIT
 
@@ -4625,7 +4625,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.27.0
+### lucide-react@1.29.0
 
 License: ISC
 
@@ -4745,7 +4745,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@9.0.3
+### nodemailer@9.0.4
 
 License: MIT-0
 
@@ -5585,7 +5585,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 ```
 
-### react-grid-layout@2.2.3
+### react-grid-layout@2.2.4
 
 License: MIT
 
@@ -6503,7 +6503,7 @@ SOFTWARE.
 
 License: MIT AND ISC
 
-### web-vitals@6.0.0
+### web-vitals@6.1.0
 
 License: Apache-2.0
 
