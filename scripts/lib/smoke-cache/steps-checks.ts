@@ -183,6 +183,18 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/check-schema-parity.ts',
 		],
 	},
+	// Existence is the input here, not content: a glob set that loses a path rehashes, which is what
+	// makes a deleted or renamed script invalidate the step.
+	'check:script-targets': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'*/package.json',
+			'eslint.config.js',
+			'package.json',
+			'scripts/**/*.sh',
+			'scripts/**/*.ts',
+		],
+	},
 	'check:secrets-shape': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
