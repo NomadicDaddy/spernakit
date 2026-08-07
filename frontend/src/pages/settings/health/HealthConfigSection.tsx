@@ -217,7 +217,7 @@ export function HealthConfigSection({
 						</div>
 						<div className="space-y-3">
 							<Label>Enabled Checks</Label>
-							<div className="grid gap-2 sm:grid-cols-3">
+							<div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
 								{enabledChecks.map((check) => (
 									<div className="flex items-center gap-2" key={check.key}>
 										<Switch

@@ -13,6 +13,7 @@ import { listWorkspaces, updateWorkspace } from '@/api/workspaces';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
@@ -208,34 +209,46 @@ function WorkspaceSettingsPage() {
 					</TabsTrigger>
 				</TabsList>
 
-				<TabsContent className="mt-6 space-y-6" value="general">
-					<WorkspaceGeneralTab
-						form={generalForm}
-						isPending={updateMutation.isPending}
-						onSave={() => handleSave('general')}
-						setForm={setGeneralForm}
-					/>
+				<TabsContent className="mt-6" value="general">
+					<Card className="max-w-2xl">
+						<CardContent className="pt-6">
+							<WorkspaceGeneralTab
+								form={generalForm}
+								isPending={updateMutation.isPending}
+								onSave={() => handleSave('general')}
+								setForm={setGeneralForm}
+							/>
+						</CardContent>
+					</Card>
 				</TabsContent>
 
-				<TabsContent className="mt-6 space-y-6" value="branding">
-					<WorkspaceBrandingTab
-						form={brandingForm}
-						isPending={updateMutation.isPending}
-						isUploading={uploadMutation.isPending}
-						onSave={() => handleSave('branding')}
-						onUpload={(file) => uploadMutation.mutate(file)}
-						setForm={setBrandingForm}
-					/>
+				<TabsContent className="mt-6" value="branding">
+					<Card className="max-w-2xl">
+						<CardContent className="pt-6">
+							<WorkspaceBrandingTab
+								form={brandingForm}
+								isPending={updateMutation.isPending}
+								isUploading={uploadMutation.isPending}
+								onSave={() => handleSave('branding')}
+								onUpload={(file) => uploadMutation.mutate(file)}
+								setForm={setBrandingForm}
+							/>
+						</CardContent>
+					</Card>
 				</TabsContent>
 
-				<TabsContent className="mt-6 space-y-6" value="dashboard">
-					<WorkspaceDashboardTab
-						dashboards={dashboards}
-						form={dashboardForm}
-						isPending={updateMutation.isPending}
-						onSave={() => handleSave('dashboard')}
-						setForm={setDashboardForm}
-					/>
+				<TabsContent className="mt-6" value="dashboard">
+					<Card className="max-w-2xl">
+						<CardContent className="pt-6">
+							<WorkspaceDashboardTab
+								dashboards={dashboards}
+								form={dashboardForm}
+								isPending={updateMutation.isPending}
+								onSave={() => handleSave('dashboard')}
+								setForm={setDashboardForm}
+							/>
+						</CardContent>
+					</Card>
 				</TabsContent>
 			</Tabs>
 

@@ -27,6 +27,7 @@ function ManageMemberRow({
 		<div className="flex items-center justify-between rounded-lg border p-3">
 			<div className="flex items-center gap-3">
 				<Checkbox
+					aria-label={`Select ${member.username} for bulk member actions`}
 					checked={isSelected}
 					onCheckedChange={() => onToggleSelection(member.userId)}
 				/>

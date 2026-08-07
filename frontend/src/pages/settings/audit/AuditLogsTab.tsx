@@ -46,41 +46,6 @@ function AuditLogsTab() {
 				</p>
 			</div>
 
-			{/* Search */}
-			<div className="flex items-center gap-2">
-				<div className="relative max-w-sm flex-1">
-					<Search
-						aria-hidden="true"
-						className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-					/>
-					<Input
-						aria-label="Search audit logs"
-						autoComplete="off"
-						className="pl-9"
-						onChange={(e) => setSearchInput(e.target.value)}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter') handleSearch();
-						}}
-						placeholder="Search actions, resources…"
-						value={searchInput}
-					/>
-				</div>
-				<Button onClick={handleSearch} size="sm" variant="outline">
-					Search
-				</Button>
-				{search && (
-					<Button
-						onClick={() => {
-							setFilter('search', '');
-							setSearchInput('');
-						}}
-						size="sm"
-						variant="ghost">
-						Clear
-					</Button>
-				)}
-			</div>
-
 			{/* Data table */}
 			{isLoading ? (
 				<TableSkeleton />
@@ -96,6 +61,41 @@ function AuditLogsTab() {
 							page,
 							total: data?.total ?? 0,
 						}}
+						toolbar={
+							<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+								<div className="relative max-w-sm min-w-52 flex-1">
+									<Search
+										aria-hidden="true"
+										className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+									/>
+									<Input
+										aria-label="Search audit logs"
+										autoComplete="off"
+										className="pl-9"
+										onChange={(e) => setSearchInput(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === 'Enter') handleSearch();
+										}}
+										placeholder="Search actions, resources…"
+										value={searchInput}
+									/>
+								</div>
+								<Button onClick={handleSearch} size="sm" variant="outline">
+									Search
+								</Button>
+								{search && (
+									<Button
+										onClick={() => {
+											setFilter('search', '');
+											setSearchInput('');
+										}}
+										size="sm"
+										variant="ghost">
+										Clear
+									</Button>
+								)}
+							</div>
+						}
 					/>
 
 					{/* Expanded details row */}

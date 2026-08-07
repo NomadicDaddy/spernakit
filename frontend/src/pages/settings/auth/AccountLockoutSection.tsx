@@ -96,6 +96,7 @@ function NumberInput({
 	return (
 		<Input
 			autoComplete="off"
+			className="max-w-xs"
 			id={id}
 			inputMode="numeric"
 			max={max}

@@ -1,15 +1,25 @@
+import type { ReactNode } from 'react';
+
 import { CheckCircle2, Circle, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router';
 
 import type { OnboardingStep } from '@/api/onboarding';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 
 interface OnboardingChecklistProps {
+	action?: ReactNode;
 	steps: OnboardingStep[];
 }
 
-function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
+function OnboardingChecklist({ action, steps }: OnboardingChecklistProps) {
 	const completedCount = steps.filter((s) => s.completed).length;
 	const totalCount = steps.length;
 	const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -68,6 +78,7 @@ function OnboardingChecklist({ steps }: OnboardingChecklistProps) {
 					))}
 				</ul>
 			</CardContent>
+			{action && <CardFooter className="justify-end border-t pt-4">{action}</CardFooter>}
 		</Card>
 	);
 }

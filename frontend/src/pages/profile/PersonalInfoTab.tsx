@@ -27,7 +27,7 @@ function PersonalInfoTab() {
 
 	if (isLoading || !data?.data) {
 		return (
-			<div className="space-y-6">
+			<div className="max-w-3xl space-y-6">
 				<CardSkeleton contentLines={3} descriptionWidth="h-4 w-48" titleWidth="h-6 w-32" />
 			</div>
 		);
@@ -44,7 +44,7 @@ function PersonalInfoTab() {
 				}}
 				title="Unsaved Changes"
 			/>
-			<div className="space-y-6">
+			<div className="max-w-3xl space-y-6">
 				<ProfileForm
 					key={data.data.id}
 					onDirtyChange={handleProfileDirtyChange}

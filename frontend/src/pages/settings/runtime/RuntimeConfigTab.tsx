@@ -169,7 +169,7 @@ function RuntimeConfigTab() {
 			)}
 
 			{!isLoading && !error && snapshot && (
-				<div className="grid gap-4 lg:grid-cols-2">
+				<div className="grid items-start gap-4 lg:grid-cols-2">
 					{sections.map(([name, section]) => (
 						<Card key={name}>
 							<CardHeader>

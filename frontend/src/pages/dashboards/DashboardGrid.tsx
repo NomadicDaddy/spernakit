@@ -122,7 +122,9 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 						<h2 className="text-lg font-semibold">No widgets yet</h2>
 						<p className="mt-1 text-sm text-muted-foreground">
 							{canMutate
-								? 'Switch to edit mode and add widgets to your dashboard.'
+								? editMode
+									? 'Add a widget to start building your dashboard.'
+									: 'Switch to edit mode and add widgets to your dashboard.'
 								: 'This dashboard has no widgets yet.'}
 						</p>
 						{canMutate && (
