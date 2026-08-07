@@ -19,6 +19,7 @@ import { exit } from 'node:process';
 import { build } from './lib/shared-core-write/fixture.ts';
 import { checkGroup, isFatal } from './lib/shared-core/check.ts';
 import { assertHookChainIsCarried } from './lib/shared-core/owner.ts';
+import { reportClean } from './lib/shared-core/vacuity.ts';
 import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
 
 let assertions = 0;
@@ -250,6 +251,15 @@ function run(): void {
 		);
 		assertHookChainIsCarried(group, owner);
 		check('a group that carries everything its hook chains is accepted', true);
+
+		// The clean-run verdict. A checker whose inputs are other repositories can report "no drift"
+		// having compared nothing, which is the presence-over-content failure it exists to catch,
+		// turned on itself. Both zero-target cases are arranged here because only one of them is a
+		// defect and nothing else tells them apart.
+		const empty = [{ ...before, findings: [], matched: 0, targets: 0 }];
+		equal('a lone clone skips rather than passing', reportClean(empty), 0);
+		equal('an --only that matched nothing fails', reportClean(empty, new Set(['nope'])), 1);
+		equal('a run with targets still passes', reportClean([{ ...before, findings: [] }]), 0);
 	} finally {
 		if (existsSync(fleet)) rmSync(fleet, { force: true, recursive: true });
 	}
