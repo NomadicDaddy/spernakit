@@ -88,9 +88,9 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'check:destructive-confirmation': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'backend/src/config/configUtils.ts',
 			'frontend/src/**/*.tsx',
 			'scripts/check-destructive-confirmation.ts',
+			'scripts/lib/destructive/*.ts',
 		],
 	},
 	'check:docs': {
