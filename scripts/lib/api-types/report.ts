@@ -65,7 +65,3 @@ export function printResult(result: ValidationResult): void {
 	}
 	console.log('');
 }
-
-export function printJsonResult(result: ValidationResult): void {
-	console.log(JSON.stringify(result, null, '\t'));
-}

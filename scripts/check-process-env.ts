@@ -2,7 +2,7 @@
 /**
  * Process Environment Access Check
  *
- * Enforces ASSERT-035: only approved files may read process.env in application code.
+ * Enforces: ASSERT-035 -- only approved files may read process.env in application code.
  * The approved files are:
  *   - backend/src/config/configSecrets.ts (secret override reads)
  *   - backend/src/config/configLogger.ts  (NODE_ENV bootstrap read)
@@ -16,6 +16,7 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { exit } from 'node:process';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
@@ -88,32 +89,37 @@ const backendSrc = join(projectRoot, 'backend', 'src');
 const frontendSrc = join(projectRoot, 'frontend', 'src');
 const sharedSrc = join(projectRoot, 'shared', 'src');
 
-const allViolations: Violation[] = [];
+export function runProcessEnv(): number {
+	const allViolations: Violation[] = [];
 
-for (const srcDir of [backendSrc, frontendSrc, sharedSrc]) {
-	try {
-		statSync(srcDir);
-	} catch {
-		continue;
+	for (const srcDir of [backendSrc, frontendSrc, sharedSrc]) {
+		try {
+			statSync(srcDir);
+		} catch {
+			continue;
+		}
+
+		for (const filePath of walkDir(srcDir)) {
+			allViolations.push(...checkFile(filePath));
+		}
 	}
 
-	for (const filePath of walkDir(srcDir)) {
-		allViolations.push(...checkFile(filePath));
+	if (allViolations.length > 0) {
+		console.error('[FAIL] Found process.env access in files outside the approved whitelist:\n');
+		for (const v of allViolations) {
+			console.error(`  ${v.file}:${v.line}: ${v.content}`);
+		}
+		console.error(
+			'\nOnly backend/src/config/configSecrets.ts and configLogger.ts may read process.env.',
+		);
+		console.error(
+			'Add the value to SECRET_CONFIG_KEYS/NESTED_SECRET_KEYS or use the typed config layer.',
+		);
+		return 1;
 	}
+
+	console.log('[OK] Process environment access check passed.');
+	return 0;
 }
 
-if (allViolations.length > 0) {
-	console.error('[FAIL] Found process.env access in files outside the approved whitelist:\n');
-	for (const v of allViolations) {
-		console.error(`  ${v.file}:${v.line}: ${v.content}`);
-	}
-	console.error(
-		'\nOnly backend/src/config/configSecrets.ts and configLogger.ts may read process.env.',
-	);
-	console.error(
-		'Add the value to SECRET_CONFIG_KEYS/NESTED_SECRET_KEYS or use the typed config layer.',
-	);
-	process.exit(1);
-}
-
-console.log('[OK] Process environment access check passed.');
+if (import.meta.main) exit(runProcessEnv());

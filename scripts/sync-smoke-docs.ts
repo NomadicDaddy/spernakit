@@ -8,12 +8,16 @@
  * smoke.md is the operator runbook for each mode. Generating the step lists prevents them from
  * diverging from smoke.json; `check-docs` validates links but not command sequences.
  *
+ * Enforces: the step lists in `scripts/smoke.md` match `scripts/smoke.json`. No assertion ID --
+ * ASSERT-041 governs that `smoke:qc` runs every declared step, not that the runbook describes them.
+ *
  * Only the numbered lists under each "Steps (in order):" heading are generated; the prose around
  * them is left alone.
  */
 
 import { join } from 'node:path';
 import { cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 interface SmokeStep {
 	command: string;
@@ -72,18 +76,19 @@ function syncDocument(markdown: string, config: SmokeConfig): string {
 	return output.join('\n').replace(/\n{3,}/g, '\n\n');
 }
 
-async function main(): Promise<void> {
-	const root = cwd();
-	const check = Bun.argv.includes('--check');
+export async function runSmokeDocs(
+	options: { check?: boolean; root?: string } = {},
+): Promise<number> {
+	const root = options.root ?? cwd();
 
 	const config = (await Bun.file(join(root, 'scripts/smoke.json')).json()) as SmokeConfig;
 	const markdown = await Bun.file(join(root, 'scripts/smoke.md')).text();
 	const synced = syncDocument(markdown, config);
 
-	if (!check) {
+	if (options.check !== true) {
 		await Bun.write(join(root, 'scripts/smoke.md'), synced);
-		console.log('Wrote scripts/smoke.md');
-		return;
+		console.log('[OK] wrote scripts/smoke.md');
+		return 0;
 	}
 
 	if (synced !== markdown) {
@@ -92,12 +97,29 @@ async function main(): Promise<void> {
 			'The runbook describes steps the runner does not run, or omits ones it does.',
 		);
 		console.error('Run `bun run smoke:docs` and commit the result.');
-		exit(1);
+		console.error('[FAIL] scripts/smoke.md does not match scripts/smoke.json.');
+		return 1;
 	}
 
 	console.log('[OK] scripts/smoke.md matches scripts/smoke.json.');
+	return 0;
 }
 
 if (import.meta.main) {
-	await main();
+	// A mistyped flag has to exit 2, not 1: `--chek` silently rewriting the runbook is the failure
+	// this parser exists to stop, and reporting it as "one finding" would read as real drift.
+	let check = false;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: { check: { type: 'boolean' } },
+			strict: true,
+		});
+		check = values.check === true;
+	} catch (err) {
+		console.error(`[FAIL] sync-smoke-docs: ${(err as Error).message}`);
+		console.error('Usage: sync-smoke-docs [--check]');
+		exit(2);
+	}
+	exit(await runSmokeDocs({ check }));
 }

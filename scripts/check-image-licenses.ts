@@ -1,5 +1,5 @@
 /**
- * Verifies license inventory coverage against the BUILT Docker image, not the development tree.
+ * Enforces: the notices the BUILT Docker image's contents require are present in that image.
  *
  *   bun scripts/check-image-licenses.ts --image <tag>            # verify
  *   bun scripts/check-image-licenses.ts --image <tag> --update   # refresh the base inventory
@@ -20,6 +20,7 @@
 
 import { join } from 'node:path';
 import { cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { collectRuntimeClosure } from './lib/third-party-licenses/closure.ts';
 import { workspaceNames } from './lib/third-party-licenses/collect.ts';
@@ -27,31 +28,38 @@ import {
 	collectBasePackages,
 	collectImagePackages,
 	renderInventory,
-	runInImage,
-	storeDirName,
 } from './lib/third-party-licenses/image-inventory.ts';
+import {
+	verifyImageCarriesLicenses,
+	verifyNoticesPresent,
+} from './lib/third-party-licenses/image-notices.ts';
 import { formatMarkdown } from './lib/third-party-licenses/render.ts';
 
 const INVENTORY = join('licenses', 'base-image-packages.md');
 const WORKSPACES = ['backend', 'frontend', 'shared'];
 
-const REQUIRED_IN_IMAGE = [
-	'/app/LICENSE',
-	'/app/THIRD_PARTY_LICENSES.md',
-	'/app/THIRD_PARTY_NOTICES.md',
-	'/app/licenses/GPL-2.0.txt',
-	'/app/licenses/GPL-3.0.txt',
-	'/app/licenses/LGPL-2.0.txt',
-	'/app/licenses/LGPL-2.1.txt',
-	'/app/licenses/LGPL-3.0.txt',
-	'/app/licenses/BUN-LICENSE.md',
-	'/app/licenses/CONTAINER-DISTRIBUTION.md',
-	'/app/licenses/base-image-packages.md',
-];
-
-interface Args {
-	image: string;
+export interface ImageLicenseOptions {
+	/** Absent means the tag this project builds locally, derived from its own package name. */
+	image?: string | undefined;
 	update: boolean;
+}
+
+export function parseImageLicenseArgs(args: string[]): ImageLicenseOptions {
+	const { values } = parseArgs({
+		args,
+		options: { image: { type: 'string' }, update: { type: 'boolean' } },
+		strict: true,
+	});
+	// parseArgs takes the token after `--image` as its value even when that token is itself a flag,
+	// so `--image --update` would check a tag no daemon has and report a missing image instead of
+	// the bad argument that caused it.
+	if (
+		values.image !== undefined &&
+		(values.image.trim() === '' || values.image.startsWith('-'))
+	) {
+		throw new Error('--image requires a tag (e.g. --image spernakit-test:latest).');
+	}
+	return { image: values.image, update: values.update === true };
 }
 
 /**
@@ -61,153 +69,19 @@ interface Args {
  */
 async function defaultImageTag(root: string): Promise<string> {
 	const manifest = (await Bun.file(join(root, 'package.json')).json()) as { name?: string };
-	if (!manifest.name) {
-		console.error('Cannot derive the image tag: package.json has no name.');
-		exit(1);
-	}
+	if (!manifest.name) throw new Error('cannot derive the image tag: package.json has no name.');
 	return `${manifest.name}-test:latest`;
-}
-
-async function parseArgs(argv: string[], root: string): Promise<Args> {
-	const index = argv.indexOf('--image');
-	const image = index >= 0 ? argv[index + 1] : await defaultImageTag(root);
-	if (!image) {
-		console.error('Usage: bun scripts/check-image-licenses.ts [--image <tag>] [--update]');
-		exit(1);
-	}
-	return { image, update: argv.includes('--update') };
-}
-
-async function assertNoticesPresent(image: string): Promise<void> {
-	const output = await runInImage(
-		image,
-		REQUIRED_IN_IMAGE.map((path) => `[ -e ${path} ] || echo MISSING ${path}`).join('; '),
-	);
-	const missing = output
-		.split('\n')
-		.filter((line) => line.startsWith('MISSING'))
-		.map((line) => line.replace('MISSING ', '').trim());
-
-	if (missing.length > 0) {
-		console.error(`${image} is missing license notices:`);
-		for (const path of missing) console.error(`  - ${path}`);
-		console.error('');
-		console.error('The image ships Bun and GPL/LGPL Alpine components. Check the Dockerfile');
-		console.error('COPY lines and ensure .dockerignore preserves the notices and guidance.');
-		exit(1);
-	}
-	console.log(`${image}: notices present (${REQUIRED_IN_IMAGE.length} files).`);
-}
-
-/** The name half of the `<name>@<version>` identity the attribution uses throughout. */
-function packageNameOf(entry: string): string {
-	return entry.slice(0, entry.lastIndexOf('@'));
-}
-
-/**
- * The file under `/app/licenses` that carries this SPDX identifier's text. `-only` and `-or-later`
- * choose which versions of the licence may be applied; both point at the same document.
- */
-function licenseTextPath(spdx: string): string {
-	return `/app/licenses/${spdx.replace(/-(?:only|or-later)$/, '')}.txt`;
-}
-
-/**
- * Reads the `license` field each package declares in the image. Deliberately takes the whole
- * remainder of the line rather than the first word, so a compound SPDX expression stays intact and
- * fails the coverage test below instead of silently matching on one of its halves.
- */
-async function readDeclaredLicenses(
-	image: string,
-	entries: string[],
-): Promise<Map<string, string>> {
-	const script = entries
-		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirName(entry)}/node_modules`;
-			const manifest = `${dir}/${packageNameOf(entry)}/package.json`;
-			const read = `sed -n 's/.*"license": *"\\([^"]*\\)".*/\\1/p' ${manifest} 2>/dev/null | head -1`;
-			return `echo "DECLARED ${entry} $(${read})"`;
-		})
-		.join('; ');
-
-	const declared = new Map<string, string>();
-	for (const line of (await runInImage(image, script)).split('\n')) {
-		if (!line.startsWith('DECLARED ')) continue;
-		const rest = line.slice('DECLARED '.length).trim();
-		const separator = rest.indexOf(' ');
-		if (separator > 0) declared.set(rest.slice(0, separator), rest.slice(separator + 1).trim());
-	}
-	return declared;
-}
-
-/**
- * For a package the generating machine cannot install, the attribution has to be verified where it
- * actually ships. Bun lays each package out at `.bun/<name>@<version>/node_modules/<name>/`, so the
- * package's own LICENSE travels with the binary; this confirms it arrived.
- *
- * Shipping no license file is not by itself a gap. sharp's prebuilt libvips binaries publish `lib`,
- * `versions.json` and a README carrying the third-party table, and name their terms only in the
- * `license` field of package.json. The image already carries the full text of every GPL and LGPL
- * variant, so that pairing is complete: the manifest names the terms and the artifact supplies
- * them. Accept it rather than demanding a file the publisher does not produce, and fail when the
- * terms reach the image nowhere at all. Membership in `REQUIRED_IN_IMAGE` is proof the text is
- * present because `assertNoticesPresent` has already checked every one of those paths on disk.
- */
-async function assertImageCarriesLicenses(image: string, entries: string[]): Promise<void> {
-	const script = entries
-		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirName(entry)}/node_modules`;
-			const find = `find ${dir} -maxdepth 3 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
-			return `[ -n "$(${find})" ] || echo "MISSING ${entry}"`;
-		})
-		.join('; ');
-
-	const missing = (await runInImage(image, script))
-		.split('\n')
-		.filter((line) => line.startsWith('MISSING'))
-		.map((line) => line.replace('MISSING ', '').trim());
-
-	if (missing.length === 0) return;
-
-	const declared = await readDeclaredLicenses(image, missing);
-	const uncovered = missing.filter((entry) => {
-		const spdx = declared.get(entry);
-		return spdx === undefined || !REQUIRED_IN_IMAGE.includes(licenseTextPath(spdx));
-	});
-
-	if (uncovered.length > 0) {
-		console.error(
-			`${image} ships ${uncovered.length} package(s) with no license terms at all:`,
-		);
-		for (const entry of uncovered) {
-			console.error(`  - ${entry} (declares ${declared.get(entry) ?? 'nothing'})`);
-		}
-		console.error('');
-		console.error('These are built for a platform this machine does not install, so the');
-		console.error(
-			'notices name them rather than reproducing their terms. The image is then the',
-		);
-		console.error('only place their license text can travel, and it did not arrive. Either');
-		console.error('the package must carry its own license file or the image must ship the');
-		console.error('text of the licence it declares under /app/licenses.');
-		exit(1);
-	}
-
-	console.log(
-		`${image}: ${missing.length} package(s) ship no license file; /app/licenses carries their terms:`,
-	);
-	for (const entry of missing) console.log(`  - ${entry} (${declared.get(entry)})`);
 }
 
 /**
  * The notices must cover what the image ships. This comparison fails on any package in the image
  * that the attribution appendix does not include.
  */
-async function assertNoticesCoverImage(root: string, image: string): Promise<void> {
+async function verifyNoticesCoverImage(root: string, image: string): Promise<boolean> {
 	const inImage = await collectImagePackages(image);
 	if (inImage.length === 0) {
-		console.log('No bun store found in the image; skipping closure comparison.');
-		return;
+		console.log('[SKIP] No bun store found in the image; skipping closure comparison.');
+		return true;
 	}
 
 	const { closure, elsewhere } = await collectRuntimeClosure(
@@ -230,37 +104,36 @@ async function assertNoticesCoverImage(root: string, image: string): Promise<voi
 	const missing = unattributed.filter((entry) => !platformGated.has(entry));
 
 	if (missing.length > 0) {
-		console.error(`${image} ships ${missing.length} package(s) the notices do not attribute:`);
+		console.error(
+			`[FAIL] ${image} ships ${missing.length} package(s) the notices do not attribute:`,
+		);
 		for (const entry of missing.slice(0, 25)) console.error(`  - ${entry}`);
 		if (missing.length > 25) console.error(`  ... and ${missing.length - 25} more`);
 		console.error('');
 		console.error('Either the image is installing more than the production dependencies, or');
 		console.error('THIRD_PARTY_NOTICES.md is stale. The notices must cover what ships.');
-		exit(1);
+		return false;
 	}
 
 	if (fromOtherPlatform.length > 0) {
-		await assertImageCarriesLicenses(image, fromOtherPlatform);
+		if (!(await verifyImageCarriesLicenses(image, fromOtherPlatform))) return false;
 		console.log(
-			`${image}: ${fromOtherPlatform.length} platform-gated package(s) verified against the image:`,
+			`[OK] ${image}: ${fromOtherPlatform.length} platform-gated package(s) verified against ` +
+				'the image:',
 		);
 		for (const entry of fromOtherPlatform) console.log(`  - ${entry}`);
 	}
 
 	const matched = inImage.length - fromOtherPlatform.length;
-	console.log(`${image}: all ${matched} npm packages have exact notice matches.`);
+	console.log(`[OK] ${image}: all ${matched} npm packages have exact notice matches.`);
+	return true;
 }
 
-async function main(): Promise<void> {
-	const root = cwd();
-	const args = await parseArgs(Bun.argv.slice(2), root);
-
-	await assertNoticesPresent(args.image);
-
-	const packages = await collectBasePackages(args.image);
+/** Refresh or verify the base inventory. Returns whether the file on disk is current. */
+async function reconcileInventory(root: string, image: string, update: boolean): Promise<boolean> {
+	const packages = await collectBasePackages(image);
 	if (packages.length === 0) {
-		console.error(`Read no apk packages from ${args.image}; is it the production image?`);
-		exit(1);
+		throw new Error(`read no apk packages from ${image}; is it the production image?`);
 	}
 
 	// Formatted with the repo's prettier config for the same reason the other generated docs
@@ -269,32 +142,59 @@ async function main(): Promise<void> {
 	const generated = await formatMarkdown(renderInventory(packages), root);
 	const target = join(root, INVENTORY);
 
-	// The inventory is written before the npm coverage assert, not after. The two answer different
-	// questions — apk packages in the base image, npm packages in the closure — and running the
-	// assert first made `licenses:image` unable to refresh the inventory while any coverage gap was
-	// open, including gaps whose repair is regenerating this very file. The assert still runs on
-	// the way out, so `--update` cannot pass a check it should fail.
-	if (args.update) {
+	if (update) {
 		await Bun.write(target, generated);
-		console.log(`Wrote ${INVENTORY} (${packages.length} packages).`);
-		await assertNoticesCoverImage(root, args.image);
-		return;
+		console.log(`[OK] Wrote ${INVENTORY} (${packages.length} packages).`);
+		return true;
 	}
 
 	const committed = await Bun.file(target)
 		.text()
 		.catch(() => '');
-
 	if (committed !== generated) {
-		console.error(`${INVENTORY} is out of date with the built image.`);
+		console.error(`[FAIL] ${INVENTORY} is out of date with the built image.`);
 		console.error('Run `bun run licenses:image` and commit the result.');
-		exit(1);
+		return false;
 	}
 
-	console.log(`${INVENTORY} matches the built image (${packages.length} packages).`);
-	await assertNoticesCoverImage(root, args.image);
+	console.log(`[OK] ${INVENTORY} matches the built image (${packages.length} packages).`);
+	return true;
+}
+
+export async function runImageLicenses(options: ImageLicenseOptions): Promise<number> {
+	const root = cwd();
+	try {
+		const image = options.image ?? (await defaultImageTag(root));
+		if (!(await verifyNoticesPresent(image))) return 1;
+
+		// The inventory is written before the npm coverage check, not after. The two answer different
+		// questions — apk packages in the base image, npm packages in the closure — and checking
+		// coverage first made `licenses:image` unable to refresh the inventory while any gap was
+		// open, including gaps whose repair is regenerating this very file. Coverage still runs on
+		// the way out, so `--update` cannot pass a check it should fail.
+		const inventoryOk = await reconcileInventory(root, image, options.update);
+		const coverageOk = await verifyNoticesCoverImage(root, image);
+		return inventoryOk && coverageOk ? 0 : 1;
+	} catch (err) {
+		console.error(
+			`[FAIL] check-image-licenses: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		return 1;
+	}
 }
 
 if (import.meta.main) {
-	await main();
+	// `--update` rewrites a committed file, so a mistyped flag must not fall through to a run that
+	// silently verifies the default tag instead. Bad arguments exit 2, findings exit 1.
+	let options: ImageLicenseOptions;
+	try {
+		options = parseImageLicenseArgs(Bun.argv.slice(2));
+	} catch (err) {
+		console.error(
+			`[FAIL] check-image-licenses: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		console.error('Usage: bun scripts/check-image-licenses.ts [--image <tag>] [--update]');
+		exit(2);
+	}
+	exit(await runImageLicenses(options));
 }

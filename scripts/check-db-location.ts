@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 /**
- * Database Location Guard (ASSERT-010)
+ * Database Location Guard
+ *
+ * Enforces: ASSERT-010 -- database files reside only under `data/` at the project root and are
+ * created nowhere else.
  *
  * Resolves the effective database file path from each config layer and asserts
  * it is contained within the project-root `data/` directory. This makes the
@@ -16,6 +19,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { exit } from 'node:process';
 
 import {
 	deepMerge,
@@ -80,7 +84,7 @@ function buildTargets(): Target[] {
 	return targets;
 }
 
-function main(): void {
+export function runDbLocation(): number {
 	const failures: string[] = [];
 
 	for (const target of buildTargets()) {
@@ -98,10 +102,11 @@ function main(): void {
 		for (const failure of failures) {
 			console.error(`  - ${failure}`);
 		}
-		process.exit(1);
+		return 1;
 	}
 
 	console.log('[OK] Database location guard (ASSERT-010) passed.');
+	return 0;
 }
 
-main();
+if (import.meta.main) exit(runDbLocation());

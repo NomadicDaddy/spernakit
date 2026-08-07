@@ -2,7 +2,7 @@
 /**
  * Destructive Confirmation Check
  *
- * Enforces ASSERT-020: destructive user actions (delete, revoke, impersonate, purge)
+ * Enforces: ASSERT-020 -- destructive user actions (delete, revoke, impersonate, purge)
  * MUST require an explicit confirmation step via ConfirmAlertDialog before dispatch.
  *
  * Scans all .tsx files for mutation hooks that target destructive endpoints and
@@ -15,6 +15,7 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { exit } from 'node:process';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
@@ -115,35 +116,39 @@ function hasConfirmationEvidence(lines: string[], index: number): boolean {
 	return false;
 }
 
-// --- Main ---
 const frontendSrc = join(projectRoot, 'frontend', 'src');
 
-try {
-	statSync(frontendSrc);
-} catch {
-	console.log('[OK] No frontend source directory found — check skipped.');
-	process.exit(0);
-}
-
-const allViolations: Violation[] = [];
-
-for (const filePath of walkDir(frontendSrc)) {
-	allViolations.push(...checkFile(filePath));
-}
-
-if (allViolations.length > 0) {
-	console.error('[FAIL] Found destructive API calls without confirmation dialog import:\n');
-	for (const v of allViolations) {
-		console.error(`  ${v.file}:${v.line}: ${v.content}`);
-		console.error(`    ${v.reason}`);
+export function runDestructiveConfirmation(): number {
+	try {
+		statSync(frontendSrc);
+	} catch {
+		console.log('[SKIP] No frontend source directory found.');
+		return 0;
 	}
-	console.error(
-		'\nDestructive mutations must use ConfirmAlertDialog or a similar confirmation step.',
-	);
-	console.error(
-		'Add a confirmation dialog import, or add // @no-confirm-required above the call.',
-	);
-	process.exit(1);
+
+	const allViolations: Violation[] = [];
+
+	for (const filePath of walkDir(frontendSrc)) {
+		allViolations.push(...checkFile(filePath));
+	}
+
+	if (allViolations.length > 0) {
+		console.error('[FAIL] Found destructive API calls without confirmation dialog import:\n');
+		for (const v of allViolations) {
+			console.error(`  ${v.file}:${v.line}: ${v.content}`);
+			console.error(`    ${v.reason}`);
+		}
+		console.error(
+			'\nDestructive mutations must use ConfirmAlertDialog or a similar confirmation step.',
+		);
+		console.error(
+			'Add a confirmation dialog import, or add // @no-confirm-required above the call.',
+		);
+		return 1;
+	}
+
+	console.log('[OK] Destructive confirmation check passed.');
+	return 0;
 }
 
-console.log('[OK] Destructive confirmation check passed.');
+if (import.meta.main) exit(runDestructiveConfirmation());

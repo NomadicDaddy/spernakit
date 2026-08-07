@@ -4,6 +4,9 @@
  *
  * The manifest is gitignored, so every declared value is checked against tracked package metadata
  * and each app's runtime config. All versions must be concrete semantic versions.
+ *
+ * Enforces: every fleet-manifest entry agrees with the app it describes. No assertion ID: the
+ * manifest is a gitignored local mirror and the catalog states no invariant over it.
  */
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -15,12 +18,13 @@ import {
 	validateFleetManifest,
 } from './lib/fleet/manifest.ts';
 
-function main(): void {
-	const root = resolve(cwd());
+export function runFleetManifest(root: string = resolve(cwd())): number {
 	const manifestPath = join(root, 'spernakit.psd1');
 	if (!existsSync(manifestPath)) {
-		console.log('No spernakit.psd1 present; fleet validation is not applicable.');
-		return;
+		console.log(
+			'[SKIP] check:fleet-manifest -- no spernakit.psd1 present, so nothing to verify.',
+		);
+		return 0;
 	}
 
 	let problems: string[];
@@ -38,10 +42,14 @@ function main(): void {
 			"Each app's package.json and config/<slug>.json are authoritative; spernakit.psd1 follows them.",
 		);
 		console.error('Repair with: bun run fleet-manifest:sync');
-		exit(1);
+		console.log(`[FAIL] check:fleet-manifest -- ${problems.length} inconsistency(ies).`);
+		return 1;
 	}
 
-	console.log('spernakit.psd1 matches every app, package, and runtime config it describes.');
+	console.log(
+		'[OK] check:fleet-manifest -- spernakit.psd1 matches every app, package, and runtime config it describes.',
+	);
+	return 0;
 }
 
-main();
+if (import.meta.main) exit(runFleetManifest());

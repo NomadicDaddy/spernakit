@@ -2,6 +2,9 @@
 /**
  * Require every Spernakit-owned feature record to declare the template version that owns it.
  *
+ * Enforces: every template-owned feature record carries a `spernakit_version`. No assertion ID: the
+ * catalog states no invariant over `.aidd/features/`.
+ *
  * Derived applications legitimately contain app-owned features without `spernakit_version`, so
  * this check is applicable only when the project root package is the Spernakit template. Published
  * clones may omit the gitignored `.aidd/` tree and also receive an explicit not-applicable result.
@@ -10,6 +13,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve, sep } from 'node:path';
 import { cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 const TEMPLATE_PACKAGE_NAME = 'spernakit';
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
@@ -135,20 +139,37 @@ export function runTemplateFeatureVersionCheck(projectRoot = cwd()): TemplateFea
 }
 
 function projectRootFromArgs(args: string[]): string {
-	const index = args.indexOf('--project-dir');
-	if (index === -1) return cwd();
-	const value = args[index + 1];
+	const { values } = parseArgs({
+		args,
+		options: { 'project-dir': { type: 'string' } },
+		strict: true,
+	});
+	const value = values['project-dir'];
+	if (value === undefined) return cwd();
 	// An empty value must not fall through to resolve(''), which silently returns the current
-	// working directory and grades the wrong repository.
-	if (value === undefined || value.trim() === '' || value.startsWith('--')) {
+	// working directory and grades the wrong repository. A following flag is the same fault wearing
+	// a dash: parseArgs takes the next token as the value rather than refusing it.
+	if (value.trim() === '' || value.startsWith('--')) {
 		throw new Error('--project-dir requires a path.');
 	}
 	return resolve(value);
 }
 
 if (import.meta.main) {
+	// A bad argument exits 2. Exiting 1 would report a mistyped flag as a real version mismatch,
+	// which is the one thing a caller cannot tell apart from a genuine finding.
+	let projectRoot: string;
 	try {
-		exit(runTemplateFeatureVersionCheck(projectRootFromArgs(Bun.argv.slice(2))).code);
+		projectRoot = projectRootFromArgs(Bun.argv.slice(2));
+	} catch (err) {
+		console.error(
+			`[FAIL] check:template-feature-versions: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		console.error('Usage: check-template-feature-versions [--project-dir <path>]');
+		exit(2);
+	}
+	try {
+		exit(runTemplateFeatureVersionCheck(projectRoot).code);
 	} catch (err) {
 		console.error(
 			`[FAIL] check:template-feature-versions: ${err instanceof Error ? err.message : String(err)}`,

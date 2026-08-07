@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Enforces ASSERT-012: Drizzle foreign keys must use named foreignKey() constraints.
+ * Enforces: ASSERT-012 -- Drizzle foreign keys must use named foreignKey() constraints.
  *
  * Inline .references() creates unnamed foreign keys, so schema migrations cannot rely on
  * stable constraint names across SQLite and PostgreSQL. Scan both schema dialects and report
@@ -45,7 +45,7 @@ function findInlineReferences(file: string): Finding[] {
 	return findings;
 }
 
-function main(): number {
+export function runNoInlineReferences(): number {
 	const findings = SCHEMA_DIRECTORIES.flatMap((directory) =>
 		collectTypeScriptFiles(directory).flatMap(findInlineReferences),
 	);
@@ -61,4 +61,4 @@ function main(): number {
 	return 1;
 }
 
-exit(main());
+if (import.meta.main) exit(runNoInlineReferences());

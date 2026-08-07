@@ -2,6 +2,9 @@
 /**
  * Validates that internal links in Markdown documentation files resolve to existing files.
  *
+ * Enforces: every internal Markdown link resolves to a file that exists. No assertion ID: the
+ * catalog states no invariant over documentation.
+ *
  * Scans all .md files in the project root, docs/, and scripts/ directories.
  * Extracts inline links [text](path) and checks that each target file exists.
  * Skips external links (http/https/mailto), anchor-only links (#heading),
@@ -14,6 +17,7 @@
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
+import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -160,7 +164,7 @@ function checkFile(filePath: string): BrokenLink[] {
 	return broken;
 }
 
-function main(): void {
+export function runDocs(): number {
 	console.log('Checking documentation links...\n');
 
 	const mdFiles = findMarkdownFiles(PROJECT_ROOT);
@@ -172,8 +176,8 @@ function main(): void {
 	}
 
 	if (allBroken.length === 0) {
-		console.log(`✅ All links valid across ${mdFiles.length} markdown files`);
-		process.exit(0);
+		console.log(`[OK] All links valid across ${mdFiles.length} markdown files`);
+		return 0;
 	}
 
 	// Group by file
@@ -185,7 +189,9 @@ function main(): void {
 		grouped.set(relative, existing);
 	}
 
-	console.error(`❌ Found ${allBroken.length} broken link(s) across ${grouped.size} file(s):\n`);
+	console.error(
+		`[FAIL] Found ${allBroken.length} broken link(s) across ${grouped.size} file(s):\n`,
+	);
 
 	for (const [file, links] of grouped) {
 		console.error(`  ${file}`);
@@ -195,7 +201,7 @@ function main(): void {
 		console.error();
 	}
 
-	process.exit(1);
+	return 1;
 }
 
-main();
+if (import.meta.main) exit(runDocs());

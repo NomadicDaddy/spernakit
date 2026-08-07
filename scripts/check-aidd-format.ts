@@ -2,6 +2,9 @@
 /**
  * Format gate for the `.aidd/` metadata a derived app tracks in git.
  *
+ * Enforces: tracked `.aidd/` metadata is in this repository's Prettier shape. The assertion catalog
+ * has no ID for it, and `.aidd/assertions.md` is itself one of the files this gate formats.
+ *
  *   bun run check:aidd-format   # fail if any metadata file is not in the repository's shape
  *   bun run format:aidd         # rewrite them in place
  *
@@ -150,7 +153,7 @@ async function listDifferent(projectRoot: string, files: string[]): Promise<stri
 }
 
 function reportSkip(label: string, reason: string): AiddFormatResult {
-	console.log(`${label} skipped: ${reason}`);
+	console.log(`[SKIP] ${label} skipped: ${reason}`);
 	return { changed: [], code: 0, examined: [], skippedReason: reason };
 }
 
@@ -173,7 +176,7 @@ export async function runAiddFormat(
 	const examined = await collectAiddMetadataFiles(projectRoot);
 	if (examined.length === 0) {
 		console.error(
-			`${label} failed: ${AIDD_DIR}/ is tracked but 0 metadata files were examined.`,
+			`[FAIL] ${label}: ${AIDD_DIR}/ is tracked but 0 metadata files were examined.`,
 		);
 		console.error(
 			`Expected ${AIDD_DIR}/roadmap.json and/or ${AIDD_DIR}/features/*/feature.json. A gate that`,
@@ -185,7 +188,7 @@ export async function runAiddFormat(
 	const unexamined = await findUnexaminedFiles(examined);
 	if (unexamined.length > 0) {
 		console.error(
-			`${label} failed: Prettier will not examine ${unexamined.length} of ${examined.length} metadata file(s).`,
+			`[FAIL] ${label}: Prettier will not examine ${unexamined.length} of ${examined.length} metadata file(s).`,
 		);
 		console.error(`Check that ${IGNORE_PATH} is still empty of patterns.`);
 		for (const file of unexamined) console.error(`- ${displayPath(projectRoot, file)}`);
@@ -209,7 +212,7 @@ export async function runAiddFormat(
 			}
 		}
 		console.log(
-			`${label} wrote ${changed.length} of ${examined.length} metadata file(s) examined.`,
+			`[OK] ${label} wrote ${changed.length} of ${examined.length} metadata file(s) examined.`,
 		);
 		for (const file of changed) console.log(`- ${file}`);
 		return { changed, code: 0, examined };
@@ -217,14 +220,14 @@ export async function runAiddFormat(
 
 	if (changed.length > 0) {
 		console.error(
-			`${label} failed: ${changed.length} of ${examined.length} metadata file(s) examined are not in the repository's Prettier shape.`,
+			`[FAIL] ${label}: ${changed.length} of ${examined.length} metadata file(s) examined are not in the repository's Prettier shape.`,
 		);
 		console.error('Run `bun run format:aidd` to rewrite them.');
 		for (const file of changed) console.error(`- ${file}`);
 		return { changed, code: 1, examined };
 	}
 
-	console.log(`${label} passed (${examined.length} metadata file(s) examined).`);
+	console.log(`[OK] ${label} passed (${examined.length} metadata file(s) examined).`);
 	return { changed, code: 0, examined };
 }
 

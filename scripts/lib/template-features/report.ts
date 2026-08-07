@@ -101,10 +101,22 @@ export function countActionable(plan: SyncPlan): number {
 }
 
 /** The machine-readable report. Same plan, same exit condition — only the rendering differs. */
-export function emitJsonPlan(appRoot: string, outcome: SyncOutcome): void {
+/**
+ * The four keys every gate in this repository puts at the head of a `--json` payload. They are
+ * built by the caller rather than derived here so the gate's own source states its envelope.
+ */
+export interface JsonEnvelope {
+	examined: number;
+	findings: number;
+	gate: string;
+	status: 'fail' | 'pass';
+}
+
+export function emitJsonPlan(appRoot: string, outcome: SyncOutcome, envelope: JsonEnvelope): void {
 	console.log(
 		JSON.stringify(
 			{
+				...envelope,
 				app: basename(appRoot),
 				durable: outcome.durable,
 				entries: outcome.plan.entries.map((entry) => ({

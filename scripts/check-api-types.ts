@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import type { TypeBoxUnionSchema } from './lib/api-types/enum-sources.ts';
-import type { ValidationResult } from './lib/api-types/report.ts';
-
 /**
  * OpenAPI Spec vs Frontend Type Contract Validation
+ *
+ * Enforces: frontend enum and union types stay consistent with the backend route schemas they are
+ * derived from. No assertion ID: the catalog states no invariant over the OpenAPI contract.
  *
  * Extracts the OpenAPI spec from the Elysia app (without starting a server)
  * and validates that frontend type definitions are consistent with backend
@@ -14,6 +14,12 @@ import type { ValidationResult } from './lib/api-types/report.ts';
  *   bun run check:api-types
  *   bun run check:api-types --json    # Output as JSON (for CI)
  */
+import { exit } from 'node:process';
+import { parseArgs } from 'node:util';
+
+import type { TypeBoxUnionSchema } from './lib/api-types/enum-sources.ts';
+import type { ValidationResult } from './lib/api-types/report.ts';
+
 import {
 	ApiKeyScopeSchema,
 	NotificationTypeSchema,
@@ -21,12 +27,10 @@ import {
 } from '../backend/src/schemas/domain.ts';
 import { extractTypeBoxEnumValues } from './lib/api-types/enum-sources.ts';
 import { validateEnums } from './lib/api-types/enum-validate.ts';
-import { printJsonResult, printResult } from './lib/api-types/report.ts';
+import { printResult } from './lib/api-types/report.ts';
 import { extractOpenAPISpec, findSpecEnumValues } from './lib/api-types/spec-extract.ts';
 
-async function main(): Promise<void> {
-	const jsonMode = process.argv.includes('--json');
-
+export async function runApiTypes(jsonMode = false): Promise<number> {
 	const result: ValidationResult = {
 		endpointCount: 0,
 		enumMismatches: [],
@@ -91,27 +95,58 @@ async function main(): Promise<void> {
 		}
 
 		if (jsonMode) {
-			printJsonResult(result);
+			console.log(
+				JSON.stringify(
+					{
+						examined: result.endpointCount,
+						findings: result.enumMismatches,
+						gate: 'check:api-types',
+						status: result.status,
+						warnings: result.warnings,
+					},
+					null,
+					'\t',
+				),
+			);
 		} else {
 			printResult(result);
 		}
 
-		process.exit(result.status === 'pass' ? 0 : 1);
+		return result.status === 'pass' ? 0 : 1;
 	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : String(err);
 		if (jsonMode) {
 			console.log(
 				JSON.stringify({
-					error: err instanceof Error ? err.message : String(err),
+					error: message,
+					examined: 0,
+					findings: [],
+					gate: 'check:api-types',
 					status: 'fail',
 				}),
 			);
 		} else {
-			console.error(
-				`API type validation error: ${err instanceof Error ? err.message : String(err)}`,
-			);
+			console.error(`[FAIL] API type validation error: ${message}`);
 		}
-		process.exit(1);
+		return 1;
 	}
 }
 
-await main();
+if (import.meta.main) {
+	// `--json` is machine-read by CI, so a mistyped flag must not quietly fall back to the human
+	// report and exit 1 as though the contract had drifted. Bad arguments exit 2.
+	let jsonMode = false;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: { json: { type: 'boolean' } },
+			strict: true,
+		});
+		jsonMode = values.json === true;
+	} catch (err) {
+		console.error(`[FAIL] check-api-types: ${(err as Error).message}`);
+		console.error('Usage: check-api-types [--json]');
+		exit(2);
+	}
+	exit(await runApiTypes(jsonMode));
+}

@@ -2,6 +2,9 @@
 /**
  * Application consistency checker for Spernakit v3.
  *
+ * Enforces: ASSERT-010 -- database files reside only under `data/` at the project root. The other
+ * checks below (config validity, workspace names, no `.env` at the root) have no assertion ID.
+ *
  * Validates:
  * - Config file exists and is valid JSON with required fields
  * - Database files are only in data/ (architectural constraint)
@@ -12,6 +15,7 @@
  */
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
+import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { checkCspHashConsistency } from './lib/check-application/csp-hash.ts';
@@ -193,7 +197,7 @@ async function checkRogueFolders(): Promise<void> {
 	console.log('   No rogue data/ or backup/ folders found.');
 }
 
-async function main(): Promise<void> {
+export async function runApplication(): Promise<number> {
 	try {
 		console.log('Checking application configuration...');
 		console.log('');
@@ -224,13 +228,13 @@ async function main(): Promise<void> {
 		checkCspHashConsistency(repoRoot);
 		console.log('');
 
-		console.log('Application checks passed.');
-		process.exit(0);
+		console.log('[OK] Application checks passed.');
+		return 0;
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));
-		console.error(`Application check failed: ${typedErr.message}`);
-		process.exit(1);
+		console.error(`[FAIL] Application check failed: ${typedErr.message}`);
+		return 1;
 	}
 }
 
-main();
+if (import.meta.main) exit(await runApplication());

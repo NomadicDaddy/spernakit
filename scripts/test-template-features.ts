@@ -226,7 +226,7 @@ try {
 	writeJson(templateRoot, 'package.json', { name: 'spernakit', version: '9.1.0' });
 	run = runSync(appRoot, ['--template', templateRoot, '--check']);
 	assert(
-		run.exitCode === 0 && run.text.includes('SKIPPED') && run.text.includes('v9.1.0'),
+		run.exitCode === 0 && run.text.includes('[SKIP]') && run.text.includes('v9.1.0'),
 		`A version mismatch must skip cleanly:\n${run.text}`,
 	);
 	run = runSync(appRoot, ['--template', templateRoot, '--check'], {
