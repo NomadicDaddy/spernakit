@@ -60,6 +60,38 @@ export function chainedByHook(group: SharedCoreGroup, ownerRoot: string): Set<st
 }
 
 /**
+ * Extensions that make a token a script somebody runs. `.json` and `.lock` are deliberately absent:
+ * the canonical pre-commit greps for `bun\.lock` and `package\.json` to decide whether to run the
+ * license check, and neither is a thing it invokes.
+ */
+const INVOKED = /[\w.-]+\.(?:bash|cjs|js|mjs|ps1|sh|ts)\b/gu;
+
+/**
+ * The script files a hook body invokes, by basename, with comment lines removed first.
+ *
+ * Basename rather than path because the two idioms in this fleet disagree about the path and agree
+ * about the name: the canonical pre-commit writes `bash .githooks/leak-guard.sh` while pre-push
+ * writes `bash "$hooks_dir/aidd-history-guard.sh"`, and a scan keyed on either spelling would miss
+ * the other. Anything without one of the extensions above is not matched, so a hook chaining an
+ * extensionless file is invisible here — an extensionless token cannot be told apart from `set` or
+ * `echo`, and a scan that guessed would fail loads for words.
+ *
+ * Comments are stripped here and NOT in `chainedByHook`, which reads the same bodies. The two ask
+ * different questions and a mention in a comment is the wrong answer in opposite directions: there
+ * it makes a guard conditional on the target's dispatcher, which errs toward not delivering, while
+ * here it would reject a manifest that describes reality correctly. The leak-guard-only pre-commit
+ * names `install-leak-guard.ts` in its header for the reader's benefit and invokes nothing of the
+ * sort.
+ */
+export function invokedScripts(body: string): Set<string> {
+	const code = body
+		.split('\n')
+		.filter((line) => !/^\s*#/u.test(line))
+		.join('\n');
+	return new Set([...code.matchAll(INVOKED)].map((match) => match[0]));
+}
+
+/**
  * The body of the hook git will actually run for `hookName`, or null when nothing is dispatched.
  *
  * An unset core.hooksPath is not "no hooks" — it is git's default, `.git/hooks`, which is exactly

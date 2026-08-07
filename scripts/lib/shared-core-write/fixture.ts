@@ -34,10 +34,15 @@ function write(path: string, body: string): void {
 }
 
 /** A committed repository, so `git status --porcelain` has a baseline to answer against. */
-function makeRepo(root: string, files: Record<string, string>, name?: string): string {
+function makeRepo(
+	root: string,
+	files: Record<string, string>,
+	name?: string,
+	scripts: Record<string, string> = {},
+): string {
 	mkdirSync(root, { recursive: true });
 	if (name !== undefined) {
-		write(join(root, 'package.json'), JSON.stringify({ name, scripts: {} }));
+		write(join(root, 'package.json'), JSON.stringify({ name, scripts }));
 	}
 	for (const [rel, body] of Object.entries(files)) write(join(root, rel), body);
 	git(root, 'init', '-q');
@@ -52,7 +57,17 @@ const MANIFEST = {
 	groups: [
 		{
 			files: [
-				{ disposition: 'synced', source: 'pre-push' },
+				// Two variants, mirroring the real leak-guard-hooks group. Without them a differing
+				// hook has exactly one possible reading and `drift` on a hook is unreachable: any
+				// body that carries the marker and matches the single variant's opposite is
+				// `diverged-hook`. The pair is what separates "holds the OTHER variant, upgrade it"
+				// from "matches neither, only a person can say why".
+				{
+					disposition: 'synced',
+					fallbackSource: 'pre-push-minimal',
+					requiresScripts: ['qc'],
+					source: 'pre-push',
+				},
 				{ disposition: 'synced', source: 'guard.sh' },
 				{ disposition: 'seeded', source: 'seed.txt' },
 			],
@@ -73,7 +88,11 @@ const OWNER_FILES = {
 	// The hook names the guard it chains, which is what makes `guard.sh` conditional on a target's
 	// dispatcher actually calling it. `seed.txt` is deliberately not named: a file the hook never
 	// chains must stay unconditional, which is the real leak-guard-setup.sh case.
-	'.githooks/pre-push': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\n',
+	'.githooks/pre-push': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\nqc\n',
+	// The lesser variant for targets that cannot satisfy the script contract. It chains the same
+	// guard, which is the invariant the two variants exist to preserve: the security tier is
+	// identical and only the static checks are absent.
+	'.githooks/pre-push-minimal': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\n',
 	'.githooks/seed.txt': 'seed original\n',
 };
 
@@ -87,20 +106,43 @@ export function build(): Fixture {
 
 	// Every target carries `.aidd` so discovery finds it, and every one is a committed repository.
 	makeRepo(join(fleet, 'absent-everything'), { '.aidd/keep': 'x' }, 'absent-everything');
+	// Defines `qc`, so the full variant is the one it should hold, and it holds the minimal one
+	// instead. That is drift the writer must fix: a target whose package.json now satisfies the
+	// script contract it did not before is exactly what requiresScripts exists to move upward.
 	makeRepo(
 		join(fleet, 'drifted'),
 		{
 			'.aidd/keep': 'x',
 			'.githooks/guard.sh': 'guard v1\n',
-			'.githooks/pre-push': '#!/bin/sh\n# OURS\nguard v1\n',
+			'.githooks/pre-push': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\n',
 			'.githooks/seed.txt': 'seed edited locally\n',
 		},
 		'drifted',
+		{ qc: 'echo qc' },
+	);
+
+	// Ours by marker, matching NEITHER variant, and never declared a local chain. Content cannot
+	// say whether someone's commit-time checks live in those extra lines or whether this is a copy
+	// of ours from two generations ago, so the gate must fail and the writer must not act.
+	makeRepo(
+		join(fleet, 'diverged'),
+		{
+			'.aidd/keep': 'x',
+			'.githooks/guard.sh': 'guard v2\n',
+			'.githooks/pre-push': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\nlint\n',
+			'.githooks/seed.txt': 'seed original\n',
+		},
+		'diverged',
 	);
 	makeRepo(
 		join(fleet, 'dirty'),
 		{ '.aidd/keep': 'x', '.githooks/guard.sh': 'guard v1\n' },
 		'dirty',
+	);
+	makeRepo(
+		join(fleet, 'staged'),
+		{ '.aidd/keep': 'x', '.githooks/guard.sh': 'guard v1\n' },
+		'staged',
 	);
 	makeRepo(
 		join(fleet, 'foreign'),
@@ -113,7 +155,15 @@ export function build(): Fixture {
 		'chained',
 	);
 
-	for (const repo of ['drifted', 'dirty', 'foreign', 'chained', 'absent-everything']) {
+	for (const repo of [
+		'drifted',
+		'diverged',
+		'dirty',
+		'staged',
+		'foreign',
+		'chained',
+		'absent-everything',
+	]) {
 		git(join(fleet, repo), 'config', 'core.hooksPath', '.githooks');
 	}
 
@@ -132,8 +182,12 @@ export function build(): Fixture {
 		writeFileSync(join(fleet, repo, '.git', 'hooks', 'pre-push'), dispatcher);
 	}
 
-	// The uncommitted change the writer must refuse to destroy.
+	// The uncommitted changes the writer must refuse to destroy, in both of the states git calls
+	// uncommitted. `git status --porcelain` reports the index column and the worktree column, and a
+	// guard that read only one of them would destroy work the other was holding.
 	writeFileSync(join(fleet, 'dirty', '.githooks', 'guard.sh'), 'guard v1 + local work\n');
+	writeFileSync(join(fleet, 'staged', '.githooks', 'guard.sh'), 'guard v1 + staged work\n');
+	git(join(fleet, 'staged'), 'add', '.githooks/guard.sh');
 
 	return { fleet, group: loadManifest(scripts)[0] as SharedCoreGroup, owner, scripts };
 }

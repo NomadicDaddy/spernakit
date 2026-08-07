@@ -20,7 +20,7 @@
  *      only trace is a cheerful "wrote" line. A git inspection that fails is treated as a refusal,
  *      not as a pass, because the script cannot then prove the overwrite is recoverable.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import type { Finding } from './check.ts';
@@ -81,6 +81,42 @@ function hasUncommittedChanges(targetRoot: string, relativePath: string): boolea
 }
 
 /**
+ * Makes a delivered hook executable, on disk and in the index.
+ *
+ * The filesystem bit alone is not enough and the reason is not portability pedantry: these
+ * repositories run with `core.fileMode=false` on Windows, so git ignores the on-disk mode and
+ * records the hook as 100644 — and git will not run a non-executable hook on Linux or macOS.
+ * Anyone cloning there would get a guard that is silently disabled, which is worse than an absent
+ * one because the repository reads as protected. The index mode is the only part that survives a
+ * clone. `install-leak-guard.ts` and `install-history-guard.ts` have both done this since they were
+ * written; the shared-core writer shipped on 2026-08-07 without it and would have delivered exactly
+ * that dead hook the first time it covered a new repository.
+ *
+ * `--add` is what makes `--chmod` reach a file git does not track yet, and it stages the hook as a
+ * side effect. That is a real cost and it is the smaller one: the alternative is a writer that
+ * cannot correctly deliver a hook at all. Failures are reported rather than thrown — the content is
+ * already written, and a mode git refused to record is a partial result the caller has to see.
+ */
+function makeExecutable(
+	targetRoot: string,
+	relativePath: string,
+	destination: string,
+): null | string {
+	try {
+		chmodSync(destination, 0o755);
+	} catch {
+		/* Filesystems without POSIX modes; the index mode below is the one that matters. */
+	}
+	const result = Bun.spawnSync(
+		['git', '-C', targetRoot, 'update-index', '--add', '--chmod=+x', relativePath],
+		{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
+	);
+	if (result.exitCode === 0) return null;
+	const detail = result.stderr.toString().trim();
+	return `wrote ${relativePath} but could not record its executable bit${detail ? `: ${detail}` : ''}`;
+}
+
+/**
  * The repository root a destination sits inside, recovered from the finding rather than passed
  * alongside it. `destination` is `<fleetRoot>/<directory>/<targetRoot>/<name>`, and the writer needs
  * the first two segments to ask git about the third.
@@ -129,11 +165,15 @@ export function applyFindings(
 			continue;
 		}
 
+		let note: null | string = null;
 		if (!dryRun) {
 			mkdirSync(dirname(finding.destination), { recursive: true });
 			writeFileSync(finding.destination, readFileSync(finding.source, 'utf8'));
+			if (finding.executable === true) {
+				note = makeExecutable(targetRoot, relativePath, finding.destination);
+			}
 		}
-		outcome.written.push(finding);
+		outcome.written.push(note === null ? finding : { ...finding, detail: note });
 	}
 
 	return outcome;
