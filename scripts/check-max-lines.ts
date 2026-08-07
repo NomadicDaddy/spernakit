@@ -17,7 +17,11 @@ import { cwd, exit } from 'node:process';
  */
 
 const MAX_LINES = 300;
-const scannedRoots = ['cli/src', 'backend/src', 'frontend/src', 'shared/src', 'scripts'];
+// The workspace source roots this template ships, and nothing else. A root that does not exist is
+// skipped silently (see the stat/continue below), so a path borrowed from a peer repository does not
+// fail — it reads as coverage while scanning nothing. `cli/src` sat here until 2026-08-06 doing
+// exactly that, in this repository and in every app derived from it.
+const scannedRoots = ['backend/src', 'frontend/src', 'shared/src', 'scripts'];
 const skippedDirs = new Set(['build', 'dist', 'node_modules', 'snapshots']);
 
 interface Finding {

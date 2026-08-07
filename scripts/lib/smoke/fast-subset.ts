@@ -21,9 +21,10 @@
 //   lint               26.98s     105                    411
 //
 // format:check runs ahead of lint here because lint is this repo's most expensive static check by a
-// wide margin (~27s against format:check's ~6s) while their ratios are within 1% of each other —
-// so when both would fail, reporting the cheaper one first saves ~27s per doomed commit. aidd's
-// absolute numbers differ (its lint is ~10s) but rank identically, so both repos run this order.
+// wide margin (~27s against format:check's ~6s) while their ratios are within 1% of each other — so
+// when both would fail, reporting the cheaper one first saves ~27s per doomed commit. That margin is
+// the whole justification for the swap, and it is narrow enough that a lint config change can invert
+// it: re-mine the table above rather than assuming the order still holds.
 //
 // leak-guard is not part of this subset: it scans the staged index diff (runtime state), so it is
 // uncacheable-by-design and the hook keeps it as a direct call ahead of `smoke:qc:fast`.
