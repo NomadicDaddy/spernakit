@@ -1,12 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { Minus, Plus, Scan } from 'lucide-react';
+import { useRef, useState } from 'react';
 
-import type { Relationship, TableMetadata } from '@/api/databaseAdmin';
+import type { TableMetadata } from '@/api/databaseAdmin';
 
 import { getRelationships, getSchema } from '@/api/databaseAdmin';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
+
+import type { NodePosition } from './ErdGraphPrimitives';
+
+import {
+	NODE_HEADER_HEIGHT,
+	NODE_PADDING,
+	RelationshipLine,
+	TableNode,
+} from './ErdGraphPrimitives';
 
 interface ErdPanelProps {
 	onSelectTable?: ((tableName: string) => void) | undefined;
@@ -14,20 +26,14 @@ interface ErdPanelProps {
 
 /** Table node dimensions and layout constants. */
 const NODE_WIDTH = 180;
-const NODE_HEADER_HEIGHT = 28;
 const NODE_ROW_HEIGHT = 18;
-const NODE_PADDING = 8;
 const GRID_COLS = 4;
 const GRID_GAP_X = 240;
 const GRID_GAP_Y = 40;
 const SVG_PADDING = 20;
-
-interface NodePosition {
-	height: number;
-	width: number;
-	x: number;
-	y: number;
-}
+const MIN_ZOOM = 0.35;
+const MAX_ZOOM = 1.5;
+const ZOOM_STEP = 0.15;
 
 function computeLayout(tables: TableMetadata[]): Map<string, NodePosition> {
 	const positions = new Map<string, NodePosition>();
@@ -50,7 +56,9 @@ function computeLayout(tables: TableMetadata[]): Map<string, NodePosition> {
 }
 
 function ErdPanel({ onSelectTable }: ErdPanelProps) {
-	const [hoveredTable, setHoveredTable] = useState<null | string>(null);
+	const [activeTable, setActiveTable] = useState<null | string>(null);
+	const [zoom, setZoom] = useState(1);
+	const graphViewportRef = useRef<HTMLDivElement>(null);
 
 	const { data: schemaResponse, isLoading: isLoadingSchema } = useQuery({
 		queryFn: getSchema,
@@ -78,23 +86,81 @@ function ErdPanel({ onSelectTable }: ErdPanelProps) {
 		svgHeight = Math.max(svgHeight, pos.y + pos.height + SVG_PADDING * 2);
 	}
 
+	const adjacentTables = new Set<string>();
+	if (activeTable) {
+		for (const relationship of relationships) {
+			if (relationship.sourceTable === activeTable) {
+				adjacentTables.add(relationship.targetTable);
+			}
+			if (relationship.targetTable === activeTable) {
+				adjacentTables.add(relationship.sourceTable);
+			}
+		}
+	}
+
+	function changeZoom(delta: number) {
+		setZoom((current) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, current + delta)));
+	}
+
+	function fitToView() {
+		const viewport = graphViewportRef.current;
+		if (!viewport) return;
+		const widthScale = Math.max(1, viewport.clientWidth - 16) / svgWidth;
+		const heightScale = Math.min(window.innerHeight * 0.58, 640) / svgHeight;
+		setZoom(Math.min(1, Math.max(MIN_ZOOM, Math.min(widthScale, heightScale))));
+		viewport.scrollTo({ behavior: 'smooth', left: 0, top: 0 });
+	}
+
 	return (
 		<Card>
-			<CardHeader className="pb-3">
+			<CardHeader className="flex flex-row items-center justify-between pb-3">
 				<CardTitle className="text-base">Entity Relationship Diagram</CardTitle>
+				<div
+					aria-label="Diagram view controls"
+					className="flex items-center gap-1"
+					role="toolbar">
+					<DiagramControl
+						disabled={zoom <= MIN_ZOOM}
+						label="Zoom out"
+						onClick={() => changeZoom(-ZOOM_STEP)}>
+						<Minus aria-hidden="true" />
+					</DiagramControl>
+					<span
+						aria-live="polite"
+						className="min-w-11 text-center text-xs text-muted-foreground">
+						{Math.round(zoom * 100)}%
+					</span>
+					<DiagramControl
+						disabled={zoom >= MAX_ZOOM}
+						label="Zoom in"
+						onClick={() => changeZoom(ZOOM_STEP)}>
+						<Plus aria-hidden="true" />
+					</DiagramControl>
+					<DiagramControl label="Fit diagram to view" onClick={fitToView}>
+						<Scan aria-hidden="true" />
+					</DiagramControl>
+				</div>
 			</CardHeader>
-			<CardContent className="overflow-auto">
+			<CardContent className="max-h-[min(70vh,720px)] overflow-auto" ref={graphViewportRef}>
 				{isLoading ? (
 					<Skeleton className="h-[400px] w-full" />
 				) : (
 					<svg
 						className="min-w-full"
-						height={svgHeight}
+						height={svgHeight * zoom}
 						viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-						width={svgWidth}>
+						width={svgWidth * zoom}>
 						{/* Relationship lines */}
 						{relationships.map((rel, i) => (
-							<RelationshipLine key={i} positions={positions} relationship={rel} />
+							<RelationshipLine
+								isActive={
+									activeTable === rel.sourceTable ||
+									activeTable === rel.targetTable
+								}
+								key={i}
+								positions={positions}
+								relationship={rel}
+							/>
 						))}
 
 						{/* Table nodes */}
@@ -103,11 +169,14 @@ function ErdPanel({ onSelectTable }: ErdPanelProps) {
 							if (!pos) return null;
 							return (
 								<TableNode
-									isHovered={hoveredTable === table.tableName}
+									isActive={activeTable === table.tableName}
+									isAdjacent={adjacentTables.has(table.tableName)}
 									key={table.tableName}
+									onBlur={() => setActiveTable(null)}
 									onClick={() => onSelectTable?.(table.tableName)}
-									onMouseEnter={() => setHoveredTable(table.tableName)}
-									onMouseLeave={() => setHoveredTable(null)}
+									onFocus={() => setActiveTable(table.tableName)}
+									onMouseEnter={() => setActiveTable(table.tableName)}
+									onMouseLeave={() => setActiveTable(null)}
 									position={pos}
 									table={table}
 								/>
@@ -120,127 +189,31 @@ function ErdPanel({ onSelectTable }: ErdPanelProps) {
 	);
 }
 
-function TableNode({
-	isHovered,
+function DiagramControl({
+	children,
+	disabled = false,
+	label,
 	onClick,
-	onMouseEnter,
-	onMouseLeave,
-	position,
-	table,
 }: {
-	isHovered: boolean;
+	children: React.ReactNode;
+	disabled?: boolean;
+	label: string;
 	onClick: () => void;
-	onMouseEnter: () => void;
-	onMouseLeave: () => void;
-	position: NodePosition;
-	table: TableMetadata;
 }) {
 	return (
-		<g
-			aria-label={`View table ${table.tableName}`}
-			className="cursor-pointer"
-			onClick={onClick}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					onClick();
-				}
-			}}
-			onMouseEnter={onMouseEnter}
-			onMouseLeave={onMouseLeave}
-			role="button"
-			tabIndex={0}>
-			{/* Background */}
-			<rect
-				className={isHovered ? 'fill-primary/5' : 'fill-card'}
-				height={position.height}
-				rx={6}
-				stroke={isHovered ? 'hsl(var(--primary))' : 'hsl(var(--border))'}
-				strokeWidth={isHovered ? 2 : 1}
-				width={position.width}
-				x={position.x}
-				y={position.y}
-			/>
-			{/* Header */}
-			<rect
-				className="fill-primary/10"
-				height={NODE_HEADER_HEIGHT}
-				rx={6}
-				width={position.width}
-				x={position.x}
-				y={position.y}
-			/>
-			{/* Cover bottom corners of header */}
-			<rect
-				className="fill-primary/10"
-				height={6}
-				width={position.width}
-				x={position.x}
-				y={position.y + NODE_HEADER_HEIGHT - 6}
-			/>
-			{/* Table name */}
-			<text
-				className="fill-foreground text-[11px] font-semibold"
-				dominantBaseline="central"
-				x={position.x + 8}
-				y={position.y + NODE_HEADER_HEIGHT / 2}>
-				{table.tableName}
-			</text>
-			{/* Row count badge */}
-			<text
-				className="fill-muted-foreground text-[9px]"
-				dominantBaseline="central"
-				textAnchor="end"
-				x={position.x + position.width - 8}
-				y={position.y + NODE_HEADER_HEIGHT / 2}>
-				{table.rowCount}
-			</text>
-			{/* Column count info */}
-			<text
-				className="fill-muted-foreground text-[10px]"
-				dominantBaseline="central"
-				x={position.x + 8}
-				y={position.y + NODE_HEADER_HEIGHT + NODE_PADDING + 8}>
-				{table.columnCount} columns
-			</text>
-		</g>
-	);
-}
-
-function RelationshipLine({
-	positions,
-	relationship,
-}: {
-	positions: Map<string, NodePosition>;
-	relationship: Relationship;
-}) {
-	const source = positions.get(relationship.sourceTable);
-	const target = positions.get(relationship.targetTable);
-
-	if (!source || !target) return null;
-
-	const x1 = source.x + source.width;
-	const y1 = source.y + source.height / 2;
-	const x2 = target.x;
-	const y2 = target.y + target.height / 2;
-
-	// Use curved path for better readability
-	const midX = (x1 + x2) / 2;
-
-	return (
-		<g>
-			<path
-				className="stroke-muted-foreground/40"
-				d={`M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`}
-				fill="none"
-				strokeWidth={1.5}
-			/>
-			{/* Arrow */}
-			<polygon
-				className="fill-muted-foreground/40"
-				points={`${x2},${y2} ${x2 - 6},${y2 - 3} ${x2 - 6},${y2 + 3}`}
-			/>
-		</g>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					aria-label={label}
+					disabled={disabled}
+					onClick={onClick}
+					size="icon-sm"
+					variant="outline">
+					{children}
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent>{label}</TooltipContent>
+		</Tooltip>
 	);
 }
 
