@@ -196,6 +196,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run check:shared-core",
+					"description": "Shared-core files in sibling repositories match their owning repository (when present)",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run test:fleet-manifest",
 					"description": "Fleet manifest validator regression self-test",
 					"templateOnly": true

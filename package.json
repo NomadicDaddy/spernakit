@@ -85,6 +85,7 @@
 		"check:schema-drift": "bun scripts/check-config-schema-drift.ts",
 		"check:schema-parity": "bun scripts/check-schema-parity.ts",
 		"check:secrets-shape": "bun scripts/check-secrets-shape.ts",
+		"check:shared-core": "bun scripts/sync-shared-core.ts --check",
 		"check:template-feature-versions": "bun scripts/check-template-feature-versions.ts",
 		"check:template-features": "bun scripts/sync-template-features.ts --check",
 		"check:version-refs": "bun scripts/check-version-refs.ts",

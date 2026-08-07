@@ -1,0 +1,70 @@
+{
+	"groups": [
+		{
+			"files": [
+				{ "disposition": "synced", "source": "pre-push" },
+				{ "disposition": "synced", "source": "aidd-history-guard.sh" },
+				{ "disposition": "synced", "source": "screenshot-guard.sh" }
+			],
+			"hook": "pre-push",
+			"hookMarker": "aidd history guard",
+			"name": "push-guards",
+			"owner": "aidd",
+			"sourceRoot": ".githooks",
+			"targetRoot": ".githooks",
+			"targets": { "marker": ".aidd", "model": "discovered" }
+		},
+		{
+			"files": [
+				{
+					"disposition": "synced",
+					"fallbackSource": "pre-commit-leak-guard-only",
+					"requiresScripts": ["smoke:qc:fast", "check:licenses"],
+					"source": "pre-commit"
+				},
+				{ "disposition": "synced", "source": "leak-guard.sh" },
+				{ "disposition": "synced", "source": "leak-guard-setup.sh" }
+			],
+			"hook": "pre-commit",
+			"hookMarker": "bash .githooks/leak-guard.sh",
+			"localChainMarker": "# leak-guard: local chain, kept by hand",
+			"name": "leak-guard-hooks",
+			"owner": "aidd",
+			"sourceRoot": ".githooks",
+			"targetRoot": ".githooks",
+			"targets": { "marker": ".aidd", "model": "discovered" }
+		},
+		{
+			"files": [
+				{ "disposition": "synced", "source": "check-leak-guard.sh" },
+				{ "disposition": "seeded", "source": "run-bash.ts" }
+			],
+			"name": "leak-guard-scripts",
+			"owner": "aidd",
+			"requiresPackageJson": true,
+			"sourceRoot": "scripts",
+			"targetRoot": "scripts",
+			"targets": { "marker": ".aidd", "model": "discovered" },
+			"wiring": {
+				"check:leak-guard": "bun ./scripts/run-bash.ts scripts/check-leak-guard.sh",
+				"prepare": "(git config core.hooksPath .githooks && bun ./scripts/run-bash.ts .githooks/leak-guard-setup.sh) || true"
+			}
+		},
+		{
+			"files": [
+				{ "disposition": "synced", "source": "scripts/check-license-core.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/expression.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/installed.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/lockfile.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/manifest.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/order.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/license-core/resolve.ts" }
+			],
+			"name": "license-core",
+			"owner": "spernakit",
+			"sourceRoot": ".",
+			"targetRoot": ".",
+			"targets": { "model": "roster", "roster": "license-core-targets.json" }
+		}
+	]
+}

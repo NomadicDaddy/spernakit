@@ -19,6 +19,11 @@ export const UNCACHEABLE_STEPS = new Set([
 	'check:drift',
 	'check:fleet-manifest',
 	'check:fresh-release',
+	// Its inputs are up to 32 sibling checkouts, not this tree. Hashing this repository's files
+	// answers "did the owner change", never "did a target drift" — and a target drifting is the only
+	// thing it checks. A cached pass here would be the presence-over-content failure it exists to
+	// catch, reproduced in the gate itself.
+	'check:shared-core',
 	// Its inputs are the sibling spernakit checkout's `.aidd/`, not this tree — the same reason
 	// `check:drift` cannot be cached. A local hash would report "unchanged" across a template bump.
 	'check:template-features',
