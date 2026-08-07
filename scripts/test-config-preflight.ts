@@ -7,9 +7,12 @@
  */
 import { join } from 'node:path';
 
+import { getConfigJsonSchema } from '../backend/src/config/configSchema.ts';
 import { loadDefaults } from '../backend/src/config/configUtils.ts';
 import {
+	findMissingRequiredPaths,
 	formatSecurityIssue,
+	type JsonSchemaNode,
 	parseNodeEnvOverride,
 	validateMergedInstance,
 } from './lib/config-validation.ts';
@@ -61,6 +64,17 @@ try {
 	);
 
 	const defaults = loadDefaults();
+	const configSchema = getConfigJsonSchema() as JsonSchemaNode;
+	assert(
+		findMissingRequiredPaths(defaults, configSchema).length === 0,
+		'Expected defaults.json to contain every required config field explicitly',
+	);
+	const incomplete = structuredClone(defaults);
+	delete (incomplete['databaseAdmin'] as Record<string, unknown>)['enabled'];
+	assert(
+		findMissingRequiredPaths(incomplete, configSchema).includes('databaseAdmin.enabled'),
+		'Expected completeness validation to catch an omitted defaulted field',
+	);
 	const generated = generatedConfig();
 	const originalNodeEnv = (generated['server'] as Record<string, unknown>)['nodeEnv'];
 	const valid = validateMergedInstance(defaults, generated, 'preflight-fixture', production);

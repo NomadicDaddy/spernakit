@@ -18,6 +18,35 @@ interface MergedConfigValidation {
 	securityIssues: ValidationIssue[];
 }
 
+interface JsonSchemaNode {
+	properties?: Record<string, JsonSchemaNode>;
+	required?: string[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Find schema-required fields omitted from a standalone config before defaults are applied. */
+function findMissingRequiredPaths(value: unknown, schema: JsonSchemaNode, prefix = ''): string[] {
+	if (!isRecord(value) || !schema.properties || !schema.required) return [];
+
+	const missing: string[] = [];
+	for (const key of schema.required) {
+		const path = prefix ? `${prefix}.${key}` : key;
+		if (!Object.hasOwn(value, key)) {
+			missing.push(path);
+			continue;
+		}
+
+		const childSchema = schema.properties[key];
+		if (childSchema?.properties && isRecord(value[key])) {
+			missing.push(...findMissingRequiredPaths(value[key], childSchema, path));
+		}
+	}
+	return missing;
+}
+
 function parseNodeEnvironment(value: string): NodeEnvironment {
 	switch (value) {
 		case 'development':
@@ -90,7 +119,9 @@ function formatSecurityIssue(issue: ValidationIssue): string {
 }
 
 export {
+	findMissingRequiredPaths,
 	formatSecurityIssue,
+	type JsonSchemaNode,
 	type MergedConfigValidation,
 	type NodeEnvironment,
 	parseNodeEnvOverride,

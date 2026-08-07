@@ -50,17 +50,25 @@
 			"location": "./backups",
 			"retentionDays": 30
 		},
+		"busyTimeoutMs": 5000,
 		"dialect": "sqlite",
 		"integrityCheck": {
 			"enabled": true,
 			"intervalHours": 6,
 			"mode": "quick"
 		},
+		"ssl": {
+			"enabled": false,
+			"rejectUnauthorized": true
+		},
 		"url": "file:./data/spernakit.db",
 		"vacuum": {
 			"enabled": true,
 			"intervalHours": 24
 		}
+	},
+	"databaseAdmin": {
+		"enabled": false
 	},
 	"email": {
 		"retryAttempts": 2,
