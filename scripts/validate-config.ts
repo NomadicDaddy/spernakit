@@ -28,11 +28,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { appConfigSchema } from '../backend/src/config/configSchema.ts';
+import { appConfigSchema, getConfigJsonSchema } from '../backend/src/config/configSchema.ts';
 import { getAppSlug, loadDefaults, projectRoot } from '../backend/src/config/configUtils.ts';
 import { type ValidationIssue } from '../backend/src/config/configValidator.ts';
 import {
+	findMissingRequiredPaths,
 	formatSecurityIssue,
+	type JsonSchemaNode,
 	type NodeEnvironment,
 	parseNodeEnvOverride,
 	type SchemaIssue,
@@ -95,8 +97,16 @@ function validateStandalone(label: string, path: string): FileValidation {
 	const raw = loadJson(path);
 	delete raw['$schema'];
 
+	const missingPaths = findMissingRequiredPaths(raw, getConfigJsonSchema() as JsonSchemaNode);
 	const parse = appConfigSchema.safeParse(raw);
-	result.schemaIssues = parseSchemaIssues(parse);
+	const missingSet = new Set(missingPaths);
+	result.schemaIssues = [
+		...missingPaths.map((fieldPath) => ({
+			message: 'Required field must be explicitly present in a complete standalone config',
+			path: fieldPath,
+		})),
+		...parseSchemaIssues(parse).filter((issue) => !missingSet.has(issue.path)),
+	];
 	result.errors = result.schemaIssues.length;
 	if (result.errors > 0) result.status = 'fail';
 	return result;
