@@ -64,7 +64,7 @@
 			"owner": "spernakit",
 			"sourceRoot": ".",
 			"targetRoot": ".",
-			"targets": { "model": "roster", "roster": "license-core-targets.json" }
+			"targets": { "model": "roster", "roster": "shared-core-targets.json" }
 		}
 	]
 }

@@ -181,8 +181,8 @@ Steps (in order):
     - Leak-guard hook self-test (synthetic fixtures).
 17. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
-18. `bun run licenses:sync-core:check`
-    - License core copies in sibling repositories match Spernakit (when present).
+18. `bun run test:shared-core-write`
+    - Shared-core write path regression self-test (synthetic fleet).
 19. `bun run check:shared-core`
     - Shared-core files in sibling repositories match their owning repository (when present).
 20. `bun run test:fleet-manifest`

@@ -21,16 +21,21 @@ import { dirname, join, resolve } from 'node:path';
 import { argv, cwd, exit } from 'node:process';
 
 import { checkGroup, type Finding, type GroupReport, isFatal } from './lib/shared-core/check.ts';
-import { loadManifest } from './lib/shared-core/manifest.ts';
+import { loadManifest, type SharedCoreGroup } from './lib/shared-core/manifest.ts';
+import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
 
-const USAGE = `sync-shared-core — verify the files this fleet shares between peer repositories.
+const USAGE = `sync-shared-core — sync the files this fleet shares between peer repositories.
 
-  --check                 Compare every group's targets against its owner. Required today; there
-                          is no write path yet.
+  --check                 Compare every group's targets against its owner and report. Read-only.
+  --write                 Deliver and replace the files --check reports as absent or drifted, for
+                          the groups this repository owns. Refuses to overwrite uncommitted work.
+  --dry-run               With --write: run every refusal and report what would be written.
   --group <name>          Restrict to one manifest group.
   --fleet-root <dir>      Directory holding the peer repositories. Defaults to the parent of this
                           repository.
   --help                  This text.
+
+--check and --write are exclusive. Neither is the default; with no mode this script does nothing.
 `;
 
 /**
@@ -41,20 +46,30 @@ const USAGE = `sync-shared-core — verify the files this fleet shares between p
  * a real four-repository write. That is a trap laid for exactly the person trying to find out what
  * the script does, and it is not carried forward.
  */
-function parseArgs(args: string[]): {
+interface Options {
 	check: boolean;
+	dryRun: boolean;
 	fleetRoot?: string;
 	group?: string;
 	help: boolean;
-} {
-	const parsed: { check: boolean; fleetRoot?: string; group?: string; help: boolean } = {
+	write: boolean;
+}
+
+function parseArgs(args: string[]): Options {
+	const parsed: Options = {
 		check: false,
+		dryRun: false,
 		help: false,
+		write: false,
 	};
 	for (let i = 0; i < args.length; i += 1) {
 		const arg = args[i] as string;
 		if (arg === '--check') {
 			parsed.check = true;
+		} else if (arg === '--write') {
+			parsed.write = true;
+		} else if (arg === '--dry-run') {
+			parsed.dryRun = true;
 		} else if (arg === '--help' || arg === '-h') {
 			parsed.help = true;
 		} else if (arg === '--group' || arg === '--fleet-root') {
@@ -68,6 +83,15 @@ function parseArgs(args: string[]): {
 		} else {
 			throw new Error(`Unrecognized argument '${arg}'.\n\n${USAGE}`);
 		}
+	}
+	// Exclusive rather than "write wins" or "check wins": both readings are defensible, which is
+	// precisely why neither should be guessed on a command that overwrites files in other people's
+	// repositories.
+	if (parsed.check && parsed.write) {
+		throw new Error('--check and --write are exclusive. Pick one.');
+	}
+	if (parsed.dryRun && !parsed.write) {
+		throw new Error('--dry-run only means anything with --write.');
 	}
 	return parsed;
 }
@@ -100,14 +124,101 @@ function printReport(report: GroupReport): void {
 	for (const skip of report.skipped) console.log(`  ${'SKIPPED'.padEnd(19)} ${skip}`);
 }
 
+function selectGroups(scriptsDir: string, name: string | undefined): SharedCoreGroup[] {
+	const groups = loadManifest(scriptsDir);
+	if (name === undefined) return groups;
+	const selected = groups.filter((g) => g.name === name);
+	if (selected.length === 0) throw new Error(`No manifest group named '${name}'.`);
+	return selected;
+}
+
+function reportCheck(reports: GroupReport[], unverifiable: string[]): void {
+	for (const report of reports) printReport(report);
+
+	const findings = reports.flatMap((r) => r.findings);
+	const fatal = findings.filter(isFatal);
+	const uncovered = findings.filter((f) => f.kind === 'uncovered');
+
+	console.log('');
+	if (unverifiable.length > 0) console.warn(`NOT VERIFIED: ${unverifiable.join('; ')}.`);
+	if (uncovered.length > 0) {
+		console.log(
+			`${uncovered.length} file(s) absent in targets the write path has not reached yet. ` +
+				'Absent is a rollout gap, not drift; it does not fail this check.',
+		);
+	}
+	if (fatal.length > 0) {
+		console.error(
+			`\nShared core has drifted: ${fatal.length} file(s) differ from their owner.\n` +
+				'These repositories carry a stale copy while reporting as covered, which is the ' +
+				'failure this gate exists to catch. Resync them from the owning repository.',
+		);
+		exit(1);
+	}
+	console.log('Shared core: no drift.');
+}
+
+/**
+ * Ownership is enforced per group rather than per run, so a `--write` from spernakit pushes the
+ * license core and says plainly that it left the aidd-owned hook groups alone. Refusing the whole
+ * command because the manifest also describes someone else's groups would make the common case an
+ * error and teach people to reach for `--group` reflexively, which is the opposite of the habit
+ * this wants.
+ */
+function reportWrite(
+	reports: GroupReport[],
+	groups: SharedCoreGroup[],
+	fleetRoot: string,
+	root: string,
+	dryRun: boolean,
+): void {
+	const byName = new Map(groups.map((g) => [g.name, g]));
+	const verb = dryRun ? 'would write' : 'wrote';
+	let wrote = 0;
+	let blocked = 0;
+
+	for (const report of reports) {
+		const group = byName.get(report.group) as SharedCoreGroup;
+		const refusal = ownershipRefusal(group, root);
+		if (refusal !== null) {
+			console.log(`\n${report.group} — not ours to write: ${refusal}.`);
+			continue;
+		}
+		const outcome = applyFindings(report.findings, fleetRoot, dryRun);
+		wrote += outcome.written.length;
+		blocked += outcome.blocked.length;
+
+		console.log(
+			`\n${report.group} (owner: ${group.owner}) — ${verb} ${outcome.written.length} file(s), ` +
+				`${outcome.blocked.length} refused, ${outcome.skipped.length} not writable.`,
+		);
+		for (const f of outcome.written)
+			console.log(`  ${verb.toUpperCase()} ${f.target}: ${f.detail}`);
+		for (const f of outcome.blocked) console.log(`  REFUSED     ${f.target}: ${f.detail}`);
+		for (const f of outcome.skipped) {
+			console.log(`  LEFT ALONE  ${f.target}: ${f.kind} — ${f.detail}`);
+		}
+	}
+
+	console.log('');
+	if (blocked > 0) {
+		console.error(
+			`Refused to write ${blocked} file(s) with uncommitted changes in the target repository. ` +
+				'Commit or discard them there, then run this again.',
+		);
+		exit(1);
+	}
+	console.log(dryRun ? `Dry run: ${wrote} file(s) would change.` : `Wrote ${wrote} file(s).`);
+}
+
 async function main(): Promise<void> {
 	const parsed = parseArgs(argv.slice(2));
 	if (parsed.help) {
 		console.log(USAGE);
 		return;
 	}
-	if (!parsed.check) {
-		console.log('Nothing to do: --check is the only mode this script implements today.');
+	if (!parsed.check && !parsed.write) {
+		console.log('Nothing to do: pass --check or --write.');
 		console.log(USAGE);
 		return;
 	}
@@ -116,13 +227,7 @@ async function main(): Promise<void> {
 	const scriptsDir = join(root, 'scripts');
 	const fleetRoot = parsed.fleetRoot === undefined ? dirname(root) : resolve(parsed.fleetRoot);
 
-	let groups = loadManifest(scriptsDir);
-	if (parsed.group !== undefined) {
-		const wanted = parsed.group;
-		groups = groups.filter((g) => g.name === wanted);
-		if (groups.length === 0) throw new Error(`No manifest group named '${wanted}'.`);
-	}
-
+	const groups = selectGroups(scriptsDir, parsed.group);
 	const reports: GroupReport[] = [];
 	const unverifiable: string[] = [];
 
@@ -141,30 +246,12 @@ async function main(): Promise<void> {
 		reports.push(checkGroup(group, fleetRoot, ownerRoot));
 	}
 
-	for (const report of reports) printReport(report);
-
-	const fatal = reports.flatMap((r) => r.findings).filter(isFatal);
-	const uncovered = reports.flatMap((r) => r.findings).filter((f) => f.kind === 'uncovered');
-
-	console.log('');
-	if (unverifiable.length > 0) {
-		console.warn(`NOT VERIFIED: ${unverifiable.join('; ')}.`);
+	if (parsed.check) {
+		reportCheck(reports, unverifiable);
+		return;
 	}
-	if (uncovered.length > 0) {
-		console.log(
-			`${uncovered.length} file(s) absent in targets the write path has not reached yet. ` +
-				'Absent is a rollout gap, not drift; it does not fail this check.',
-		);
-	}
-	if (fatal.length > 0) {
-		console.error(
-			`\nShared core has drifted: ${fatal.length} file(s) differ from their owner.\n` +
-				'These repositories carry a stale copy while reporting as covered, which is the ' +
-				'failure this gate exists to catch. Resync them from the owning repository.',
-		);
-		exit(1);
-	}
-	console.log('Shared core: no drift.');
+	if (unverifiable.length > 0) console.warn(`NOT VERIFIED: ${unverifiable.join('; ')}.`);
+	reportWrite(reports, groups, fleetRoot, root, parsed.dryRun);
 }
 
 await main().catch((error) => {

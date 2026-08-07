@@ -191,8 +191,8 @@
 					"description": "Third-party license inventory matches the installed graph"
 				},
 				{
-					"command": "bun run licenses:sync-core:check",
-					"description": "License core copies in sibling repositories match Spernakit (when present)",
+					"command": "bun run test:shared-core-write",
+					"description": "Shared-core write path regression self-test (synthetic fleet)",
 					"templateOnly": true
 				},
 				{

@@ -63,10 +63,18 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^run\.ps1$/,
 	/^spernakit\.psd1$/,
 	/^spernakit\.json$/,
-	/^license-core-targets\.json(\.example)?$/,
+	/^shared-core-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,
+	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: only
+	// aidd and spernakit own shared-core groups, so in a derived app every one of these can do
+	// nothing but refuse. Its qc step is already templateOnly; excluding it from init keeps the
+	// script, its library, its manifest and its self-test out of eleven trees that cannot use them.
+	/^scripts\/lib\/shared-core\//,
+	/^scripts\/shared-core-manifest\.json$/,
+	/^scripts\/sync-shared-core\.ts$/,
+	/^scripts\/test-shared-core-write\.ts$/,
 	/^smoke-cache\.json$/,
 	/^sync\.ps1$/,
 ];
