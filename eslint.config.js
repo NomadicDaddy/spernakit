@@ -1,8 +1,8 @@
 import js from '@eslint/js';
 import jsdoc from 'eslint-plugin-jsdoc';
+import perfectionist from 'eslint-plugin-perfectionist';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import perfectionist from 'eslint-plugin-perfectionist';
 import unusedImports from 'eslint-plugin-unused-imports';
 import { defineConfig } from 'eslint/config';
 import globals from 'globals';
@@ -31,14 +31,7 @@ const noDefaultExportPlugin = {
 // eslint-disable-next-line import/no-default-export
 export default defineConfig([
 	{
-		ignores: [
-			'**/*.min.js',
-			'**/dist/**',
-			'**/node_modules/**',
-			'artifacts/**',
-			'backups/**',
-			'logs/**',
-		],
+		ignores: ['**/*.min.js', '**/dist/**', '**/node_modules/**', 'backups/**', 'logs/**'],
 	},
 	{
 		extends: [js.configs.recommended, ...tseslint.configs.recommended],
@@ -67,7 +60,6 @@ export default defineConfig([
 			'import/no-default-export': 'error',
 			'no-useless-rename': 'error',
 			'object-shorthand': ['error', 'always'],
-			'prefer-const': 'error',
 			'perfectionist/sort-array-includes': [
 				'error',
 				{ ignoreCase: false, order: 'asc', type: 'alphabetical' },
@@ -129,6 +121,7 @@ export default defineConfig([
 				'error',
 				{ ignoreCase: false, order: 'asc', type: 'alphabetical' },
 			],
+			'prefer-const': 'error',
 			'prefer-template': 'error',
 			'sort-imports': 'off',
 			'sort-keys': 'off',
@@ -218,7 +211,9 @@ export default defineConfig([
 		},
 	},
 	{
-		files: ['**/vite.config.ts', '**/tailwind.config.js', '**/drizzle.config.ts'],
+		// Tools that require a default export. Tailwind is absent deliberately: v4 is configured in
+		// CSS, so there is no tailwind.config.js in this repository to exempt.
+		files: ['**/drizzle.config.ts', '**/vite.config.ts'],
 		rules: {
 			'import/no-default-export': 'off',
 		},
