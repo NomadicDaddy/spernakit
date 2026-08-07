@@ -11,6 +11,7 @@ import {
 } from '@/api/mfa';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { Spinner } from '@/components/shared/Spinner';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -86,7 +87,14 @@ function SecurityTab() {
 		<div className="space-y-6">
 			<Card>
 				<CardHeader>
-					<CardTitle>Two-factor authentication</CardTitle>
+					<div className="flex flex-wrap items-center gap-2">
+						<CardTitle>Two-factor authentication</CardTitle>
+						<Badge
+							aria-label={`MFA status: ${enabled ? 'Enabled' : 'Disabled'}`}
+							variant={enabled ? 'default' : 'secondary'}>
+							{enabled ? 'Enabled' : 'Disabled'}
+						</Badge>
+					</div>
 					<CardDescription>
 						{enabled
 							? 'MFA is active. Sign-in requires a code from your authenticator app after your password.'
@@ -94,10 +102,6 @@ function SecurityTab() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-2">
-					<p className="text-sm">
-						Status:{' '}
-						<span className="font-medium">{enabled ? 'Enabled' : 'Disabled'}</span>
-					</p>
 					{!serverConfigured && (
 						<p className="text-xs text-muted-foreground">
 							MFA is not configured on this server yet. Run{' '}

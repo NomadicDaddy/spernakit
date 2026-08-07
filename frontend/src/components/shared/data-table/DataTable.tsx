@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { type ColumnDef, flexRender } from '@tanstack/react-table';
 
 import {
@@ -60,6 +62,8 @@ interface DataTableProps<TData, TValue> {
 	 * same place the list is cleared.
 	 */
 	selectionResetToken?: number | string;
+	/** Consumer-provided filters or actions rendered in the shared table toolbar. */
+	toolbar?: ReactNode;
 	/**
 	 * Virtual scrolling configuration for large datasets.
 	 *
@@ -114,6 +118,7 @@ function DataTable<TData, TValue>({
 	pagination,
 	searchColumn,
 	selectionResetToken,
+	toolbar,
 	virtualize,
 }: DataTableProps<TData, TValue>) {
 	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
@@ -135,8 +140,9 @@ function DataTable<TData, TValue>({
 			<DataTableToolbar
 				filterPlaceholder={filterPlaceholder}
 				searchColumn={searchColumn}
-				table={table}
-			/>
+				table={table}>
+				{toolbar}
+			</DataTableToolbar>
 
 			<div className="overflow-x-auto rounded-md border">
 				<Table>

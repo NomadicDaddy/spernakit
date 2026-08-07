@@ -10,6 +10,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { FileUpload } from '@/components/shared/FileUpload';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useFileColumns } from '@/hooks/useFileColumns';
@@ -89,7 +90,7 @@ function FilesPage() {
 		<div className="space-y-6 p-6">
 			<PageHeader description="Upload and manage files for your workspace" title="Files" />
 
-			{canManageFiles('OPERATOR') && (
+			{canManageFiles('OPERATOR') && (isLoading || files.length > 0) && (
 				<FileUpload
 					isPending={uploadMutation.isPending}
 					maxSizeBytes={10 * 1024 * 1024}
@@ -99,9 +100,24 @@ function FilesPage() {
 
 			{isLoading ? (
 				<TableSkeleton />
+			) : files.length === 0 && canManageFiles('OPERATOR') ? (
+				<Card>
+					<CardHeader className="text-center">
+						<CardTitle>No files uploaded yet</CardTitle>
+						<CardDescription>Upload a file to get started.</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<FileUpload
+							className="mx-auto max-w-3xl"
+							isPending={uploadMutation.isPending}
+							maxSizeBytes={10 * 1024 * 1024}
+							onFileSelect={(file) => uploadMutation.mutate(file)}
+						/>
+					</CardContent>
+				</Card>
 			) : files.length === 0 ? (
 				<EmptyState
-					description="Upload files to get started."
+					description="No files are available in this workspace."
 					icon={FileText}
 					title="No files uploaded yet"
 				/>

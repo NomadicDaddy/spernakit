@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { type Column, type Table } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
 
@@ -11,6 +13,7 @@ import {
 import { Input } from '@/components/ui/input';
 
 interface DataTableToolbarProps<TData> {
+	children?: ReactNode;
 	filterPlaceholder: string;
 	searchColumn: string | undefined;
 	table: Table<TData>;
@@ -20,12 +23,14 @@ interface DataTableToolbarProps<TData> {
  * Toolbar component for DataTable with search and column visibility toggle.
  */
 export function DataTableToolbar<TData>({
+	children,
 	filterPlaceholder = 'Search…',
 	searchColumn,
 	table,
 }: DataTableToolbarProps<TData>) {
 	return (
-		<div className="flex items-center gap-2">
+		<div className="flex flex-wrap items-center gap-2">
+			{children}
 			{searchColumn && (
 				<Input
 					aria-label={filterPlaceholder}
@@ -36,7 +41,7 @@ export function DataTableToolbar<TData>({
 					value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''}
 				/>
 			)}
-			<div className="ml-auto">
+			<div className="ml-auto shrink-0">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button aria-label="Toggle column visibility" size="sm" variant="outline">

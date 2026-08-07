@@ -220,27 +220,34 @@ function OnboardingPage() {
 				/>
 			)}
 
-			{!status?.isComplete && <OnboardingChecklist steps={steps} />}
-
-			{!status?.isComplete && isAdmin() && (
-				<div className="flex items-center justify-end gap-2">
-					<Button
-						disabled={resetMutation.isPending}
-						onClick={() => setShowResetConfirm(true)}
-						size="sm"
-						variant="outline">
-						Reset Onboarding
-					</Button>
-					{allComplete && (
-						<Button
-							disabled={completeMutation.isPending}
-							onClick={() => completeMutation.mutate()}
-							size="lg">
-							<Rocket aria-hidden="true" className="mr-2 h-4 w-4" />
-							{completeMutation.isPending ? 'Completing…' : 'Complete Onboarding'}
-						</Button>
-					)}
-				</div>
+			{!status?.isComplete && (
+				<OnboardingChecklist
+					action={
+						isAdmin() ? (
+							<div className="flex items-center gap-2">
+								<Button
+									disabled={resetMutation.isPending}
+									onClick={() => setShowResetConfirm(true)}
+									size="sm"
+									variant="outline">
+									Reset Onboarding
+								</Button>
+								{allComplete && (
+									<Button
+										disabled={completeMutation.isPending}
+										onClick={() => completeMutation.mutate()}
+										size="lg">
+										<Rocket aria-hidden="true" className="mr-2 h-4 w-4" />
+										{completeMutation.isPending
+											? 'Completing…'
+											: 'Complete Onboarding'}
+									</Button>
+								)}
+							</div>
+						) : undefined
+					}
+					steps={steps}
+				/>
 			)}
 
 			{!status?.isComplete && <OnboardingQuickStart isSysop={isSysop()} />}

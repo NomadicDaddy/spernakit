@@ -62,7 +62,7 @@ function ThemePreferences({
 					<CardDescription>Choose your preferred color accent</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
 						{APP_THEMES.map((theme) => (
 							<button
 								className={cn(
@@ -81,7 +81,7 @@ function ThemePreferences({
 								/>
 								<div className="min-w-0">
 									<div className="text-sm font-medium">{theme.label}</div>
-									<div className="truncate text-xs text-muted-foreground">
+									<div className="text-xs leading-snug text-muted-foreground">
 										{theme.description}
 									</div>
 								</div>

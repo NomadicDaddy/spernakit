@@ -52,6 +52,7 @@ function PasswordPolicySection({
 				<Label htmlFor="passwordExpiryDays">Password Expiry (days)</Label>
 				<Input
 					autoComplete="off"
+					className="max-w-xs"
 					id="passwordExpiryDays"
 					inputMode="numeric"
 					max={365}
@@ -103,6 +104,7 @@ function PasswordPolicySection({
 				<Label htmlFor="passwordHistoryDepth">Password History Depth</Label>
 				<Input
 					autoComplete="off"
+					className="max-w-xs"
 					id="passwordHistoryDepth"
 					inputMode="numeric"
 					max={100}
@@ -122,6 +124,7 @@ function PasswordPolicySection({
 				<Label htmlFor="minPasswordAgeDays">Minimum Password Age (days)</Label>
 				<Input
 					autoComplete="off"
+					className="max-w-xs"
 					id="minPasswordAgeDays"
 					inputMode="numeric"
 					max={365}

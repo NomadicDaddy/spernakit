@@ -24,12 +24,14 @@ const VALID_READ_FILTERS = new Set<string>(['all', 'read', 'unread']);
 
 function NotificationPageHeader({
 	markAllReadIsPending,
+	markAllReadUnavailableReason,
 	onMarkAllRead,
 	onShowBulkDelete,
 	selectedCount,
 	totalLabel,
 }: {
 	markAllReadIsPending: boolean;
+	markAllReadUnavailableReason: null | string;
 	onMarkAllRead: () => void;
 	onShowBulkDelete: () => void;
 	selectedCount: number;
@@ -38,13 +40,19 @@ function NotificationPageHeader({
 	return (
 		<PageHeader description={totalLabel} title="Notifications">
 			<Button
-				disabled={markAllReadIsPending}
+				aria-describedby={markAllReadUnavailableReason ? 'mark-all-read-status' : undefined}
+				disabled={markAllReadIsPending || markAllReadUnavailableReason !== null}
 				onClick={onMarkAllRead}
 				size="sm"
 				variant="outline">
 				<CheckCheck aria-hidden="true" className="mr-2 size-4" />
 				Mark all read
 			</Button>
+			{markAllReadUnavailableReason && (
+				<span className="sr-only" id="mark-all-read-status">
+					{markAllReadUnavailableReason}
+				</span>
+			)}
 			{selectedCount > 0 && (
 				<Button onClick={onShowBulkDelete} size="sm" variant="destructive">
 					<Trash2 aria-hidden="true" className="mr-2 size-4" />
@@ -140,7 +148,9 @@ function NotificationsPage() {
 		markReadMutation,
 	} = useNotifications({ limit, page, readFilter, typeFilter });
 
-	const { data: statsResponse } = useQuery<DataResponse<NotificationStatistics>>({
+	const { data: statsResponse, isLoading: statsLoading } = useQuery<
+		DataResponse<NotificationStatistics>
+	>({
 		enabled: activeWorkspaceId !== null,
 		queryFn: getNotificationStatistics,
 		queryKey: notificationKeys.statistics(activeWorkspaceId),
@@ -160,11 +170,17 @@ function NotificationsPage() {
 		onDelete: (notification) => setDeleteTarget(notification),
 		onMarkAsRead: (id) => markReadMutation.mutate(id),
 	});
+	const markAllReadUnavailableReason = statsLoading
+		? 'Notification status is loading.'
+		: (statsResponse?.data.unread ?? 0) === 0
+			? 'There are no unread notifications.'
+			: null;
 
 	return (
 		<div className="space-y-6 p-6">
 			<NotificationPageHeader
 				markAllReadIsPending={markAllReadMutation.isPending}
+				markAllReadUnavailableReason={markAllReadUnavailableReason}
 				onMarkAllRead={() => markAllReadMutation.mutate()}
 				onShowBulkDelete={() => setShowBulkDelete(true)}
 				selectedCount={selectedRows.length}
@@ -172,27 +188,6 @@ function NotificationsPage() {
 			/>
 
 			<NotificationStatsGrid stats={statsResponse?.data} />
-
-			<NotificationFilters
-				onReadFilterChange={(filter) => {
-					setReadFilter(filter);
-					void trackEvent({
-						eventCategory: 'user_action',
-						eventName: 'notification_filter_change',
-						metadata: { filter: 'read', value: filter },
-					});
-				}}
-				onTypeFilterChange={(filter) => {
-					setTypeFilter(filter);
-					void trackEvent({
-						eventCategory: 'user_action',
-						eventName: 'notification_filter_change',
-						metadata: { filter: 'type', value: filter },
-					});
-				}}
-				readFilter={readFilter}
-				typeFilter={typeFilter}
-			/>
 
 			{isLoading ? (
 				<TableSkeleton />
@@ -212,6 +207,28 @@ function NotificationsPage() {
 						total: data?.total ?? 0,
 					}}
 					selectionResetToken={selectionResetToken}
+					toolbar={
+						<NotificationFilters
+							onReadFilterChange={(filter) => {
+								setReadFilter(filter);
+								void trackEvent({
+									eventCategory: 'user_action',
+									eventName: 'notification_filter_change',
+									metadata: { filter: 'read', value: filter },
+								});
+							}}
+							onTypeFilterChange={(filter) => {
+								setTypeFilter(filter);
+								void trackEvent({
+									eventCategory: 'user_action',
+									eventName: 'notification_filter_change',
+									metadata: { filter: 'type', value: filter },
+								});
+							}}
+							readFilter={readFilter}
+							typeFilter={typeFilter}
+						/>
+					}
 				/>
 			)}
 

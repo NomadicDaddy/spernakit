@@ -1,9 +1,11 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
 import type { UserRole } from '@/types/roles';
 
 import { PageHeader } from '@/components/shared/PageHeader';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface TabItem {
@@ -37,15 +39,29 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 		setCanScrollRight(scrollLeft + clientWidth < scrollWidth - threshold);
 	};
 
+	const scrollTabs = (direction: 'left' | 'right') => {
+		const nav = navRef.current;
+		if (!nav) return;
+		nav.scrollBy({
+			behavior: 'smooth',
+			left: (direction === 'left' ? -1 : 1) * Math.max(240, nav.clientWidth * 0.75),
+		});
+	};
+
+	const scrollActiveTabIntoView = useCallback(
+		(behavior: ScrollBehavior) => {
+			const activeTab = tabRefs.current.get(location.pathname);
+			activeTab?.scrollIntoView({ behavior, block: 'nearest', inline: 'center' });
+		},
+		[location.pathname],
+	);
+
 	// Scroll active tab into view on mount and route change
 	useEffect(() => {
-		const activeTab = tabRefs.current.get(location.pathname);
-		if (activeTab) {
-			activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-		}
+		scrollActiveTabIntoView('smooth');
 		// Also update scroll indicators after route change
 		requestAnimationFrame(updateScrollIndicators);
-	}, [location.pathname]);
+	}, [location.pathname, scrollActiveTabIntoView]);
 
 	// Update indicators on mount and resize
 	useEffect(() => {
@@ -54,11 +70,12 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 		if (!nav) return;
 
 		const observer = new ResizeObserver(() => {
+			scrollActiveTabIntoView('auto');
 			updateScrollIndicators();
 		});
 		observer.observe(nav);
 		return () => observer.disconnect();
-	}, []);
+	}, [scrollActiveTabIntoView]);
 
 	return (
 		<div className="space-y-6 p-6">
@@ -74,6 +91,28 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 				{/* Leading gradient fade — shows when scrolled past start */}
 				{canScrollLeft && (
 					<div className="pointer-events-none absolute top-0 left-0 z-10 h-full w-12 bg-gradient-to-r from-background to-transparent" />
+				)}
+				{canScrollLeft && (
+					<Button
+						aria-label="Scroll section tabs left"
+						className="absolute top-1/2 left-0 z-20 size-8 -translate-y-1/2 rounded-full bg-background/95 shadow-sm"
+						onClick={() => scrollTabs('left')}
+						size="icon"
+						type="button"
+						variant="outline">
+						<ChevronLeft aria-hidden="true" className="size-4" />
+					</Button>
+				)}
+				{canScrollRight && (
+					<Button
+						aria-label="Scroll section tabs right"
+						className="absolute top-1/2 right-0 z-20 size-8 -translate-y-1/2 rounded-full bg-background/95 shadow-sm"
+						onClick={() => scrollTabs('right')}
+						size="icon"
+						type="button"
+						variant="outline">
+						<ChevronRight aria-hidden="true" className="size-4" />
+					</Button>
 				)}
 				<nav
 					className="-mb-px flex scrollbar-none gap-4 overflow-x-auto"

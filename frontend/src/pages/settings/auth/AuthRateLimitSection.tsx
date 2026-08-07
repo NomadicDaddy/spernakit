@@ -49,6 +49,7 @@ function AuthRateLimitSection({
 						<Label htmlFor="authRateLimitMaxRequests">Max Requests per Window</Label>
 						<Input
 							autoComplete="off"
+							className="max-w-xs"
 							id="authRateLimitMaxRequests"
 							inputMode="numeric"
 							max={1000}
@@ -66,6 +67,7 @@ function AuthRateLimitSection({
 						<Label htmlFor="authRateLimitWindowMinutes">Window (minutes)</Label>
 						<Input
 							autoComplete="off"
+							className="max-w-xs"
 							id="authRateLimitWindowMinutes"
 							inputMode="numeric"
 							max={1440}
