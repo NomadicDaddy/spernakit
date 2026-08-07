@@ -48,6 +48,7 @@ has to land with.
 | Validate repo identity/config/Docker consistency | `bun run check-application`                           | `scripts/check-application.ts`            |
 | Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-deps.ts`                   |
 | Check every gate follows the gate conventions    | `bun run check:gate-conventions`                      | `scripts/check-gate-conventions.ts`       |
+| Check every package.json script resolves         | `bun run check:script-targets`                        | `scripts/check-script-targets.ts`         |
 | Initialize or re-template a derived app repo     | `bun run setup`                                       | `scripts/setup.ts`                        |
 | Run check-only local quality chain (mode-based)  | `bun run smoke:qc`                                    | `scripts/smoke.ts` + `scripts/smoke.json` |
 | Run the cached inner-loop quality subset         | `bun run smoke:qc:fast`                               | `scripts/smoke.ts` + `scripts/smoke.json` |

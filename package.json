@@ -79,6 +79,7 @@
 		"check:feature-integration": "bun scripts/check-feature-integration.ts",
 		"check:fresh-release": "bun scripts/check-fresh-release.ts",
 		"check:image-publication": "bun scripts/check-image-publication.ts",
+		"check:script-targets": "bun scripts/check-script-targets.ts",
 		"check:schema-drift": "bun scripts/check-config-schema-drift.ts",
 		"check:schema-parity": "bun scripts/check-schema-parity.ts",
 		"check:secrets-shape": "bun scripts/check-secrets-shape.ts",
