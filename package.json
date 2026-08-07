@@ -59,6 +59,7 @@
 		"check-application": "bun scripts/check-application.ts",
 		"check:aidd-format": "bun scripts/check-aidd-format.ts",
 		"check:api-types": "bun scripts/check-api-types.ts",
+		"check:audit-artifact-hygiene": "bun scripts/check-audit-artifact-hygiene.ts",
 		"check:config": "bun scripts/check-config-invariants.ts",
 		"check:critical-path": "bun scripts/check-critical-path.ts",
 		"check-deps": "bun scripts/check-deps.ts",

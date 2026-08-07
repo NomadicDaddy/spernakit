@@ -17,6 +17,11 @@ import { TOOLCHAIN_STEP_DEPENDENCIES } from './steps-toolchain.ts';
 import { type StepDependencies } from './types.ts';
 
 export const UNCACHEABLE_STEPS = new Set([
+	// It reads `.aidd/audit-reports/`, and `/.aidd/` is gitignored here. Every input is untracked, so
+	// a hash of this tree answers "did a tracked file change" while a report appears, changes, or is
+	// removed without moving that hash at all. Its other input is the wall clock, which no glob can
+	// name.
+	'check:audit-artifact-hygiene',
 	'check:drift',
 	'check:fleet-manifest',
 	'check:fresh-release',
