@@ -1151,11 +1151,11 @@ bun run smoke:preview
 bun run smoke:qc
 
 # Run authentication reset API tests
-bun run check-auth-reset-api
+bun run test:auth-reset-api
 
 # Run authentication reset UI tests
-bun run check-auth-reset-ui-dev   # Development mode
-bun run check-auth-reset-ui-preview  # Preview mode
+bun run test:auth-reset-ui-dev   # Development mode
+bun run test:auth-reset-ui-preview  # Preview mode
 
 # Run full validation chain (QC + all environments)
 bun run supertest

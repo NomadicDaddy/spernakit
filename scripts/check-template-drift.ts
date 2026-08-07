@@ -136,7 +136,7 @@ function skip(reason: string): never {
  * Skipping that would exit 0 — and because the skip aborts the whole run, a single mistyped version
  * would also suppress the ORDINARY drift verdict, silently, during the upgrade where drift matters
  * most. An argument the operator typed is theirs to correct, so it is reported as an error rather
- * than absorbed. `check-template-overrides.ts` fails on every precondition for the same reason, and
+ * than absorbed. `check-override-deltas.ts` fails on every precondition for the same reason, and
  * `--target-version` with no value at all already exits 1 a few lines above.
  */
 function fail(reason: string): never {

@@ -101,8 +101,8 @@ bun scripts/smoke.ts --mode preview
 
 Steps (in order):
 
-1. `bun run check-auth-reset-ui-preview`
-    - Check auth reset UI (preview).
+1. `bun run test:auth-reset-ui-preview`
+    - Test auth reset UI (preview).
 2. `bun scripts/crawltest.ts --mode preview`
     - Crawl test (preview).
 

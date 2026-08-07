@@ -30,7 +30,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/package.json',
 			'frontend/package.json',
 			'package.json',
-			'scripts/check-dependency-versions.ts',
+			'scripts/check-deps.ts',
 			'shared/package.json',
 		],
 	},
@@ -49,7 +49,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'frontend/src/api/types/**/*.ts',
 			'shared/src/**/*.ts',
 			'scripts/lib/api-types/**/*.ts',
-			'scripts/validate-api-types.ts',
+			'scripts/check-api-types.ts',
 		],
 	},
 	'check:config': {
@@ -269,7 +269,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		// text.ts performs the line comparison, and repo.ts reads the target version.
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'scripts/check-template-overrides.ts',
+			'scripts/check-override-deltas.ts',
 			'scripts/lib/template/*.ts',
 			'scripts/test-override-deltas.ts',
 		],

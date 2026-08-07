@@ -8,22 +8,22 @@ Spernakit uses smoke tests, crawl tests, and integration scripts to check applic
 
 ### Retained Verification Paths
 
-| Command                               | Purpose                                                                           |
-| ------------------------------------- | --------------------------------------------------------------------------------- |
-| `bun run smoke:qc`                    | Check-only quality gate - typecheck, lint, build, format check, dependency checks |
-| `bun run qc:fix`                      | Repair lint/format drift, then run `smoke:qc`                                     |
-| `bun run smoke:dev`                   | Start services, crawltest in dev mode, stop                                       |
-| `bun run smoke:preview`               | Auth-reset UI check + crawltest in preview mode                                   |
-| `bun run smoke:docker-local`          | Docker Compose local stack + crawltest                                            |
-| `bun run smoke:docker-prod`           | Production Docker stack + crawltest                                               |
-| `bun run smoke:reset`                 | Full reset - clear logs, reset packages, QC, Docker build                         |
-| `bun run smoke:screenshots`           | Dev crawltest with screenshot capture                                             |
-| `bun run supertest`                   | Full validation chain across all environments                                     |
-| `bun run crawltest`                   | Crawl test in dev mode                                                            |
-| `bun run crawltest:preview`           | Crawl test in preview mode                                                        |
-| `bun run check-auth-reset-api`        | Password reset API endpoint verification                                          |
-| `bun run check-auth-reset-ui-dev`     | Password reset UI E2E in dev mode                                                 |
-| `bun run check-auth-reset-ui-preview` | Password reset UI E2E in preview mode                                             |
+| Command                              | Purpose                                                                           |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| `bun run smoke:qc`                   | Check-only quality gate - typecheck, lint, build, format check, dependency checks |
+| `bun run qc:fix`                     | Repair lint/format drift, then run `smoke:qc`                                     |
+| `bun run smoke:dev`                  | Start services, crawltest in dev mode, stop                                       |
+| `bun run smoke:preview`              | Auth-reset UI check + crawltest in preview mode                                   |
+| `bun run smoke:docker-local`         | Docker Compose local stack + crawltest                                            |
+| `bun run smoke:docker-prod`          | Production Docker stack + crawltest                                               |
+| `bun run smoke:reset`                | Full reset - clear logs, reset packages, QC, Docker build                         |
+| `bun run smoke:screenshots`          | Dev crawltest with screenshot capture                                             |
+| `bun run supertest`                  | Full validation chain across all environments                                     |
+| `bun run crawltest`                  | Crawl test in dev mode                                                            |
+| `bun run crawltest:preview`          | Crawl test in preview mode                                                        |
+| `bun run test:auth-reset-api`        | Password reset API endpoint verification                                          |
+| `bun run test:auth-reset-ui-dev`     | Password reset UI E2E in dev mode                                                 |
+| `bun run test:auth-reset-ui-preview` | Password reset UI E2E in preview mode                                             |
 
 ## Quality Control (smoke:qc)
 
@@ -141,9 +141,9 @@ See `scripts/readme.md` for complete CLI reference and configuration options.
 Test the password reset flow end-to-end:
 
 ```bash
-bun run check-auth-reset-api          # API endpoints
-bun run check-auth-reset-ui-dev       # UI in dev mode
-bun run check-auth-reset-ui-preview   # UI in preview mode
+bun run test:auth-reset-api           # API endpoints
+bun run test:auth-reset-ui-dev        # UI in dev mode
+bun run test:auth-reset-ui-preview    # UI in preview mode
 ```
 
 ## When to Use Each Verification

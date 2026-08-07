@@ -1,7 +1,7 @@
 /**
  * OpenAPI spec extraction and enum cross-check helpers.
  *
- * Extracted from scripts/validate-api-types.ts (max-lines split). Extracts
+ * Extracted from scripts/check-api-types.ts (max-lines split). Extracts
  * the OpenAPI spec from the Elysia app (without starting a server) and walks
  * it for anyOf/const enum patterns.
  */

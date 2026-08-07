@@ -106,8 +106,8 @@
 		"preview": {
 			"steps": [
 				{
-					"command": "bun run check-auth-reset-ui-preview",
-					"description": "Check auth reset UI (preview)"
+					"command": "bun run test:auth-reset-ui-preview",
+					"description": "Test auth reset UI (preview)"
 				},
 				{
 					"command": "bun scripts/crawltest.ts --mode preview",
