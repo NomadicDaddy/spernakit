@@ -20,6 +20,13 @@
  * apps where the operator hasn't populated their secrets yet, live-only
  * when the example was never committed).
  *
+ * That no-op is the template's own state — spernakit's `config/` holds no `*.secrets.json` at all —
+ * so it prints `[SKIP]` with the reason rather than `[OK]`, per rule 5 of
+ * `docs/reference/gate-conventions.md`. It printed `[OK]` for its whole life, which is
+ * indistinguishable from a clean comparison of twenty pairs, in the one repository where the
+ * distinction is always "looked at nothing". A gate whose subject lives in the derived apps rather
+ * than in the template has to say so on every run, or nobody notices when it stops finding them.
+ *
  * When BOTH files exist, the check compares the nested key structure and
  * fails on mismatches — the only contract these two files must uphold.
  *
@@ -49,8 +56,8 @@ function collectNestedKeys(value: unknown, prefix = ''): string[] {
 	return keys;
 }
 
-function findSecretsPairs(): SecretsPair[] {
-	const configDir = join(projectRoot, 'config');
+function findSecretsPairs(root: string): SecretsPair[] {
+	const configDir = join(root, 'config');
 	if (!existsSync(configDir)) return [];
 
 	const pairs: SecretsPair[] = [];
@@ -135,16 +142,20 @@ function checkPair(pair: SecretsPair): CheckResult {
 	};
 }
 
-export function runSecretsShape(): number {
-	const pairs = findSecretsPairs();
+export function runSecretsShape(root: string = projectRoot): number {
+	const pairs = findSecretsPairs(root);
 
 	if (pairs.length === 0) {
-		console.log('[OK] No secrets files found — nothing to check.');
+		console.log(
+			'[SKIP] No config/*.secrets.json files — this repository does not use the ' +
+				'split-secrets pattern, so there is no pair to compare.',
+		);
 		return 0;
 	}
 
 	const results = pairs.map(checkPair);
 	const failures = results.filter((r) => r.status === 'fail');
+	const compared = results.filter((r) => r.status !== 'skip').length;
 
 	for (const r of results) {
 		const tag = r.status === 'fail' ? 'FAIL' : r.status === 'skip' ? 'SKIP' : 'OK  ';
@@ -171,6 +182,17 @@ export function runSecretsShape(): number {
 		return 1;
 	}
 
+	// Pairs found but nothing comparable is its own zero, and a legitimate one: either file can
+	// exist alone. It gets its own line for the same reason the case above does — the per-pair
+	// `[SKIP]` lines say which pairs, and this says that none of them were actually compared.
+	if (compared === 0) {
+		console.log(
+			`\n[SKIP] ${pairs.length} secrets file(s) found, none with both halves present — no shape compared.`,
+		);
+		return 0;
+	}
+
+	console.log(`\n[OK] ${compared} of ${pairs.length} secrets pair(s) compared, shapes match.`);
 	return 0;
 }
 
