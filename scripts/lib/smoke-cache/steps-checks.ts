@@ -181,6 +181,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/db/schema/**/*.ts',
 			'backend/src/db/schema-pg/**/*.ts',
 			'scripts/check-schema-parity.ts',
+			'scripts/lib/schema-parity/**/*.ts',
 		],
 	},
 	// Existence is the input here, not content: a glob set that loses a path rehashes, which is what
