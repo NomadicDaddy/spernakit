@@ -22,6 +22,9 @@
  */
 import type { TemplateOverrides } from './types.ts';
 
+import { enumerateTemplateFiles } from './classify.ts';
+import { fileExistsInApp } from './repo.ts';
+
 export interface RetainedDeletion {
 	filePath: string;
 	status: 'retained' | 'suppressed';
@@ -89,4 +92,38 @@ export function detectRetainedDeletions(input: RetainedDeletionInput): RetainedD
 		);
 	}
 	return results;
+}
+
+export interface DeletionScan {
+	deletions: RetainedDeletion[];
+	/** Recorded-version paths the target no longer ships — excluded from the drift report. */
+	removed: Set<string>;
+	targetVersion: string;
+}
+
+/**
+ * Compare the drift-managed path sets at the two versions.
+ *
+ * Both sides come from `enumerateTemplateFiles`, so both are app-relative: scaffold-mapped paths
+ * (`scaffolding/.gitignore`) are already resolved through `toTemplatePath` to the app path they
+ * land on, on both sides, before anything is compared.
+ */
+export function scanTemplateDeletions(
+	repoRoot: string,
+	spernakitPath: string,
+	targetVersion: string,
+	recordedPaths: string[],
+	overrides: TemplateOverrides,
+): DeletionScan {
+	const input: RetainedDeletionInput = {
+		existsInApp: (filePath: string): boolean => fileExistsInApp(repoRoot, filePath),
+		overrides,
+		recordedPaths,
+		targetPaths: enumerateTemplateFiles(spernakitPath, targetVersion),
+	};
+	return {
+		deletions: detectRetainedDeletions(input),
+		removed: findRemovedPaths(input),
+		targetVersion,
+	};
 }

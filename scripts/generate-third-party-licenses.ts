@@ -6,10 +6,14 @@
  *
  * The output enumerates direct packages and reproduces their notices. --check runs
  * in smoke:qc and CI to enforce alignment with the lockfile.
+ *
+ * Enforces: the committed THIRD_PARTY_LICENSES.md matches what the current lockfile generates. No
+ * assertion ID: the catalog states no invariant over third-party notices.
  */
 
 import { join } from 'node:path';
 import { cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { collectRuntimeClosure, summarizeClosure } from './lib/third-party-licenses/closure.ts';
 import { collectDirectDependencies, workspaceNames } from './lib/third-party-licenses/collect.ts';
@@ -157,9 +161,11 @@ async function assertImageCarriesNotices(root: string): Promise<void> {
 	}
 }
 
-async function main(): Promise<void> {
-	const root = cwd();
-	const check = Bun.argv.includes('--check');
+export async function runThirdPartyLicenses(
+	options: { check?: boolean; root?: string } = {},
+): Promise<number> {
+	const root = options.root ?? cwd();
+	const check = options.check === true;
 	const generated = await generate(root);
 	const documents = [
 		{ content: generated.summary, name: OUTPUT },
@@ -169,9 +175,9 @@ async function main(): Promise<void> {
 	if (!check) {
 		for (const document of documents) {
 			await Bun.write(join(root, document.name), document.content);
-			console.log(`Wrote ${document.name}`);
+			console.log(`[OK] Wrote ${document.name}`);
 		}
-		return;
+		return 0;
 	}
 
 	await assertImageCarriesNotices(root);
@@ -182,15 +188,33 @@ async function main(): Promise<void> {
 			.catch(() => '');
 
 		if (committed !== document.content) {
-			console.error(`${document.name} is out of date with the locked dependency graph.`);
+			console.error(
+				`[FAIL] ${document.name} is out of date with the locked dependency graph.`,
+			);
 			console.error('Run `bun run licenses:generate` and commit the result.');
-			exit(1);
+			return 1;
 		}
 	}
 
-	console.log(`${OUTPUT} and ${NOTICES_OUTPUT} match the locked dependency graph.`);
+	console.log(`[OK] ${OUTPUT} and ${NOTICES_OUTPUT} match the locked dependency graph.`);
+	return 0;
 }
 
 if (import.meta.main) {
-	await main();
+	// Without `--check` this rewrites two tracked documents, so a mistyped flag must not fall
+	// through to a real write. Exit 2 separates that from an out-of-date notice file.
+	let check = false;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: { check: { type: 'boolean' } },
+			strict: true,
+		});
+		check = values.check === true;
+	} catch (err) {
+		console.error(`[FAIL] generate-third-party-licenses: ${(err as Error).message}`);
+		console.error('Usage: generate-third-party-licenses [--check]');
+		exit(2);
+	}
+	exit(await runThirdPartyLicenses({ check }));
 }

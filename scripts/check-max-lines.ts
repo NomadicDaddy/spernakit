@@ -3,7 +3,8 @@ import { join, relative, sep } from 'node:path';
 import { cwd, exit } from 'node:process';
 
 /**
- * Enforces the 300-line-per-file modularity rule across the tracked source trees.
+ * Enforces: the 300-line-per-file modularity rule, across the tracked source trees. No assertion
+ * ID: the rule is stated in `AGENTS.md` rather than in the assertion catalog.
  *
  * Background: the codebase has gone through repeated "split oversized file" refactoring waves
  * (see CHANGELOG entries for handler/service decompositions) because the 300-line guideline was
@@ -76,7 +77,7 @@ export async function runCheckMaxLines(projectRoot = cwd()): Promise<number> {
 	if (findings.length > 0) {
 		findings.sort((a, b) => b.lines - a.lines);
 		console.error(
-			`max-lines check failed: ${findings.length} file(s) exceed ${MAX_LINES} lines.`,
+			`[FAIL] max-lines check failed: ${findings.length} file(s) exceed ${MAX_LINES} lines.`,
 		);
 		console.error(
 			'Split oversized files into cohesive modules (facade + submodules / extracted components).',
@@ -87,7 +88,7 @@ export async function runCheckMaxLines(projectRoot = cwd()): Promise<number> {
 		return 1;
 	}
 
-	console.log(`max-lines check passed (no file exceeds ${MAX_LINES} lines).`);
+	console.log(`[OK] max-lines check passed (no file exceeds ${MAX_LINES} lines).`);
 	return 0;
 }
 

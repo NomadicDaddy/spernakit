@@ -12,6 +12,7 @@
 import { CHECK_STEP_DEPENDENCIES } from './steps-checks.ts';
 import { INTEGRATION_STEP_DEPENDENCIES } from './steps-integration.ts';
 import { METADATA_STEP_DEPENDENCIES } from './steps-metadata.ts';
+import { SELF_TEST_STEP_DEPENDENCIES } from './steps-selftests.ts';
 import { TOOLCHAIN_STEP_DEPENDENCIES } from './steps-toolchain.ts';
 import { type StepDependencies } from './types.ts';
 
@@ -35,6 +36,7 @@ export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	...CHECK_STEP_DEPENDENCIES,
 	...INTEGRATION_STEP_DEPENDENCIES,
 	...METADATA_STEP_DEPENDENCIES,
+	...SELF_TEST_STEP_DEPENDENCIES,
 	...TOOLCHAIN_STEP_DEPENDENCIES,
 };
 

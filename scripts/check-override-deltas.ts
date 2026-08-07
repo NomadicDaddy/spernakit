@@ -2,6 +2,10 @@
 /**
  * Report what every accepted `.templateoverrides` entry is holding back.
  *
+ * Enforces: every `.templateoverrides` entry is accounted for against the target version, so a
+ * suppression cannot silently widen past the reason it was taken for. No assertion ID: the catalog
+ * states no invariant over template overrides.
+ *
  * `bun run check:drift` asks whether each template-managed file still matches the template, and a
  * `SKIP` or `KEEP` line answers "stop asking about this one". From that moment the template's own
  * later changes to the file are invisible: the drift report shows the path as `suppressed` with
@@ -22,7 +26,8 @@
  *   bun scripts/check-override-deltas.ts --target-version 3.31.2 --template ../spernakit
  */
 import path from 'node:path';
-import { argv, exit } from 'node:process';
+import { exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { loadAppBrandingValues, loadClassificationOverrides } from './lib/template/classify.ts';
 import { computeOverrideDeltas } from './lib/template/override-deltas.ts';
@@ -41,7 +46,7 @@ const repoRoot = path.resolve(process.cwd());
 const USAGE =
 	'Usage: bun run check:override-deltas -- --target-version <version> [--fail-on-delta]';
 
-interface Options {
+export interface OverrideDeltaOptions {
 	failOnDelta: boolean;
 	targetVersion: string;
 	templatePath: string | undefined;
@@ -54,42 +59,47 @@ interface Options {
  * `smoke:qc`. This runs only when someone asks what an override is withholding at a named version,
  * and the one answer it must never give is a clean report it could not substantiate.
  */
+class PreconditionError extends Error {}
+
 function fail(message: string): never {
-	console.error(`   FAILED: ${message}`);
-	exit(1);
+	throw new PreconditionError(message);
 }
 
-function parseArgs(): Options {
-	const args = argv.slice(2);
-	const valueOf = (flag: string): string | undefined => {
-		const index = args.indexOf(flag);
-		if (index === -1) return undefined;
-		const value = args[index + 1];
-		if (value === undefined || value.startsWith('--'))
-			fail(`${flag} requires a value. ${USAGE}`);
-		return value;
-	};
+export function parseOverrideDeltaArgs(args: string[]): OverrideDeltaOptions {
+	const { values } = parseArgs({
+		args,
+		options: {
+			'fail-on-delta': { type: 'boolean' },
+			'target-version': { type: 'string' },
+			template: { type: 'string' },
+		},
+		strict: true,
+	});
 
-	const targetVersion = valueOf('--target-version');
-	if (targetVersion === undefined) {
+	const targetVersion = values['target-version'];
+	if (targetVersion === undefined || targetVersion.startsWith('--')) {
 		// Deliberately NOT defaulting to the app's recorded spernakit_version. Comparing an override
 		// against the version the app is already on can only ever report that it withholds nothing —
 		// a clean report for the exact question the check exists to ask.
 		fail(`--target-version is required. ${USAGE}`);
 	}
+	const templatePath = values.template;
+	if (templatePath !== undefined && templatePath.startsWith('--')) {
+		fail(`--template requires a value. ${USAGE}`);
+	}
 	return {
-		failOnDelta: args.includes('--fail-on-delta'),
+		failOnDelta: values['fail-on-delta'] === true,
 		targetVersion,
-		templatePath: valueOf('--template'),
+		templatePath,
 	};
 }
 
-function main(): void {
-	const { failOnDelta, targetVersion, templatePath } = parseArgs();
+function report(options: OverrideDeltaOptions): number {
+	const { failOnDelta, targetVersion, templatePath } = options;
 
 	if (isSpernakitItself(repoRoot)) {
-		console.log('   Override delta report is not applicable to spernakit itself.');
-		exit(0);
+		console.log('[SKIP] Override delta report is not applicable to spernakit itself.');
+		return 0;
 	}
 
 	const spernakitPath = resolveSpernakitPath(templatePath, repoRoot);
@@ -121,12 +131,38 @@ function main(): void {
 	// An unresolved entry always fails: the report could not substantiate it either way. A withheld
 	// delta is a review item, so it is advisory until a caller (the dance, a release gate) asks for
 	// it to block with --fail-on-delta.
-	if (counts.unavailable > 0) exit(1);
+	if (counts.unavailable > 0) return 1;
 	if (counts.deltas > 0 && failOnDelta) {
-		console.log(`   ${counts.deltas} override(s) withhold template content (--fail-on-delta).`);
-		exit(1);
+		console.log(
+			`[FAIL] ${counts.deltas} override(s) withhold template content (--fail-on-delta).`,
+		);
+		return 1;
 	}
-	exit(0);
+	return 0;
 }
 
-main();
+export function runOverrideDeltas(options: OverrideDeltaOptions): number {
+	try {
+		return report(options);
+	} catch (err) {
+		if (err instanceof PreconditionError) {
+			console.error(`[FAIL] ${err.message}`);
+			return 1;
+		}
+		throw err;
+	}
+}
+
+if (import.meta.main) {
+	// A bad argument exits 2. This report is read as evidence during an upgrade, so "you typed the
+	// flag wrong" and "an override is withholding template content" must not share an exit code.
+	let options: OverrideDeltaOptions;
+	try {
+		options = parseOverrideDeltaArgs(Bun.argv.slice(2));
+	} catch (err) {
+		console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
+		console.error(USAGE);
+		exit(2);
+	}
+	exit(runOverrideDeltas(options));
+}

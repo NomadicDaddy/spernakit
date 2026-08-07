@@ -32,9 +32,21 @@ More development guides live in `docs/template/`:
 
 - `DEVELOPMENT.md` - core development patterns and workflows
 
+### `reference/` - Fleet Reference Documents
+
+`reference/` holds documents that are canonical somewhere else in the fleet and mirrored here so
+the paths this repository's tooling cites resolve locally.
+
+- `gate-conventions.md` - the eight rules every `check*` gate follows, and the six-part shape for
+  changing one. Canonical copy: `aidd/docs/reference/gate-conventions.md`. Enforced here by
+  `bun run check:gate-conventions`.
+
+**Audience**: anyone writing or changing a gate in this repository.
+
 ## Pathing Conventions
 
 - **Template documentation**: always referenced with the `docs/template/` prefix
+- **Mirrored fleet references**: referenced with the `docs/reference/` prefix
 
 ## Maintenance Guidelines
 

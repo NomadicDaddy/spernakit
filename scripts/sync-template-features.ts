@@ -7,9 +7,12 @@
  *   bun scripts/sync-template-features.ts --app ../deeper    # push, from the template
  *   bun scripts/sync-template-features.ts --all              # push to every app in spernakit.psd1
  *
+ * Enforces: every template-owned feature record in a derived app matches the template's copy. No
+ * assertion ID: the catalog states no invariant over `.aidd/features/`.
+ *
  * A feature record is the machine-checkable half of the template contract, and until now the only
- * thing that ever copied one downstream was a paragraph of prose in the upgrade skill, executed by
- * hand. It had run on four of eleven apps.
+ * thing that copied one downstream was a paragraph of prose in the upgrade skill, run by hand on
+ * four of eleven apps.
  *
  * A write run applies the plan except for records whose overwrite would destroy app-authored
  * `spec`/`notes`/`description`/`summary`: those are left on disk, listed, and the run exits 1.
@@ -33,6 +36,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import { cwd, env, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { applicationsRootForManifest, loadFleetManifest } from './lib/fleet/manifest.ts';
 import { applyPlan } from './lib/template-features/apply.ts';
@@ -53,7 +57,7 @@ import {
 
 const MANIFEST = 'spernakit.psd1';
 
-interface CliOptions {
+export interface CliOptions {
 	adopt: boolean;
 	all: boolean;
 	apps: string[];
@@ -64,41 +68,38 @@ interface CliOptions {
 	template: string | undefined;
 }
 
-function parseArgs(args: string[]): CliOptions {
-	const options: CliOptions = {
-		adopt: false,
-		all: false,
-		apps: [],
-		check: false,
-		json: false,
-		overwriteAppText: false,
-		prune: true,
-		template: undefined,
-	};
-
-	for (let index = 0; index < args.length; index += 1) {
-		const arg = args[index];
-		const takeValue = (flag: string): string => {
-			const value = args[index + 1];
-			if (value === undefined || value.trim() === '' || value.startsWith('--')) {
-				throw new Error(`${flag} requires a path.`);
-			}
-			index += 1;
-			return value;
-		};
-
-		if (arg === '--adopt') options.adopt = true;
-		else if (arg === '--all') options.all = true;
-		else if (arg === '--app') options.apps.push(takeValue('--app'));
-		else if (arg === '--check') options.check = true;
-		else if (arg === '--json') options.json = true;
-		else if (arg === '--no-prune') options.prune = false;
-		else if (arg === '--overwrite-app-text') options.overwriteAppText = true;
-		else if (arg === '--template') options.template = takeValue('--template');
-		else throw new Error(`Unknown argument: ${String(arg)}`);
+export function parseTemplateFeatureArgs(args: string[]): CliOptions {
+	const { values } = parseArgs({
+		args,
+		options: {
+			adopt: { type: 'boolean' },
+			all: { type: 'boolean' },
+			app: { multiple: true, type: 'string' },
+			check: { type: 'boolean' },
+			json: { type: 'boolean' },
+			'no-prune': { type: 'boolean' },
+			'overwrite-app-text': { type: 'boolean' },
+			template: { type: 'string' },
+		},
+		strict: true,
+	});
+	// parseArgs takes the token after a path flag as that flag's value even when the token is
+	// itself a flag, so `--app --check` would name a directory nothing matches and push nowhere.
+	for (const path of [...(values.app ?? []), values.template ?? '.']) {
+		if (path.trim() === '' || path.startsWith('-')) {
+			throw new Error('--app and --template each require a path.');
+		}
 	}
-
-	return options;
+	return {
+		adopt: values.adopt === true,
+		all: values.all === true,
+		apps: values.app ?? [],
+		check: values.check === true,
+		json: values.json === true,
+		overwriteAppText: values['overwrite-app-text'] === true,
+		prune: values['no-prune'] !== true,
+		template: values.template,
+	};
 }
 
 /**
@@ -107,10 +108,10 @@ function parseArgs(args: string[]): CliOptions {
  */
 function skip(reason: string): never {
 	if (env['TEMPLATE_FEATURES_REQUIRED'] === '1') {
-		console.error(`   FAILED (TEMPLATE_FEATURES_REQUIRED=1, would have skipped): ${reason}`);
+		console.error(`[FAIL] TEMPLATE_FEATURES_REQUIRED=1, would have skipped: ${reason}`);
 		exit(1);
 	}
-	console.log(`   SKIPPED (${reason})`);
+	console.log(`[SKIP] ${reason}`);
 	exit(0);
 }
 
@@ -143,7 +144,12 @@ async function syncOne(
 	// output a pipeline cannot gate on.
 	const drifted = countActionable(outcome.plan) > 0 || outcome.plan.roadmapChanged;
 	if (options.json) {
-		emitJsonPlan(appRoot, outcome);
+		emitJsonPlan(appRoot, outcome, {
+			examined: outcome.durable,
+			findings: countActionable(outcome.plan),
+			gate: 'check:template-features',
+			status: drifted || outcome.plan.errors.length > 0 ? 'fail' : 'pass',
+		});
 		if (outcome.plan.errors.length > 0) return 1;
 		return options.check && drifted ? 1 : 0;
 	}
@@ -189,9 +195,7 @@ function requireUsableTemplate(templateRoot: string): void {
 function fleetAppRoots(templateRoot: string): string[] {
 	const manifestPath = join(templateRoot, MANIFEST);
 	if (!existsSync(manifestPath)) {
-		throw new Error(
-			`${MANIFEST} not found at ${manifestPath}; --all needs the fleet manifest.`,
-		);
+		throw new Error(`${MANIFEST} not found at ${manifestPath}; --all needs the manifest.`);
 	}
 	const applicationsRoot = applicationsRootForManifest(manifestPath);
 	return loadFleetManifest(manifestPath)
@@ -219,7 +223,7 @@ async function runPush(repoRoot: string, options: CliOptions): Promise<number> {
 	let code = 0;
 	for (const appRoot of appRoots) {
 		if (!existsSync(appRoot)) {
-			console.error(`   Application directory not found: ${appRoot}`);
+			console.error(`[FAIL] Application directory not found: ${appRoot}`);
 			code = 1;
 			continue;
 		}
@@ -230,7 +234,7 @@ async function runPush(repoRoot: string, options: CliOptions): Promise<number> {
 
 async function runPull(repoRoot: string, options: CliOptions): Promise<number> {
 	if (isSpernakitItself(repoRoot)) {
-		console.log('   Template feature sync is not applicable to spernakit itself.');
+		console.log('[SKIP] Template feature sync is not applicable to spernakit itself.');
 		return 0;
 	}
 
@@ -265,19 +269,30 @@ async function runPull(repoRoot: string, options: CliOptions): Promise<number> {
 	return await syncOne(templateRoot, repoRoot, options);
 }
 
-async function main(): Promise<void> {
-	const options = parseArgs(Bun.argv.slice(2));
+export async function runTemplateFeatureSync(options: CliOptions): Promise<number> {
 	const repoRoot = resolve(cwd());
 	const push = options.all || options.apps.length > 0;
-	exit(push ? await runPush(repoRoot, options) : await runPull(repoRoot, options));
+	return push ? await runPush(repoRoot, options) : await runPull(repoRoot, options);
 }
 
 if (import.meta.main) {
+	// This writes `.aidd/features/` in other repositories, so a mistyped flag must not fall through
+	// to the default pull and report the app clean. Bad arguments exit 2, drift exits 1.
+	let options: CliOptions;
 	try {
-		await main();
+		options = parseTemplateFeatureArgs(Bun.argv.slice(2));
+	} catch (err) {
+		console.error(`[FAIL] sync-template-features: ${(err as Error).message}`);
+		console.error(
+			'Usage: sync-template-features [--check] [--app <dir>|--all] [--template <d>]',
+		);
+		exit(2);
+	}
+	try {
+		exit(await runTemplateFeatureSync(options));
 	} catch (err) {
 		console.error(
-			`   Template feature sync failed: ${err instanceof Error ? err.message : String(err)}`,
+			`[FAIL] Template feature sync failed: ${err instanceof Error ? err.message : String(err)}`,
 		);
 		exit(1);
 	}

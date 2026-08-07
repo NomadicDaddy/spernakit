@@ -7,6 +7,12 @@ those, read `scripts/smoke.md`, which is generated from `scripts/smoke.json` by
 `bun run smoke:docs` and enumerates every step of every mode in the order it runs. Adding a gate
 does not obligate you to add a section here; leaving one out of `smoke.json` is what would hide it.
 
+**Before you write or change a gate**, read `docs/reference/gate-conventions.md`. It is the contract
+every `check*` script in this repository follows: entry shape, exit codes, output, arguments,
+anti-vacuity, rule linkage, waiver forms, and `--json`. `bun run check:gate-conventions` enforces
+the statically decidable half, and the same document carries the six-part shape that a gate change
+has to land with.
+
 ## Table of Contents
 
 - [Quick Reference](#quick-reference)
@@ -41,6 +47,7 @@ does not obligate you to add a section here; leaving one out of `smoke.json` is 
 | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------- |
 | Validate repo identity/config/Docker consistency | `bun run check-application`                           | `scripts/check-application.ts`            |
 | Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-deps.ts`                   |
+| Check every gate follows the gate conventions    | `bun run check:gate-conventions`                      | `scripts/check-gate-conventions.ts`       |
 | Initialize or re-template a derived app repo     | `bun run setup`                                       | `scripts/setup.ts`                        |
 | Run check-only local quality chain (mode-based)  | `bun run smoke:qc`                                    | `scripts/smoke.ts` + `scripts/smoke.json` |
 | Run the cached inner-loop quality subset         | `bun run smoke:qc:fast`                               | `scripts/smoke.ts` + `scripts/smoke.json` |

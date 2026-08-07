@@ -2,6 +2,9 @@
 /**
  * Git Subprocess Window Visibility Check
  *
+ * Enforces: every direct git subprocess passes `windowsHide: true`. No assertion ID: the catalog
+ * states no invariant over subprocess spawning.
+ *
  * Every direct Git subprocess must pass `windowsHide: true`. On Windows a spawn without it
  * flashes a real console window, so a background gate or a hook run visibly blinks the desktop
  * — and in a packaged app it looks like a crash. The flag is inert everywhere else, so the rule
@@ -16,6 +19,7 @@
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { exit } from 'node:process';
 
 const projectRoot = join(import.meta.dir, '..');
 const SCAN_ROOTS = ['backend/src', 'frontend/src', 'shared/src', 'scripts'];
@@ -89,28 +93,34 @@ function checkFile(filePath: string): Violation[] {
 	return violations;
 }
 
-// --- Main ---
-const allViolations: Violation[] = [];
+export function runGitWindowHide(): number {
+	const allViolations: Violation[] = [];
 
-for (const root of SCAN_ROOTS) {
-	const absoluteRoot = join(projectRoot, root);
-	try {
-		statSync(absoluteRoot);
-	} catch {
-		continue;
+	for (const root of SCAN_ROOTS) {
+		const absoluteRoot = join(projectRoot, root);
+		try {
+			statSync(absoluteRoot);
+		} catch {
+			continue;
+		}
+		for (const filePath of walkDir(absoluteRoot)) {
+			allViolations.push(...checkFile(filePath));
+		}
 	}
-	for (const filePath of walkDir(absoluteRoot)) {
-		allViolations.push(...checkFile(filePath));
+
+	if (allViolations.length > 0) {
+		console.error('[FAIL] Found direct Git subprocesses spawned without windowsHide:\n');
+		for (const v of allViolations) {
+			console.error(`  ${v.file}:${v.line}: ${v.content}`);
+		}
+		console.error(
+			'\nAdd `windowsHide: true` to the spawn options so no console window appears.',
+		);
+		return 1;
 	}
+
+	console.log('[OK] Git subprocess window visibility check passed.');
+	return 0;
 }
 
-if (allViolations.length > 0) {
-	console.error('[FAIL] Found direct Git subprocesses spawned without windowsHide:\n');
-	for (const v of allViolations) {
-		console.error(`  ${v.file}:${v.line}: ${v.content}`);
-	}
-	console.error('\nAdd `windowsHide: true` to the spawn options so no console window appears.');
-	process.exit(1);
-}
-
-console.log('[OK] Git subprocess window visibility check passed.');
+if (import.meta.main) exit(runGitWindowHide());

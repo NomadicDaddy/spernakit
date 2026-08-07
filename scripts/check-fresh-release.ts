@@ -1,6 +1,14 @@
 #!/usr/bin/env bun
+/**
+ * Fresh-release validation for the tracked files a new release must carry.
+ *
+ * Enforces: every tracked fresh-release file matches the shape `lib/fresh-release/validation.ts`
+ * declares for the current `FRESH_RELEASE_VERSION`. No assertion ID: the catalog states no
+ * invariant over the release artifacts.
+ */
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { exit } from 'node:process';
 
 import {
 	FRESH_RELEASE_VERSION,
@@ -32,8 +40,7 @@ function readPublicFiles(root: string): FreshReleaseFile[] {
 		}));
 }
 
-function main(): void {
-	const root = resolve(import.meta.dir, '..');
+export function runFreshRelease(root: string = resolve(import.meta.dir, '..')): number {
 	const packageJson = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')) as {
 		version?: string;
 	};
@@ -45,13 +52,15 @@ function main(): void {
 	if (issues.length > 0) {
 		console.error('Fresh-release contract failed:');
 		for (const issue of issues) console.error(`  - ${issue}`);
-		process.exit(1);
+		console.log(`[FAIL] check:fresh-release -- ${issues.length} issue(s).`);
+		return 1;
 	}
 
 	console.log(
-		`Fresh-release contract passed for Spernakit v${packageJson.version} ` +
+		`[OK] check:fresh-release -- contract passed for Spernakit v${packageJson.version} ` +
 			`(public baseline v${FRESH_RELEASE_VERSION}).`,
 	);
+	return 0;
 }
 
-main();
+if (import.meta.main) exit(runFreshRelease());

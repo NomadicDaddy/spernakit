@@ -2,6 +2,9 @@
 /**
  * Require every feature record's `id` to equal the directory that holds it.
  *
+ * Enforces: a feature record's `id` equals its directory name. No assertion ID: the catalog states
+ * no invariant over `.aidd/features/`, which is aidd's contract rather than the template's.
+ *
  * aidd's roadmap tooling builds its directory-to-id lookup from `feature.json.id` and then writes
  * dependency arrays in terms of those ids. A record whose id has drifted from its directory name
  * therefore does not merely look untidy: every other feature that depends on it gets the stale
@@ -16,6 +19,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve, sep } from 'node:path';
 import { cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 interface FeatureProblem {
 	path: string;
@@ -121,20 +125,37 @@ export function runFeatureIdDirectoryCheck(projectRoot = cwd()): FeatureIdDirect
 }
 
 function projectRootFromArgs(args: string[]): string {
-	const index = args.indexOf('--project-dir');
-	if (index === -1) return cwd();
-	const value = args[index + 1];
+	const { values } = parseArgs({
+		args,
+		options: { 'project-dir': { type: 'string' } },
+		strict: true,
+	});
+	const value = values['project-dir'];
+	if (value === undefined) return cwd();
 	// An empty value must not fall through to resolve(''), which silently returns the current
-	// working directory and grades the wrong repository.
-	if (value === undefined || value.trim() === '' || value.startsWith('--')) {
+	// working directory and grades the wrong repository. A following flag is the same fault wearing
+	// a dash: parseArgs takes the next token as the value rather than refusing it.
+	if (value.trim() === '' || value.startsWith('--')) {
 		throw new Error('--project-dir requires a path.');
 	}
 	return resolve(value);
 }
 
 if (import.meta.main) {
+	// A bad argument exits 2. Exiting 1 would report a mistyped flag as a real id mismatch, which
+	// is the one thing a caller cannot tell apart from a genuine finding.
+	let projectRoot: string;
 	try {
-		exit(runFeatureIdDirectoryCheck(projectRootFromArgs(Bun.argv.slice(2))).code);
+		projectRoot = projectRootFromArgs(Bun.argv.slice(2));
+	} catch (err) {
+		console.error(
+			`[FAIL] check:feature-id-directory: ${err instanceof Error ? err.message : String(err)}`,
+		);
+		console.error('Usage: check-feature-id-directory [--project-dir <path>]');
+		exit(2);
+	}
+	try {
+		exit(runFeatureIdDirectoryCheck(projectRoot).code);
 	} catch (err) {
 		console.error(
 			`[FAIL] check:feature-id-directory: ${err instanceof Error ? err.message : String(err)}`,

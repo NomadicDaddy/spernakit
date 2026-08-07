@@ -1,0 +1,6 @@
+{
+	"excluded": {
+		"scripts/run-bash.ts": "The bash shim. `check:leak-guard` runs `bun ./scripts/run-bash.ts scripts/check-leak-guard.sh`, so discovery reaches the shim rather than the guard. The shim spawns a subprocess and returns its exit code; it enforces no rule of its own, and the guard it runs is a `.sh` file with none of the eight rules' surfaces."
+	},
+	"waivers": {}
+}

@@ -20,10 +20,12 @@ export {
 	loadClassificationOverrides,
 } from './lib/template/classify.ts';
 export {
+	type DeletionScan,
 	detectRetainedDeletions,
 	findRemovedPaths,
 	type RetainedDeletion,
 	type RetainedDeletionInput,
+	scanTemplateDeletions,
 } from './lib/template/deletions.ts';
 export { checkFile } from './lib/template/drift.ts';
 export { applyTemplateOverrides, loadTemplateOverrides } from './lib/template/overrides.ts';

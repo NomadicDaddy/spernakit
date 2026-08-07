@@ -2,6 +2,10 @@
 /**
  * check-feature-integration.ts
  *
+ * Enforces: ASSERT-001 -- every backend route file is registered in `create-api-app.ts` -- and
+ * ASSERT-002 -- every `*Page.tsx` is lazy-imported in `routes/lazyPages.ts`. The third check below,
+ * on shared-skeleton import paths, has no assertion ID.
+ *
  * Fails the build when:
  *   1 - An Elysia instance exported from a backend route module that is not
  *       reachable from create-api-app.ts through .use() calls
@@ -16,21 +20,13 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { checkBackendRoutes } from './lib/feature-integration/backend-routes.ts';
 
-function resolveProjectRoot(): string {
-	const rootFlag = process.argv.indexOf('--root');
-	if (rootFlag === -1) return resolve(import.meta.dir, '..');
-	const root = process.argv[rootFlag + 1];
-	if (!root) throw new Error('--root requires a project directory');
-	return resolve(root);
-}
-
-const ROOT = resolveProjectRoot();
-
-function readText(relPath: string): string {
-	return readFileSync(resolve(ROOT, relPath), 'utf8');
+function readText(root: string, relPath: string): string {
+	return readFileSync(resolve(root, relPath), 'utf8');
 }
 
 /** Extract `lazyNamed(() => import('@/pages/XXX/YYY'), 'ZZZ')` page references. */
@@ -47,14 +43,14 @@ function extractLazyPageImports(source: string): string[] {
 // Check 2: Frontend lazy pages
 // ---------------------------------------------------------------------------
 
-function checkFrontendPages(): string[] {
+function checkFrontendPages(root: string): string[] {
 	const errors: string[] = [];
 
-	const lazyPagesSource = readText('frontend/src/routes/lazyPages.ts');
+	const lazyPagesSource = readText(root, 'frontend/src/routes/lazyPages.ts');
 	const registeredPages = new Set(extractLazyPageImports(lazyPagesSource));
 
 	// Collect all *Page.tsx files under pages/
-	const pagesDir = resolve(ROOT, 'frontend/src/pages');
+	const pagesDir = resolve(root, 'frontend/src/pages');
 	const pageFiles: string[] = [];
 
 	function walk(dir: string) {
@@ -73,8 +69,8 @@ function checkFrontendPages(): string[] {
 	for (const pageFile of pageFiles) {
 		// Normalize to forward-slash relative path without extension: "pages/analytics/BusinessMetricsPage"
 		const rel = pageFile
-			.replace(`${resolve(ROOT, 'frontend/src')}\\`, '')
-			.replace(`${resolve(ROOT, 'frontend/src')}/`, '')
+			.replace(`${resolve(root, 'frontend/src')}\\`, '')
+			.replace(`${resolve(root, 'frontend/src')}/`, '')
 			.replace(/\\/g, '/')
 			.replace(/\.tsx$/, '');
 		if (!registeredPages.has(rel)) {
@@ -99,7 +95,7 @@ const SKELETON_NAMES = [
 	'TableSkeleton',
 ] as const;
 
-function checkSkeletonImportPaths(): string[] {
+function checkSkeletonImportPaths(root: string): string[] {
 	const errors: string[] = [];
 	const pattern = new RegExp(
 		`from\\s+['"]@/components/shared/(${SKELETON_NAMES.join('|')})['"]`,
@@ -116,8 +112,8 @@ function checkSkeletonImportPaths(): string[] {
 				const source = readFileSync(full, 'utf8');
 				for (const match of source.matchAll(pattern)) {
 					const rel = full
-						.replace(`${ROOT}\\`, '')
-						.replace(`${ROOT}/`, '')
+						.replace(`${root}\\`, '')
+						.replace(`${root}/`, '')
 						.replace(/\\/g, '/');
 					errors.push(
 						`  ${rel}: imports "${match[1]}" from "@/components/shared/${match[1]}" — ` +
@@ -127,8 +123,8 @@ function checkSkeletonImportPaths(): string[] {
 			}
 		}
 	}
-	walk(resolve(ROOT, 'frontend/src/pages'));
-	walk(resolve(ROOT, 'frontend/src/components'));
+	walk(resolve(root, 'frontend/src/pages'));
+	walk(resolve(root, 'frontend/src/components'));
 
 	return errors;
 }
@@ -137,32 +133,54 @@ function checkSkeletonImportPaths(): string[] {
 // Main
 // ---------------------------------------------------------------------------
 
-const allErrors: string[] = [];
+export function runFeatureIntegration(root: string = resolve(import.meta.dir, '..')): number {
+	const allErrors: string[] = [];
 
-const backendErrors = checkBackendRoutes(ROOT);
-if (backendErrors.length > 0) {
-	allErrors.push('Backend route registration mismatches:', ...backendErrors);
-}
-
-const frontendErrors = checkFrontendPages();
-if (frontendErrors.length > 0) {
-	allErrors.push('Frontend page registration mismatches:', ...frontendErrors);
-}
-
-const skeletonErrors = checkSkeletonImportPaths();
-if (skeletonErrors.length > 0) {
-	allErrors.push(
-		'Forbidden skeleton import shorthand (use "@/components/shared/skeletons/<Name>"):',
-		...skeletonErrors,
-	);
-}
-
-if (allErrors.length > 0) {
-	console.error('[FAIL] Feature integration check found issues:');
-	for (const line of allErrors) {
-		console.error(line);
+	const backendErrors = checkBackendRoutes(root);
+	if (backendErrors.length > 0) {
+		allErrors.push('Backend route registration mismatches:', ...backendErrors);
 	}
-	process.exit(1);
+
+	const frontendErrors = checkFrontendPages(root);
+	if (frontendErrors.length > 0) {
+		allErrors.push('Frontend page registration mismatches:', ...frontendErrors);
+	}
+
+	const skeletonErrors = checkSkeletonImportPaths(root);
+	if (skeletonErrors.length > 0) {
+		allErrors.push(
+			'Forbidden skeleton import shorthand (use "@/components/shared/skeletons/<Name>"):',
+			...skeletonErrors,
+		);
+	}
+
+	if (allErrors.length > 0) {
+		console.error('[FAIL] Feature integration check found issues:');
+		for (const line of allErrors) {
+			console.error(line);
+		}
+		return 1;
+	}
+
+	console.log('[OK] Feature integration check passed.');
+	return 0;
 }
 
-console.log('[OK] Feature integration check passed.');
+if (import.meta.main) {
+	// `--root` names a directory to scan instead of this repository; a typo has to exit 2 rather
+	// than report a clean pass over the default root, which is what a silently ignored flag does.
+	let root: string | undefined;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: { root: { type: 'string' } },
+			strict: true,
+		});
+		root = values.root;
+	} catch (err) {
+		console.error(`[FAIL] check-feature-integration: ${(err as Error).message}`);
+		console.error('Usage: check-feature-integration [--root <dir>]');
+		exit(2);
+	}
+	exit(runFeatureIntegration(root ? resolve(root) : undefined));
+}

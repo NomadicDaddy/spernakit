@@ -2,6 +2,10 @@
 /**
  * Critical-Path Verification Script
  *
+ * Enforces: the first page load stays within its recorded byte budget and keeps its chunk shape.
+ * No assertion ID -- ASSERT-040 is the neighbouring performance invariant and covers compression
+ * of served assets, not what the browser must fetch before first render.
+ *
  * Guards the bytes and the *shape* of the first page load. `verify-minification.ts`
  * caps total JS across the whole build, which is structurally blind to how those
  * bytes are distributed: a release that moved the React runtime out of the preloaded
@@ -25,7 +29,9 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
 import {
@@ -167,21 +173,20 @@ function checkBudget(totalBrotli: number, totalGzipJs: number, updateBudget: boo
 	return result.ok;
 }
 
-function main(): void {
-	const updateBudget = process.argv.includes('--update-budget');
+export function runCriticalPath(updateBudget = false): number {
 	log('\n=== Critical-Path Verification ===\n', 'blue');
 
 	if (!existsSync(INDEX_HTML)) {
-		log('✗ frontend/dist/index.html not found — build the frontend first:', 'red');
+		log('[FAIL] frontend/dist/index.html not found — build the frontend first:', 'red');
 		log('  bun run build:frontend', 'yellow');
-		process.exit(1);
+		return 1;
 	}
 
 	const html = readFileSync(INDEX_HTML, 'utf-8');
 	const criticalNames = parseCriticalAssets(html);
 	if (criticalNames.length === 0) {
-		log('✗ No entry/modulepreload/stylesheet assets found in index.html', 'red');
-		process.exit(1);
+		log('[FAIL] No entry/modulepreload/stylesheet assets found in index.html', 'red');
+		return 1;
 	}
 
 	const assets = criticalNames.map(sizeOf).sort((a, b) => b.brotliBytes - a.brotliBytes);
@@ -204,22 +209,25 @@ function main(): void {
 	// --- Check 2: the React runtime must be preloaded, not discovered late ---
 	const entryName = findEntryChunk(html);
 	if (entryName === null) {
-		log('✗ Could not identify the entry module in index.html.', 'red');
+		log('[FAIL] Could not identify the entry module in index.html.', 'red');
 		log('  The waterfall assertion cannot run, and a check that did not run must', 'yellow');
 		log('  never be reported as one that passed.', 'yellow');
-		process.exit(1);
+		return 1;
 	}
 	const reactChunk = findReactRuntimeChunk();
 	let runtimeOk = true;
 
 	if (!reactChunk) {
 		log(
-			'✗ Could not locate the React runtime in any chunk — update REACT_RUNTIME_MARKERS.',
+			'[FAIL] Could not locate the React runtime in any chunk — update REACT_RUNTIME_MARKERS.',
 			'red',
 		);
 		runtimeOk = false;
 	} else if (!criticalNames.includes(reactChunk)) {
-		log(`✗ React runtime lives in ${reactChunk}, which index.html does not preload.`, 'red');
+		log(
+			`[FAIL] React runtime lives in ${reactChunk}, which index.html does not preload.`,
+			'red',
+		);
 		log('  It will be discovered only after the entry chunk is parsed, costing a', 'yellow');
 		log('  round trip on every page load. Check the codeSplitting groups in', 'yellow');
 		log(
@@ -228,7 +236,7 @@ function main(): void {
 		);
 		runtimeOk = false;
 	} else {
-		log(`✓ React runtime is in ${reactChunk}, which is preloaded`, 'green');
+		log(`[OK] React runtime is in ${reactChunk}, which is preloaded`, 'green');
 	}
 
 	// --- Check 3: no static import of a chunk the browser was not told to preload ---
@@ -236,7 +244,10 @@ function main(): void {
 	{
 		const late = staticImportsOf(entryName).filter((dep) => !criticalNames.includes(dep));
 		if (late.length > 0) {
-			log(`✗ Entry chunk statically imports ${late.length} non-preloaded chunk(s):`, 'red');
+			log(
+				`[FAIL] Entry chunk statically imports ${late.length} non-preloaded chunk(s):`,
+				'red',
+			);
 			for (const dep of late) log(`    ${dep}`, 'red');
 			log(
 				'  A static import that is not preloaded is a serialized round trip: the',
@@ -245,15 +256,34 @@ function main(): void {
 			log('  browser cannot request it until it has parsed the entry chunk.', 'yellow');
 			waterfallOk = false;
 		} else {
-			log('✓ Entry chunk statically imports only preloaded chunks', 'green');
+			log('[OK] Entry chunk statically imports only preloaded chunks', 'green');
 		}
 	}
 
 	if (!budgetOk || !runtimeOk || !waterfallOk) {
-		log('\n✗ Critical-path verification failed\n', 'red');
-		process.exit(1);
+		log('\n[FAIL] Critical-path verification failed\n', 'red');
+		return 1;
 	}
-	log('\n✓ Critical-path verification passed\n', 'green');
+	log('\n[OK] Critical-path verification passed\n', 'green');
+	return 0;
 }
 
-main();
+if (import.meta.main) {
+	// `--update-budget` rewrites the recorded ceiling, so a mistyped flag must not be swallowed:
+	// under the old `argv.includes` scan `--update-budgets` simply checked against the old budget
+	// and reported a pass. Exit 2 keeps that apart from a real overrun.
+	let updateBudget = false;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: { 'update-budget': { type: 'boolean' } },
+			strict: true,
+		});
+		updateBudget = values['update-budget'] === true;
+	} catch (err) {
+		console.error(`[FAIL] check-critical-path: ${(err as Error).message}`);
+		console.error('Usage: check-critical-path [--update-budget]');
+		exit(2);
+	}
+	exit(runCriticalPath(updateBudget));
+}

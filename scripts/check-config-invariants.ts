@@ -2,6 +2,10 @@
 /**
  * Config Invariants Guard
  *
+ * Enforces: the three config invariants enumerated below -- rate limiting on by default, an app
+ * version distinct from its `spernakit_version`, and no bare `bash` in a package script. No
+ * assertion ID: the catalog states none of the three.
+ *
  * Enforces config invariants that must remain stable:
  *
  * 1. `backend/src/config/defaults.json` — rateLimit.enabled must be true.
@@ -27,6 +31,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -114,7 +119,7 @@ function checkScriptShellInvariants(): string[] {
 		);
 }
 
-function main(): void {
+export function runConfigInvariants(): number {
 	const failures: string[] = [
 		...checkDefaultsInvariants(),
 		...checkPackageJsonInvariants(),
@@ -123,14 +128,14 @@ function main(): void {
 
 	if (failures.length === 0) {
 		console.log('[OK] Config invariants passed.');
-		return;
+		return 0;
 	}
 
 	console.error('[FAIL] Config invariants violated:');
 	for (const failure of failures) {
 		console.error(`  - ${failure}`);
 	}
-	process.exit(1);
+	return 1;
 }
 
-main();
+if (import.meta.main) exit(runConfigInvariants());

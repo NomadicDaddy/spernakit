@@ -233,6 +233,16 @@
 					"description": "300-line max-lines gate"
 				},
 				{
+					"command": "bun run test:gate-conventions",
+					"description": "Gate conventions meta-gate regression self-test",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:gate-conventions",
+					"description": "Every gate follows docs/reference/gate-conventions.md",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check-application",
 					"description": "Application check"
 				},

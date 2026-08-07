@@ -3,6 +3,10 @@
  * Checks that all dependencies across every workspace package.json (root,
  * backend, frontend, shared) are pinned to exact semver versions.
  *
+ * Enforces: every dependency spec is exact semver or `workspace:*`, in dependency blocks and in
+ * `overrides`/`resolutions` alike. No assertion ID: the pinning policy lives in `docs/stack.md`
+ * rather than in the assertion catalog.
+ *
  * Rejects any spec that is not exact semver or `workspace:*` — this catches
  * `^`/`~` prefixes as well as `>=`, `*`, `latest`, ranges, and git/url specs.
  * The `overrides`/`resolutions` blocks are checked too, so a floating override
@@ -15,6 +19,7 @@
  */
 
 import { readFileSync } from 'fs';
+import { exit } from 'node:process';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -110,7 +115,7 @@ function checkDependencyVersions(target: PackageTarget): boolean {
 	const invalid = Object.entries(specs).filter(([, spec]) => !isAllowedSpec(spec));
 	if (invalid.length > 0) {
 		console.error(
-			`❌ ${target.name}: Found ${invalid.length} non-exact dependency spec(s) (exact versions or workspace:* required):`,
+			`[FAIL] ${target.name}: Found ${invalid.length} non-exact dependency spec(s) (exact versions or workspace:* required):`,
 		);
 		invalid.forEach(([name, spec]) => console.error(`   - ${name}: ${spec}`));
 		ok = false;
@@ -118,18 +123,18 @@ function checkDependencyVersions(target: PackageTarget): boolean {
 
 	const missing = target.criticalDeps.filter((dep) => !(dep in specs));
 	if (missing.length > 0) {
-		console.error(`❌ ${target.name}: Missing critical dependencies:`);
+		console.error(`[FAIL] ${target.name}: Missing critical dependencies:`);
 		missing.forEach((dep) => console.error(`   - ${dep}`));
 		ok = false;
 	}
 
 	if (ok) {
-		console.log(`✅ ${target.name}: All dependency specs are exact (critical deps present)`);
+		console.log(`[OK] ${target.name}: All dependency specs are exact (critical deps present)`);
 	}
 	return ok;
 }
 
-function main(): void {
+export function runDeps(): number {
 	console.log('Checking dependency version pinning across all workspaces...\n');
 
 	const targets: PackageTarget[] = [
@@ -152,13 +157,13 @@ function main(): void {
 	console.log();
 
 	if (results.every(Boolean)) {
-		console.log('✅ All dependencies are properly pinned');
-		process.exit(0);
-	} else {
-		console.error('❌ Some dependencies are not pinned to exact versions');
-		console.error('   Use exact versions (e.g., "react": "19.2.7") or "workspace:*"');
-		process.exit(1);
+		console.log('[OK] All dependencies are properly pinned');
+		return 0;
 	}
+
+	console.error('[FAIL] Some dependencies are not pinned to exact versions');
+	console.error('   Use exact versions (e.g., "react": "19.2.7") or "workspace:*"');
+	return 1;
 }
 
-main();
+if (import.meta.main) exit(runDeps());

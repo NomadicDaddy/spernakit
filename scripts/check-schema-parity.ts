@@ -2,6 +2,8 @@
 /**
  * check-schema-parity.ts
  *
+ * Enforces: ASSERT-013 -- the SQLite and PostgreSQL schema trees remain structurally in lockstep.
+ *
  * Compares SQLite schema files (backend/src/db/schema/) against PostgreSQL
  * schema files (backend/src/db/schema-pg/) for structural parity.
  *
@@ -15,6 +17,7 @@
  */
 import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { exit } from 'node:process';
 
 const ROOT = resolve(import.meta.dir, '..');
 const SQLITE_DIR = resolve(ROOT, 'backend/src/db/schema');
@@ -176,84 +179,89 @@ function listSchemaFiles(dir: string): string[] {
 // Main
 // ---------------------------------------------------------------------------
 
-const errors: string[] = [];
+export function runSchemaParity(): number {
+	const errors: string[] = [];
 
-const sqliteFiles = listSchemaFiles(SQLITE_DIR);
-const pgFiles = listSchemaFiles(PG_DIR);
+	const sqliteFiles = listSchemaFiles(SQLITE_DIR);
+	const pgFiles = listSchemaFiles(PG_DIR);
 
-// Check 1: File-level parity
-const sqliteSet = new Set(sqliteFiles);
-const pgSet = new Set(pgFiles);
+	// Check 1: File-level parity
+	const sqliteSet = new Set(sqliteFiles);
+	const pgSet = new Set(pgFiles);
 
-for (const file of sqliteFiles) {
-	if (!pgSet.has(file)) {
-		errors.push(`  SQLite schema "${file}" has no matching PG schema file`);
+	for (const file of sqliteFiles) {
+		if (!pgSet.has(file)) {
+			errors.push(`  SQLite schema "${file}" has no matching PG schema file`);
+		}
 	}
-}
 
-for (const file of pgFiles) {
-	if (!sqliteSet.has(file)) {
-		errors.push(`  PG schema "${file}" has no matching SQLite schema file`);
+	for (const file of pgFiles) {
+		if (!sqliteSet.has(file)) {
+			errors.push(`  PG schema "${file}" has no matching SQLite schema file`);
+		}
 	}
-}
 
-// Check 2 & 3: Column and index parity for files that exist in both
-const commonFiles = sqliteFiles.filter((f) => pgSet.has(f));
+	// Check 2 & 3: Column and index parity for files that exist in both
+	const commonFiles = sqliteFiles.filter((f) => pgSet.has(f));
 
-for (const file of commonFiles) {
-	const sqliteSource = readText(resolve(SQLITE_DIR, file));
-	const pgSource = readText(resolve(PG_DIR, file));
+	for (const file of commonFiles) {
+		const sqliteSource = readText(resolve(SQLITE_DIR, file));
+		const pgSource = readText(resolve(PG_DIR, file));
 
-	const sqliteColumns = extractColumnNames(sqliteSource);
-	const pgColumns = extractColumnNames(pgSource);
+		const sqliteColumns = extractColumnNames(sqliteSource);
+		const pgColumns = extractColumnNames(pgSource);
 
-	if (sqliteColumns.length !== pgColumns.length) {
+		if (sqliteColumns.length !== pgColumns.length) {
+			errors.push(
+				`  ${file}: column count mismatch (SQLite: ${sqliteColumns.length}, PG: ${pgColumns.length})`,
+			);
+		}
+
+		// Find columns in SQLite but not in PG
+		for (const col of sqliteColumns) {
+			if (!pgColumns.includes(col)) {
+				errors.push(`  ${file}: column "${col}" exists in SQLite but missing from PG`);
+			}
+		}
+
+		// Find columns in PG but not in SQLite
+		for (const col of pgColumns) {
+			if (!sqliteColumns.includes(col)) {
+				errors.push(`  ${file}: column "${col}" exists in PG but missing from SQLite`);
+			}
+		}
+
+		const sqliteIndexes = extractIndexNames(sqliteSource);
+		const pgIndexes = extractIndexNames(pgSource);
+
+		for (const idx of sqliteIndexes) {
+			if (!pgIndexes.includes(idx)) {
+				errors.push(`  ${file}: index "${idx}" exists in SQLite but missing from PG`);
+			}
+		}
+
+		for (const idx of pgIndexes) {
+			if (!sqliteIndexes.includes(idx)) {
+				errors.push(`  ${file}: index "${idx}" exists in PG but missing from SQLite`);
+			}
+		}
+
 		errors.push(
-			`  ${file}: column count mismatch (SQLite: ${sqliteColumns.length}, PG: ${pgColumns.length})`,
+			...checkEnumDomainConstraints(sqliteSource, `backend/src/db/schema/${file}`),
+			...checkEnumDomainConstraints(pgSource, `backend/src/db/schema-pg/${file}`),
 		);
 	}
 
-	// Find columns in SQLite but not in PG
-	for (const col of sqliteColumns) {
-		if (!pgColumns.includes(col)) {
-			errors.push(`  ${file}: column "${col}" exists in SQLite but missing from PG`);
+	if (errors.length > 0) {
+		console.error('[FAIL] Schema parity check found issues:');
+		for (const line of errors) {
+			console.error(line);
 		}
+		return 1;
 	}
 
-	// Find columns in PG but not in SQLite
-	for (const col of pgColumns) {
-		if (!sqliteColumns.includes(col)) {
-			errors.push(`  ${file}: column "${col}" exists in PG but missing from SQLite`);
-		}
-	}
-
-	const sqliteIndexes = extractIndexNames(sqliteSource);
-	const pgIndexes = extractIndexNames(pgSource);
-
-	for (const idx of sqliteIndexes) {
-		if (!pgIndexes.includes(idx)) {
-			errors.push(`  ${file}: index "${idx}" exists in SQLite but missing from PG`);
-		}
-	}
-
-	for (const idx of pgIndexes) {
-		if (!sqliteIndexes.includes(idx)) {
-			errors.push(`  ${file}: index "${idx}" exists in PG but missing from SQLite`);
-		}
-	}
-
-	errors.push(
-		...checkEnumDomainConstraints(sqliteSource, `backend/src/db/schema/${file}`),
-		...checkEnumDomainConstraints(pgSource, `backend/src/db/schema-pg/${file}`),
-	);
+	console.log('[OK] Schema parity check passed.');
+	return 0;
 }
 
-if (errors.length > 0) {
-	console.error('[FAIL] Schema parity check found issues:');
-	for (const line of errors) {
-		console.error(line);
-	}
-	process.exit(1);
-}
-
-console.log('[OK] Schema parity check passed.');
+if (import.meta.main) exit(runSchemaParity());

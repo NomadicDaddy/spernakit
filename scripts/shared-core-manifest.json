@@ -52,6 +52,27 @@
 		},
 		{
 			"files": [
+				{ "disposition": "synced", "source": "scripts/check-gate-conventions.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/gate/allowlist.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/gate/discover.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/gate/rules.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/gate/toplevel.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/gate/types.ts" },
+				{ "disposition": "synced", "source": "scripts/test-gate-conventions.ts" }
+			],
+			"name": "gate-conventions",
+			"owner": "spernakit",
+			"requiresPackageJson": true,
+			"sourceRoot": ".",
+			"targetRoot": ".",
+			"targets": { "model": "roster", "roster": "gate-conventions-targets.json" },
+			"wiring": {
+				"check:gate-conventions": "bun scripts/check-gate-conventions.ts",
+				"test:gate-conventions": "bun scripts/test-gate-conventions.ts"
+			}
+		},
+		{
+			"files": [
 				{ "disposition": "synced", "source": "scripts/check-license-core.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/license-core/expression.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/license-core/installed.ts" },
@@ -65,6 +86,27 @@
 			"sourceRoot": ".",
 			"targetRoot": ".",
 			"targets": { "model": "roster", "roster": "shared-core-targets.json" }
+		},
+		{
+			"files": [
+				{ "disposition": "synced", "source": "scripts/shared-core-manifest.json" },
+				{ "disposition": "synced", "source": "scripts/sync-shared-core.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/check.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/dispatch.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/manifest.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/owner.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/targets.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/write.ts" }
+			],
+			"name": "shared-core-sync",
+			"owner": "spernakit",
+			"requiresPackageJson": true,
+			"sourceRoot": ".",
+			"targetRoot": ".",
+			"targets": { "model": "roster", "roster": "shared-core-sync-targets.json" },
+			"wiring": {
+				"check:shared-core": "bun scripts/sync-shared-core.ts --check"
+			}
 		}
 	]
 }

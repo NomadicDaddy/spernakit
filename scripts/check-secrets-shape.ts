@@ -2,6 +2,10 @@
 /**
  * Secrets File Shape Check
  *
+ * Enforces: a secrets file and its `.example` companion declare the same keys, so the example
+ * cannot advertise a shape the live file does not have. No assertion ID -- ASSERT-035 governs which
+ * keys may be read from the environment, not whether the two files agree on their shape.
+ *
  * Guards against shape drift between `config/{slug}.secrets.json` and its
  * companion `config/{slug}.secrets.json.example`. In one derived app the two
  * files drifted silently — the example advertised one provider key while the
@@ -24,6 +28,7 @@
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { exit } from 'node:process';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
@@ -130,12 +135,12 @@ function checkPair(pair: SecretsPair): CheckResult {
 	};
 }
 
-function main(): void {
+export function runSecretsShape(): number {
 	const pairs = findSecretsPairs();
 
 	if (pairs.length === 0) {
 		console.log('[OK] No secrets files found — nothing to check.');
-		process.exit(0);
+		return 0;
 	}
 
 	const results = pairs.map(checkPair);
@@ -163,10 +168,10 @@ function main(): void {
 				'the live file holds real secrets — but the keys must match so ' +
 				'operators can discover every secret path from the example alone.',
 		);
-		process.exit(1);
+		return 1;
 	}
 
-	process.exit(0);
+	return 0;
 }
 
-main();
+if (import.meta.main) exit(runSecretsShape());

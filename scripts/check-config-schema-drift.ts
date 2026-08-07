@@ -2,6 +2,9 @@
 /**
  * Config Schema Artifact Drift Check
  *
+ * Enforces: the committed `config/config-schema.json` matches what the TypeBox source generates
+ * today. No assertion ID: the catalog states no invariant over generated config artifacts.
+ *
  * Regenerates the JSON schema from the TypeBox source in-memory and diffs it
  * against the committed `config/config-schema.json`. Fails if the committed
  * artifact is stale, instructing the developer to run `bun run config:schema`.
@@ -16,6 +19,7 @@
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { exit } from 'node:process';
 
 import { getConfigJsonSchema } from '../backend/src/config/configSchema.ts';
 import { projectRoot } from '../backend/src/config/configUtils.ts';
@@ -49,13 +53,13 @@ function buildExpectedSchema(): Record<string, unknown> {
 	return jsonSchema;
 }
 
-function main(): void {
+export function runConfigSchemaDrift(): number {
 	if (!existsSync(schemaPath)) {
 		console.error(
 			`[FAIL] Schema artifact missing: ${schemaPath}\n` +
 				'       Run `bun run config:schema` to generate it.',
 		);
-		process.exit(1);
+		return 1;
 	}
 
 	const committed = JSON.parse(readFileSync(schemaPath, 'utf8')) as unknown;
@@ -63,7 +67,7 @@ function main(): void {
 
 	if (JSON.stringify(canonicalize(committed)) === JSON.stringify(canonicalize(expected))) {
 		console.log('[OK] Config schema artifact is in sync with TypeBox source.');
-		process.exit(0);
+		return 0;
 	}
 
 	console.error(
@@ -73,7 +77,7 @@ function main(): void {
 			'       changed since the committed schema was generated.\n\n' +
 			'       Fix: bun run config:schema\n',
 	);
-	process.exit(1);
+	return 1;
 }
 
-main();
+if (import.meta.main) exit(runConfigSchemaDrift());

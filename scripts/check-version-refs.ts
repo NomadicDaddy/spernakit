@@ -2,6 +2,9 @@
 /**
  * Version Reference Check
  *
+ * Enforces: every current-state version claim in the tracked prose agrees with `package.json`. No
+ * assertion ID: the catalog states no invariant over documentation.
+ *
  * Guards the template's *current-state* version claims against `package.json`.
  * The README title and baseline sentences sat at v3.29.0 across seven releases
  * because nothing bumped them and nothing checked them — `release:notes` writes
@@ -24,6 +27,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { exit } from 'node:process';
 
 import { projectRoot } from '../backend/src/config/configUtils.ts';
 
@@ -108,7 +112,7 @@ function checkSite(site: ClaimSite, expected: string, failures: Failure[]): void
 	}
 }
 
-function main(): void {
+export function runVersionRefs(): number {
 	const expected = readPackageVersion();
 	const failures: Failure[] = [];
 
@@ -127,11 +131,11 @@ function main(): void {
 				'legitimately changed. Support floors and historical references are not ' +
 				'checked here and should stay frozen.',
 		);
-		process.exit(1);
+		return 1;
 	}
 
 	console.log(`\n[OK] All ${CLAIM_SITES.length} version claims match package.json v${expected}.`);
-	process.exit(0);
+	return 0;
 }
 
-main();
+if (import.meta.main) exit(runVersionRefs());

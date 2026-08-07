@@ -213,7 +213,7 @@ function expectLeakedRecordFails(templateRoot: string, appRoot: string): void {
 	writeJson(templateRoot, 'package.json', { name: 'spernakit', version: '9.1.0' });
 	run = runSync(appRoot, ['--template', templateRoot, '--check']);
 	assert(
-		run.exitCode === 1 && !run.text.includes('SKIPPED'),
+		run.exitCode === 1 && !run.text.includes('[SKIP]'),
 		`A version skew must not hide a leaked record behind the parity skip:\n${run.text}`,
 	);
 	writeJson(templateRoot, 'package.json', { name: 'spernakit', version: TEMPLATE_VERSION });
