@@ -17,9 +17,11 @@ import { join } from 'node:path';
 import type { SharedCoreFile, SharedCoreGroup } from './manifest.ts';
 
 import { chainedByHook, dispatcherBody, hooksPath, invokes } from './dispatch.ts';
+import { assertHookChainIsCarried, assertSourcesExist, sourcesOf } from './owner.ts';
 import { readScripts, resolveTargets } from './targets.ts';
 
 export type FindingKind =
+	| 'diverged-hook'
 	| 'drift'
 	| 'foreign-hook'
 	| 'local-chain'
@@ -40,6 +42,13 @@ export type FindingKind =
 export interface Finding {
 	destination?: string;
 	detail: string;
+	/**
+	 * The file is the group's hook, so git has to be able to execute it. Carried on the finding
+	 * rather than looked up by the writer for the same reason `destination` is: everything the write
+	 * path acts on comes from the classifier, and a writer that re-derived "is this the hook" from
+	 * the manifest would be a second copy of the rule.
+	 */
+	executable?: true;
 	group: string;
 	kind: FindingKind;
 	source?: string;
@@ -55,27 +64,6 @@ export interface GroupReport {
 	targets: number;
 }
 
-/**
- * Every source a group could install, including the fallback variants. All of them must exist in
- * the owning repository or the group is a description of something that is not there.
- */
-function sourcesOf(file: SharedCoreFile): string[] {
-	return file.fallbackSource === undefined ? [file.source] : [file.source, file.fallbackSource];
-}
-
-export function assertSourcesExist(group: SharedCoreGroup, ownerRoot: string): void {
-	const missing = group.files
-		.flatMap(sourcesOf)
-		.filter((source) => !existsSync(join(ownerRoot, group.sourceRoot, source)));
-	if (missing.length > 0) {
-		throw new Error(
-			`group '${group.name}': ${missing.length} source file(s) do not exist in ${group.owner} ` +
-				`under ${group.sourceRoot}: ${missing.join(', ')}. A manifest naming files that are ` +
-				'not there reports coverage it does not have.',
-		);
-	}
-}
-
 /** Picks the variant this target can actually run. */
 function resolveSource(file: SharedCoreFile, scripts: null | Record<string, string>): string {
 	if (file.requiresScripts === undefined) return file.source;
@@ -88,8 +76,10 @@ export function checkGroup(
 	group: SharedCoreGroup,
 	fleetRoot: string,
 	ownerRoot: string,
+	only?: Set<string>,
 ): GroupReport {
 	assertSourcesExist(group, ownerRoot);
+	assertHookChainIsCarried(group, ownerRoot);
 	const chained = chainedByHook(group, ownerRoot);
 
 	const report: GroupReport = {
@@ -101,7 +91,7 @@ export function checkGroup(
 		targets: 0,
 	};
 
-	for (const target of resolveTargets(group, fleetRoot, ownerRoot)) {
+	for (const target of resolveTargets(group, fleetRoot, ownerRoot, only)) {
 		if (!existsSync(target.path)) {
 			report.skipped.push(`${target.directory} (not checked out)`);
 			continue;
@@ -188,6 +178,7 @@ export function checkGroup(
 					kind: 'uncovered',
 					source: sourcePath,
 					target: target.directory,
+					...(name === group.hook ? { executable: true as const } : {}),
 				});
 				continue;
 			}
@@ -229,6 +220,34 @@ export function checkGroup(
 					});
 					continue;
 				}
+
+				// Ours by marker, undeclared, and matching NO variant — which content cannot tell
+				// apart from a hand-written chain whose author never added the marker. Both call the
+				// guard and both match neither variant, so overwriting deletes real commit-time
+				// checks and leaving it lets a stale copy read as covered.
+				//
+				// Fatal AND unwritable, which no other kind is. `install-leak-guard.ts` refuses this
+				// state outright and this classifier used to call it `drift`, so absorbing one into
+				// the other had to pick a loser: refuse and let a stale hook go unnoticed, or
+				// overwrite and delete someone's checks. It picks neither. The gate stays red until a
+				// person decides, and the writer is given no destination to decide it with.
+				//
+				// Matching the OTHER variant is deliberately not this: that is a target whose
+				// package.json now satisfies the script contract it did not before, and moving it to
+				// the right variant is exactly what `requiresScripts` is for. It falls through to
+				// drift below.
+				const variants = sourcesOf(file).map((s) =>
+					readFileSync(join(ownerRoot, group.sourceRoot, s), 'utf8'),
+				);
+				if (!variants.includes(actual)) {
+					report.findings.push({
+						detail: `${name} calls the guard but matches no current variant and does not declare itself a local chain — either delete it and re-run to take the current variant, or add '${group.localChainMarker ?? 'the local-chain marker'}' to its header if its extra steps are deliberate`,
+						group: group.name,
+						kind: 'diverged-hook',
+						target: target.directory,
+					});
+					continue;
+				}
 			}
 
 			// A seeded file is written once and never touched again, so a difference is the target
@@ -244,6 +263,7 @@ export function checkGroup(
 				kind: 'drift',
 				source: sourcePath,
 				target: target.directory,
+				...(name === group.hook ? { executable: true as const } : {}),
 			});
 		}
 
@@ -265,7 +285,11 @@ export function checkGroup(
 	return report;
 }
 
-/** Drift is the only kind that fails the gate. See the header for why. */
+/**
+ * The two kinds that fail the gate, both of them a target running a stale copy of a guard while
+ * reporting as covered. See the header for why absence is not one of them, and `diverged-hook`
+ * above for why exactly one fatal kind is deliberately unwritable.
+ */
 export function isFatal(finding: Finding): boolean {
-	return finding.kind === 'drift';
+	return finding.kind === 'diverged-hook' || finding.kind === 'drift';
 }

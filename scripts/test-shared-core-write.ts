@@ -11,12 +11,14 @@
  * where the reasoning about each arranged state lives. This file is the assertions alone: what the
  * classifier must call each state, and what the writer must and must not then do with it.
  */
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import { build } from './lib/shared-core-write/fixture.ts';
-import { checkGroup } from './lib/shared-core/check.ts';
+import { checkGroup, isFatal } from './lib/shared-core/check.ts';
+import { assertHookChainIsCarried } from './lib/shared-core/owner.ts';
 import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
 
 let assertions = 0;
@@ -46,6 +48,25 @@ function run(): void {
 			1,
 		);
 		equal('drifted target reports drift', found('drift', 'drifted'), 2);
+		equal(
+			'a hook matching neither variant is diverged, not drift',
+			found('diverged-hook', 'diverged'),
+			1,
+		);
+		equal('and it is not reported as drift as well', found('drift', 'diverged'), 0);
+		check(
+			'diverged-hook fails the gate',
+			before.findings.filter(isFatal).some((f) => f.kind === 'diverged-hook'),
+		);
+		check(
+			'the finding names both ways out',
+			before.findings.some(
+				(f) =>
+					f.kind === 'diverged-hook' &&
+					f.detail.includes('delete it') &&
+					f.detail.includes('LOCAL CHAIN'),
+			),
+		);
 		equal('absent target reports uncovered', found('uncovered', 'absent-everything'), 3);
 		// Applicability under a foreign dispatcher, which is the distinction that keeps `--write`
 		// from delivering a guard nothing will ever invoke. Both repositories are identical except
@@ -98,6 +119,36 @@ function run(): void {
 			'guard v2\n',
 		);
 		equal(
+			'a target that now satisfies the script contract is moved to the full variant',
+			readFileSync(join(fleet, 'drifted', '.githooks', 'pre-push'), 'utf8'),
+			'#!/bin/sh\n# OURS\nbash .githooks/guard.sh\nqc\n',
+		);
+		equal(
+			'a target that does not gets the lesser variant, not the full one',
+			readFileSync(join(fleet, 'absent-everything', '.githooks', 'pre-push'), 'utf8'),
+			'#!/bin/sh\n# OURS\nbash .githooks/guard.sh\n',
+		);
+		// The bit that survives a clone. core.fileMode is false on this fleet's machines, so the
+		// filesystem mode proves nothing and only the index entry does.
+		equal(
+			'a delivered hook is recorded executable in the index',
+			execFileSync(
+				'git',
+				['-C', join(fleet, 'absent-everything'), 'ls-files', '-s', '.githooks/pre-push'],
+				{
+					windowsHide: true,
+				},
+			)
+				.toString()
+				.slice(0, 6),
+			'100755',
+		);
+		equal(
+			'a diverged hook is never overwritten',
+			readFileSync(join(fleet, 'diverged', '.githooks', 'pre-push'), 'utf8'),
+			'#!/bin/sh\n# OURS\nbash .githooks/guard.sh\nlint\n',
+		);
+		equal(
 			'an absent file is delivered',
 			readFileSync(join(fleet, 'absent-everything', '.githooks', 'guard.sh'), 'utf8'),
 			'guard v2\n',
@@ -123,11 +174,16 @@ function run(): void {
 			'guard v2\n',
 		);
 
-		equal('uncommitted work is refused', outcome.blocked.length, 1);
+		equal('uncommitted work is refused, staged or not', outcome.blocked.length, 2);
 		equal(
-			'the refused file is untouched',
+			'the refused worktree file is untouched',
 			readFileSync(join(fleet, 'dirty', '.githooks', 'guard.sh'), 'utf8'),
 			'guard v1 + local work\n',
+		);
+		equal(
+			'the refused staged file is untouched',
+			readFileSync(join(fleet, 'staged', '.githooks', 'guard.sh'), 'utf8'),
+			'guard v1 + staged work\n',
 		);
 		equal(
 			'a foreign hook is never claimed',
@@ -162,13 +218,38 @@ function run(): void {
 		equal(
 			'the second pass has no drift',
 			after.findings.filter((f) => f.kind === 'drift').length,
-			1, // the refused dirty target, still divergent by design
+			2, // the two refused targets, still divergent by design
 		);
 		equal(
 			'every clean target is now current',
 			after.findings.filter((f) => f.kind === 'uncovered').length,
 			0,
 		);
+
+		// The hook-chain rule. Every checkGroup call above already ran it against a well-formed
+		// group, which is only half the evidence: a validator never seen rejecting is the vacuous
+		// gate this file exists to argue against. So arrange the defect of 2026-08-04 directly — a
+		// hook chaining a guard its group does not deliver — and require the refusal.
+		const rogue = join(owner, '.githooks', 'rogue');
+		writeFileSync(rogue, '#!/bin/sh\n# bash "$d/mentioned-only.sh"\nbash "$d/unshipped.sh"\n');
+		const withRogue = {
+			...group,
+			files: [...group.files, { disposition: 'synced' as const, source: 'rogue' }],
+			hook: 'rogue',
+		};
+		let refused: string = '';
+		try {
+			assertHookChainIsCarried(withRogue, owner);
+		} catch (err) {
+			refused = err instanceof Error ? err.message : String(err);
+		}
+		check('a hook chaining an unshipped guard is refused', refused.includes('unshipped.sh'));
+		check(
+			'a guard named only in a comment is not mistaken for one that is chained',
+			refused.length > 0 && !refused.includes('mentioned-only.sh'),
+		);
+		assertHookChainIsCarried(group, owner);
+		check('a group that carries everything its hook chains is accepted', true);
 	} finally {
 		if (existsSync(fleet)) rmSync(fleet, { force: true, recursive: true });
 	}

@@ -93,14 +93,23 @@ function discoveredTargets(group: SharedCoreGroup, fleetRoot: string, owner: str
 		);
 }
 
+/**
+ * `only` narrows the resolved set to the named directories and can never widen it: it is applied
+ * after the model has answered, so a repository the roster omits or discovery rejects stays out
+ * however it is spelled on the command line. That is what makes it safe as the rollout aid it is —
+ * covering the fleet one repository at a time — rather than a second, looser way to name a target.
+ */
 export function resolveTargets(
 	group: SharedCoreGroup,
 	fleetRoot: string,
 	ownerRoot: string,
+	only?: Set<string>,
 ): Target[] {
-	return group.targets.model === 'roster'
-		? rosterTargets(group, fleetRoot, ownerRoot)
-		: discoveredTargets(group, fleetRoot, group.owner);
+	const targets =
+		group.targets.model === 'roster'
+			? rosterTargets(group, fleetRoot, ownerRoot)
+			: discoveredTargets(group, fleetRoot, group.owner);
+	return only === undefined ? targets : targets.filter((t) => only.has(t.directory));
 }
 
 /** Reads a target's package.json scripts. Returns null when the repository has no package.json. */

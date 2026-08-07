@@ -2,23 +2,28 @@
 /**
  * sync-shared-core.ts — one mechanism for every file this fleet shares between peer repositories.
  *
- * Today this is the READ-ONLY half. `--check` compares each manifest group's targets against its
- * owner and reports; there is no write path yet, and running with no arguments does nothing except
- * say so. The write path lands per group, absorbing sync-license-core.ts, install-leak-guard.ts and
- * install-history-guard.ts one at a time, each kept working as a thin delegate until its group has
- * been through one clean --check cycle. Design: common/gatesync.md, section 3a.
+ * Enforces: every file a manifest group declares is present and byte-identical in each target that
+ * the group applies to. No assertion ID: the groups span repositories whose assertion catalogs
+ * differ, and an ID from one of them would not resolve in the others.
+ *
+ * `--check` compares each manifest group's targets against its owner and reports; `--write` delivers
+ * what `--check` found absent or drifted. Neither is the default: running with no arguments does
+ * nothing except say so. The write path landed per group, absorbing sync-license-core.ts,
+ * install-leak-guard.ts and install-history-guard.ts one at a time, each kept working as a thin
+ * delegate to this script. Design: common/gatesync.md, section 3a.
  *
  * OWNER VERSUS RUNNER. This script is itself a shared file present in more than one repository, so
  * it cannot infer ownership from where it is running — that would make whichever repository you
  * happened to be standing in the source of truth. Every group names its owner, and the write path
- * (when it exists) will push only the groups the running repository owns. `--check` is exempt and
- * verifies every group from anywhere, because reading cannot overwrite anything.
+ * pushes only the groups the running repository owns. `--check` is exempt and verifies every group
+ * from anywhere, because reading cannot overwrite anything.
  *
  *   bun scripts/sync-shared-core.ts --check [--group <name>] [--fleet-root <dir>]
  */
 import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { argv, cwd, exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
 import { checkGroup, type Finding, type GroupReport, isFatal } from './lib/shared-core/check.ts';
 import { loadManifest, type SharedCoreGroup } from './lib/shared-core/manifest.ts';
@@ -30,7 +35,10 @@ const USAGE = `sync-shared-core — sync the files this fleet shares between pee
   --write                 Deliver and replace the files --check reports as absent or drifted, for
                           the groups this repository owns. Refuses to overwrite uncommitted work.
   --dry-run               With --write: run every refusal and report what would be written.
-  --group <name>          Restrict to one manifest group.
+  --group <name>          Restrict to one manifest group. Repeatable; a subsystem whose files span
+                          more than one group is named one group per flag.
+  --only <csv>            Restrict to the named target directories. Narrows what the group's target
+                          model already resolved; it can never add a target the model rejected.
   --fleet-root <dir>      Directory holding the peer repositories. Defaults to the parent of this
                           repository.
   --help                  This text.
@@ -39,50 +47,54 @@ const USAGE = `sync-shared-core — sync the files this fleet shares between pee
 `;
 
 /**
- * Unknown flags are rejected rather than ignored.
- *
- * sync-license-core.ts, which this generalizes, tests only for the presence of --check. Every other
- * argument — including --help, and including a typo — falls through to the write path and performs
- * a real four-repository write. That is a trap laid for exactly the person trying to find out what
- * the script does, and it is not carried forward.
+ * Unknown flags are rejected rather than ignored. sync-license-core.ts, which this generalizes,
+ * tests only for the presence of --check: every other argument — including --help, and including a
+ * typo — falls through to the write path and performs a real four-repository write. That is a trap
+ * laid for exactly the person trying to find out what the script does, and it is not carried here.
  */
-interface Options {
+export interface SharedCoreOptions {
 	check: boolean;
 	dryRun: boolean;
 	fleetRoot?: string;
-	group?: string;
+	groups: string[];
 	help: boolean;
+	only?: Set<string>;
 	write: boolean;
 }
 
-function parseArgs(args: string[]): Options {
-	const parsed: Options = {
-		check: false,
-		dryRun: false,
-		help: false,
-		write: false,
-	};
-	for (let i = 0; i < args.length; i += 1) {
-		const arg = args[i] as string;
-		if (arg === '--check') {
-			parsed.check = true;
-		} else if (arg === '--write') {
-			parsed.write = true;
-		} else if (arg === '--dry-run') {
-			parsed.dryRun = true;
-		} else if (arg === '--help' || arg === '-h') {
-			parsed.help = true;
-		} else if (arg === '--group' || arg === '--fleet-root') {
-			const value = args[i + 1];
-			if (value === undefined || value.startsWith('-')) {
-				throw new Error(`${arg} needs a value.`);
-			}
-			if (arg === '--group') parsed.group = value;
-			else parsed.fleetRoot = value;
-			i += 1;
-		} else {
-			throw new Error(`Unrecognized argument '${arg}'.\n\n${USAGE}`);
+export function parseSharedCoreArgs(args: string[]): SharedCoreOptions {
+	const { values } = parseArgs({
+		args,
+		options: {
+			check: { type: 'boolean' },
+			'dry-run': { type: 'boolean' },
+			'fleet-root': { type: 'string' },
+			group: { multiple: true, type: 'string' },
+			help: { short: 'h', type: 'boolean' },
+			only: { multiple: true, type: 'string' },
+			write: { type: 'boolean' },
+		},
+		strict: true,
+	});
+	// parseArgs takes the token after a value-taking flag as its value even when that token is
+	// itself a flag, so `--group --check` would name a group nothing matches and quietly run zero
+	// groups against a fleet the caller believed it had just checked.
+	for (const [name, value] of Object.entries(values)) {
+		const given = Array.isArray(value) ? value : [value];
+		if (given.some((v) => typeof v === 'string' && (v.trim() === '' || v.startsWith('-')))) {
+			throw new Error(`--${name} needs a value.`);
 		}
+	}
+	const parsed: SharedCoreOptions = {
+		check: values.check === true,
+		dryRun: values['dry-run'] === true,
+		groups: values.group ?? [],
+		help: values.help === true,
+		write: values.write === true,
+	};
+	if (values['fleet-root'] !== undefined) parsed.fleetRoot = values['fleet-root'];
+	if (values.only !== undefined) {
+		parsed.only = new Set(values.only.flatMap((v) => v.split(',').map((s) => s.trim())));
 	}
 	// Exclusive rather than "write wins" or "check wins": both readings are defensible, which is
 	// precisely why neither should be guessed on a command that overwrites files in other people's
@@ -100,13 +112,14 @@ function order(findings: Finding[]): Finding[] {
 	// Keys are alphabetical to satisfy the sort rule; the VALUES carry the reporting order, which is
 	// severity: what fails the gate, then what needs a decision, then what the write path will fix.
 	const rank: Record<Finding['kind'], number> = {
+		'diverged-hook': 1,
 		drift: 0,
-		'foreign-hook': 1,
-		'local-chain': 4,
-		'not-applicable': 6,
-		uncovered: 3,
-		'unmanaged-dispatch': 5,
-		unwired: 2,
+		'foreign-hook': 2,
+		'local-chain': 5,
+		'not-applicable': 7,
+		uncovered: 4,
+		'unmanaged-dispatch': 6,
+		unwired: 3,
 	};
 	return [...findings].sort((a, b) => rank[a.kind] - rank[b.kind]);
 }
@@ -125,15 +138,17 @@ function printReport(report: GroupReport): void {
 	for (const skip of report.skipped) console.log(`  ${'SKIPPED'.padEnd(19)} ${skip}`);
 }
 
-function selectGroups(scriptsDir: string, name: string | undefined): SharedCoreGroup[] {
+function selectGroups(scriptsDir: string, names: string[]): SharedCoreGroup[] {
 	const groups = loadManifest(scriptsDir);
-	if (name === undefined) return groups;
-	const selected = groups.filter((g) => g.name === name);
-	if (selected.length === 0) throw new Error(`No manifest group named '${name}'.`);
-	return selected;
+	if (names.length === 0) return groups;
+	// Every unknown name at once, and an error rather than a silent empty run: a typo in one of
+	// several --group flags would otherwise read as "that group had nothing to do".
+	const unknown = names.filter((name) => !groups.some((g) => g.name === name));
+	if (unknown.length > 0) throw new Error(`No manifest group named '${unknown.join("', '")}'.`);
+	return groups.filter((g) => names.includes(g.name));
 }
 
-function reportCheck(reports: GroupReport[], unverifiable: string[]): void {
+function reportCheck(reports: GroupReport[], unverifiable: string[]): number {
 	for (const report of reports) printReport(report);
 
 	const findings = reports.flatMap((r) => r.findings);
@@ -141,7 +156,7 @@ function reportCheck(reports: GroupReport[], unverifiable: string[]): void {
 	const uncovered = findings.filter((f) => f.kind === 'uncovered');
 
 	console.log('');
-	if (unverifiable.length > 0) console.warn(`NOT VERIFIED: ${unverifiable.join('; ')}.`);
+	if (unverifiable.length > 0) console.warn(`[WARN] NOT VERIFIED: ${unverifiable.join('; ')}.`);
 	if (uncovered.length > 0) {
 		console.log(
 			`${uncovered.length} file(s) absent in targets the write path has not reached yet. ` +
@@ -149,14 +164,25 @@ function reportCheck(reports: GroupReport[], unverifiable: string[]): void {
 		);
 	}
 	if (fatal.length > 0) {
+		const diverged = fatal.filter((f) => f.kind === 'diverged-hook').length;
 		console.error(
-			`\nShared core has drifted: ${fatal.length} file(s) differ from their owner.\n` +
+			`\n[FAIL] Shared core has drifted: ${fatal.length} file(s) differ from their owner.\n` +
 				'These repositories carry a stale copy while reporting as covered, which is the ' +
 				'failure this gate exists to catch. Resync them from the owning repository.',
 		);
-		exit(1);
+		// Named separately because `--write` will not clear these and saying "resync" alone would
+		// send someone to a command that reports them as not writable and leaves the gate red.
+		if (diverged > 0) {
+			console.error(
+				`\n${diverged} of them are DIVERGED-HOOK, which --write deliberately will not touch: ` +
+					'each one is either a stale copy of ours or a hand-written local chain, and only a ' +
+					'person can tell which. Each finding names both ways out.',
+			);
+		}
+		return 1;
 	}
-	console.log('Shared core: no drift.');
+	console.log('[OK] Shared core: no drift.');
+	return 0;
 }
 
 /**
@@ -172,7 +198,7 @@ function reportWrite(
 	fleetRoot: string,
 	root: string,
 	dryRun: boolean,
-): void {
+): number {
 	const byName = new Map(groups.map((g) => [g.name, g]));
 	const verb = dryRun ? 'would write' : 'wrote';
 	let wrote = 0;
@@ -204,31 +230,33 @@ function reportWrite(
 	console.log('');
 	if (blocked > 0) {
 		console.error(
-			`Refused to write ${blocked} file(s) with uncommitted changes in the target repository. ` +
-				'Commit or discard them there, then run this again.',
+			`[FAIL] Refused to write ${blocked} file(s) with uncommitted changes in the target ` +
+				'repository. Commit or discard them there, then run this again.',
 		);
-		exit(1);
+		return 1;
 	}
-	console.log(dryRun ? `Dry run: ${wrote} file(s) would change.` : `Wrote ${wrote} file(s).`);
+	console.log(
+		dryRun ? `[OK] Dry run: ${wrote} file(s) would change.` : `[OK] Wrote ${wrote} file(s).`,
+	);
+	return 0;
 }
 
-async function main(): Promise<void> {
-	const parsed = parseArgs(argv.slice(2));
-	if (parsed.help) {
+export function runSharedCoreSync(options: SharedCoreOptions): number {
+	if (options.help) {
 		console.log(USAGE);
-		return;
+		return 0;
 	}
-	if (!parsed.check && !parsed.write) {
+	if (!options.check && !options.write) {
 		console.log('Nothing to do: pass --check or --write.');
 		console.log(USAGE);
-		return;
+		return 0;
 	}
 
 	const root = resolve(cwd());
 	const scriptsDir = join(root, 'scripts');
-	const fleetRoot = parsed.fleetRoot === undefined ? dirname(root) : resolve(parsed.fleetRoot);
+	const fleetRoot = options.fleetRoot === undefined ? dirname(root) : resolve(options.fleetRoot);
 
-	const groups = selectGroups(scriptsDir, parsed.group);
+	const groups = selectGroups(scriptsDir, options.groups);
 	const reports: GroupReport[] = [];
 	const unverifiable: string[] = [];
 
@@ -244,18 +272,29 @@ async function main(): Promise<void> {
 			);
 			continue;
 		}
-		reports.push(checkGroup(group, fleetRoot, ownerRoot));
+		reports.push(checkGroup(group, fleetRoot, ownerRoot, options.only));
 	}
 
-	if (parsed.check) {
-		reportCheck(reports, unverifiable);
-		return;
-	}
-	if (unverifiable.length > 0) console.warn(`NOT VERIFIED: ${unverifiable.join('; ')}.`);
-	reportWrite(reports, groups, fleetRoot, root, parsed.dryRun);
+	if (options.check) return reportCheck(reports, unverifiable);
+	if (unverifiable.length > 0) console.warn(`[WARN] NOT VERIFIED: ${unverifiable.join('; ')}.`);
+	return reportWrite(reports, groups, fleetRoot, root, options.dryRun);
 }
 
-await main().catch((error) => {
-	console.error(error instanceof Error ? error.message : String(error));
-	exit(1);
-});
+if (import.meta.main) {
+	// A mistyped flag must not fall through to a real fleet-wide write, which is the trap
+	// sync-license-core.ts lays. Bad arguments exit 2, distinct from drift's exit 1.
+	let options: SharedCoreOptions;
+	try {
+		options = parseSharedCoreArgs(argv.slice(2));
+	} catch (err) {
+		console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
+		console.error(USAGE);
+		exit(2);
+	}
+	try {
+		exit(runSharedCoreSync(options));
+	} catch (err) {
+		console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
+		exit(1);
+	}
+}
