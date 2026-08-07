@@ -233,6 +233,10 @@
 					"description": "Direct Git subprocesses hide their Windows console window"
 				},
 				{
+					"command": "bun run check:audit-artifact-hygiene",
+					"description": "No audit report claims a date that has not happened yet"
+				},
+				{
 					"command": "bun run check:max-lines",
 					"description": "300-line max-lines gate"
 				},
