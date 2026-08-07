@@ -1,23 +1,42 @@
 #!/usr/bin/env bun
 /**
- * Enforces: ASSERT-012 -- Drizzle foreign keys must use named foreignKey() constraints.
+ * Drizzle Named Foreign Key Check
  *
- * Inline .references() creates unnamed foreign keys, so schema migrations cannot rely on
- * stable constraint names across SQLite and PostgreSQL. Scan both schema dialects and report
- * every offending source location for a direct repair.
+ * Enforces: ASSERT-012 (spernakit) / DATA-008 (aidd) -- Drizzle foreign keys are declared as
+ * named `foreignKey({ ..., name })` constraints, never as inline `.references()`.
+ *
+ * An inline `.references()` produces a foreign key with no constraint name. Neither carrier can
+ * afford that, for its own reason. spernakit ships two schema dialects and its migrations rely on
+ * one constraint name meaning the same thing in SQLite and in PostgreSQL. aidd is SQLite-only,
+ * where changing a table means the rebuild-copy-rename procedure -- see
+ * `backend/src/db/migrations/0002_cline_backend.sql`, which restates
+ * `CONSTRAINT fk_runs_pipeline_session_id_pipeline_sessions FOREIGN KEY (...)` by hand and matches
+ * the schema's declared name byte for byte. A nameless foreign key gives that migration nothing to
+ * restate, so the rebuild has to invent a name the schema does not know about.
+ *
+ * A schema-parity gate does not cover this and cannot be made to. Drizzle's `getTableConfig`
+ * collects inline and named foreign keys into the same `InlineForeignKeys` array
+ * (`drizzle-orm/sqlite-core/table.js`), so a reader of that array sees an identical shape either
+ * way. The same is true of SQLite's `foreign_key_list` pragma: both forms produce a foreign key,
+ * and only the source text records which form declared it. This rule is about the declaration, so
+ * only a source scan can enforce it.
+ *
+ * This file is delivered by `sync-shared-core.ts`, so `SCHEMA_ROOTS` is the union across carriers
+ * and a root that does not exist here is skipped rather than failed.
+ *
+ * Usage:
+ *   bun scripts/check-no-inline-references.ts
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { exit } from 'node:process';
 
-const ROOT = resolve(import.meta.dir, '..');
-const SCHEMA_DIRECTORIES = [
-	resolve(ROOT, 'backend/src/db/schema'),
-	resolve(ROOT, 'backend/src/db/schema-pg'),
-];
+const DEFAULT_PROJECT_ROOT = join(import.meta.dir, '..');
+const SCHEMA_ROOTS = ['backend/src/db/schema', 'backend/src/db/schema-pg'];
 const INLINE_REFERENCE = /\.references\s*\(/g;
 
 interface Finding {
+	content: string;
 	file: string;
 	line: number;
 }
@@ -32,33 +51,62 @@ function collectTypeScriptFiles(directory: string): string[] {
 	return files;
 }
 
-function findInlineReferences(file: string): Finding[] {
+function findInlineReferences(projectRoot: string, file: string): Finding[] {
 	const source = readFileSync(file, 'utf8');
 	const findings: Finding[] = [];
 	for (const match of source.matchAll(INLINE_REFERENCE)) {
-		const line = source.slice(0, match.index).split('\n').length;
+		const before = source.slice(0, match.index);
+		const line = before.split('\n').length;
 		findings.push({
-			file: relative(ROOT, file).replaceAll('\\', '/'),
+			content: (source.split(/\r?\n/)[line - 1] ?? '').trim(),
+			file: relative(projectRoot, file).replaceAll('\\', '/'),
 			line,
 		});
 	}
 	return findings;
 }
 
-export function runNoInlineReferences(): number {
-	const findings = SCHEMA_DIRECTORIES.flatMap((directory) =>
-		collectTypeScriptFiles(directory).flatMap(findInlineReferences),
-	);
+export function runNoInlineReferences(projectRoot = DEFAULT_PROJECT_ROOT): number {
+	const findings: Finding[] = [];
+	let examined = 0;
 
-	if (findings.length === 0) {
-		console.log('[OK] No inline .references() calls found in Drizzle schema files.');
-		return 0;
+	for (const root of SCHEMA_ROOTS) {
+		const absoluteRoot = join(projectRoot, root);
+		try {
+			statSync(absoluteRoot);
+		} catch {
+			continue;
+		}
+		for (const file of collectTypeScriptFiles(absoluteRoot)) {
+			examined++;
+			findings.push(...findInlineReferences(projectRoot, file));
+		}
 	}
 
-	console.error('[FAIL] ASSERT-012 forbids inline .references() calls in Drizzle schema files:');
-	for (const finding of findings) console.error(`- ${finding.file}:${finding.line}`);
-	console.error('Use a named foreignKey({ columns, foreignColumns, name }) constraint instead.');
-	return 1;
+	if (findings.length > 0) {
+		console.error('[FAIL] Inline .references() calls found in Drizzle schema files:\n');
+		for (const finding of findings) {
+			console.error(`  ${finding.file}:${finding.line}: ${finding.content}`);
+		}
+		console.error(
+			'\nUse a named foreignKey({ columns, foreignColumns, name }) constraint instead.',
+		);
+		return 1;
+	}
+
+	// Skipping an absent root is deliberate (see SCHEMA_ROOTS), but skipping every one of them
+	// means this file was delivered to a carrier with no Drizzle schema at all. Reporting [OK]
+	// there would be a pass earned by looking at nothing.
+	if (examined === 0) {
+		console.error(
+			`[FAIL] No schema files were examined. None of the schema roots exist under ` +
+				`${projectRoot}: ${SCHEMA_ROOTS.join(', ')}.`,
+		);
+		return 1;
+	}
+
+	console.log(`[OK] No inline .references() calls found (${examined} schema file(s) examined).`);
+	return 0;
 }
 
 if (import.meta.main) exit(runNoInlineReferences());
