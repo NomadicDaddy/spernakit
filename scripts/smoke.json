@@ -267,7 +267,7 @@
 					"description": "Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users)"
 				},
 				{
-					"command": "bun run check-docs",
+					"command": "bun run check:docs",
 					"description": "Documentation consistency check"
 				},
 				{

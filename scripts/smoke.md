@@ -215,7 +215,7 @@ Steps (in order):
     - Destructive mutation confirmation check.
 34. `bun run verify-mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-35. `bun run check-docs`
+35. `bun run check:docs`
     - Documentation consistency check.
 36. `bun run check:version-refs`
     - Current-state version claims in docs match package.json.

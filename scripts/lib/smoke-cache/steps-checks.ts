@@ -34,13 +34,6 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'shared/package.json',
 		],
 	},
-	'check-docs': {
-		// check-docs recursively scans every .md file under the project root
-		// (excluding the dirs listed below). A narrow glob list would let the
-		// cache skip the step when an unlisted .md file gains a broken link.
-		excludes: [...COMMON_EXCLUDES, '.github/**', 'coverage/**', 'data/**', 'screenshots/**'],
-		globs: ['**/*.md', 'scripts/check-docs.ts'],
-	},
 	'check:api-types': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -99,6 +92,13 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'frontend/src/**/*.tsx',
 			'scripts/check-destructive-confirmation.ts',
 		],
+	},
+	'check:docs': {
+		// check-docs recursively scans every .md file under the project root
+		// (excluding the dirs listed below). A narrow glob list would let the
+		// cache skip the step when an unlisted .md file gains a broken link.
+		excludes: [...COMMON_EXCLUDES, '.github/**', 'coverage/**', 'data/**', 'screenshots/**'],
+		globs: ['**/*.md', 'scripts/check-docs.ts', 'scripts/lib/docs/*.ts'],
 	},
 	// check:drift has no static entry because it compares every template file from git.
 	// A stale glob list once skipped real drift; missing entries intentionally always run.
