@@ -2,152 +2,187 @@
 /**
  * Destructive Confirmation Check
  *
- * Enforces: ASSERT-020 -- destructive user actions (delete, revoke, impersonate, purge)
- * MUST require an explicit confirmation step via ConfirmAlertDialog before dispatch.
+ * Enforces: ASSERT-020 (spernakit) / WEB-007 (aidd) -- destructive user actions (delete, revoke,
+ * impersonate, purge) MUST require an explicit confirmation step before dispatch.
  *
- * Scans all .tsx files for mutation hooks that target destructive endpoints and
- * verifies each destructive call has confirmation evidence within a window of
- * surrounding lines. Evidence elsewhere in the file does not satisfy the
- * check. An opt-out marker is available for idempotent operations.
+ * Scans every .tsx file under `frontend/src` for destructive call sites and verifies that each one
+ * has confirmation evidence the gate can resolve, or a waiver that says why it cannot.
+ *
+ * A destructive call site is one of two things:
+ *
+ * - an **inline destructive request** — a `method: 'DELETE'` option, or an endpoint literal naming
+ *   a destructive verb; or
+ * - a **destructive mutation dispatch** — `deleteThing.mutate(...)`, `revokeKey.mutateAsync(...)`,
+ *   and the rest of the same shape.
+ *
+ * The second form is the one that matters, and it was missing. This gate looked only for the
+ * first, and both carriers have since moved their requests behind a typed API client: the DELETE
+ * now lives in `frontend/src/api/*.ts`, the mutation in `frontend/src/hooks/*.ts`, and only the
+ * dispatch remains in the component. The patterns matched **zero lines in spernakit's own
+ * frontend** while eight real destructive dispatches sat in it, and the gate reported `[OK]` on
+ * every run. Rule 5 of `docs/reference/gate-conventions.md` exists for exactly that: a gate that
+ * found nothing looks the same as a gate that looked at nothing, which is why the pass line below
+ * carries the count and why zero sites in a frontend that has mutations is a failure.
  *
  * Usage:
  *   bun scripts/check-destructive-confirmation.ts
+ *   bun run check:destructive-confirmation
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { exit } from 'node:process';
+import { fileURLToPath } from 'node:url';
 
-import { projectRoot } from '../backend/src/config/configUtils.ts';
+import { hasConfirmationEvidence } from './lib/destructive/evidence.ts';
+import {
+	type BadWaiver,
+	badWaivers,
+	coveringMarker,
+	reportWaivers,
+	WAIVER_MARKER,
+	waiverReason,
+} from './lib/destructive/waivers.ts';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const DEFAULT_PROJECT_ROOT = resolve(__dirname, '..');
 
 const SKIP_DIRS = new Set(['.aidd', '.git', 'coverage', 'data', 'dist', 'logs', 'node_modules']);
 
-/** Patterns indicating a destructive API endpoint. */
-const DESTRUCTIVE_ENDPOINT_PATTERNS = [
+/**
+ * The verbs that make an action destructive. Unchanged from the version of this gate that only
+ * read endpoint literals: this rewrite changes where the gate looks, not what it considers
+ * destructive, so no call site becomes a finding because the vocabulary grew.
+ */
+const DESTRUCTIVE_VERBS = 'delete|remove|revoke|purge|impersonate|wipe|destroy';
+
+const DESTRUCTIVE_PATTERNS = [
 	/method:\s*['"]DELETE['"]/i,
-	/['"]\/api\/v1\/[^'"]*(?:delete|remove|revoke|purge|impersonate|wipe|destroy)[^'"]*['"]/i,
+	// Endpoint literals are matched under any API prefix. The original pattern required
+	// `/api/v1/`, which is spernakit's; a gate that ships to a repository versioning its API
+	// differently would have gone quiet without saying so.
+	new RegExp(`['"]/[^'"]*(?:${DESTRUCTIVE_VERBS})[^'"]*['"]`, 'i'),
+	new RegExp(`\\b[\\w.]*(?:${DESTRUCTIVE_VERBS})\\w*\\.(?:mutate|mutateAsync)\\s*\\(`, 'i'),
 ];
 
-/** Pattern for useMutation usage that might involve destructive operations. */
-const USE_MUTATION_PATTERN = /useMutation|mutate\(|mutateAsync\(/;
-
-/**
- * Concrete confirmation primitives that must appear near the destructive call.
- * Deliberately excludes loose tokens such as the bare word "confirmation";
- * comments and unrelated copy are not evidence of a confirmation control.
- */
-const CONFIRMATION_EVIDENCE_PATTERN =
-	/ConfirmAlertDialog|ConfirmDialog|AlertDialogAction|AlertDialog|onConfirm/;
-
-/** Lines above/below a destructive call site searched for confirmation evidence. */
-const EVIDENCE_WINDOW_LINES = 15;
-
-/** Opt-out marker. */
-const OPT_OUT_MARKER = '@no-confirm-required';
+/** A frontend with none of these has no mutation layer, which is the one honest reason for zero. */
+const MUTATION_PATTERN = /useMutation|mutate\(|mutateAsync\(/;
 
 interface Violation {
 	content: string;
 	file: string;
 	line: number;
-	reason: string;
+}
+
+interface FileResult {
+	mutations: boolean;
+	sites: number;
+	violations: Violation[];
+	waivers: BadWaiver[];
 }
 
 function* walkDir(dir: string): Generator<string> {
-	const entries = readdirSync(dir, { withFileTypes: true });
-	for (const entry of entries) {
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		if (SKIP_DIRS.has(entry.name)) continue;
 		const fullPath = join(dir, entry.name);
-		if (entry.isDirectory()) {
-			yield* walkDir(fullPath);
-		} else if (entry.isFile() && entry.name.endsWith('.tsx')) {
-			yield fullPath;
-		}
+		if (entry.isDirectory()) yield* walkDir(fullPath);
+		else if (entry.isFile() && entry.name.endsWith('.tsx')) yield fullPath;
 	}
 }
 
-function checkFile(filePath: string): Violation[] {
+function checkFile(projectRoot: string, filePath: string): FileResult {
 	const content = readFileSync(filePath, 'utf-8');
 	const relativePath = relative(projectRoot, filePath).replace(/\\/g, '/');
 	const lines = content.split('\n');
+	const result: FileResult = { mutations: false, sites: 0, violations: [], waivers: [] };
 
-	// If the file has no mutations, skip it
-	if (!USE_MUTATION_PATTERN.test(content)) return [];
+	if (!MUTATION_PATTERN.test(content)) return result;
+	result.mutations = true;
 
-	// Check for destructive endpoint patterns in the same file
-	const violations: Violation[] = [];
-
-	for (let i = 0; i < lines.length; i++) {
-		const line = lines[i]!;
+	const used = new Set<number>();
+	for (const [index, line] of lines.entries()) {
 		if (!line) continue;
+		if (waiverReason(line) !== null) continue;
+		if (!DESTRUCTIVE_PATTERNS.some((pattern) => pattern.test(line))) continue;
 
-		for (const pattern of DESTRUCTIVE_ENDPOINT_PATTERNS) {
-			if (pattern.test(line)) {
-				if (!hasScopedOptOut(lines, i) && !hasConfirmationEvidence(lines, i)) {
-					violations.push({
-						content: line.trim(),
-						file: relativePath,
-						line: i + 1,
-						reason: 'destructive endpoint or method is not near a confirmation handler or scoped opt-out',
-					});
-				}
-				break; // one violation per line
-			}
+		result.sites += 1;
+		if (hasConfirmationEvidence(lines, index)) continue;
+		const marker = coveringMarker(lines, index);
+		if (marker !== null) {
+			used.add(marker);
+			continue;
 		}
+		result.violations.push({ content: line.trim(), file: relativePath, line: index + 1 });
 	}
 
-	return violations;
+	result.waivers = badWaivers(relativePath, lines, used);
+	return result;
 }
 
-function hasScopedOptOut(lines: string[], index: number): boolean {
-	const start = Math.max(0, index - 3);
-	const end = Math.min(lines.length - 1, index + 1);
-	for (let i = start; i <= end; i++) {
-		if (lines[i]?.includes(OPT_OUT_MARKER)) return true;
-	}
-	return false;
-}
-
-function hasConfirmationEvidence(lines: string[], index: number): boolean {
-	const start = Math.max(0, index - EVIDENCE_WINDOW_LINES);
-	const end = Math.min(lines.length - 1, index + EVIDENCE_WINDOW_LINES);
-	for (let i = start; i <= end; i++) {
-		const line = lines[i];
-		if (line && CONFIRMATION_EVIDENCE_PATTERN.test(line)) return true;
-	}
-	return false;
-}
-
-const frontendSrc = join(projectRoot, 'frontend', 'src');
-
-export function runDestructiveConfirmation(): number {
+export function runDestructiveConfirmation(projectRoot = DEFAULT_PROJECT_ROOT): number {
+	const frontendSrc = join(projectRoot, 'frontend', 'src');
 	try {
 		statSync(frontendSrc);
 	} catch {
-		console.log('[SKIP] No frontend source directory found.');
+		console.log(
+			`[SKIP] No frontend source directory at ${relative(projectRoot, frontendSrc)}.`,
+		);
 		return 0;
 	}
 
-	const allViolations: Violation[] = [];
+	let sites = 0;
+	let mutationFiles = 0;
+	const violations: Violation[] = [];
+	const waivers: BadWaiver[] = [];
 
 	for (const filePath of walkDir(frontendSrc)) {
-		allViolations.push(...checkFile(filePath));
+		const result = checkFile(projectRoot, filePath);
+		if (result.mutations) mutationFiles += 1;
+		sites += result.sites;
+		violations.push(...result.violations);
+		waivers.push(...result.waivers);
 	}
 
-	if (allViolations.length > 0) {
-		console.error('[FAIL] Found destructive API calls without confirmation dialog import:\n');
-		for (const v of allViolations) {
-			console.error(`  ${v.file}:${v.line}: ${v.content}`);
-			console.error(`    ${v.reason}`);
+	if (waivers.length > 0) {
+		reportWaivers(waivers);
+		return 1;
+	}
+
+	if (sites === 0) {
+		// Rule 5. The distinction the gate can actually make is whether the frontend has a mutation
+		// layer at all: none means there is nothing destructive to dispatch and the skip is true,
+		// while mutations present and no destructive site among them means these patterns have
+		// stopped describing this codebase. That second state is the one this gate spent releases in.
+		if (mutationFiles === 0) {
+			console.log('[SKIP] No mutation call sites under frontend/src.');
+			return 0;
 		}
 		console.error(
-			'\nDestructive mutations must use ConfirmAlertDialog or a similar confirmation step.',
+			'[FAIL] No destructive call sites found, but frontend/src dispatches mutations.\n',
 		);
 		console.error(
-			'Add a confirmation dialog import, or add // @no-confirm-required above the call.',
+			'  Either every destructive action was removed, or the patterns in this gate no ' +
+				'longer match how this frontend dispatches one. Check the second before believing ' +
+				'the first: a gate that examines nothing passes every run.',
 		);
 		return 1;
 	}
 
-	console.log('[OK] Destructive confirmation check passed.');
+	if (violations.length > 0) {
+		console.error(
+			`[FAIL] ${violations.length} destructive call site(s) with no confirmation, of ${sites} examined:\n`,
+		);
+		for (const violation of violations) {
+			console.error(`- ${violation.file}:${violation.line} ${violation.content}`);
+		}
+		console.error(
+			'\nDispatch a destructive action from a handler a confirmation dialog invokes, or ' +
+				`mark the line with '${WAIVER_MARKER} <reason>' when the ` +
+				'confirmation is real but takes a form this gate cannot see.',
+		);
+		return 1;
+	}
+
+	console.log(`[OK] ${sites} destructive call site(s) examined, all confirmed`);
 	return 0;
 }
 
