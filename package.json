@@ -65,7 +65,7 @@
 		"check-deps": "bun scripts/check-deps.ts",
 		"check:db-location": "bun scripts/check-db-location.ts",
 		"check:dead-code": "bunx knip",
-		"check-docs": "bun scripts/check-docs.ts",
+		"check:docs": "bun scripts/check-docs.ts",
 		"check:drift": "bun scripts/check-template-drift.ts",
 		"check:env-spread": "bun scripts/check-env-spread.ts",
 		"check:fleet-manifest": "bun scripts/check-fleet-manifest.ts",
