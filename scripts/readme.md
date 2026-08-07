@@ -1,5 +1,12 @@
 # Spernakit Scripts Manual
 
+**Scope.** This manual covers the scripts you invoke directly: lifecycle, setup, testing, and the
+utilities behind them. It is not an inventory of `scripts/`, which holds far more files than are
+listed here — most of them `check:*` and `test:*` gates that only ever run as part of a mode. For
+those, read `scripts/smoke.md`, which is generated from `scripts/smoke.json` by
+`bun run smoke:docs` and enumerates every step of every mode in the order it runs. Adding a gate
+does not obligate you to add a section here; leaving one out of `smoke.json` is what would hide it.
+
 ## Table of Contents
 
 - [Quick Reference](#quick-reference)
@@ -83,7 +90,11 @@ If you run scripts in a derived application repo, ensure:
     - Intended to be a strict guardrail for derived applications.
 - **Run**
     - `bun run check-application`
-    - `bun scripts/check-application.ts --verbose`
+    - `bun scripts/check-application.ts`
+- **Flags**
+    - None. The script reads no arguments, so anything passed on the command line is ignored
+      rather than rejected. A `--verbose` flag was documented here until 2026-08-06 and never
+      existed.
 
 ### `check-dependency-versions.ts`
 

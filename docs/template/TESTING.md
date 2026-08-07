@@ -33,16 +33,20 @@ The primary quality gate before every commit:
 bun run smoke:qc
 ```
 
-Pipeline:
+Pipeline: see `scripts/smoke.md`, section _QC_, for the steps in the order they run. That document
+is generated from `scripts/smoke.json` by `bun run smoke:docs`, and `bun run check:smoke-docs` is
+itself a qc step, so the list there cannot fall behind the mode it describes. The list was
+maintained by hand here until 2026-08-06 and had drifted to 8 entries against the 54 steps the mode
+actually ran.
 
-1. Template drift check - `bun run check:drift`
-2. Application check - `bun run check-application`
-3. TypeScript type checking - `bun run typecheck`
-4. ESLint linting - `bun run lint`
-5. Production build - `bun run build`
-6. API type contract validation - `bun run check:api-types`
-7. Prettier formatting - `bun run format:check`
-8. Dependency version check - `bun run check-deps`
+The fast inner-loop subset is a different, much shorter chain:
+
+```bash
+bun run smoke:qc:fast
+```
+
+It runs the four cached static checks (`check:max-lines`, `typecheck`, `format:check`, `lint`) and
+is what `.githooks/pre-commit` invokes. Run the full `smoke:qc` once before committing.
 
 ## Supertest (Full Validation Chain)
 
