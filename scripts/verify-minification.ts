@@ -63,8 +63,9 @@ function rawAvgLineLength(content: string): number {
  * multi-line content. In valid JS a RAW newline can only occur inside a template literal — single
  * and double quoted strings cannot span lines, and minifiers strip comments — so a minified chunk
  * carrying markdown, SVG, or SQL in backticks is full of newlines the minifier could not remove and
- * scores identically to unminified source. aidd hit exactly this: a minified docs chunk with 583 of
- * its 584 newlines inside template literals scored 57 against a threshold of 200.
+ * scores identically to unminified source. The case this was written against: a correctly minified
+ * docs chunk with 583 of its 584 newlines inside template literals scored 57 against a threshold of
+ * 200 — the heuristic reporting "not minified" about output the minifier had already processed.
  *
  * Measuring only the code OUTSIDE template literals is what the heuristic always meant to measure.
  */
