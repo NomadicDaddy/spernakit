@@ -21,10 +21,20 @@ import { hooksPath, readScripts, resolveTargets } from './targets.ts';
 export type FindingKind =
 	'drift' | 'foreign-hook' | 'local-chain' | 'uncovered' | 'unmanaged-dispatch' | 'unwired';
 
+/**
+ * `destination` and `source` are absolute paths, set only on the two kinds a write path may act on:
+ * `uncovered` (deliver it) and `drift` (replace it). Every other kind leaves them undefined, which
+ * is the mechanism rather than a convenience — the writer takes its worklist from these fields and
+ * therefore cannot touch a file this checker did not already classify as writable. A foreign hook,
+ * a hand-maintained chain, and a repository whose dispatcher is not ours are unwritable by
+ * construction, not by a second copy of the rules that could fall out of step with these.
+ */
 export interface Finding {
+	destination?: string;
 	detail: string;
 	group: string;
 	kind: FindingKind;
+	source?: string;
 	target: string;
 }
 
@@ -117,7 +127,8 @@ export function checkGroup(
 		for (const file of group.files) {
 			const name = file.target ?? file.source;
 			const source = resolveSource(file, scripts);
-			const expected = readFileSync(join(ownerRoot, group.sourceRoot, source), 'utf8');
+			const sourcePath = join(ownerRoot, group.sourceRoot, source);
+			const expected = readFileSync(sourcePath, 'utf8');
 			const destination = join(target.path, group.targetRoot, name);
 
 			if (name === group.hook && !dispatches) {
@@ -131,9 +142,11 @@ export function checkGroup(
 			}
 			if (!existsSync(destination)) {
 				report.findings.push({
+					destination,
 					detail: `${group.targetRoot}/${name} is absent`,
 					group: group.name,
 					kind: 'uncovered',
+					source: sourcePath,
 					target: target.directory,
 				});
 				continue;
@@ -185,9 +198,11 @@ export function checkGroup(
 				continue;
 			}
 			report.findings.push({
+				destination,
 				detail: `${group.targetRoot}/${name} differs from ${group.owner}${source === file.source ? '' : ` (variant ${source})`}`,
 				group: group.name,
 				kind: 'drift',
+				source: sourcePath,
 				target: target.directory,
 			});
 		}

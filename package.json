@@ -181,7 +181,9 @@
 		"verify-minification": "bun scripts/verify-minification.ts",
 		"preinstall": "bun scripts/require-bun.ts",
 		"smoke:docs": "bun scripts/sync-smoke-docs.ts",
-		"check:smoke-docs": "bun scripts/sync-smoke-docs.ts --check"
+		"check:smoke-docs": "bun scripts/sync-smoke-docs.ts --check",
+		"test:shared-core-write": "bun scripts/test-shared-core-write.ts",
+		"shared-core:write": "bun scripts/sync-shared-core.ts --write"
 	},
 	"type": "module",
 	"workspaces": [

@@ -60,7 +60,7 @@ nul/
 
 # local config
 /spernakit.psd1
-/license-core-targets.json
+/shared-core-targets.json
 /config/*.json
 /config/*.json.backup.*
 /config/testing.local.json
