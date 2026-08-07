@@ -63,6 +63,7 @@ nul/
 /shared-core-targets.json
 /shared-core-sync-targets.json
 /gate-conventions-targets.json
+/portable-gates-targets.json
 /config/*.json
 /config/*.json.backup.*
 /config/testing.local.json

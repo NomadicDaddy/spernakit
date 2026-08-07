@@ -2,8 +2,8 @@
 /**
  * Git Subprocess Window Visibility Check
  *
- * Enforces: every direct git subprocess passes `windowsHide: true`. No assertion ID: the catalog
- * states no invariant over subprocess spawning.
+ * Enforces: ASSERT-024 (spernakit) / SEC-006 (aidd) -- every direct git subprocess passes
+ * `windowsHide: true`.
  *
  * Every direct Git subprocess must pass `windowsHide: true`. On Windows a spawn without it
  * flashes a real console window, so a background gate or a hook run visibly blinks the desktop
@@ -14,6 +14,13 @@
  * intentionally not flagged: the flag belongs on the helper's own spawn call, which this check
  * sees at that call site.
  *
+ * This file is delivered by `sync-shared-core.ts`, so `SCAN_ROOTS` is the union across carriers and
+ * a root that does not exist here is skipped rather than failed. The union is load-bearing rather
+ * than tidy: this rule was previously enforced twice, once here and once as a hand-rolled bun:test
+ * in another repository, and the two copies had drifted to different root lists. The gap that
+ * opened was a whole top-level directory (`skills/`) holding a real unhidden spawn that neither
+ * copy's own root list covered. Widen this list rather than narrowing it.
+ *
  * Usage:
  *   bun scripts/check-git-window-hide.ts
  */
@@ -21,8 +28,16 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { exit } from 'node:process';
 
-const projectRoot = join(import.meta.dir, '..');
-const SCAN_ROOTS = ['backend/src', 'frontend/src', 'shared/src', 'scripts'];
+const DEFAULT_PROJECT_ROOT = join(import.meta.dir, '..');
+const SCAN_ROOTS = [
+	'backend/src',
+	'cli/src',
+	'frontend/src',
+	'scripts',
+	'shared/src',
+	'skills',
+	'test',
+];
 const SKIP_DIRS = new Set([
 	'.aidd',
 	'.git',
@@ -71,7 +86,7 @@ function isDirectGitSpawnLine(lines: string[], index: number): boolean {
 	return /\bBun\.spawn(?:Sync)?\(\s*$|\bBun\.spawn(?:Sync)?\(\s+\[/.test(previous);
 }
 
-function checkFile(filePath: string): Violation[] {
+function checkFile(projectRoot: string, filePath: string): Violation[] {
 	const relativePath = relative(projectRoot, filePath).replace(/\\/g, '/');
 	if (relativePath === 'scripts/check-git-window-hide.ts') return [];
 
@@ -93,8 +108,9 @@ function checkFile(filePath: string): Violation[] {
 	return violations;
 }
 
-export function runGitWindowHide(): number {
+export function runGitWindowHide(projectRoot = DEFAULT_PROJECT_ROOT): number {
 	const allViolations: Violation[] = [];
+	let examined = 0;
 
 	for (const root of SCAN_ROOTS) {
 		const absoluteRoot = join(projectRoot, root);
@@ -104,7 +120,8 @@ export function runGitWindowHide(): number {
 			continue;
 		}
 		for (const filePath of walkDir(absoluteRoot)) {
-			allViolations.push(...checkFile(filePath));
+			examined++;
+			allViolations.push(...checkFile(projectRoot, filePath));
 		}
 	}
 
@@ -119,7 +136,20 @@ export function runGitWindowHide(): number {
 		return 1;
 	}
 
-	console.log('[OK] Git subprocess window visibility check passed.');
+	// Skipping an absent root is deliberate (see SCAN_ROOTS), but skipping every one of them is a
+	// carrier this file should never have been delivered to. Reporting [OK] there would be a pass
+	// earned by looking at nothing.
+	if (examined === 0) {
+		console.error(
+			`[FAIL] No source files were examined. None of the scanned roots exist under ` +
+				`${projectRoot}: ${SCAN_ROOTS.join(', ')}.`,
+		);
+		return 1;
+	}
+
+	console.log(
+		`[OK] Git subprocess window visibility check passed (${examined} file(s) examined).`,
+	);
 	return 0;
 }
 
