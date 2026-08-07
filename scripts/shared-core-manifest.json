@@ -32,7 +32,7 @@
 			"owner": "aidd",
 			"sourceRoot": ".githooks",
 			"targetRoot": ".githooks",
-			"targets": { "marker": ".aidd", "model": "discovered" }
+			"targets": { "model": "discovered" }
 		},
 		{
 			"files": [
@@ -44,7 +44,7 @@
 			"requiresPackageJson": true,
 			"sourceRoot": "scripts",
 			"targetRoot": "scripts",
-			"targets": { "marker": ".aidd", "model": "discovered" },
+			"targets": { "model": "discovered" },
 			"wiring": {
 				"check:leak-guard": "bun ./scripts/run-bash.ts scripts/check-leak-guard.sh",
 				"prepare": "bun ./scripts/run-bash.ts .githooks/leak-guard-setup.sh"

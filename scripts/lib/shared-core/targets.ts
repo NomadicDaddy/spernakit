@@ -2,9 +2,17 @@
  * Resolves the repositories a group applies to.
  *
  * Two models, because the two existing syncs genuinely differ. The license core names its four
- * siblings in a gitignored roster; the hook installers sweep for a marker directory and take
- * whatever they find. Neither can be expressed as the other: a roster cannot arm a repository
- * nobody remembered to add, and discovery cannot express a subset chosen by hand.
+ * siblings in a gitignored roster; the hook installers sweep the fleet root and take whatever they
+ * find. Neither can be expressed as the other: a roster cannot arm a repository nobody remembered
+ * to add, and discovery cannot express a subset chosen by hand.
+ *
+ * A discovered group's marker is OPTIONAL, and each group's answer is copied from the installer it
+ * replaced rather than chosen here. The history guard is installed into repositories carrying
+ * `.aidd`, so its group names that marker. The leak guard is installed into every git repository
+ * under the fleet root, so its groups name none. Giving both groups the `.aidd` marker is what made
+ * the gate report thirty-two repositories current while the installer had covered fifty-one
+ * (punchlist C5): a narrower predicate than the installer's does not report a smaller number, it
+ * reports a complete-looking one.
  *
  * NO GROUP NAMES A TARGET REPOSITORY. This manifest is tracked in repositories that are published,
  * and a private sibling's name in a tracked file is the exact disclosure .githooks/leak-guard.sh
@@ -78,7 +86,11 @@ function discoveredTargets(group: SharedCoreGroup, fleetRoot: string, owner: str
 		.filter((entry) => entry.isDirectory() && !entry.name.endsWith('.old'))
 		.filter((entry) => entry.name !== owner)
 		.map((entry) => ({ directory: entry.name, path: join(fleetRoot, entry.name) }))
-		.filter((t) => existsSync(join(t.path, '.git')) && existsSync(join(t.path, marker)));
+		.filter(
+			(t) =>
+				existsSync(join(t.path, '.git')) &&
+				(marker === undefined || existsSync(join(t.path, marker))),
+		);
 }
 
 export function resolveTargets(
