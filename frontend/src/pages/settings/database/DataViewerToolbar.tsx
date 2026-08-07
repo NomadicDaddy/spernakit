@@ -48,7 +48,7 @@ function DataViewerToolbar({
 			<div className="flex flex-wrap items-center gap-3">
 				<h3 className="text-sm font-semibold">{tableName}</h3>
 
-				<Badge variant={safeMode ? 'destructive' : 'secondary'}>
+				<Badge variant={safeMode ? 'secondary' : 'destructive'}>
 					Safe Mode: {safeMode ? 'ON' : 'OFF'}
 				</Badge>
 

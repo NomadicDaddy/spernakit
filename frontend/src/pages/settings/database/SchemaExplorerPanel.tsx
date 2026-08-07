@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Database, Key, Search } from 'lucide-react';
-import { useDeferredValue, useState } from 'react';
+import { ChevronDown, Database, Key, Search } from 'lucide-react';
+import { useDeferredValue, useEffect, useRef, useState } from 'react';
 
 import type { ColumnInfo, TableMetadata } from '@/api/databaseAdmin';
 
@@ -18,6 +18,8 @@ interface SchemaExplorerPanelProps {
 
 function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPanelProps) {
 	const [search, setSearch] = useState('');
+	const [hasMoreTablesBelow, setHasMoreTablesBelow] = useState(false);
+	const tableListRef = useRef<HTMLDivElement>(null);
 
 	const { data: schemaResponse, isLoading: isLoadingSchema } = useQuery({
 		queryFn: getSchema,
@@ -39,6 +41,19 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 	const filteredTables = deferredSearch
 		? tables.filter((t) => t.tableName.toLowerCase().includes(deferredSearch.toLowerCase()))
 		: tables;
+
+	useEffect(() => {
+		const list = tableListRef.current;
+		if (!list) return;
+
+		const updateOverflowCue = () => {
+			setHasMoreTablesBelow(list.scrollTop + list.clientHeight < list.scrollHeight - 2);
+		};
+		updateOverflowCue();
+		const observer = new ResizeObserver(updateOverflowCue);
+		observer.observe(list);
+		return () => observer.disconnect();
+	}, [filteredTables.length, isLoadingSchema]);
 
 	return (
 		<div className="grid gap-4 md:grid-cols-2">
@@ -64,25 +79,49 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 						/>
 					</div>
 				</CardHeader>
-				<CardContent className="max-h-[500px] space-y-1 overflow-y-auto">
-					{isLoadingSchema ? (
-						<ContentListSkeleton lineCount={8} lineHeight="h-10" spacing="space-y-2" />
-					) : (
-						filteredTables.map((table) => (
-							<TableRow
-								isSelected={selectedTable === table.tableName}
-								key={table.tableName}
-								onSelect={() => onSelectTable?.(table.tableName)}
-								table={table}
+				<div className="relative">
+					<CardContent
+						className="max-h-[500px] space-y-1 overflow-y-auto"
+						onScroll={() => {
+							const list = tableListRef.current;
+							if (list) {
+								setHasMoreTablesBelow(
+									list.scrollTop + list.clientHeight < list.scrollHeight - 2,
+								);
+							}
+						}}
+						ref={tableListRef}>
+						{isLoadingSchema ? (
+							<ContentListSkeleton
+								lineCount={8}
+								lineHeight="h-10"
+								spacing="space-y-2"
 							/>
-						))
+						) : (
+							filteredTables.map((table) => (
+								<TableRow
+									isSelected={selectedTable === table.tableName}
+									key={table.tableName}
+									onSelect={() => onSelectTable?.(table.tableName)}
+									table={table}
+								/>
+							))
+						)}
+						{!isLoadingSchema && filteredTables.length === 0 && (
+							<p className="py-4 text-center text-sm text-muted-foreground">
+								No tables found
+							</p>
+						)}
+					</CardContent>
+					{hasMoreTablesBelow && (
+						<div className="pointer-events-none absolute right-0 bottom-0 left-0 flex h-12 items-end justify-center bg-linear-to-t from-card via-card/90 to-transparent pb-1 text-xs text-muted-foreground">
+							<span className="flex items-center gap-1 rounded-full border bg-card px-2 py-0.5 shadow-sm">
+								More tables below
+								<ChevronDown aria-hidden="true" className="size-3" />
+							</span>
+						</div>
 					)}
-					{!isLoadingSchema && filteredTables.length === 0 && (
-						<p className="py-4 text-center text-sm text-muted-foreground">
-							No tables found
-						</p>
-					)}
-				</CardContent>
+				</div>
 			</Card>
 
 			{/* Column Details */}

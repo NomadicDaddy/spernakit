@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 
 import { HeaderBarActions } from '@/components/layout/HeaderBarActions';
 import { LazyMobileNav } from '@/components/layout/LazyMobileNav';
@@ -11,6 +11,7 @@ import { preloadRoute } from '@/routes';
 import { useLayoutStore } from '@/stores/layoutStore';
 
 import { getVisibleNavItems, navItems } from './navConfig';
+import { TopBarOverflowMenu } from './TopBarOverflowMenu';
 
 /**
  * Horizontal top-bar navigation layout.
@@ -21,6 +22,7 @@ import { getVisibleNavItems, navItems } from './navConfig';
  */
 function TopBar() {
 	const { hasMinRole } = useAuthorization();
+	const { pathname } = useLocation();
 	const containerWidth = useLayoutStore((s) => s.containerWidth);
 	const layoutActions = useLayoutActions();
 	const { features: appFeatures } = useAppFeatures();
@@ -30,6 +32,12 @@ function TopBar() {
 		: navItems.filter(
 				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole)),
 			);
+	const overflowStart = Math.min(4, visibleNavItems.length);
+	const primaryNavItems = visibleNavItems.slice(0, overflowStart);
+	const overflowNavItems = visibleNavItems.slice(overflowStart);
+	const overflowIsActive = overflowNavItems.some(
+		(item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
+	);
 
 	return (
 		<header className="sticky top-0 z-40 border-b bg-background">
@@ -46,18 +54,10 @@ function TopBar() {
 						translate="no">
 						{__APP_NAME__}
 					</span>
-					<nav className="ml-4 hidden min-w-0 items-center gap-1 overflow-x-auto md:flex">
-						{visibleNavItems.map((item) => (
+					<nav className="ml-4 hidden min-w-0 items-center gap-1 md:flex">
+						{primaryNavItems.map((item) => (
 							<NavLink
-								className={({ isActive }) =>
-									cn(
-										'flex items-center gap-2 rounded-md px-3 py-(--density-padding-y) text-sm font-medium text-nowrap transition-colors',
-										'hover:bg-accent hover:text-accent-foreground',
-										isActive
-											? 'bg-accent text-accent-foreground'
-											: 'text-muted-foreground',
-									)
-								}
+								className={navLinkClassName}
 								key={item.to}
 								onFocus={() => preloadRoute(item.to)}
 								onMouseEnter={() => preloadRoute(item.to)}
@@ -66,6 +66,12 @@ function TopBar() {
 								<span>{item.label}</span>
 							</NavLink>
 						))}
+						{overflowNavItems.length > 0 && (
+							<TopBarOverflowMenu
+								isActive={overflowIsActive}
+								items={overflowNavItems}
+							/>
+						)}
 					</nav>
 				</div>
 
@@ -76,6 +82,14 @@ function TopBar() {
 				</div>
 			</div>
 		</header>
+	);
+}
+
+function navLinkClassName({ isActive }: { isActive: boolean }) {
+	return cn(
+		'flex items-center gap-2 rounded-md px-3 py-(--density-padding-y) text-sm font-medium text-nowrap transition-colors',
+		'hover:bg-accent hover:text-accent-foreground',
+		isActive ? 'bg-accent text-accent-foreground' : 'text-muted-foreground',
 	);
 }
 
