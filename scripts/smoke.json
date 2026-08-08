@@ -263,7 +263,7 @@
 					"description": "Destructive mutation confirmation check"
 				},
 				{
-					"command": "bun run verify-mutation-denylist",
+					"command": "bun run test:mutation-denylist",
 					"description": "Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users)"
 				},
 				{

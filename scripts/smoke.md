@@ -213,7 +213,7 @@ Steps (in order):
     - Application check.
 33. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-34. `bun run verify-mutation-denylist`
+34. `bun run test:mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
 35. `bun run check:docs`
     - Documentation consistency check.
