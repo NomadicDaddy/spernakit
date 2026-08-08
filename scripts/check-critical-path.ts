@@ -264,7 +264,10 @@ export function runCriticalPath(updateBudget = false): number {
 		log('\n[FAIL] Critical-path verification failed\n', 'red');
 		return 1;
 	}
-	log('\n[OK] Critical-path verification passed\n', 'green');
+	log(
+		`\n[OK] Critical-path verification passed (${assets.length} blocking asset(s) examined)\n`,
+		'green',
+	);
 	return 0;
 }
 

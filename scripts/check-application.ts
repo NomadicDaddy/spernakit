@@ -159,11 +159,21 @@ function checkPackageJsonFiles(slug: string): void {
 	}
 }
 
-async function checkDatabaseLocation(slug: string): Promise<void> {
+async function checkDatabaseLocation(slug: string): Promise<number> {
 	console.log('   Checking for unauthorized database files...');
-	const dbFiles = await findDbFiles(repoRoot);
+	const { examined, files } = await findDbFiles(repoRoot);
 
-	const unauthorizedFiles = dbFiles.filter((file) => {
+	// Rule 5. Every sub-check here asserts an ABSENCE, and the walk swallows its own errors, so a
+	// tree it could not read produces the same verdict as a clean one. Fail on zero rather than
+	// report a pass nothing stands behind.
+	if (examined === 0) {
+		throw new Error(
+			'The repository walk examined no entries. An absence of stray database files cannot ' +
+				'be asserted from a tree that was never read.',
+		);
+	}
+
+	const unauthorizedFiles = files.filter((file) => {
 		return normalizeRelPath(file) !== `data/${slug}.db`;
 	});
 
@@ -177,7 +187,8 @@ async function checkDatabaseLocation(slug: string): Promise<void> {
 		);
 	}
 
-	console.log('   No unauthorized database files found.');
+	console.log(`   No unauthorized database files found (${examined} entries examined).`);
+	return examined;
 }
 
 async function checkRogueFolders(): Promise<void> {
@@ -213,7 +224,7 @@ export async function runApplication(): Promise<number> {
 		checkPackageJsonFiles(slug);
 		console.log('');
 
-		await checkDatabaseLocation(slug);
+		const examined = await checkDatabaseLocation(slug);
 		console.log('');
 
 		await checkRogueFolders();
@@ -228,7 +239,7 @@ export async function runApplication(): Promise<number> {
 		checkCspHashConsistency(repoRoot);
 		console.log('');
 
-		console.log('[OK] Application checks passed.');
+		console.log(`[OK] Application checks passed (${examined} repository entries examined).`);
 		return 0;
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));

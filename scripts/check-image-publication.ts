@@ -98,9 +98,11 @@ export async function runImagePublication(): Promise<number> {
 		{ pattern: /docker\/build-push-action/, reason: 'uses a container publication action' },
 		{ pattern: /ghcr\.io/, reason: 'references GHCR from an executable workflow' },
 	];
+	let scanned = 0;
 	for (const extension of ['yml', 'yaml']) {
 		const glob = new Bun.Glob(`*.${extension}`);
 		for await (const found of glob.scan({ cwd: join(root, '.github/workflows') })) {
+			scanned += 1;
 			const file = `.github/workflows/${found}`;
 			const content = readFileSync(join(root, file), 'utf8');
 			for (const check of workflowPatterns) {
@@ -133,7 +135,21 @@ export async function runImagePublication(): Promise<number> {
 		return 1;
 	}
 
-	console.log('[OK] Spernakit has no executable container-image publication path.');
+	// Rule 5, and this gate is the shape that needs it most: it asserts an ABSENCE. A renamed
+	// `.github/workflows` makes the glob match nothing, every pattern go unchecked, and the verdict
+	// come out identical to a genuine clean scan. "Found no publication path" and "opened no
+	// workflow" have to be different sentences.
+	if (scanned === 0) {
+		console.error(
+			'[FAIL] No workflow files scanned under .github/workflows. The absence of a publication ' +
+				'path cannot be asserted from a directory the glob did not match.',
+		);
+		return 1;
+	}
+
+	console.log(
+		`[OK] Spernakit has no executable container-image publication path (${scanned} workflow(s) scanned).`,
+	);
 	return 0;
 }
 

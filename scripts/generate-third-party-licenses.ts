@@ -132,6 +132,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 
 	return {
 		notices: await formatMarkdown(notices, root),
+		packages: attributed.length,
 		summary: await formatMarkdown(summary, root),
 	};
 }
@@ -196,7 +197,10 @@ export async function runThirdPartyLicenses(
 		}
 	}
 
-	console.log(`[OK] ${OUTPUT} and ${NOTICES_OUTPUT} match the locked dependency graph.`);
+	console.log(
+		`[OK] ${OUTPUT} and ${NOTICES_OUTPUT} match the locked dependency graph ` +
+			`(${generated.packages} attributed package(s)).`,
+	);
 	return 0;
 }
 

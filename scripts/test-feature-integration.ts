@@ -49,9 +49,21 @@ function runCheck(): RunResult {
 }
 
 try {
-	write('frontend/src/routes/lazyPages.ts', 'export {};\n');
+	// The frontend half is a registered page and one component, not two empty directories. Rule 5
+	// makes the checker fail a run that walked no pages and opened no component file, and it is
+	// right to: this fixture's backend cases would otherwise be asserting a pass that half the
+	// gate never earned.
+	write(
+		'frontend/src/routes/lazyPages.ts',
+		"export const HomePage = () => import('@/pages/HomePage');\n",
+	);
 	mkdirSync(join(fixtureRoot, 'frontend/src/pages'), { recursive: true });
 	mkdirSync(join(fixtureRoot, 'frontend/src/components'), { recursive: true });
+	write(
+		'frontend/src/pages/HomePage.tsx',
+		'export default function HomePage() {\n\treturn null;\n}\n',
+	);
+	write('frontend/src/components/Empty.tsx', 'export const Empty = () => null;\n');
 	write(
 		'backend/src/create-api-app.ts',
 		"import { Elysia } from 'elysia';\nexport const createApiApp = () => new Elysia();\n",
@@ -102,8 +114,8 @@ try {
 	result = runCheck();
 	assert(result.exitCode === 0, `A mounted barrel chain must pass:\n${result.output}`);
 	assert(
-		result.output.includes('[OK] Feature integration check passed.'),
-		`The passing fixture must print the checker success marker:\n${result.output}`,
+		result.output.includes('[OK] Feature integration check passed (1 page(s) registered, '),
+		`The passing fixture must print the success marker and what it examined:\n${result.output}`,
 	);
 
 	console.log(`Feature integration route-mount test passed (${checks} assertions).`);
