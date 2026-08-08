@@ -15,7 +15,6 @@ export { normalizeBranding } from './lib/template/branding.ts';
 export {
 	classifyFile,
 	enumerateTemplateFiles,
-	isFileExcluded,
 	loadAppBrandingValues,
 	loadClassificationOverrides,
 } from './lib/template/classify.ts';
@@ -28,6 +27,7 @@ export {
 	scanTemplateDeletions,
 } from './lib/template/deletions.ts';
 export { checkFile } from './lib/template/drift.ts';
+export { isFileExcluded } from './lib/template/exclusions.ts';
 export { applyTemplateOverrides, loadTemplateOverrides } from './lib/template/overrides.ts';
 export {
 	fileExistsInApp,

@@ -35,7 +35,8 @@ import {
 	kb,
 	writeCriticalPathBudget,
 } from './lib/critical-path-budget.ts';
-import { enumerateInitFiles, isFileExcluded, isInitExcluded } from './lib/template/classify.ts';
+import { enumerateInitFiles } from './lib/template/classify.ts';
+import { isFileExcluded, isInitExcluded } from './lib/template/exclusions.ts';
 
 const BUDGET_FILE = 'scripts/critical-path-budget.json';
 
