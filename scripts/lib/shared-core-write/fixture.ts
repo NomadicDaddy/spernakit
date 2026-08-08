@@ -155,6 +155,30 @@ export function build(): Fixture {
 		'chained',
 	);
 
+	// Carries every synced file and does NOT carry the marker: seeded before the marker described
+	// it, which is the state that left two repositories two weeks behind on one guard while the
+	// group reported current (punchlist C1). Discovery must find it anyway, or every later fix to
+	// a file it already holds routes around it silently.
+	makeRepo(
+		join(fleet, 'unmarked-carrier'),
+		{
+			'.githooks/guard.sh': 'guard v1\n',
+			'.githooks/pre-push': '#!/bin/sh\n# OURS\nbash .githooks/guard.sh\nqc\n',
+		},
+		'unmarked-carrier',
+		{ qc: 'echo qc' },
+	);
+
+	// The negative control, and the reason the rule is "carries every synced file" rather than any
+	// of them: no marker and a partial holding. Discovery must NOT find it, or the rule becomes a
+	// second way to adopt a repository nobody chose, and `uncovered` starts appearing for
+	// repositories the group was never meant to reach.
+	makeRepo(
+		join(fleet, 'unmarked-stranger'),
+		{ '.githooks/guard.sh': 'guard v1\n' },
+		'unmarked-stranger',
+	);
+
 	for (const repo of [
 		'drifted',
 		'diverged',
@@ -163,6 +187,7 @@ export function build(): Fixture {
 		'foreign',
 		'chained',
 		'absent-everything',
+		'unmarked-carrier',
 	]) {
 		git(join(fleet, repo), 'config', 'core.hooksPath', '.githooks');
 	}

@@ -98,6 +98,20 @@ function run(): void {
 			!before.findings.some((f) => f.kind === 'drift' && f.detail.includes('seed.txt')),
 		);
 
+		// Discovery by carriage (punchlist C1). The marker selects repositories that should adopt
+		// the group; it is not the only way to already be in it, and a carrier it stops selecting
+		// is what silently accumulates a stale copy.
+		equal(
+			'a carrier without the marker is still maintained',
+			found('drift', 'unmarked-carrier'),
+			1,
+		);
+		equal(
+			'and a repository holding only part of the group is not adopted by it',
+			before.findings.filter((f) => f.target === 'unmarked-stranger').length,
+			0,
+		);
+
 		// A dry run must exercise every refusal and change nothing on disk.
 		const seedBefore = readFileSync(join(fleet, 'drifted', '.githooks', 'seed.txt'), 'utf8');
 		const dry = applyFindings(before.findings, fleet, true);
