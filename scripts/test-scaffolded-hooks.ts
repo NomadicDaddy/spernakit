@@ -160,6 +160,10 @@ try {
 
 	mkdirSync(templateDir, { recursive: true });
 	assertGit('init', '-b', 'main');
+	// Not under scaffolding/: a derived app captures for the same reason the template does, so the
+	// declaration ships from the root and the copier maps it to the app root unchanged. Without it
+	// the scaffolded app is opted out and the screenshot assertion below stops asserting anything.
+	write(templateDir, '.screenshot-capture', readFileSync(join(repoRoot, '.screenshot-capture')));
 	write(templateDir, '.githooks/leak-guard-setup.sh', leakGuardSetup.root);
 	write(templateDir, '.githooks/leak-guard.sh', leakGuard.root);
 	write(templateDir, '.githooks/pre-commit', preCommit.root);
@@ -178,7 +182,11 @@ try {
 	assertGit('tag', `v${TEMPLATE_VERSION}`);
 
 	const copied = copyTemplateTree(templateDir, appDir);
-	assert(copied === 8, `Expected eight app-facing files, copied ${copied}.`);
+	assert(copied === 9, `Expected nine app-facing files, copied ${copied}.`);
+	assert(
+		existsSync(join(appDir, '.screenshot-capture')),
+		'The initializer must copy .screenshot-capture, or every scaffolded app is born opted out.',
+	);
 	const taggedHook = assertGit(
 		'show',
 		`v${TEMPLATE_VERSION}:scaffolding/.githooks/pre-push`,
