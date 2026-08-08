@@ -2,5 +2,10 @@
 	"excluded": {
 		"scripts/run-bash.ts": "The bash shim. `check:leak-guard` runs `bun ./scripts/run-bash.ts scripts/check-leak-guard.sh`, so discovery reaches the shim rather than the guard. The shim spawns a subprocess and returns its exit code; it enforces no rule of its own, and the guard it runs is a `.sh` file with none of the eight rules' surfaces."
 	},
+	"gates": {
+		"config:validate": "Validates `backend/src/config/defaults.json`, `config/example.json` and the live `config/<slug>.json` against the TypeBox schema, reports every file's findings, and exits non-zero if any file failed. It reads as a loader because it loads the files, but nothing consumes what it loads -- the exit code and the finding list are the whole output, which is what makes it a gate. It cannot simply be renamed into the namespace either: `check:config` is already taken by `check-config-invariants.ts`.",
+		"verify-compression": "Asserts that the served bundle carries the Content-Encoding the build promised, and exits non-zero when it does not. A gate under a different verb: it is named for what it inspects rather than for the namespace, and `smoke.json` runs it in the qc chain beside the `check:` tasks.",
+		"verify-minification": "Asserts the built assets in `frontend/dist/assets` against the budgets in `scripts/bundle-budget.json` and exits non-zero when one is blown. Same shape as `verify-compression` and the same reason."
+	},
 	"waivers": {}
 }

@@ -47,6 +47,13 @@ function findMissingRequiredPaths(value: unknown, schema: JsonSchemaNode, prefix
 	return missing;
 }
 
+/**
+ * Narrow a `--node-env` value, rejecting anything outside the three environments.
+ *
+ * This used to sit behind a hand-rolled argv scanner that handled the spaced and equals forms
+ * itself. `parseArgs` handles both, so only the value check is left; gate convention 4 makes
+ * `parseArgs({ strict: true })` the only sanctioned parser and the scanner went with it.
+ */
 function parseNodeEnvironment(value: string): NodeEnvironment {
 	switch (value) {
 		case 'development':
@@ -58,23 +65,6 @@ function parseNodeEnvironment(value: string): NodeEnvironment {
 				`Invalid --node-env value "${value}". Expected development, production, or test.`,
 			);
 	}
-}
-
-function parseNodeEnvOverride(args: string[]): NodeEnvironment | undefined {
-	for (let index = 0; index < args.length; index++) {
-		const argument = args[index];
-		if (argument === '--node-env') {
-			const value = args[index + 1];
-			if (value === undefined || value.startsWith('--')) {
-				throw new Error('--node-env requires development, production, or test.');
-			}
-			return parseNodeEnvironment(value);
-		}
-		if (argument?.startsWith('--node-env=')) {
-			return parseNodeEnvironment(argument.slice('--node-env='.length));
-		}
-	}
-	return undefined;
 }
 
 function parseSchemaIssues(
@@ -124,7 +114,8 @@ export {
 	type JsonSchemaNode,
 	type MergedConfigValidation,
 	type NodeEnvironment,
-	parseNodeEnvOverride,
+	parseNodeEnvironment,
+	parseSchemaIssues,
 	type SchemaIssue,
 	validateMergedInstance,
 };

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /**
- * Config Schema Validation
+ * validate-config.ts
  *
  * Validates three config files against the TypeBox config schema:
  *
@@ -20,153 +20,27 @@
  * new required field is added to a schema, it's easy to forget to update
  * defaults/example — and that mismatch is exactly the drift this guard catches.
  *
- * Usage:
- *   bun run config:validate
- *   bun run config:validate --json
- *   bun run config:validate -- --node-env production
+ * This file holds the gate's presentation: argument parsing, the human-readable report, and the
+ * exit code. The pass over the three files and the `--json` envelope live in `lib/config-report.ts`,
+ * split out when this file went over the 300-line ceiling `check:max-lines` enforces.
+ *
+ * Enforces: every shipped config file conforms to the TypeBox config schema, and the live
+ * instance additionally passes the production security checks. No assertion ID: `.aidd/` lists
+ * `config:validate` under the `config-validator` enforcement kind rather than under an
+ * ASSERT- number.
+ *
+ * Run: bun run config:validate [--json] [-- --node-env development|production|test]
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { exit } from 'node:process';
+import { parseArgs } from 'node:util';
 
-import { appConfigSchema, getConfigJsonSchema } from '../backend/src/config/configSchema.ts';
-import { getAppSlug, loadDefaults, projectRoot } from '../backend/src/config/configUtils.ts';
-import { type ValidationIssue } from '../backend/src/config/configValidator.ts';
+import { projectRoot } from '../backend/src/config/configUtils.ts';
 import {
-	findMissingRequiredPaths,
-	formatSecurityIssue,
-	type JsonSchemaNode,
-	type NodeEnvironment,
-	parseNodeEnvOverride,
-	type SchemaIssue,
-	validateMergedInstance,
-} from './lib/config-validation.ts';
-
-interface FileValidation {
-	errors: number;
-	label: string;
-	path: string;
-	schemaIssues: SchemaIssue[];
-	/** Security issues only collected for the live {slug}.json instance. */
-	securityIssues: ValidationIssue[];
-	status: 'fail' | 'pass' | 'skip';
-	warnings: number;
-}
-
-interface ValidationReport {
-	files: FileValidation[];
-	status: 'fail' | 'pass';
-}
-
-function loadJson(path: string): Record<string, unknown> {
-	try {
-		return JSON.parse(readFileSync(path, 'utf8')) as Record<string, unknown>;
-	} catch (err) {
-		throw new Error(
-			`Failed to parse config at ${path}: ${err instanceof Error ? err.message : String(err)}`,
-			{ cause: err },
-		);
-	}
-}
-
-function parseSchemaIssues(
-	parseResult: ReturnType<typeof appConfigSchema.safeParse>,
-): SchemaIssue[] {
-	if (parseResult.success) return [];
-	return parseResult.error.issues.map((issue) => ({
-		message: issue.message,
-		path: issue.path.join('.'),
-	}));
-}
-
-function validateStandalone(label: string, path: string): FileValidation {
-	const result: FileValidation = {
-		errors: 0,
-		label,
-		path,
-		schemaIssues: [],
-		securityIssues: [],
-		status: 'pass',
-		warnings: 0,
-	};
-
-	if (!existsSync(path)) {
-		result.status = 'skip';
-		return result;
-	}
-
-	const raw = loadJson(path);
-	delete raw['$schema'];
-
-	const missingPaths = findMissingRequiredPaths(raw, getConfigJsonSchema() as JsonSchemaNode);
-	const parse = appConfigSchema.safeParse(raw);
-	const missingSet = new Set(missingPaths);
-	result.schemaIssues = [
-		...missingPaths.map((fieldPath) => ({
-			message: 'Required field must be explicitly present in a complete standalone config',
-			path: fieldPath,
-		})),
-		...parseSchemaIssues(parse).filter((issue) => !missingSet.has(issue.path)),
-	];
-	result.errors = result.schemaIssues.length;
-	if (result.errors > 0) result.status = 'fail';
-	return result;
-}
-
-function validateInstance(nodeEnvOverride?: NodeEnvironment): FileValidation {
-	const defaults = loadDefaults();
-	const slug = getAppSlug(defaults);
-	const configPath = join(projectRoot, 'config', `${slug}.json`);
-
-	const result: FileValidation = {
-		errors: 0,
-		label: 'instance',
-		path: configPath,
-		schemaIssues: [],
-		securityIssues: [],
-		status: 'pass',
-		warnings: 0,
-	};
-
-	if (!existsSync(configPath)) {
-		// Instance file is optional at validation time — it gets created from
-		// defaults on first `bun run dev`. Skip rather than fail.
-		result.status = 'skip';
-		return result;
-	}
-
-	const userConfig = loadJson(configPath);
-	const validation = validateMergedInstance(defaults, userConfig, slug, nodeEnvOverride);
-	result.schemaIssues = validation.schemaIssues;
-	if (result.schemaIssues.length > 0) {
-		result.errors = result.schemaIssues.length;
-		result.status = 'fail';
-		return result;
-	}
-
-	// Security validation only runs on the instance — it checks placeholder
-	// secrets, minimum key lengths, and production-safety invariants.
-	result.securityIssues = validation.securityIssues;
-	for (const issue of result.securityIssues) {
-		if (issue.level === 'error') result.errors++;
-		else result.warnings++;
-	}
-	if (result.errors > 0) result.status = 'fail';
-	return result;
-}
-
-function validate(nodeEnvOverride?: NodeEnvironment): ValidationReport {
-	const defaultsPath = join(projectRoot, 'backend/src/config/defaults.json');
-	const examplePath = join(projectRoot, 'config/example.json');
-
-	const files: FileValidation[] = [
-		validateStandalone('defaults', defaultsPath),
-		validateStandalone('example', examplePath),
-		validateInstance(nodeEnvOverride),
-	];
-
-	const anyFailed = files.some((f) => f.status === 'fail');
-	return { files, status: anyFailed ? 'fail' : 'pass' };
-}
+	collectConfigValidation,
+	type FileValidation,
+	type ValidationReport,
+} from './lib/config-report.ts';
+import { formatSecurityIssue, parseNodeEnvironment } from './lib/config-validation.ts';
 
 function printFile(file: FileValidation): void {
 	const relPath = file.path.replace(projectRoot, '').replace(/^[/\\]/, '');
@@ -207,43 +81,85 @@ function printReport(report: ValidationReport): void {
 
 	const errors = report.files.reduce((n, f) => n + f.errors, 0);
 	const warnings = report.files.reduce((n, f) => n + f.warnings, 0);
+	const skipped = report.files.length - report.examined;
 	console.log('\nSUMMARY');
 	console.log(`  Errors: ${errors} | Warnings: ${warnings}`);
-	if (report.status === 'pass' && warnings > 0) {
-		console.log('  Status: PASS (warnings only)');
-	} else {
-		console.log(`  Status: ${report.status.toUpperCase()}`);
+	if (report.status === 'fail') {
+		console.log(
+			`[FAIL] config:validate -- ${errors} error(s) across ${report.examined} files.`,
+		);
+		return;
 	}
-	console.log('');
+	console.log(
+		`[OK] config:validate -- ${report.examined} config file(s) validated, ` +
+			`${skipped} not present, ${warnings} warning(s).`,
+	);
 }
 
-function main(): void {
-	const jsonMode = process.argv.includes('--json');
+export interface ConfigValidateOptions {
+	json?: boolean | undefined;
+	nodeEnv?: string | undefined;
+}
+
+/**
+ * Run the gate. Returns the process exit code: 0 pass, 1 findings.
+ *
+ * A config file that will not parse exits 1 rather than 2. An unreadable config is not this gate
+ * failing to run; it is the defect the gate exists to report, and the only difference between it
+ * and a schema violation is which layer noticed.
+ */
+export function runConfigValidate(options: ConfigValidateOptions = {}): number {
+	const jsonMode = options.json === true;
 
 	try {
-		const nodeEnvOverride = parseNodeEnvOverride(process.argv.slice(2));
-		const report = validate(nodeEnvOverride);
+		const nodeEnvOverride =
+			options.nodeEnv === undefined ? undefined : parseNodeEnvironment(options.nodeEnv);
+		const report = collectConfigValidation(nodeEnvOverride);
 		if (jsonMode) {
 			console.log(JSON.stringify(report, null, '\t'));
 		} else {
 			printReport(report);
 		}
-		process.exit(report.status === 'pass' ? 0 : 1);
+		return report.status === 'pass' ? 0 : 1;
 	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : String(err);
 		if (jsonMode) {
 			console.log(
 				JSON.stringify({
-					error: err instanceof Error ? err.message : String(err),
+					examined: 0,
+					findings: [{ file: '(unknown)', kind: 'error', message, path: '(root)' }],
+					gate: 'config:validate',
 					status: 'fail',
 				}),
 			);
 		} else {
-			console.error(
-				`Config validation error: ${err instanceof Error ? err.message : String(err)}`,
-			);
+			console.error(`[FAIL] config:validate -- ${message}`);
 		}
-		process.exit(1);
+		return 1;
 	}
 }
 
-main();
+if (import.meta.main) {
+	// `parseArgs` throws on an unknown flag, and an uncaught throw exits 1 -- the code reserved for
+	// a real config finding. A mistyped flag reporting "config validation failed" is exactly the
+	// confusion the exit codes exist to end, so bad arguments are caught and mapped onto 2 here.
+	let options: ConfigValidateOptions;
+	try {
+		const { values } = parseArgs({
+			args: Bun.argv.slice(2),
+			options: {
+				json: { type: 'boolean' },
+				'node-env': { type: 'string' },
+			},
+			strict: true,
+		});
+		options = { json: values.json, nodeEnv: values['node-env'] };
+	} catch (err) {
+		console.error(`[FAIL] config:validate: ${(err as Error).message}`);
+		console.error(
+			'Usage: config:validate [--json] [-- --node-env development|production|test]',
+		);
+		exit(2);
+	}
+	exit(runConfigValidate(options));
+}

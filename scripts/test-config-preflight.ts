@@ -13,7 +13,7 @@ import {
 	findMissingRequiredPaths,
 	formatSecurityIssue,
 	type JsonSchemaNode,
-	parseNodeEnvOverride,
+	parseNodeEnvironment,
 	validateMergedInstance,
 } from './lib/config-validation.ts';
 import { generateEcKeyPair, generateHexKey, generateSecureKey } from './lib/crypto-keys.ts';
@@ -56,12 +56,20 @@ function generatedConfig(): Record<string, unknown> {
 }
 
 try {
-	const production = parseNodeEnvOverride(['--node-env', 'production']);
-	assert(production === 'production', 'Expected the spaced --node-env form to select production');
+	const production = parseNodeEnvironment('production');
 	assert(
-		parseNodeEnvOverride(['--node-env=production']) === 'production',
-		'Expected the equals --node-env form to select production',
+		production === 'production',
+		'Expected --node-env production to select the production environment',
 	);
+	// The argument is what selects the production security checks, so a value outside the three
+	// environments has to throw rather than fall back to development and pass a weaker run.
+	let rejected = false;
+	try {
+		parseNodeEnvironment('prod');
+	} catch {
+		rejected = true;
+	}
+	assert(rejected, 'Expected an unrecognized --node-env value to be rejected');
 
 	const defaults = loadDefaults();
 	const configSchema = getConfigJsonSchema() as JsonSchemaNode;
