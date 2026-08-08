@@ -91,6 +91,7 @@ const sharedSrc = join(projectRoot, 'shared', 'src');
 
 export function runProcessEnv(): number {
 	const allViolations: Violation[] = [];
+	let examined = 0;
 
 	for (const srcDir of [backendSrc, frontendSrc, sharedSrc]) {
 		try {
@@ -100,6 +101,7 @@ export function runProcessEnv(): number {
 		}
 
 		for (const filePath of walkDir(srcDir)) {
+			examined += 1;
 			allViolations.push(...checkFile(filePath));
 		}
 	}
@@ -118,7 +120,18 @@ export function runProcessEnv(): number {
 		return 1;
 	}
 
-	console.log('[OK] Process environment access check passed.');
+	// Rule 5: all three source roots are skipped when absent, so a carrier with none of them reports
+	// a clean pass having read nothing. This gate guards a secrets boundary, which is the worst place
+	// for a pass that means "found no files" to be spelled the same as "found no violations".
+	if (examined === 0) {
+		console.error(
+			'[FAIL] Process environment access check examined no files: none of backend/src, ' +
+				`frontend/src, or shared/src exists under ${projectRoot}.`,
+		);
+		return 1;
+	}
+
+	console.log(`[OK] Process environment access check passed (${examined} file(s) examined).`);
 	return 0;
 }
 

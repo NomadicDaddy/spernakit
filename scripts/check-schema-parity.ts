@@ -46,7 +46,8 @@ export function runSchemaParity(): number {
 	const errors = checkFileParity(sqliteFiles, pgFiles);
 
 	const pgSet = new Set(pgFiles);
-	for (const file of sqliteFiles.filter((name) => pgSet.has(name))) {
+	const shared = sqliteFiles.filter((name) => pgSet.has(name));
+	for (const file of shared) {
 		const sqliteSource = readFileSync(resolve(SQLITE_DIR, file), 'utf8');
 		const pgSource = readFileSync(resolve(PG_DIR, file), 'utf8');
 
@@ -66,7 +67,18 @@ export function runSchemaParity(): number {
 		return 1;
 	}
 
-	console.log('[OK] Schema parity check passed.');
+	// Rule 5: both schema directories are tracked and neither can legitimately be empty, so a run
+	// that compared nothing means the listing broke, not that the two schemas agree. `checkFileParity`
+	// does not catch it -- two empty directories have perfect parity.
+	if (shared.length === 0) {
+		console.error(
+			`[FAIL] Schema parity compared no files: backend/src/db/schema has ${sqliteFiles.length} ` +
+				`and backend/src/db/schema-pg has ${pgFiles.length}, with no name in common.`,
+		);
+		return 1;
+	}
+
+	console.log(`[OK] Schema parity check passed (${shared.length} schema file(s) compared).`);
 	return 0;
 }
 

@@ -125,5 +125,7 @@ source is published at <https://gitlab.alpinelinux.org/alpine/aports>.
 
 export interface GeneratedDocuments {
 	notices: string;
+	/** Packages whose licenses were read to build these documents. Rule 5's count for the check run. */
+	packages: number;
 	summary: string;
 }

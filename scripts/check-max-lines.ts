@@ -56,6 +56,7 @@ function countLines(text: string): number {
 
 export async function runCheckMaxLines(projectRoot = cwd()): Promise<number> {
 	const findings: Finding[] = [];
+	let examined = 0;
 	for (const root of scannedRoots) {
 		const fullRoot = join(projectRoot, root);
 		try {
@@ -64,6 +65,7 @@ export async function runCheckMaxLines(projectRoot = cwd()): Promise<number> {
 			continue;
 		}
 		const files = await collectFiles(fullRoot);
+		examined += files.length;
 		for (const file of files) {
 			const text = await readFile(file, 'utf8');
 			const lines = countLines(text);
@@ -88,7 +90,20 @@ export async function runCheckMaxLines(projectRoot = cwd()): Promise<number> {
 		return 1;
 	}
 
-	console.log(`[OK] max-lines check passed (no file exceeds ${MAX_LINES} lines).`);
+	// Rule 5: a missing root is skipped rather than reported, so a repository laid out differently
+	// than `scannedRoots` expects walks nothing and passes. `${MAX_LINES}` in the line below is the
+	// threshold, not a count -- it says what the ceiling was, never how much was measured against it.
+	if (examined === 0) {
+		console.error(
+			`[FAIL] max-lines examined no files: none of ${scannedRoots.join(', ')} exists under ` +
+				`${projectRoot}, so nothing was measured against the ${MAX_LINES}-line ceiling.`,
+		);
+		return 1;
+	}
+
+	console.log(
+		`[OK] max-lines check passed (${examined} file(s) examined, none exceeds ${MAX_LINES} lines).`,
+	);
 	return 0;
 }
 

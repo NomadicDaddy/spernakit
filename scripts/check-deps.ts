@@ -105,12 +105,28 @@ function collectSpecs(pkg: PackageJson): Record<string, string> {
 	return specs;
 }
 
-function checkDependencyVersions(target: PackageTarget): boolean {
+interface TargetResult {
+	ok: boolean;
+	/** Dependency specs read from this manifest. Zero means nothing was checked. */
+	specs: number;
+}
+
+function checkDependencyVersions(target: PackageTarget): TargetResult {
 	const content = readFileSync(target.path, 'utf-8');
 	const pkg = JSON.parse(content) as PackageJson;
 
 	const specs = collectSpecs(pkg);
+	const total = Object.keys(specs).length;
 	let ok = true;
+
+	// Rule 5's legitimate-emptiness case. `shared` is a types-and-utilities workspace with no
+	// dependencies at all, so zero specs is its correct state, not a truncated manifest. Say so
+	// rather than printing "[OK] All 0 dependency spec(s) are exact", which is the vacuous pass
+	// the rule exists to stop: it reads as a verdict about specs nobody looked at.
+	if (total === 0) {
+		console.log(`[SKIP] ${target.name}: declares no dependencies; nothing to pin.`);
+		return { ok: true, specs: 0 };
+	}
 
 	const invalid = Object.entries(specs).filter(([, spec]) => !isAllowedSpec(spec));
 	if (invalid.length > 0) {
@@ -129,9 +145,12 @@ function checkDependencyVersions(target: PackageTarget): boolean {
 	}
 
 	if (ok) {
-		console.log(`[OK] ${target.name}: All dependency specs are exact (critical deps present)`);
+		console.log(
+			`[OK] ${target.name}: All ${total} dependency spec(s) are exact ` +
+				`(${target.criticalDeps.length} critical dep(s) present)`,
+		);
 	}
-	return ok;
+	return { ok, specs: total };
 }
 
 export function runDeps(): number {
@@ -153,11 +172,14 @@ export function runDeps(): number {
 	];
 
 	const results = targets.map((target) => checkDependencyVersions(target));
+	const specs = results.reduce((running, result) => running + result.specs, 0);
 
 	console.log();
 
-	if (results.every(Boolean)) {
-		console.log('[OK] All dependencies are properly pinned');
+	if (results.every((result) => result.ok)) {
+		console.log(
+			`[OK] All ${specs} dependency spec(s) across ${targets.length} workspace(s) are properly pinned`,
+		);
 		return 0;
 	}
 

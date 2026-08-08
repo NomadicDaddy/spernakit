@@ -25,8 +25,21 @@ const EXCLUDE_DIRECTORIES: readonly string[] = [
 	'tmp',
 ];
 
-export async function findDbFiles(dir: string, basePath = ''): Promise<string[]> {
-	const dbFiles: string[] = [];
+export interface DbFileScan {
+	/**
+	 * Entries the walk actually examined, after exclusions.
+	 *
+	 * This scan swallows every error to survive permission problems, so a walk that reached nothing
+	 * returns the same empty file list as a genuinely clean tree. The count is what separates them,
+	 * and rule 5 of `docs/reference/gate-conventions.md` requires the caller to report it.
+	 */
+	examined: number;
+	files: string[];
+}
+
+export async function findDbFiles(dir: string, basePath = ''): Promise<DbFileScan> {
+	const files: string[] = [];
+	let examined = 0;
 
 	try {
 		const entries = await readdir(dir);
@@ -38,23 +51,25 @@ export async function findDbFiles(dir: string, basePath = ''): Promise<string[]>
 			if (EXCLUDE_DIRECTORIES.includes(entry)) {
 				continue;
 			}
+			examined += 1;
 
 			const stats = await stat(fullPath);
 			if (stats.isDirectory()) {
-				const subFiles = await findDbFiles(fullPath, relativePath);
-				dbFiles.push(...subFiles);
+				const sub = await findDbFiles(fullPath, relativePath);
+				files.push(...sub.files);
+				examined += sub.examined;
 				continue;
 			}
 
 			if (entry.endsWith('.db')) {
-				dbFiles.push(relativePath);
+				files.push(relativePath);
 			}
 		}
 	} catch {
 		// Ignore permission errors and continue
 	}
 
-	return dbFiles;
+	return { examined, files };
 }
 
 /**

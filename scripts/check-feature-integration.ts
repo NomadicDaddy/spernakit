@@ -43,7 +43,7 @@ function extractLazyPageImports(source: string): string[] {
 // Check 2: Frontend lazy pages
 // ---------------------------------------------------------------------------
 
-function checkFrontendPages(root: string): string[] {
+function checkFrontendPages(root: string): { errors: string[]; pages: number } {
 	const errors: string[] = [];
 
 	const lazyPagesSource = readText(root, 'frontend/src/routes/lazyPages.ts');
@@ -80,7 +80,7 @@ function checkFrontendPages(root: string): string[] {
 		}
 	}
 
-	return errors;
+	return { errors, pages: pageFiles.length };
 }
 
 // ---------------------------------------------------------------------------
@@ -95,8 +95,9 @@ const SKELETON_NAMES = [
 	'TableSkeleton',
 ] as const;
 
-function checkSkeletonImportPaths(root: string): string[] {
+function checkSkeletonImportPaths(root: string): { errors: string[]; scanned: number } {
 	const errors: string[] = [];
+	let scanned = 0;
 	const pattern = new RegExp(
 		`from\\s+['"]@/components/shared/(${SKELETON_NAMES.join('|')})['"]`,
 		'g',
@@ -109,6 +110,7 @@ function checkSkeletonImportPaths(root: string): string[] {
 			if (entry.isDirectory()) {
 				walk(full);
 			} else if (entry.isFile() && /\.tsx?$/.test(entry.name)) {
+				scanned += 1;
 				const source = readFileSync(full, 'utf8');
 				for (const match of source.matchAll(pattern)) {
 					const rel = full
@@ -126,7 +128,7 @@ function checkSkeletonImportPaths(root: string): string[] {
 	walk(resolve(root, 'frontend/src/pages'));
 	walk(resolve(root, 'frontend/src/components'));
 
-	return errors;
+	return { errors, scanned };
 }
 
 // ---------------------------------------------------------------------------
@@ -141,16 +143,16 @@ export function runFeatureIntegration(root: string = resolve(import.meta.dir, '.
 		allErrors.push('Backend route registration mismatches:', ...backendErrors);
 	}
 
-	const frontendErrors = checkFrontendPages(root);
-	if (frontendErrors.length > 0) {
-		allErrors.push('Frontend page registration mismatches:', ...frontendErrors);
+	const frontend = checkFrontendPages(root);
+	if (frontend.errors.length > 0) {
+		allErrors.push('Frontend page registration mismatches:', ...frontend.errors);
 	}
 
-	const skeletonErrors = checkSkeletonImportPaths(root);
-	if (skeletonErrors.length > 0) {
+	const skeleton = checkSkeletonImportPaths(root);
+	if (skeleton.errors.length > 0) {
 		allErrors.push(
 			'Forbidden skeleton import shorthand (use "@/components/shared/skeletons/<Name>"):',
-			...skeletonErrors,
+			...skeleton.errors,
 		);
 	}
 
@@ -162,7 +164,21 @@ export function runFeatureIntegration(root: string = resolve(import.meta.dir, '.
 		return 1;
 	}
 
-	console.log('[OK] Feature integration check passed.');
+	// Rule 5: both walks are recursive over directories that are expected to exist. A renamed
+	// `pages/` directory makes every page "registered" -- there is nothing left to be unregistered --
+	// and the skeleton scan finds no forbidden import because it opened no file.
+	if (frontend.pages === 0 || skeleton.scanned === 0) {
+		console.error(
+			`[FAIL] Feature integration examined too little to be a pass: ${frontend.pages} page(s) ` +
+				`under frontend/src/pages and ${skeleton.scanned} component file(s) scanned.`,
+		);
+		return 1;
+	}
+
+	console.log(
+		`[OK] Feature integration check passed (${frontend.pages} page(s) registered, ` +
+			`${skeleton.scanned} component file(s) scanned).`,
+	);
 	return 0;
 }
 
