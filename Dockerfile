@@ -17,10 +17,12 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-# Copy workspace-level files. require-bun.ts must ride along: every workspace's
-# preinstall runs it, and this stage installs with scripts enabled.
+# Copy workspace-level files. require-bun.ts and postinstall.ts must ride along: this stage
+# installs with scripts enabled, so preinstall runs the first and postinstall the second, and bun
+# fails the install outright on an entry file it cannot resolve. postinstall.ts skips itself here
+# rather than pulling scripts/lib/third-party-licenses/ into this layer; see its header.
 COPY package.json bun.lock bunfig.toml ./
-COPY scripts/require-bun.ts scripts/
+COPY scripts/require-bun.ts scripts/postinstall.ts scripts/
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 COPY shared/package.json shared/

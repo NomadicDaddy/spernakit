@@ -102,25 +102,10 @@ bun run typecheck
 
 **Quality Gate Pipeline** (`smoke:qc` - must pass before every commit):
 
-1. `check:drift` - Template drift check
-2. `check:config` - Config invariants check
-3. `check:schema-drift` - Config schema artifact drift check
-4. `config:validate` - Config schema validation (defaults + example + instance)
-5. `check:db-location` - Database location guard
-6. `check:secrets-shape` - Secrets file shape parity
-7. `check:process-env` - Process environment access check
-8. `check:max-lines` - Source file size gate
-9. `check-application` - Application structure validation
-10. `check:destructive-confirmation` - Destructive action confirmation check
-11. `check-docs` - Documentation link check
-12. `typecheck` - TypeScript compilation
-13. `lint` - ESLint rules
-14. `build` - Production build validation
-15. `check:api-types` - API type contract validation
-16. `check:feature-integration` - Route and page reachability
-17. `check:schema-parity` - SQLite/PG schema structural parity
-18. `format:check` - Prettier formatting check
-19. `check-deps` - Dependency version check
+The full ordered step list lives in `scripts/smoke.md`, which is generated from `scripts/smoke.json`
+by `bun run smoke:docs` and guarded by `check:smoke-docs` inside qc. Read it there rather than here:
+this section previously restated 19 steps by hand against the far larger set the mode actually runs,
+and named gates by tasks that have since been renamed.
 
 **Quality Standards**:
 
