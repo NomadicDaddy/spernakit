@@ -63,6 +63,7 @@ export function printOverrideDeltas(
 ): OverrideDeltaCounts {
 	const deltas = entries.filter((e) => e.status === 'delta');
 	const empty = entries.filter((e) => e.status === 'empty');
+	const superset = entries.filter((e) => e.status === 'superset');
 	const presence = entries.filter((e) => e.status === 'presence');
 	const unavailable = entries.filter((e) => e.status === 'unavailable');
 
@@ -100,6 +101,25 @@ export function printOverrideDeltas(
 			`     These entries match v${targetVersion} line for line; deleting them restores`,
 		);
 		console.log('     drift detection on the path at no cost.');
+		console.log('');
+	}
+
+	// Withholds nothing, but is not redundant: the app has extended the file. The entry is doing the
+	// job it was written for, and deleting it would make `check:drift` report this path forever.
+	// The only thing to check here is that the recorded reason still names what the app added.
+	if (superset.length > 0) {
+		console.log(`   ADDS ONLY (${superset.length}, KEEP — the app extends this file):`);
+		for (const entry of superset) {
+			const added = entry.appOnly.length;
+			console.log(
+				`     ${entry.appPath} ${tags(entry)} — ${added} app-only line${added === 1 ? '' : 's'}`,
+			);
+			printReason(entry);
+		}
+		console.log(
+			`     These carry every line v${targetVersion} has and add more. Do NOT delete them:`,
+		);
+		console.log('     confirm the reason still names the addition, and move on.');
 		console.log('');
 	}
 

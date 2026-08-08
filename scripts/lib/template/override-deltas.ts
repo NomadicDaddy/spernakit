@@ -40,11 +40,18 @@ import { TEMPLATE_BRANDING } from './types.ts';
 
 /**
  * - `delta`       the target version has content this entry withholds
- * - `empty`       the entry resolves and withholds nothing — a candidate for deletion
+ * - `empty`       the two copies agree line for line — a candidate for deletion
+ * - `superset`    the entry withholds nothing but the app copy adds lines of its own
  * - `presence`    a `DELETED` entry, listed but not compared
  * - `unavailable` the comparison could not be made; the report fails closed rather than guess
+ *
+ * `superset` is split out from `empty` because the two call for opposite actions and only one of
+ * them is a deletion. An override on a file the app has extended is the override working: delete it
+ * and `check:drift` reports that path as drifted on every run, forever, which is the noise the entry
+ * was written to suppress. Collapsing both into `empty` told deeper's v3.38.0 upgrade that 21
+ * entries were "safe to delete" when every one of them had app-authored additions behind it.
  */
-export type OverrideDeltaStatus = 'delta' | 'empty' | 'presence' | 'unavailable';
+export type OverrideDeltaStatus = 'delta' | 'empty' | 'presence' | 'superset' | 'unavailable';
 
 export interface OverrideDelta {
 	action: TemplateOverrideAction;
@@ -140,10 +147,11 @@ function compareEntry(
 	);
 	const app = normalizeForComparison(appContent, appPath, branded ? input.appBranding : null);
 	const withheld = findRemovedLines(template, app);
+	const appOnly = findRemovedLines(app, template);
 	return {
 		...base,
-		appOnly: findRemovedLines(app, template),
-		status: withheld.length > 0 ? 'delta' : 'empty',
+		appOnly,
+		status: withheld.length > 0 ? 'delta' : appOnly.length > 0 ? 'superset' : 'empty',
 		withheld,
 	};
 }

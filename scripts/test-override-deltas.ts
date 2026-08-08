@@ -18,8 +18,6 @@
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
-import type { TemplateOverrides } from './lib/template/types.ts';
-
 import {
 	AGREED,
 	APP_CSP_LINE,
@@ -38,8 +36,11 @@ import {
 	TEMPLATE_CSP_LINE,
 	WITHHELD_SCAFFOLD_LINE,
 } from './lib/template/override-deltas-fixture.ts';
-import { computeOverrideDeltas } from './lib/template/override-deltas.ts';
-import { isSecurityRelevantPath, SECURITY_INFRASTRUCTURE_FILES } from './lib/template/security.ts';
+import {
+	assertOrdering,
+	assertSecurityRanking,
+	assertSupersetIsNotEmpty,
+} from './lib/template/override-deltas-invariants.ts';
 
 let checks = 0;
 
@@ -233,54 +234,10 @@ EXPOSE 3330
 		'A clean run must not print the withholding banner',
 	);
 
-	// ===== 12. Security relevance is derived from the checker's own rules. =====
-	for (const securityFile of SECURITY_INFRASTRUCTURE_FILES) {
-		assert(
-			isSecurityRelevantPath(securityFile),
-			`Every security-infrastructure file must rank as security-relevant: ${securityFile}`,
-		);
-	}
-	assert(
-		isSecurityRelevantPath('docker/nginx.conf') &&
-			isSecurityRelevantPath('backend/src/plugins/csrf.ts') &&
-			isSecurityRelevantPath('backend/src/guards/role.ts') &&
-			isSecurityRelevantPath('.githooks/leak-guard.sh'),
-		'docker/, plugin, and guard paths must rank as security-relevant',
-	);
-	assert(
-		!isSecurityRelevantPath('frontend/src/App.tsx') && !isSecurityRelevantPath(DOCKERFILE),
-		'Ordinary application files must not be ranked security-relevant',
-	);
-
-	// ===== 13. Ordering the CLI fixture cannot isolate: two security paths sort by path. =====
-	const ordered = computeOverrideDeltas({
-		appBranding: null,
-		classification: {
-			branded: [],
-			buildCriticalBranded: [],
-			infrastructure: [],
-			securityInfrastructure: [],
-		},
-		overrides: {
-			deleted: new Map(),
-			keep: new Map([['docker/start.sh', '']]),
-			skip: new Map([
-				['docker/nginx.conf', ''],
-				['frontend/src/App.tsx', ''],
-			]),
-		} satisfies TemplateOverrides,
-		readApp: () => 'same\n',
-		readTemplate: () => 'same\n',
-	});
-	assert(
-		ordered.map((e) => e.appPath).join(',') ===
-			'docker/nginx.conf,docker/start.sh,frontend/src/App.tsx',
-		`Entries must sort security-first then by path: ${ordered.map((e) => e.appPath).join(',')}`,
-	);
-	assert(
-		ordered.every((e) => e.status === 'empty'),
-		'Identical content must resolve to an empty delta, whichever action declared it',
-	);
+	// ===== 12-14. The assertions that need no fixture, in override-deltas-invariants.ts. =====
+	assertSecurityRanking(assert, DOCKERFILE);
+	assertOrdering(assert);
+	assertSupersetIsNotEmpty(assert);
 
 	console.log(`Override delta report test passed (${checks} assertions).`);
 } catch (err) {
