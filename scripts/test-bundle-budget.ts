@@ -32,7 +32,7 @@ import {
 	kb,
 	writeBundleBudget,
 } from './lib/bundle-budget.ts';
-import { isFileExcluded, isInitExcluded } from './lib/template/classify.ts';
+import { isFileExcluded, isInitExcluded } from './lib/template/exclusions.ts';
 
 const BUDGET_FILE = 'scripts/bundle-budget.json';
 /** Behavior owned by scripts/test-critical-path-budget.ts; only the boundary is asserted here. */

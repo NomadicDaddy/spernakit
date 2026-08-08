@@ -22,7 +22,8 @@
  * copied template content, whether or not a surviving blob can still prove it. Only a path an app
  * commit touched is work the upgrade had no licence to drop.
  */
-import { isFileExcluded, isScaffoldMapped, toTemplatePath } from './classify.ts';
+import { isScaffoldMapped, toTemplatePath } from './classify.ts';
+import { isFileExcluded } from './exclusions.ts';
 import { findRemovedLines, normalizeLine } from './text.ts';
 
 /** Record separator for `git log --format`, emitted as `%x00`. */

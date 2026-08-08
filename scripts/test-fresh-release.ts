@@ -8,7 +8,7 @@ import {
 	type FreshReleaseFile,
 	validateFreshRelease,
 } from './lib/fresh-release/validation.ts';
-import { isInitExcluded } from './lib/template/classify.ts';
+import { isInitExcluded } from './lib/template/exclusions.ts';
 import { renderBaselineNotes } from './release-notes.ts';
 import {
 	MIN_SUPPORTED_TEMPLATE_VERSION,
