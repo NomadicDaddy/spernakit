@@ -79,6 +79,14 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	'test:mutation-denylist': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/database-admin/schemaIntrospection.ts',
+			'backend/src/services/database-admin/dataValidation.ts',
+			'scripts/test-mutation-denylist.ts',
+		],
+	},
 	'test:reset-packages': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -129,13 +137,5 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/verify-minification.ts',
 		],
 		outputs: ['frontend/dist'],
-	},
-	'verify-mutation-denylist': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/src/services/database-admin/schemaIntrospection.ts',
-			'backend/src/services/database-admin/dataValidation.ts',
-			'scripts/verify-mutation-denylist.ts',
-		],
 	},
 };

@@ -7,7 +7,7 @@
  * logic checks do NOT require a live database; the assertTableMutable path
  * proves mutation attempts against denied tables throw the standard error.
  *
- * Run: bun scripts/verify-mutation-denylist.ts
+ * Run: bun scripts/test-mutation-denylist.ts
  */
 import { assertTableMutable } from '../backend/src/services/database-admin/dataValidation.ts';
 import {
