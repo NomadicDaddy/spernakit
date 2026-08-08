@@ -179,6 +179,34 @@ export function build(): Fixture {
 		'unmarked-stranger',
 	);
 
+	// Declines, and may: no push remote, so nothing it holds can be published. The state `common` was
+	// in for two days while every discovered group classified it `uncovered` and `--write` kept
+	// offering to install into it (punchlist S14). It carries stale files too, so a decline that was
+	// merely dropped from discovery rather than honored would still show up as drift.
+	makeRepo(
+		join(fleet, 'declines'),
+		{
+			'.aidd/keep': 'x',
+			'.githooks/guard.sh': 'guard v1\n',
+			'.no-fleet-sync': '# why\nlocal-only, never pushed\n',
+		},
+		'declines',
+	);
+
+	// The negative control, and the whole reason the declaration is conditional. A repository that
+	// can publish cannot exempt itself from a guard that exists because selective installation leaked
+	// a token. The file is identical; only the remote differs, and that is what decides.
+	makeRepo(
+		join(fleet, 'declines-but-publishes'),
+		{
+			'.aidd/keep': 'x',
+			'.githooks/guard.sh': 'guard v1\n',
+			'.no-fleet-sync': 'local-only, never pushed\n',
+		},
+		'declines-but-publishes',
+	);
+	git(join(fleet, 'declines-but-publishes'), 'remote', 'add', 'origin', join(fleet, 'aidd'));
+
 	for (const repo of [
 		'drifted',
 		'diverged',
@@ -188,6 +216,8 @@ export function build(): Fixture {
 		'chained',
 		'absent-everything',
 		'unmarked-carrier',
+		'declines',
+		'declines-but-publishes',
 	]) {
 		git(join(fleet, repo), 'config', 'core.hooksPath', '.githooks');
 	}

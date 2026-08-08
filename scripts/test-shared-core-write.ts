@@ -12,28 +12,15 @@
  * classifier must call each state, and what the writer must and must not then do with it.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import { build } from './lib/shared-core-write/fixture.ts';
+import { check, equal, verdict } from './lib/shared-core-write/harness.ts';
+import { assertCleanRunVerdict, assertHookChainRule } from './lib/shared-core-write/invariants.ts';
 import { checkGroup, isFatal } from './lib/shared-core/check.ts';
-import { assertHookChainIsCarried } from './lib/shared-core/owner.ts';
-import { reportClean } from './lib/shared-core/vacuity.ts';
 import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
-
-let assertions = 0;
-const failures: string[] = [];
-
-function check(label: string, condition: boolean): void {
-	assertions += 1;
-	if (!condition) failures.push(label);
-}
-
-function equal(label: string, actual: unknown, expected: unknown): void {
-	assertions += 1;
-	if (actual !== expected) failures.push(`${label}: expected ${expected}, got ${actual}`);
-}
 
 function run(): void {
 	const { fleet, group, owner } = build();
@@ -112,6 +99,26 @@ function run(): void {
 			0,
 		);
 
+		// The stated opt-out (punchlist S14). It must remove the repository from the worklist, must
+		// say why in the report rather than leaving an absence, and must not be available to a
+		// repository that can publish — that last one is the whole safety argument, since this
+		// subsystem exists because a guard was installed selectively.
+		equal(
+			'a repository that declines is not a target of anything',
+			before.findings.filter((f) => f.target === 'declines').length,
+			0,
+		);
+		check(
+			'and the decline is reported with its reason, not left as an absence',
+			before.skipped.some(
+				(s) => s.startsWith('declines ') && s.includes('local-only, never pushed'),
+			),
+		);
+		check(
+			'a repository with a push remote cannot decline',
+			before.findings.some((f) => f.target === 'declines-but-publishes'),
+		);
+
 		// A dry run must exercise every refusal and change nothing on disk.
 		const seedBefore = readFileSync(join(fleet, 'drifted', '.githooks', 'seed.txt'), 'utf8');
 		const dry = applyFindings(before.findings, fleet, true);
@@ -184,6 +191,20 @@ function run(): void {
 			!existsSync(join(fleet, 'unreached', '.githooks', 'guard.sh')),
 		);
 		equal(
+			'a declining repository is left exactly as it was',
+			readFileSync(join(fleet, 'declines', '.githooks', 'guard.sh'), 'utf8'),
+			'guard v1\n',
+		);
+		check(
+			'and receives nothing it did not already hold',
+			!existsSync(join(fleet, 'declines', '.githooks', 'pre-push')),
+		);
+		equal(
+			'while the one that can publish is brought current anyway',
+			readFileSync(join(fleet, 'declines-but-publishes', '.githooks', 'guard.sh'), 'utf8'),
+			'guard v2\n',
+		);
+		equal(
 			'the guard was delivered to the repository that does run it',
 			readFileSync(join(fleet, 'reached', '.githooks', 'guard.sh'), 'utf8'),
 			'guard v2\n',
@@ -241,49 +262,12 @@ function run(): void {
 			0,
 		);
 
-		// The hook-chain rule. Every checkGroup call above already ran it against a well-formed
-		// group, which is only half the evidence: a validator never seen rejecting is the vacuous
-		// gate this file exists to argue against. So arrange the defect of 2026-08-04 directly — a
-		// hook chaining a guard its group does not deliver — and require the refusal.
-		const rogue = join(owner, '.githooks', 'rogue');
-		writeFileSync(rogue, '#!/bin/sh\n# bash "$d/mentioned-only.sh"\nbash "$d/unshipped.sh"\n');
-		const withRogue = {
-			...group,
-			files: [...group.files, { disposition: 'synced' as const, source: 'rogue' }],
-			hook: 'rogue',
-		};
-		let refused: string = '';
-		try {
-			assertHookChainIsCarried(withRogue, owner);
-		} catch (err) {
-			refused = err instanceof Error ? err.message : String(err);
-		}
-		check('a hook chaining an unshipped guard is refused', refused.includes('unshipped.sh'));
-		check(
-			'a guard named only in a comment is not mistaken for one that is chained',
-			refused.length > 0 && !refused.includes('mentioned-only.sh'),
-		);
-		assertHookChainIsCarried(group, owner);
-		check('a group that carries everything its hook chains is accepted', true);
-
-		// The clean-run verdict. A checker whose inputs are other repositories can report "no drift"
-		// having compared nothing, which is the presence-over-content failure it exists to catch,
-		// turned on itself. Both zero-target cases are arranged here because only one of them is a
-		// defect and nothing else tells them apart.
-		const empty = [{ ...before, findings: [], matched: 0, targets: 0 }];
-		equal('a lone clone skips rather than passing', reportClean(empty), 0);
-		equal('an --only that matched nothing fails', reportClean(empty, new Set(['nope'])), 1);
-		equal('a run with targets still passes', reportClean([{ ...before, findings: [] }]), 0);
+		assertHookChainRule(group, owner);
+		assertCleanRunVerdict(before);
 	} finally {
 		if (existsSync(fleet)) rmSync(fleet, { force: true, recursive: true });
 	}
 }
 
 run();
-
-if (failures.length > 0) {
-	console.error(`shared-core write self-test FAILED (${failures.length} of ${assertions}):`);
-	for (const failure of failures) console.error(`  - ${failure}`);
-	exit(1);
-}
-console.log(`shared-core write self-test passed (${assertions} assertions).`);
+exit(verdict('shared-core write self-test'));
