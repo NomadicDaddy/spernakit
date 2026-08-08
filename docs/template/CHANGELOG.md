@@ -3,6 +3,22 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.38.1] - 2026-08-08
+
+### Fixed
+
+- The override-delta report no longer recommends deleting an override that is doing its job. An
+  entry whose app copy carries every line the target version has and adds more was reported as
+  withholding nothing and safe to delete, which is the opposite of the correct action: deleting one
+  makes drift detection report that path on every run from then on, which is the noise the entry
+  was written to suppress. Those entries now report separately as adds-only, with their app-only
+  line count, and the deletion advice is limited to entries whose two copies agree line for line.
+  The first derived-app upgrade to read this report was handed 21 entries under the wrong heading.
+- The initializer no longer expects a derived app to carry `scripts/lib/shared-core-write/`. That
+  directory holds the fixture and invariant library for the owner-side peer-sync self-test and
+  imports `scripts/lib/shared-core/`, which 3.38.0 already excluded. Leaving the write helpers off
+  the same list made drift detection report three missing files in every derived app.
+
 ## [3.38.0] - 2026-08-08
 
 ### Added
