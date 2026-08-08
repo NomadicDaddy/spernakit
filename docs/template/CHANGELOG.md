@@ -131,6 +131,10 @@ this release.
 
 ### Fixed
 
+- `waiverReason` in `scripts/lib/docs/waivers.ts` strips `--!>` as well as `-->`. Both close an
+  HTML comment, so a waiver written with the first kept its terminator in the reason text. CodeQL
+  reports the old pattern as `js/bad-tag-filter` at high severity; nothing here filters untrusted
+  HTML, so the practical effect was the reason string, not a vulnerability.
 - The API error handler answers `/api/v1` failures. The root handler in `app.ts` was registered
   before `.use(apiApp)`, and an Elysia error handler swallows errors from every plugin mounted
   after it, so request-body validation failures came back as 500 `SERVER_INTERNAL_ERROR` with no
