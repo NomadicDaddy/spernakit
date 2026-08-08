@@ -3,6 +3,179 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.38.0] - 2026-08-08
+
+### Added
+
+- `scripts/sync-shared-core.ts` and `scripts/shared-core-manifest.json`, one manifest describing
+  every file this fleet shares between peer repositories. It replaces three hand-written installers
+  whose file lists were each restated somewhere different, and it carries a `--check` mode wired
+  into `smoke:qc` as `check:shared-core` plus a `--write` path with `--dry-run`, `--only` and a
+  repeatable `--group`. Absent and different are separate findings: a file missing from a target is
+  a rollout the write path has not reached, a file present and different is a repository running a
+  stale guard while reporting as covered, and only drift exits non-zero. The writer takes its whole
+  worklist from the findings the checker already produced and can reach a file only through the two
+  classifications that name a real source and destination pair, so a foreign hook, a
+  hand-maintained local chain, a repository whose hook dispatcher is not ours, and a guard that
+  dispatcher never invokes are all unwritable by construction rather than by a second copy of the
+  rules. Ownership is declared per group and `--write` refuses a group the running repository does
+  not own; `--check` verifies every group from anywhere. A target with uncommitted changes at the
+  path is refused, and a git failure counts as a refusal rather than a pass.
+  `scripts/test-shared-core-write.ts` builds a synthetic fleet of real `git init` repositories and
+  asserts 22 properties across classification, dry-run fidelity, every refusal, and idempotence.
+- `check:gate-conventions`, a meta-gate over the repository's own gates, with the eight rules
+  written out in `docs/reference/gate-conventions.md`. Six of the eight are enforced statically:
+  an exported `run*` entry point behind an `import.meta.main` guard, exit codes limited to 0, 1
+  and 2, an `[OK]`/`[FAIL]`/`[WARN]`/`[SKIP]` marker with no pictographs, `parseArgs` with
+  `strict: true` from `node:util` in place of a hand-rolled argv scan, an `Enforces:` line naming
+  the rule, and `--json` output carrying `examined`, `findings`, `gate` and `status`. The allowlist
+  can only shrink, because a waived path whose rule now passes is itself a finding. A gate joins
+  the population either by carrying a `check*` task name or through a reasoned entry in the
+  allowlist's `gates` map, so a gate-shaped task outside the naming convention is examined rather
+  than skipped.
+- `check:script-targets`, which resolves every script file named by a `package.json` task and fails
+  when one does not exist. A task name and the file behind it reach a derived application on
+  different mechanisms, since `package.json` is branded and script files are template-managed, so
+  an application that receives one half of a rename without the other is broken rather than stale.
+- `check:env-spread` (ASSERT-038), which reports a child process handed the parent environment
+  wholesale. `scripts/lib/third-party-licenses/image-inventory.ts` is narrowed to the keys the
+  docker CLI documents for locating its daemon and config; six remaining sites spawn dev servers,
+  git hooks, or the CLI under test and carry a marker with a stated reason.
+- `check:audit-artifact-hygiene`, which refuses an audit report claiming a date later than today in
+  its filename, its first heading, or a `Date:` field.
+- `.no-fleet-sync`, a tracked file by which a repository declines the shared-core sync with a
+  reason. It is honored only while the repository has no push remote, so it can never exempt
+  anything that could publish, and `git remote add` re-arms every group.
+- `.screenshot-capture`, a tracked declaration that a repository captures release screenshots.
+  `screenshot-guard.sh` previously decided this by testing for a `screenshots/` directory, which is
+  gitignored, so the predicate answered from untracked local state and read as opted out in a fresh
+  clone. The file ships from the template root so a scaffolded app is born with it.
+- The data table's select column. Row selection was wired end to end except for the control that
+  selects a row, so Settings > Users and Notifications rendered a permanent "0 of N row(s)
+  selected." footer and their bulk delete and bulk role-change paths could not be reached.
+  `createSelectColumn()` returns the column and the two column hooks prepend it behind an
+  `enableSelection` prop, so tables that do not select keep their existing column sets.
+- `findMissingRequiredPaths` reports schema-required fields omitted from a standalone config file
+  before defaults are applied, so a required value has to be supplied rather than silently
+  defaulted. `config/example.json` gains `busyTimeoutMs`, `ssl` and `databaseAdmin`.
+- A `postinstall` hook running `scripts/postinstall.ts`, which regenerates
+  `THIRD_PARTY_LICENSES.md` and `THIRD_PARTY_NOTICES.md`. Both are derived from the lockfile, so a
+  dependency bump makes them stale as soon as `bun.lock` is written, and until now the only thing
+  that noticed was `check:licenses` during the next `smoke:qc`. It is skipped when `CI` is set,
+  because that gate is the same generator in `--check` mode and CI installs before it runs qc:
+  regenerating there would rewrite the artifact immediately before the gate compared against it, so
+  a stale committed document would pass every CI run and fail only on a developer machine. The hook
+  never fails the install; a generator that cannot read the lockfile warns and lets `bun install`
+  finish. It is skipped a second way, for the Docker build: `Dockerfile` installs against a partial
+  tree holding only the workspace manifests, and bun resolves a postinstall entry file before it
+  runs, so the file itself has to be copied into that layer. It is, next to `require-bun.ts`, and it
+  detects the absent generator and returns without importing it. **Derived apps take all three
+  parts: the `postinstall` key in `package.json`, `scripts/postinstall.ts`, and the `Dockerfile`
+  COPY line.** An app that takes the key without the COPY line fails `bun run docker:build`.
+
+### Changed
+
+- Four gates are now named after the task that runs them: `check:api-types` runs
+  `check-api-types.ts`, `check-deps` runs `check-deps.ts`, and `check:override-deltas` runs
+  `check-override-deltas.ts`. The files were renamed and the task names left alone, because a task
+  name is the external surface while a filename is named only by this repository's own plumbing.
+  Four end-to-end tests move the other way, since they wore `check` names while gating nothing and
+  need a running server: `check-auth-reset-api`, `check-auth-reset-ui-dev`,
+  `check-auth-reset-ui-preview` and `check-lockout-refresh` are now `test:*`, and
+  `test-lockout-refresh-decouple.ts` drops its suffix. `verify-mutation-denylist` becomes
+  `test:mutation-denylist` running `scripts/test-mutation-denylist.ts` for the same reason: it
+  exercises a runtime guard against fixtures it assembles itself rather than asserting anything
+  about the repository. **Derived apps take both halves of these renames in one pass.** The files
+  arrive through drift detection and the task names do not, so an app that copies the files without
+  editing its own `package.json` fails `check:script-targets`, and in the case of
+  `test:mutation-denylist` fails its own `smoke:qc`, because that step is an ordinary qc step
+  rather than `templateOnly`.
+- `sync-license-core.ts` is now a delegate to `sync-shared-core.ts` rather than its own
+  implementation, and the roster file is renamed `license-core-targets.json` to
+  `shared-core-targets.json` since it no longer describes license-core targets alone. The
+  `licenses:sync-core:check` qc step is retired in favor of `check:shared-core`.
+- `check-docs` is renamed `check:docs`, takes a project root so a delivered copy can be pointed at
+  another tree, states how many markdown files it examined on both verdict lines, and fails when it
+  finds none. Gitignored files are dropped in one batched `git check-ignore --stdin` call rather
+  than one spawn per directory, which took the largest carrier from nine seconds to under a fifth
+  of a second.
+- `check:destructive-confirmation` looks at the dispatch layer. Both carriers moved their requests
+  behind a typed API client, so the DELETE lives in `frontend/src/api/` and only the dispatch
+  remains in the component; the old patterns matched zero lines while eight real destructive
+  dispatches sat in the repository. A confirmation primitive that names the handler holding the
+  call now counts as evidence, one level deep. The `@no-confirm-required` marker is replaced by
+  `destructive-confirmation-allow: <reason>`, and a marker with no reason, or one that has outlived
+  the finding it covered, is itself a failure.
+- `check-schema-parity.ts` is split into `scripts/lib/schema-parity/`, so its parsing and
+  comparisons can be exercised without a schema tree on disk. Behavior and message order are
+  unchanged. `test-backup-compression.ts` imports `MAX_COMPRESSION_RATIO` and
+  `MAX_DECOMPRESSED_SIZE` from the service instead of restating them under a comment saying they
+  mirrored it.
+- `check:git-window-hide` and `check:no-inline-references` take a project root and ship through the
+  shared-core sync. The first had drifted to a different scan-root list than aidd's
+  re-implementation of the same rule, and the gap between them was a whole top-level directory
+  holding a real unhidden spawn. The second hardcoded two absolute schema directories and crashed
+  on a carrier that had only one of them.
+- The repository root is linted. `lint` covered the three workspaces and `scripts/` but never the
+  root, so `eslint.config.js` was an input to a cache entry for a step that never read it. A
+  `lint:config` peer of `lint:scripts` is chained into `lint`, `lint:fast` and `lint:fix`, and runs
+  with `--report-unused-disable-directives`.
+- `docs/template/TESTING.md` points at `scripts/smoke.md` instead of listing the qc pipeline by
+  hand. The hand-written list had drifted to 8 entries against the steps the mode actually runs;
+  the generated runbook is guarded by `check:smoke-docs` inside qc.
+- Frontend and backend dependencies updated: vite to v8.2.1, nodemailer to v9.0.5, pg to v8.23.0,
+  `@types/pg` to v8.21.0, `lucide-react` to v1.30.0, `@types/node` to v26.2.0, eslint to v10.8.1
+  and `eslint-plugin-jsdoc` to v64.0.1. `@tanstack/react-table` stays on the 8 line: the v9
+  rearchitecture renames every row model and reshapes every generic around a leading `TFeatures`
+  parameter, which breaks all eleven consumers under `frontend/src`.
+
+### Fixed
+
+- The API error handler answers `/api/v1` failures. The root handler in `app.ts` was registered
+  before `.use(apiApp)`, and an Elysia error handler swallows errors from every plugin mounted
+  after it, so request-body validation failures came back as 500 `SERVER_INTERNAL_ERROR` with no
+  `requestId` and an ERROR-level log line instead of 400 `VALIDATION_FAILED` at DEBUG. The root
+  handler now sits after the API chain and still ahead of the root's own routes.
+- Widget width and height are validated before submit. `AddWidgetDialog` checked the title and
+  nothing else, and because Add Widget is a button click rather than a form submit the browser
+  never enforced the inputs' `min` and `max`, so an out-of-range value came back as a toast naming
+  no field. The bounds live in `widgetSize.ts` and mirror the backend schema. Height keeps no
+  client-side maximum because the server imposes none.
+- Three selection defects that only appeared once a row could be selected: two toggles in one tick
+  both read the same value through the render closure and under-counted, a successful bulk action
+  left the checkboxes checked while the bulk bar no longer offered those rows, and the loading
+  skeleton unmounted the table on any query-key change so a page-size change discarded the
+  selection outright.
+- Six gates that could report a pass having examined nothing. `check:shared-core` printed no drift
+  with no peer checked out, which is legitimate in CI and is now a `[SKIP]` with its reason, while
+  an `--only` matching no target is now a failure. `check:secrets-shape` has printed `[OK] No
+secrets files found` on every run it ever made, because the split-secrets pattern belongs to the
+  derived apps, and now prints `[SKIP]`. `check:env-spread`, `check:git-window-hide`,
+  `check:no-inline-references` and `check:docs` each skipped every absent scan root and printed
+  `[OK]` over zero files. `check:image-publication` asserts an absence, so a renamed
+  `.github/workflows` made every pattern go unchecked and produced the same verdict as a clean
+  scan. Eight gates now state how many items they examined on their success line, which
+  `check:gate-conventions` enforces.
+- `check:max-lines` scanned `cli/src`, a workspace this template does not ship. A missing root is
+  skipped silently rather than failing, so the entry read as coverage while scanning nothing, here
+  and in every derived app. `fast-subset` and `verify-minification` no longer justify a decision by
+  citing measurements from a peer repository that nothing here can verify.
+- The shared-core sync's wiring check compared a target's `package.json` script against the
+  canonical command with `!==`, so a target that composed the required invocation into a longer
+  script reported identically to one that had wired nothing. Wiring values are substrings the
+  script must contain, each naming the load-bearing invocation alone.
+- The shared-core sync discovered leak-guard targets by the `.aidd` marker, which is the history
+  guard's sweep rather than the leak guard's, and so reported thirty-two repositories current when
+  the installer it replaced had covered fifty-one. The marker is now optional and each group copies
+  the answer from the installer it replaced.
+- A repository seeded before a group's marker described it stopped receiving updates to files it
+  already holds, and two sat two weeks behind on `screenshot-guard.sh` while the group reported
+  full coverage. Discovery takes the union of the marker and already carrying every one of the
+  group's files, which widens maintenance without widening adoption.
+- Two dead entries in `eslint.config.js`: `artifacts/**` names a directory this repository has
+  never had, and `**/tailwind.config.js` names a file Tailwind v4 does not use.
+- Desktop design sweep remediations and database admin desktop refinements.
+
 ## [3.37.0] - 2026-08-05
 
 ### Fixed

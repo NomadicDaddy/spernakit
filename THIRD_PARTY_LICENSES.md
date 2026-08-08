@@ -18,14 +18,14 @@ by license family, and it does not inventory the Alpine base system.
 | -------------------------------------------------------------------- | ------- | ------------- |
 | [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger) | 1.3.1   | MIT           |
 | [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox) | 0.34.52 | MIT           |
-| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.20.4  | MIT           |
+| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.21.0  | MIT           |
 | [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)             | 0.45.2  | Apache-2.0    |
 | [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.29  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)           | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                 | 11.5.2  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 9.0.4   | MIT-0         |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 9.0.5   | MIT-0         |
 | [otpauth](https://www.npmjs.com/package/otpauth)                     | 9.5.1   | MIT           |
-| [pg](https://www.npmjs.com/package/pg)                               | 8.22.0  | MIT           |
+| [pg](https://www.npmjs.com/package/pg)                               | 8.23.0  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                           | 10.3.1  | MIT           |
 | [pino-roll](https://www.npmjs.com/package/pino-roll)                 | 4.0.0   | MIT           |
 
@@ -55,7 +55,7 @@ by license family, and it does not inventory the Alpine base system.
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.29.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.30.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
@@ -156,7 +156,7 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **238**
+closure follows everything they pull in transitively and covers **239**
 third-party package versions (220 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
@@ -165,7 +165,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 203      |
+| MIT              | 204      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
