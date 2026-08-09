@@ -24,6 +24,40 @@ const TEMPLATE_DOCKERFILE = [
 const APP_DOCKERFILE = TEMPLATE_DOCKERFILE.replace('Spernakit v3', 'Fixture App');
 const TEMPLATE_README = '# Spernakit v3\n\nTemplate fixture.\n';
 const APP_README = '# Fixture App\n\nTemplate fixture.\n';
+const EXAMPLE_CONFIG = 'config/example.json';
+const FRONTEND_PORT = 3330;
+const BACKEND_PORT = 3331;
+
+/** The branded subset of config/example.json: identity, cookies, database path, ports, origins. */
+function exampleConfig(slug: string, name: string, description: string): string {
+	return `${JSON.stringify(
+		{
+			app: { description, name, slug },
+			cors: { frontendDevOrigins: [`http://localhost:${FRONTEND_PORT}`] },
+			database: { url: `file:./data/${slug}.db` },
+			security: {
+				authCookieName: `${slug}_auth`,
+				csrfCookieName: `${slug}_csrf`,
+				refreshCookieName: `${slug}_refresh`,
+			},
+			server: {
+				backendPort: BACKEND_PORT,
+				backendUrl: `http://localhost:${BACKEND_PORT}`,
+				frontendPort: FRONTEND_PORT,
+				frontendUrl: `http://localhost:${FRONTEND_PORT}`,
+			},
+		},
+		null,
+		'\t',
+	)}\n`;
+}
+
+const TEMPLATE_EXAMPLE = exampleConfig(
+	'spernakit',
+	'Spernakit v3',
+	'Self-Hosted Multi-User Application Template',
+);
+const APP_EXAMPLE = exampleConfig('fixture-app', 'Fixture App', 'Fixture application');
 
 interface RunResult {
 	exitCode: number;
@@ -86,7 +120,7 @@ try {
 	const manifest = `${JSON.stringify(
 		{
 			$comment: 'Build-critical branded fixture',
-			branded: [DOCKERFILE, 'README.md', 'package.json'],
+			branded: [DOCKERFILE, EXAMPLE_CONFIG, 'README.md', 'package.json'],
 			buildCriticalBranded: [DOCKERFILE],
 			infrastructure: [],
 		},
@@ -125,6 +159,7 @@ try {
 	};
 	git('init', '-b', 'main');
 	write(templateDir, DOCKERFILE, TEMPLATE_DOCKERFILE);
+	write(templateDir, EXAMPLE_CONFIG, TEMPLATE_EXAMPLE);
 	write(templateDir, 'README.md', TEMPLATE_README);
 	write(templateDir, 'package.json', templatePackage);
 	write(templateDir, 'scripts/template-manifest.json', manifest);
@@ -133,6 +168,7 @@ try {
 	git('tag', 'v9.0.0');
 
 	writeApp(DOCKERFILE, APP_DOCKERFILE);
+	writeApp(EXAMPLE_CONFIG, APP_EXAMPLE);
 	writeApp('README.md', APP_README);
 	writeApp('package.json', appPackage);
 	writeApp('scripts/template-manifest.json', manifest);
@@ -196,6 +232,29 @@ try {
 		`Presentation drift must not be promoted to build-critical:\n${presentationDrift.output}`,
 	);
 	writeApp('README.md', APP_README);
+
+	// config/example.json is the only tracked config a fresh clone of an app has, and setup used to
+	// leave it holding the template's slug, cookie names and database path while `config/` sat in the
+	// drift checker's excluded directories. Two assertions pin both halves of the repair: the path
+	// has to be reachable by the checker at all, and its normalizer has to assert the app's branding
+	// rather than erase it. Re-broadening the exclusion, or routing this file through
+	// normalizeDefaultsJson, makes the unbranded copy below report clean.
+	writeApp(EXAMPLE_CONFIG, TEMPLATE_EXAMPLE);
+	const unbrandedExample = runDrift();
+	assert(
+		unbrandedExample.exitCode !== 0 && unbrandedExample.output.includes(EXAMPLE_CONFIG),
+		`An example config still carrying the template's branding must drift:\n${unbrandedExample.output}`,
+	);
+	assert(
+		!unbrandedExample.output.includes('BUILD-CRITICAL DRIFT'),
+		`Example config drift is branded, not build-critical:\n${unbrandedExample.output}`,
+	);
+	writeApp(EXAMPLE_CONFIG, APP_EXAMPLE);
+	const brandedExample = runDrift();
+	assert(
+		brandedExample.exitCode === 0,
+		`A correctly branded example config must not drift:\n${brandedExample.output}`,
+	);
 
 	// Scaffold-time advisory mode continues to make every branded drift non-failing.
 	writeApp(DOCKERFILE, missingDockerfile);

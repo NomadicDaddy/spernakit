@@ -43,7 +43,6 @@ const INIT_EXCLUDED_DIRS = [
 // Additional exclusions for drift detection (generated/app-specific content):
 const DRIFT_EXCLUDED_DIRS = [
 	'backups/',
-	'config/', // generated per-app by setup.ts
 	'docs/', // app-specific docs excluded (docs/template/ re-included in isFileExcluded)
 	'drizzle/', // migration state diverges
 	'backend/drizzle/', // migration state diverges
@@ -89,6 +88,15 @@ const INIT_EXCLUDED_PATTERNS = [
 // are generated from each app's own dependency graph, bun.lock resolves per-app, and both size
 // budgets are measured from each app's own build (scripts/lib/{bundle,critical-path}-budget.ts).
 const DRIFT_EXCLUDED_PATTERNS = [
+	// `config/` used to be excluded as a directory, on the reasoning that setup.ts generates its
+	// contents per app. Only two files under it are tracked in the template, and enumeration reads
+	// the template's git tree, so an app's own instance configs were never enumerable in the first
+	// place — the directory rule bought nothing and hid `config/example.json`, which the manifest
+	// classifies as branded. That entry described a comparison that had never run once: ten of the
+	// eleven derived apps carry the template's example verbatim, slug `spernakit` and all. Only the
+	// generated schema belongs here, and it has its own gate (`check:config-schema-drift`) comparing
+	// it against each app's TypeBox source, which is the comparison that can actually be right.
+	/^config\/config-schema\.json$/,
 	/^THIRD_PARTY_LICENSES\.md$/,
 	/^THIRD_PARTY_NOTICES\.md$/,
 	/^scripts\/bundle-budget\.json$/,
