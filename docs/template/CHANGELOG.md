@@ -3,6 +3,39 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.39.1] - 2026-08-09
+
+### Fixed
+
+- The leak guard sees a key body added under a PEM header that is already committed. The rule
+  walked staged additions, so it could only find a header and a body when one commit added both.
+  A body pasted under a header left behind by an earlier commit puts no header in the additions
+  set at all, and that is the likeliest way the leak actually happens. The walk now runs over a
+  diff carrying one line of context, which makes the adjacency visible while `+` still marks what
+  the commit is adding. Inline material is reported only on an added header, because reporting it
+  on a committed one would block every later commit to that file with no way to clear it short of
+  the bypass. `check:leak-guard` gains a case that commits a bare header and then adds a body
+  under it.
+- The shared-core roster hygiene check asks git rather than the filesystem. It read
+  `existsSync` for "the example roster is tracked here", which an untracked copy sitting in the
+  working tree satisfies while shipping nothing, and it searched `.gitignore` for a literal
+  `/<roster>` line for "the roster is ignored here", which misses a rule spelled another way, one
+  in a nested `.gitignore`, and the global excludes file. Both now run git itself, through
+  `ls-files --error-unmatch` and `check-ignore --no-index`. A probe against a name the repository
+  does not carry runs first, so a git invocation that stops answering fails the suite instead of
+  reading as two clean results.
+- The destructive-confirmation comment stripper carries a template literal across lines. Quote
+  state was reset at every line boundary, so the continuation lines of a multiline template were
+  read as code and a confirmation primitive named in template text counted as evidence for the
+  call below it. Only the backtick survives a line boundary; a single or double quote left open
+  is closed at the end of its line, since neither can legally span one.
+- The evidence resolver resolves a `useCallback` handler whose parameter list Prettier wrapped to
+  the next line. It required the `(` on the declaration line, so a declaration ending at
+  `useCallback(` with `async (id) => {` underneath resolved to nothing and the gate reported
+  a confirmed site as unconfirmed. Whether a handler resolved depended on how long its arguments
+  happened to be. The wrapper still has to be `useCallback` by name: accepting any wrapping call
+  reintroduces the misresolution recorded against `UsersTab.tsx:79`.
+
 ## [3.39.0] - 2026-08-09
 
 ### Added
