@@ -169,6 +169,7 @@
 		"test:config-preflight": "bun scripts/test-config-preflight.ts",
 		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
+		"test:destructive-comments": "bun scripts/test-destructive-comments.ts",
 		"test:destructive-evidence": "bun scripts/test-destructive-evidence.ts",
 		"test:feature-integration": "bun scripts/test-feature-integration.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",

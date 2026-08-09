@@ -259,6 +259,10 @@
 					"description": "Application check"
 				},
 				{
+					"command": "bun run test:destructive-comments",
+					"description": "Destructive-confirmation reads code not prose (comment stripping and waiver honouring)"
+				},
+				{
 					"command": "bun run test:destructive-evidence",
 					"description": "Destructive-confirmation evidence resolver assertion (window and one-level handler hop)"
 				},
