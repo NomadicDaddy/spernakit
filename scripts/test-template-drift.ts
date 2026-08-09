@@ -103,8 +103,14 @@ function runCli(script: string, args: string[] = [], env: Record<string, string>
 	};
 }
 
+// Advisory mode is pinned off unless a case asks for it: init runs this suite under a `smoke:qc`
+// that sets DRIFT_BRANDED_ADVISORY=1, and runCli inherits the real environment, so a bare call let
+// the case that must fail (a deleted build instruction) pass as advisory. Empty is off (`=== '1'`).
 function runDrift(env: Record<string, string> = {}): RunResult {
-	return runCli('check-template-drift.ts', ['--template', templateDir], env);
+	return runCli('check-template-drift.ts', ['--template', templateDir], {
+		DRIFT_BRANDED_ADVISORY: '',
+		...env,
+	});
 }
 
 function runOverrideReport(): RunResult {

@@ -3,6 +3,129 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.39.0] - 2026-08-09
+
+### Added
+
+- `test:destructive-comments`, which covers the comment stripper the confirmation gate now reads
+  through. Eleven unit cases over the stripper, then five cases running the real gate against a
+  fixture tree and asserting both the exit code and the printed text, one per fault below plus a
+  control. The fixtures cannot live under `frontend/src`, because a file holding a deliberately
+  unconfirmed delete is indistinguishable, to the gate, from the defect it exists to find. The
+  pre-fix gate fails seven of the ten gate assertions.
+- `test:destructive-evidence`, which exercises the real evidence resolver against fixtures it
+  builds rather than against repository files, so no source file has to hold a particular shape
+  just to be measured. It is wired into qc ahead of the gate it backs and carries both resolver
+  defects below: 21 assertions, eight of which fail against the previous pattern and two against
+  the broader one that would have replaced it.
+
+### Fixed
+
+- A scaffolded project can make its first commit. `bun scripts/init.ts` ended on `git add -A`
+  followed by `git commit`, and the leak guard blocked that commit on fourteen PEM header
+  constants across five template files. The guard scans staged additions only, so content
+  committed before the guard existed never fires again, and a fresh init is the one case that
+  stages every template file at once. Those headers had been legal for months: a config validator
+  compares an incoming key against the header, and the deployment and security documents show the
+  shape a key takes, so the header on its own says a key goes here rather than a key is here. The
+  rule now requires the key material as well, either base64 following the header on the same line,
+  which is how a one-line JSON or `.env` value carries a whole key, or an added line of nothing but
+  base64, which is how a pasted body looks. A placeholder remainder matches neither. It is written
+  in grep and sed rather than awk because CI runs on Ubuntu, whose mawk has no interval support.
+  The guard's self-test trades its single PEM case for four: a bare header passes, a pasted body
+  blocks, a one-line key blocks, and a documentation placeholder passes.
+- The initializer runs its quality gate inside a populated repository. `git init`, the hooks-path
+  configuration and `git add -A` all ran after `smoke:qc`, and several gates ask git what the app
+  contains. `enumerateInitFiles` shells `git ls-files`, which reads the index, so an unstaged tree
+  answers with nothing and `test:critical-path-budget` fails on an empty file set. Running the gate
+  outside a repository is worse, since every answer then comes from whatever repository sits above
+  the target or from none at all. Formatting still lands before staging, so the index holds the
+  text the gate grades and the commit records exactly that. The drift suite pins
+  `DRIFT_BRANDED_ADVISORY` off for its own cases, because init runs it under a `smoke:qc` that sets
+  the variable and `runCli` inherits the real environment, so the case that must fail on a deleted
+  build instruction passed as advisory.
+- Setup deletes a task by what it points at rather than by name. The fresh-release pair was removed
+  from a new app's `package.json` by name, and when the shared-core group was withheld from init,
+  its three tasks kept shipping and no longer resolved, so `check:script-targets` failed in every
+  new app. Setup runs after the copy, so the tree itself answers which files arrived, and any task
+  naming a file the app did not receive is now dropped. The parse comes from
+  `check-script-targets.ts` rather than a second weaker copy, since the question is the one that
+  gate already answers.
+- `scripts/bundle-budget.json` records the new app's slug. The budget carries the slug its numbers
+  were measured for, and the gate refuses to enforce a budget belonging to another app, so a copy
+  still stamped `spernakit` left every derived app's bundle unmeasured until someone regenerated
+  it. The critical-path budget beside it carries no slug by design and is deliberately left alone.
+- The confirmation gate reads code rather than prose. It scanned raw file lines, so a comment
+  counted as evidence, and four faults followed from that. A comment naming a primitive satisfied
+  the evidence window, so `// TODO: wrap this in a ConfirmAlertDialog` inside a handler passed the
+  call on the note saying it was unguarded. A waiver's own reason counted as evidence for the site
+  it waived, which resolved the window, left the marker unclaimed, and reported the waiver stale;
+  both real waivers in the fleet passed only because their wording happened to avoid the pattern.
+  A waiver marker's own line was examined as a candidate site. And a commented-out dispatch such
+  as `// deleteThing.mutate(id)` was counted as a call site. The gate now reads sites and evidence
+  from stripped text while reading waivers from the raw lines, which are not interchangeable: a
+  waiver lives in a comment by definition. The stripper is a single-pass scanner that tracks
+  strings, so a marker inside a literal survives. It is deliberately inexact on JSX text
+  containing `//`, and the bias is asserted rather than left implicit, because dropping real
+  evidence produces a finding a reader can see and waive while keeping prose produces a pass
+  nobody sees.
+- The evidence resolver resolves a `useCallback`-wrapped handler. Its const form required the
+  parameter list to follow the `=` directly, so a handler written as
+  `useCallback(() => {...}, [deps])` returned null and lost the handler hop entirely, reporting
+  the site unconfirmed with an `onConfirm={handleDelete}` sitting in the same file. The wrapper is
+  matched by name rather than by accepting any call before the parameter list: the broad form
+  matched `const ids = selectedRows.map((u) => u.id)`, which sits at the same depth as the
+  statement under it, so the indentation test read it as a closed sibling and stopped resolving a
+  `function handleBulkDelete()` two lines above.
+- `config/example.json` is branded during setup and visible to drift detection. The template
+  manifest has classified it as branded for as long as the manifest has existed and nothing ever
+  checked it: `config/` sat in the drift-excluded directories, so exclusion returned true before
+  classification ran, and setup wrote `config/<slug>.json` and `backend/src/config/defaults.json`
+  from two separate call sites while missing the third tracked config. Ten of the eleven derived
+  apps carry an example config still declaring slug `spernakit`, the `spernakit_auth` /
+  `spernakit_csrf` / `spernakit_refresh` cookies, and `file:./data/spernakit.db`. That is the only
+  tracked config a fresh clone has, since the live one is gitignored, and cookies are not
+  port-scoped, so two apps started that way on one machine share a session cookie namespace.
+  `config-writer.ts` now applies one `applyBranding` to all three tracked configs from a single
+  place; secrets stay out of it, since the tracked files must hold the
+  `PRODUCTION_CHANGE_REQUIRED` placeholders and only the untracked instance config receives
+  generated keys. The directory exclusion is dropped for `config/config-schema.json` alone, which
+  is generated per app and already has its own gate. The example-config comparison substitutes
+  only each side's own declared branding and replaces a field only where it already holds that
+  value, so an unbranded file survives into the comparison instead of normalizing to the same text
+  as a branded one.
+- The initializer no longer ships shared-core rosters to apps that cannot read one. The init
+  exclusion named `shared-core-targets.json` literally, and when the license-core sync generalized
+  into `sync-shared-core.ts` and one group became four, the pattern did not move.
+  `gate-conventions-targets.json.example`, `portable-gates-targets.json.example` and
+  `shared-core-sync-targets.json.example` have shipped to every derived app since, and nothing in
+  an app can act on them: the only reader of a roster is withheld from init, and the one entry
+  point that does ship refuses on ownership before it would resolve one. The exclusion is now a
+  pattern over the roster naming convention, and `assertRosterHygiene` reads the real manifest and
+  requires, for every owned roster group, that the roster and its example are both withheld from
+  init, that the example is tracked here, and that the roster is gitignored here, so a fifth group
+  fails the self-test instead of shipping. `scaffolding/.gitignore` gains the roster rule for the
+  reason `/spernakit.psd1` is already in it: a roster names private sibling repositories, and a
+  file that should never exist in an app must not become a tracked one if it ever does.
+- `check:deps` requires the shared workspace package in both critical dependency lists. The check
+  exists to catch an accidentally removed dependency and omitted the one whose absence breaks the
+  schema layer. An app ran for two days with the shared package gone from `backend/package.json`
+  and every gate green, because an earlier install had left a resolvable link in `node_modules`,
+  and only wiping the tree exposed it. The name is read from `shared/package.json` rather than
+  written down, since that file is branded and a literal would fail an app that renamed it
+  correctly.
+
+### Upgrade notes
+
+Both new gates run as part of `smoke:qc`, taking the qc step count from 60 to 62.
+
+Two of these repairs land as findings on first upgrade rather than as silent fixes. An app whose
+`config/example.json` still carries template branding will fail `check:drift` on that path until
+the file is branded; an app whose example config carries its own app-specific sections needs a
+`.templateoverrides` entry instead. And the three roster example files remain tracked until each
+app removes them, which is a `git rm` per app; drift detection stays quiet about them, since an
+init exclusion is also a drift exclusion.
+
 ## [3.38.1] - 2026-08-08
 
 ### Fixed

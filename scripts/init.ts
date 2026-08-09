@@ -207,15 +207,22 @@ async function main(): Promise<void> {
 						' `bun run template:sync-features -- --app <path>` from a checkout that has one.'
 				: `Seeded ${seeded} template feature records.`,
 		);
+		// The repository exists and is populated BEFORE the gate runs, because several gates ask git
+		// what the app contains. `enumerateInitFiles` shells `git ls-files`, which reads the index,
+		// so `git init` alone is not enough: an unstaged tree answers with nothing and
+		// test:critical-path-budget fails on an empty file set. Running the gate outside a
+		// repository is worse still, since every answer then comes from whatever repository happens
+		// to sit above the target, or from no repository at all. Formatting lands before the staging
+		// so the index holds the text the gate grades and the commit records exactly that.
+		run(['git', 'init'], target);
+		run(['git', 'config', 'core.hooksPath', '.githooks'], target);
 		run(['bun', 'run', 'format'], target);
+		run(['git', 'add', '-A'], target);
+		chmodHooks(target);
 		// Branded drift is advisory at scaffold time: init's own transforms exceed the drift
 		// checker's branding normalization. Pure/security/missing drift stays strict.
 		run(['bun', 'run', 'smoke:qc'], target, { env: { DRIFT_BRANDED_ADVISORY: '1' } });
 
-		run(['git', 'init'], target);
-		run(['git', 'config', 'core.hooksPath', '.githooks'], target);
-		run(['git', 'add', '-A'], target);
-		chmodHooks(target);
 		run(['git', 'commit', '-m', 'init'], target);
 		run(['git', 'branch', '-M', 'main'], target);
 

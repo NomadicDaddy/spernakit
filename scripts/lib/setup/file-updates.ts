@@ -8,6 +8,7 @@ import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 import type { SetupSettings } from './config-writer.ts';
 
+import { commandFileReferences } from '../../check-script-targets.ts';
 import { updateFile, updateJsonFile } from './json-files.ts';
 
 /**
@@ -69,8 +70,23 @@ export function updatePackageJsonFiles(s: SetupSettings): void {
 		// publishing blind does not.
 		const scripts = pkg['scripts'] as Record<string, string> | undefined;
 		if (scripts) {
-			delete scripts['check:fresh-release'];
-			delete scripts['test:fresh-release'];
+			// A task pointing at a file the app never received cannot run, and check:script-targets
+			// fails on it in every new app. Naming those tasks here was the fragile half: the
+			// fresh-release pair was removed by name, and when the shared-core group was withheld
+			// from init later, its three tasks kept shipping and no longer resolved.
+			//
+			// Setup runs after the copy, so the tree itself answers which files arrived. That is
+			// also the only question worth asking: re-deriving it from the copy predicate gets
+			// `prepare` deleted, because .githooks/ reaches an app through scaffolding/ and its
+			// own template path is init-excluded.
+			for (const [task, command] of Object.entries(scripts)) {
+				const missing = commandFileReferences(command).filter(
+					(file) => !existsSync(file.replace(/^\.\//, '')),
+				);
+				if (missing.length > 0) {
+					delete scripts[task];
+				}
+			}
 			scripts['docker:image:push'] = 'bun scripts/docker-image.ts push';
 			scripts['release:publish'] = 'bun run docker:image:push';
 		}
@@ -198,6 +214,15 @@ export function updateMiscFiles(s: SetupSettings): void {
 		'config/spernakit\\.json': `config/${s.appSlug}.json`,
 		'spernakit/': `${s.appSlug}/`,
 		'Spernakit v3 is a': `${s.appName} is a`,
+	});
+
+	// The bundle budget records the slug its numbers were measured for. The gate compares that
+	// provenance against the app's own slug and refuses to enforce a budget belonging to another
+	// app, so a copy still stamped `spernakit` leaves a derived app's bundle unmeasured until
+	// someone regenerates it. The critical-path budget beside it carries no slug by design and is
+	// enforced everywhere, so it is deliberately not rebranded here.
+	updateJsonFile('scripts/bundle-budget.json', (budget) => {
+		budget['appSlug'] = s.appSlug;
 	});
 
 	// smoke.ts replaces {{FRONTEND_PORT}}/{{BACKEND_PORT}} from app config at runtime.
