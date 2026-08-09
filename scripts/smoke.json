@@ -259,6 +259,10 @@
 					"description": "Application check"
 				},
 				{
+					"command": "bun run test:destructive-evidence",
+					"description": "Destructive-confirmation evidence resolver assertion (window and one-level handler hop)"
+				},
+				{
 					"command": "bun run check:destructive-confirmation",
 					"description": "Destructive mutation confirmation check"
 				},

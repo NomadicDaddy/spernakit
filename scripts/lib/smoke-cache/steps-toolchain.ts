@@ -79,6 +79,10 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	'test:destructive-evidence': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
+	},
 	'test:mutation-denylist': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
