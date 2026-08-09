@@ -79,6 +79,16 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	'test:destructive-comments': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-destructive-confirmation.ts',
+			'scripts/lib/destructive/comments.ts',
+			'scripts/lib/destructive/evidence.ts',
+			'scripts/lib/destructive/waivers.ts',
+			'scripts/test-destructive-comments.ts',
+		],
+	},
 	'test:destructive-evidence': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
