@@ -6,6 +6,7 @@ import type { BrandingValues } from './types.ts';
  * Routes branded files to their structured normalizers and applies the
  * default text-based normalization (docker files, etc.) otherwise.
  */
+import { normalizeExampleConfig } from './branding-example-config.ts';
 import {
 	normalizeDefaultsJson,
 	normalizeIndexHtml,
@@ -33,6 +34,12 @@ export function normalizeBranding(
 
 	if (filePath === 'backend/src/config/defaults.json') {
 		return normalizeDefaultsJson(content, values, isTemplate);
+	}
+
+	// Deliberately NOT normalizeDefaultsJson, even though the two files share a shape and a branded
+	// field list. That one erases; this one asserts. See branding-example-config.ts.
+	if (filePath === 'config/example.json') {
+		return normalizeExampleConfig(content, values);
 	}
 
 	// Handle README
