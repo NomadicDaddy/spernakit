@@ -50,6 +50,20 @@ console.log('--- stripComments ---');
 			[`const s = 'it\\'s // ok';`],
 		],
 		['indentation is preserved', ['\t\tdel(); // x'], ['\t\tdel(); ']],
+		[
+			// The continuation lines of a template are string content, not code. Read as code they let
+			// a primitive named in prose stand as evidence for the call under it.
+			'template literal carries across lines',
+			['const s = `line one', '// ConfirmAlertDialog', 'line three`; // x'],
+			['const s = `line one', '// ConfirmAlertDialog', 'line three`; '],
+		],
+		[
+			// The other two quote characters cannot span a line, so an unterminated one must not read
+			// the rest of the file as string content.
+			'an unterminated single quote does not carry to the next line',
+			[`const s = 'oops`, '\t// ConfirmAlertDialog'],
+			[`const s = 'oops`, '\t'],
+		],
 	];
 	for (const [name, input, want] of cases) {
 		const got = stripComments(input);

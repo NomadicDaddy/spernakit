@@ -113,6 +113,24 @@ const HOP_FIXTURES: Fixture[] = [
 `,
 	},
 	{
+		enclosing: 'handleDelete',
+		evidence: true,
+		// Prettier moves the parameter list to its own line once the arguments outrun the print width,
+		// and the resolver required it on the declaration line. A handler resolved or not depending on
+		// how long its dependency array happened to be.
+		name: 'useCallback whose parameter list prettier wrapped to the next line',
+		source: `
+	const handleDelete = useCallback(
+		async (episodeId: string, options: DeleteOptions) => {
+			await deleteEpisode.mutate(episodeId, options);
+		},
+		[deleteEpisode],
+	);
+// gap
+	return <ConfirmAlertDialog onConfirm={handleDelete} />;
+`,
+	},
+	{
 		enclosing: 'handleBulkDelete',
 		evidence: true,
 		name: 'a mapped const above the call does not shadow the handler',
@@ -165,6 +183,22 @@ const REFUSAL_FIXTURES: Fixture[] = [
 	deleteEpisode.mutate(id);
 // gap
 	return <ConfirmAlertDialog onConfirm={handleArchive} />;
+`,
+	},
+	{
+		enclosing: null,
+		evidence: false,
+		// The wrapped form accepts a line that ends at the open paren, which is only safe while the
+		// wrapper has to be `useCallback` by name. Any-call-then-newline would readmit exactly the
+		// `UsersTab.tsx:79` misresolution the header describes, one line further down.
+		name: 'a wrapped call that is not useCallback is not a declaration either',
+		source: `
+	const ids = selectedRows.map(
+		(u) => u.id,
+	);
+		deleteEpisode.mutate(ids);
+// gap
+	return <ConfirmAlertDialog onConfirm={ids} />;
 `,
 	},
 	{
