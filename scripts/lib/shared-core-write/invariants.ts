@@ -66,10 +66,20 @@ export function assertRosterHygiene(groups: SharedCoreGroup[], root: string): vo
 		.map((g) => (g.targets.model === 'roster' ? g.targets.roster : ''));
 
 	check('this repository owns at least one roster group', rosters.length > 0);
-	// A name neither tracked nor ignored, asserted first: both predicates below are exit statuses, and
-	// a git invocation that fails for an unrelated reason reads as "not tracked, not ignored" rather
-	// than as an error. Probing a name that is genuinely neither is what tells a working predicate
-	// from one that has stopped answering.
+	// A directory that is not there, so a git that cannot run is arranged rather than waited for.
+	// Answering `false` to that is how a predicate over an exit status fails quietly: all four
+	// assertions below would pass, having established nothing about any roster.
+	let refused = '';
+	try {
+		isTracked(join(root, 'zzz-no-such-directory'), 'package.json');
+	} catch (err) {
+		refused = err instanceof Error ? err.message : String(err);
+	}
+	check('a git that cannot run is raised, not answered', refused.includes('could not run'));
+	// A name neither tracked nor ignored, asserted next. `gitSucceeds` raises on a git that cannot
+	// answer, so this is not there to catch a broken invocation; it is there to catch a predicate that
+	// answers the same way to everything. Both are exit statuses, and a rule that matched every path
+	// would pass all four assertions below while distinguishing nothing.
 	check(
 		'a name this repository does not carry is neither tracked nor ignored',
 		!isTracked(root, 'zzz-no-such-roster.json.example') &&
@@ -83,9 +93,25 @@ export function assertRosterHygiene(groups: SharedCoreGroup[], root: string): vo
 	}
 }
 
-/** Exit status of a git command run in `root`, with its output discarded. */
+/**
+ * Whether a git command run in `root` exited clean, with its output discarded.
+ *
+ * A predicate over an exit status has to say which statuses are answers. Both callers below use a
+ * command that reports 1 for "no", so anything else is the checker being broken rather than git
+ * saying anything: a `git` that is not on PATH, a kill signal, a usage error from a flag this
+ * repository's git version does not carry. Collapsing those to `false` reports the roster unguarded
+ * for a reason that has nothing to do with the roster, which is the harder failure to read of the
+ * two. Raise instead, and let the probe in `assertRosterHygiene` stay a probe of the rule.
+ */
 function gitSucceeds(root: string, args: string[]): boolean {
-	return spawnSync('git', args, { cwd: root, stdio: 'ignore', windowsHide: true }).status === 0;
+	const run = spawnSync('git', args, { cwd: root, stdio: 'ignore', windowsHide: true });
+	const command = `git ${args.join(' ')}`;
+	if (run.error) throw new Error(`${command} could not run in ${root}: ${run.error.message}`);
+	if (run.status === null) throw new Error(`${command} in ${root} was killed by ${run.signal}`);
+	if (run.status !== 0 && run.status !== 1) {
+		throw new Error(`${command} in ${root} exited ${run.status}, which is neither yes nor no`);
+	}
+	return run.status === 0;
 }
 
 /**
