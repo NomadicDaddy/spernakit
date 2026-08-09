@@ -1,12 +1,13 @@
 /**
- * The two checks that guard the checker itself, rather than any target.
+ * The checks that guard the checker itself, rather than any target.
  *
- * Neither reads the synthetic fleet's write path, which is why they are not in the write self-test
- * beside the classification assertions: one is about a group being well-formed before any target is
- * looked at, the other about a run that compared nothing being told apart from a run that found
- * nothing. Both exist because the failure they catch reads as success.
+ * None of them reads the synthetic fleet's write path, which is why they are not in the write
+ * self-test beside the classification assertions: one is about a group being well-formed before any
+ * target is looked at, one about a run that compared nothing being told apart from a run that found
+ * nothing, one about the rosters those groups resolve through. All three exist because the failure
+ * they catch reads as success.
  */
-import { writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import type { GroupReport } from '../shared-core/check.ts';
@@ -14,6 +15,7 @@ import type { SharedCoreGroup } from '../shared-core/manifest.ts';
 
 import { assertHookChainIsCarried } from '../shared-core/owner.ts';
 import { reportClean } from '../shared-core/vacuity.ts';
+import { isInitExcluded } from '../template/exclusions.ts';
 import { check, equal } from './harness.ts';
 
 /**
@@ -53,6 +55,30 @@ export function assertHookChainRule(group: SharedCoreGroup, owner: string): void
  * is the presence-over-content failure it exists to catch, turned on itself. Both zero-target cases
  * are arranged because only one of them is a defect and nothing else tells them apart.
  */
+/**
+ * The roster is the one file in this subsystem that names private sibling repositories, and the one
+ * a derived app has no way to read: every reader of one is withheld from init. Both halves of that
+ * arrangement were maintained by hand against a single roster name and neither moved when the
+ * license-core sync became four groups, so three `*-targets.json.example` files shipped to all
+ * eleven apps as instructions for a command those apps do not have. Hold the exclusion pattern and
+ * the ignore rule to the manifest rather than to a remembered list, so a fifth group fails here
+ * instead of shipping.
+ */
+export function assertRosterHygiene(groups: SharedCoreGroup[], root: string): void {
+	const ignored = readFileSync(join(root, '.gitignore'), 'utf8');
+	const rosters = groups
+		.filter((g) => g.owner === 'spernakit' && g.targets.model === 'roster')
+		.map((g) => (g.targets.model === 'roster' ? g.targets.roster : ''));
+
+	check('this repository owns at least one roster group', rosters.length > 0);
+	for (const roster of rosters) {
+		check(`${roster} is withheld from init`, isInitExcluded(roster));
+		check(`${roster}.example is withheld from init`, isInitExcluded(`${roster}.example`));
+		check(`${roster}.example is tracked here`, existsSync(join(root, `${roster}.example`)));
+		check(`${roster} is gitignored here`, ignored.includes(`\n/${roster}\n`));
+	}
+}
+
 export function assertCleanRunVerdict(report: GroupReport): void {
 	const empty = [{ ...report, findings: [], matched: 0, targets: 0 }];
 	equal('a lone clone skips rather than passing', reportClean(empty), 0);
