@@ -65,7 +65,18 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^run\.ps1$/,
 	/^spernakit\.psd1$/,
 	/^spernakit\.json$/,
-	/^shared-core-targets\.json(\.example)?$/,
+	// Every shared-core roster, and the `.example` beside it. A roster names the private sibling
+	// repositories one sync group writes into and is gitignored for that reason; the example is the
+	// tracked half that shows the shape. Both are template-only, because nothing in a derived app can
+	// read a roster: `sync-shared-core.ts`, `scripts/lib/shared-core/` and the manifest are all
+	// excluded below, and `sync-license-core.ts` — the one entry point that does ship — refuses on
+	// ownership before it would resolve one. This is a pattern and not a list because the list is
+	// what broke. It named `shared-core-targets.json` alone and stayed that way when the license-core
+	// sync generalized into four groups, so `gate-conventions-`, `portable-gates-` and
+	// `shared-core-sync-targets.json.example` went to all eleven apps as instructions for a command
+	// they do not have. `assertRosterHygiene` holds this pattern to every roster the manifest
+	// actually declares, so the next group cannot repeat it.
+	/^[a-z0-9-]+-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,

@@ -80,6 +80,10 @@ nul/
 
 # local config
 /spernakit.psd1
+# No app owns a shared-core sync group, so no app should have a roster. This line is here for the
+# same reason /spernakit.psd1 is: a roster lists private sibling repositories by name, and a file
+# that should never exist here must not become a tracked one if it ever does.
+/*-targets.json
 /config/*.json
 /config/*.json.backup.*
 /config/testing.local.json

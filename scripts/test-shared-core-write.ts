@@ -18,8 +18,13 @@ import { exit } from 'node:process';
 
 import { build } from './lib/shared-core-write/fixture.ts';
 import { check, equal, verdict } from './lib/shared-core-write/harness.ts';
-import { assertCleanRunVerdict, assertHookChainRule } from './lib/shared-core-write/invariants.ts';
+import {
+	assertCleanRunVerdict,
+	assertHookChainRule,
+	assertRosterHygiene,
+} from './lib/shared-core-write/invariants.ts';
 import { checkGroup, isFatal } from './lib/shared-core/check.ts';
+import { loadManifest } from './lib/shared-core/manifest.ts';
 import { applyFindings, ownershipRefusal } from './lib/shared-core/write.ts';
 
 function run(): void {
@@ -264,6 +269,9 @@ function run(): void {
 
 		assertHookChainRule(group, owner);
 		assertCleanRunVerdict(before);
+		// Against the real manifest, not the fixture's: the arrangement being checked is this
+		// repository's own, and a synthetic group would only restate its own roster name back.
+		assertRosterHygiene(loadManifest(join(import.meta.dir)), join(import.meta.dir, '..'));
 	} finally {
 		if (existsSync(fleet)) rmSync(fleet, { force: true, recursive: true });
 	}
