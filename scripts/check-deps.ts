@@ -13,7 +13,8 @@
  * cannot reintroduce version drift.
  *
  * Also verifies that the critical backend/frontend dependencies are still
- * present in their respective manifests (guards against accidental removal).
+ * present in their respective manifests (guards against accidental removal),
+ * including the shared workspace both of them import from.
  *
  * See docs/stack.md for the version pinning policy.
  */
@@ -83,6 +84,25 @@ interface PackageTarget {
 	criticalDeps: string[];
 	name: string;
 	path: string;
+}
+
+/**
+ * The shared workspace's package name, read rather than written down here.
+ *
+ * `shared/package.json` naming is branded in the template manifest, so a literal would be right in
+ * the template and wrong in any app that renamed it — failing that app on a dependency it declares
+ * correctly. Reading it asserts the invariant instead of a spelling: both consumers declare the
+ * workspace they import their types from.
+ *
+ * Its absence is what this exists to catch, and neither list held it before. One app ran for two
+ * days with the dependency gone from backend/package.json and every gate green, because an earlier
+ * install had left a resolvable link behind in node_modules; only wiping the tree exposed it. A
+ * missing-dependency check that omits the dependency whose absence breaks the schema layer is the
+ * one omission it could not afford.
+ */
+function sharedPackageName(manifest: string): null | string {
+	const { name } = JSON.parse(readFileSync(manifest, 'utf-8')) as { name?: string };
+	return typeof name === 'string' && name.length > 0 ? name : null;
 }
 
 function isAllowedSpec(spec: string): boolean {
@@ -156,19 +176,23 @@ function checkDependencyVersions(target: PackageTarget): TargetResult {
 export function runDeps(): number {
 	console.log('Checking dependency version pinning across all workspaces...\n');
 
+	const sharedManifest = join(__dirname, '..', 'shared', 'package.json');
+	const shared = sharedPackageName(sharedManifest);
+	const withShared = (deps: string[]): string[] => (shared === null ? deps : [...deps, shared]);
+
 	const targets: PackageTarget[] = [
 		{ criticalDeps: [], name: 'root', path: join(__dirname, '..', 'package.json') },
 		{
-			criticalDeps: CRITICAL_BACKEND_DEPS,
+			criticalDeps: withShared(CRITICAL_BACKEND_DEPS),
 			name: 'backend',
 			path: join(__dirname, '..', 'backend', 'package.json'),
 		},
 		{
-			criticalDeps: CRITICAL_FRONTEND_DEPS,
+			criticalDeps: withShared(CRITICAL_FRONTEND_DEPS),
 			name: 'frontend',
 			path: join(__dirname, '..', 'frontend', 'package.json'),
 		},
-		{ criticalDeps: [], name: 'shared', path: join(__dirname, '..', 'shared', 'package.json') },
+		{ criticalDeps: [], name: 'shared', path: sharedManifest },
 	];
 
 	const results = targets.map((target) => checkDependencyVersions(target));
