@@ -1,7 +1,7 @@
 /**
  * Standalone verification that `check-destructive-confirmation` reads code and not prose.
  *
- * Two halves. The first exercises `stripComments` directly, including the cases where it is
+ * Two halves. The first exercises `codeOnly` directly, including the cases where it is
  * deliberately inexact. The second runs the real `runDestructiveConfirmation` against a fixture
  * project tree, because the four faults this covers are not all visible from the resolver: two of
  * them are about which lines become call sites and whether a waiver marker gets claimed, and those
@@ -18,7 +18,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { runDestructiveConfirmation } from './check-destructive-confirmation.ts';
-import { stripComments } from './lib/destructive/comments.ts';
+import { codeOnly } from './lib/destructive/comments.ts';
 
 let failures = 0;
 function expect(cond: boolean, msg: string): void {
@@ -30,7 +30,7 @@ function expect(cond: boolean, msg: string): void {
 	}
 }
 
-console.log('--- stripComments ---');
+console.log('--- codeOnly ---');
 {
 	const cases: [string, string[], string[]][] = [
 		['line comment', ['a(); // onConfirm'], ['a(); ']],
@@ -42,31 +42,29 @@ console.log('--- stripComments ---');
 			['', '', ' a();', 'b();'],
 		],
 		['jsx comment', ['\t{/* AlertDialog */}'], ['\t{}']],
-		['string holding a marker', [`const s = '// onConfirm';`], [`const s = '// onConfirm';`]],
-		['url in a string survives', [`fetch("https://x/y");`], [`fetch("https://x/y");`]],
-		[
-			'escaped quote does not end the string',
-			[`const s = 'it\\'s // ok';`],
-			[`const s = 'it\\'s // ok';`],
-		],
+		// A `//` inside quotes still does not open a comment: the tail after the closing quote survives
+		// in all three, which is what says the string was tracked rather than skipped.
+		['string holding a marker', [`const s = '// onConfirm';`], [`const s = '';`]],
+		['url in a string is dropped', [`fetch("https://x/y");`], [`fetch("");`]],
+		['escaped quote does not end the string', [`const s = 'it\\'s // ok';`], [`const s = '';`]],
 		['indentation is preserved', ['\t\tdel(); // x'], ['\t\tdel(); ']],
 		[
-			// The continuation lines of a template are string content, not code. Read as code they let
-			// a primitive named in prose stand as evidence for the call under it.
+			// A template's continuation lines are string content, so the state has to carry across the
+			// boundary the way a block comment's does.
 			'template literal carries across lines',
-			['const s = `line one', '// ConfirmAlertDialog', 'line three`; // x'],
-			['const s = `line one', '// ConfirmAlertDialog', 'line three`; '],
+			['const s = `line one', 'ConfirmAlertDialog', 'line three`; // x'],
+			['const s = `', '', '`; '],
 		],
 		[
-			// The other two quote characters cannot span a line, so an unterminated one must not read
-			// the rest of the file as string content.
+			// The other two quote characters cannot span a line, so an unterminated one must not blank
+			// the rest of the file.
 			'an unterminated single quote does not carry to the next line',
-			[`const s = 'oops`, '\t// ConfirmAlertDialog'],
-			[`const s = 'oops`, '\t'],
+			[`const s = 'oops`, '\tConfirmAlertDialog'],
+			[`const s = '`, '\tConfirmAlertDialog'],
 		],
 	];
 	for (const [name, input, want] of cases) {
-		const got = stripComments(input);
+		const got = codeOnly(input);
 		expect(
 			got.length === want.length && got.every((line, i) => line === want[i]),
 			`${name}: ${JSON.stringify(got)}`,
@@ -75,10 +73,14 @@ console.log('--- stripComments ---');
 	// Inexact by design, and asserted so the bias stays visible: dropping evidence yields a finding
 	// a reader can see, keeping prose yields a pass nobody sees.
 	expect(
-		stripComments(['<p>a // b</p>'])[0] === '<p>a ',
+		codeOnly(['<p>a // b</p>'])[0] === '<p>a ',
 		'jsx text after // is dropped (over-strips rather than under-strips)',
 	);
-	expect(stripComments([]).length === 0, 'empty input yields empty output');
+	expect(
+		codeOnly(['const r = /`/;', 'ConfirmAlertDialog;'])[1] === '',
+		'an unbalanced backtick blanks what follows rather than preserving it',
+	);
+	expect(codeOnly([]).length === 0, 'empty input yields empty output');
 }
 
 const HANDLER = `
@@ -141,6 +143,19 @@ const GATE_CASES: GateCase[] = [
 		purgeThing.mutate(id);
 	}
 	return <ConfirmAlertDialog onConfirm={handleDelete} />;
+}
+`,
+	},
+	{
+		code: 1,
+		name: 'a primitive inside a string is not evidence',
+		says: '1 destructive call site(s) with no confirmation',
+		source: `${HANDLER}	function handleDelete() {
+		const notice = \`Deleting this cannot be undone. Confirm in the
+		ConfirmAlertDialog before continuing.\`;
+		deleteThing.mutate(id, notice);
+	}
+	return <button onClick={handleDelete}>x</button>;
 }
 `,
 	},

@@ -21,14 +21,24 @@ this release.
   working tree satisfies while shipping nothing, and it searched `.gitignore` for a literal
   `/<roster>` line for "the roster is ignored here", which misses a rule spelled another way, one
   in a nested `.gitignore`, and the global excludes file. Both now run git itself, through
-  `ls-files --error-unmatch` and `check-ignore --no-index`. A probe against a name the repository
-  does not carry runs first, so a git invocation that stops answering fails the suite instead of
-  reading as two clean results.
-- The destructive-confirmation comment stripper carries a template literal across lines. Quote
-  state was reset at every line boundary, so the continuation lines of a multiline template were
-  read as code and a confirmation primitive named in template text counted as evidence for the
-  call below it. Only the backtick survives a line boundary; a single or double quote left open
-  is closed at the end of its line, since neither can legally span one.
+  `ls-files --error-unmatch` and `check-ignore --no-index`. Both understand exit 0 and exit 1 as
+  answers and raise on anything else, so a git that is not on PATH, is killed, or rejects a flag
+  fails the suite instead of reporting the roster unguarded for a reason unrelated to the roster.
+  Two probes run before the roster assertions: one against a directory that does not exist, which
+  must raise, and one against a name this repository neither tracks nor ignores, which must answer
+  no to both.
+- The destructive-confirmation gate no longer reads a confirmation primitive out of a string
+  literal. `stripComments` removed comments and deliberately kept string contents, so a dialog
+  named in a toast message, in a route path, or in a test's expected text sat in the evidence
+  window of an unguarded call and passed it. That is the same fault the comment handling exists to
+  close, one layer over: prose that happens to sit inside quotes rather than inside a comment. The
+  function is now `codeOnly`, and it blanks the contents of every string while keeping the
+  delimiters, so the surrounding line still reads as code.
+- Quote state in that scan carries across line boundaries. It was reset at every line, so a
+  multiline template's continuation lines were read as code, and a `/*` or a stray quote inside
+  template text opened a comment or a string that swallowed the code after it. Only the backtick
+  survives a line boundary now; a single or double quote left open is closed at the end of its
+  line, since neither can legally span one.
 - The evidence resolver resolves a `useCallback` handler whose parameter list Prettier wrapped to
   the next line. It required the `(` on the declaration line, so a declaration ending at
   `useCallback(` with `async (id) => {` underneath resolved to nothing and the gate reported
