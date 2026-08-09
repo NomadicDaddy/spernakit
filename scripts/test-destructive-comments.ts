@@ -62,6 +62,26 @@ console.log('--- codeOnly ---');
 			[`const s = 'oops`, '\tConfirmAlertDialog'],
 			[`const s = '`, '\tConfirmAlertDialog'],
 		],
+		[
+			// An interpolation is code that runs. Dropping it with the prose around it would not weaken
+			// the evidence for a site, it would delete the site.
+			'a template interpolation is kept as code',
+			['const s = `deleted ${del(id)} rows`;'],
+			['const s = `${del(id)}`;'],
+		],
+		[
+			// Nested braces, a nested string, and a nested template all have to close before the
+			// interpolation does, or everything after the first `}` reads as the wrong kind of thing.
+			'nesting inside an interpolation closes in the right order',
+			['t(`a ${ {k: o["x"]}.k } b ${`in ${y}`} c`);'],
+			['t(`${ {k: o[""]}.k }${`${y}`}`);'],
+		],
+		[
+			// An interpolation may span lines the way its template does.
+			'an interpolation carries across lines',
+			['const s = `${cond', '\t? del(id)', '\t: keep()}`;'],
+			['const s = `${cond', '\t? del(id)', '\t: keep()}`;'],
+		],
 	];
 	for (const [name, input, want] of cases) {
 		const got = codeOnly(input);
@@ -156,6 +176,20 @@ const GATE_CASES: GateCase[] = [
 		deleteThing.mutate(id, notice);
 	}
 	return <button onClick={handleDelete}>x</button>;
+}
+`,
+	},
+	{
+		code: 0,
+		// Both are confirmed, so the count is what carries the case: blanking the interpolation with
+		// the prose around it leaves one site here, and a site nobody counted is never reported.
+		name: 'a dispatch inside a template interpolation is still a site',
+		says: '2 destructive call site(s) examined, all confirmed',
+		source: `${HANDLER}	function handleDelete() {
+		deleteThing.mutate(id);
+		track(\`purged \${purgeThing.mutate(id)} rows\`);
+	}
+	return <ConfirmAlertDialog onConfirm={handleDelete} />;
 }
 `,
 	},

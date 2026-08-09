@@ -33,7 +33,10 @@ this release.
   window of an unguarded call and passed it. That is the same fault the comment handling exists to
   close, one layer over: prose that happens to sit inside quotes rather than inside a comment. The
   function is now `codeOnly`, and it blanks the contents of every string while keeping the
-  delimiters, so the surrounding line still reads as code.
+  delimiters, so the surrounding line still reads as code. A template's interpolations are the
+  exception and are scanned as the code they are, including strings and templates nested inside
+  them: `${deleteThing.mutate(id)}` is a call that runs, and dropping it would delete a call site
+  rather than weaken the evidence for one.
 - Quote state in that scan carries across line boundaries. It was reset at every line, so a
   multiline template's continuation lines were read as code, and a `/*` or a stray quote inside
   template text opened a comment or a string that swallowed the code after it. Only the backtick
