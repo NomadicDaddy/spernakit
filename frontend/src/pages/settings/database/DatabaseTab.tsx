@@ -144,6 +144,7 @@ function DatabaseTab() {
 			<div className="flex gap-2">
 				{panels.map(({ icon: Icon, id, label }) => (
 					<Button
+						aria-pressed={activePanel === id}
 						key={id}
 						onClick={() => setActivePanel(id)}
 						size="sm"

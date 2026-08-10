@@ -64,6 +64,7 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 					<div className="flex gap-3">
 						{navOptions.map((option) => (
 							<Button
+								aria-pressed={layoutMode === option.value}
 								className={cn(
 									'flex items-center gap-2',
 									layoutMode === option.value &&
@@ -89,6 +90,7 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 					<div className="flex gap-3">
 						{widthOptions.map((option) => (
 							<Button
+								aria-pressed={containerWidth === option.value}
 								className={cn(
 									'flex items-center gap-2',
 									containerWidth === option.value &&
