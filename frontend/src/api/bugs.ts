@@ -14,4 +14,12 @@ function submitBug(report: BugReportInput): Promise<DataResponse<BugReport>> {
 	return apiClient.post<DataResponse<BugReport>>('/bugs', { body: report });
 }
 
-export { listBugs, submitBug };
+/** Move a bug report to a new triage status. Requires ADMIN+ role. */
+function updateBugStatus(
+	id: number,
+	status: BugReport['status'],
+): Promise<DataResponse<BugReport>> {
+	return apiClient.patch<DataResponse<BugReport>>(`/bugs/${id}`, { body: { status } });
+}
+
+export { listBugs, submitBug, updateBugStatus };

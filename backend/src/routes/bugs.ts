@@ -1,18 +1,29 @@
 import { Elysia, t } from 'elysia';
+import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
+import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import {
 	badRequestExample,
 	FORBIDDEN_EXAMPLE,
+	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../constants/responseExamples.ts';
 import { MAX_PROPERTIES_DEFAULT } from '../constants/validation.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
-import { list, submit } from '../services/bugReportService.ts';
+import { log as logAudit } from '../services/auditService.ts';
+import { list, submit, updateStatus } from '../services/bugReportService.ts';
 import { dataResponse, paginatedResponse } from '../utils/apiResponse.ts';
+import { notFoundError } from '../utils/errorResponse.ts';
 
 const MAX_DESCRIPTION_LENGTH = 5000;
 const MAX_EMAIL_LENGTH = 255;
+
+/**
+ * Status union derived from the shared tuple rather than hand-written, so adding a
+ * status to `BUG_REPORT_STATUSES` reaches this route without editing it.
+ */
+const statusSchema = t.Union(BUG_REPORT_STATUSES.map((status) => t.Literal(status)));
 
 const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 	.use(authPlugin)
@@ -119,6 +130,52 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			query: t.Object({
 				limit: t.Optional(t.Numeric({ default: 50, maximum: 200, minimum: 1 })),
 				page: t.Optional(t.Numeric({ default: 1, minimum: 1 })),
+			}),
+		},
+	)
+	.patch(
+		'/:id',
+		({ body, params, set, user }) => {
+			const authedUser = assertUser(user);
+
+			const result = updateStatus(params.id, body.status);
+			if (!result) {
+				set.status = HTTP_STATUS.NOT_FOUND;
+				return notFoundError('Bug report');
+			}
+
+			logAudit({
+				action: 'bug.status.updated',
+				details: {
+					previousStatus: result.previousStatus,
+					status: body.status,
+				},
+				entityId: String(params.id),
+				entityType: 'bug-report',
+				userId: authedUser.id,
+			});
+
+			return dataResponse(result.report);
+		},
+		{
+			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
+			body: t.Object({
+				status: statusSchema,
+			}),
+			detail: {
+				description:
+					'Move a bug report or feature request to a new triage status. Reports are ' +
+					'retained indefinitely and closed via status rather than deleted, so this is ' +
+					'the only way a report leaves the open state. Requires ADMIN or SYSOP role.',
+				responses: {
+					'401': UNAUTHORIZED_EXAMPLE,
+					'403': FORBIDDEN_EXAMPLE,
+					'404': notFoundExample('Bug report'),
+				},
+				summary: 'Update bug report status (ADMIN+)',
+			},
+			params: t.Object({
+				id: t.Numeric({ minimum: 1 }),
 			}),
 		},
 	);
