@@ -134,6 +134,8 @@ function RuntimeConfigTab() {
 	}
 
 	const snapshot = data?.data;
+	// The snapshot names its own source; prefer it over a placeholder operators cannot act on.
+	const appSlug = typeof snapshot?.app?.slug === 'string' ? snapshot.app.slug : null;
 	const sections = snapshot
 		? Object.entries(snapshot).sort(([a], [b]) => a.localeCompare(b))
 		: [];
@@ -145,10 +147,15 @@ function RuntimeConfigTab() {
 				<AlertTitle>Read-only runtime configuration</AlertTitle>
 				<AlertDescription>
 					The effective startup configuration loaded from{' '}
-					<code translate="no">config/&lt;slug&gt;.json</code> merged with defaults. These
-					values change only on restart and cannot be edited here - settings that require
-					a restart stay in the config file. Secrets (keys, cookie and webhook secrets,
-					database and storage credentials) are redacted and never sent to the browser.
+					{appSlug ? (
+						<code translate="no">config/{appSlug}.json</code>
+					) : (
+						'the application config file'
+					)}{' '}
+					merged with defaults. These values change only on restart and cannot be edited
+					here - settings that require a restart stay in the config file. Secrets (keys,
+					cookie and webhook secrets, database and storage credentials) are redacted and
+					never sent to the browser.
 				</AlertDescription>
 			</Alert>
 
