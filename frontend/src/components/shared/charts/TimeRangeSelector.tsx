@@ -25,6 +25,7 @@ function TimeRangeSelector({ onChange, value }: TimeRangeSelectorProps) {
 		<div className="flex gap-1">
 			{TIME_RANGES.map((range) => (
 				<Button
+					aria-pressed={value === range.hours}
 					key={range.hours}
 					onClick={() => onChange(range.hours)}
 					size="sm"

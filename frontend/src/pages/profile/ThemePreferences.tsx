@@ -40,6 +40,7 @@ function ThemePreferences({
 					<div className="flex gap-3">
 						{themeOptions.map((option) => (
 							<Button
+								aria-pressed={themeMode === option.value}
 								className={cn(
 									'flex items-center gap-2',
 									themeMode === option.value &&
@@ -65,6 +66,7 @@ function ThemePreferences({
 					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
 						{APP_THEMES.map((theme) => (
 							<button
+								aria-pressed={appTheme === theme.value}
 								className={cn(
 									'flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
 									appTheme === theme.value

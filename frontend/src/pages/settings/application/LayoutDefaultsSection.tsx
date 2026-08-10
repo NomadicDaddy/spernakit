@@ -36,6 +36,7 @@ function LayoutDefaultsSection({
 				<div className="flex gap-3">
 					{layoutOptions.map((option) => (
 						<Button
+							aria-pressed={defaultLayoutMode === option.value}
 							className={cn(
 								'flex items-center gap-2',
 								defaultLayoutMode === option.value &&
