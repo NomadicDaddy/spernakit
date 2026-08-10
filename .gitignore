@@ -62,6 +62,7 @@ nul/
 /spernakit.psd1
 /shared-core-targets.json
 /shared-core-sync-targets.json
+/license-core-adapter-targets.json
 /gate-conventions-targets.json
 /portable-gates-targets.json
 /config/*.json
