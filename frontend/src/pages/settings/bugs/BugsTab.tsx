@@ -1,12 +1,21 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
 import type { BugReport, PaginatedResponse } from '@/api/types';
 
-import { listBugs } from '@/api/bugs';
+import { listBugs, updateBugStatus } from '@/api/bugs';
 import { DataTable } from '@/components/shared/data-table/DataTable';
 import { Badge } from '@/components/ui/badge';
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select';
 import { useFormatters } from '@/hooks/useFormatters';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
@@ -37,12 +46,34 @@ const KIND_LABEL: Record<BugReport['kind'], string> = {
 	feature: 'Feature',
 };
 
+/** Narrow the plain string a Select hands back to the shared status union. */
+function isBugStatus(value: string): value is BugReport['status'] {
+	return BUG_REPORT_STATUSES.some((status) => status === value);
+}
+
 function BugsTab() {
 	const { formatDate } = useFormatters();
 	const { limit, page, setLimit, setPage } = useUrlFilters(20);
+	const queryClient = useQueryClient();
 	const { data, isLoading } = useQuery<PaginatedResponse<BugReport>>({
 		queryFn: () => listBugs(page, limit),
 		queryKey: ['bugs', page, limit],
+	});
+
+	const statusMutation = useMutation({
+		mutationFn: ({ id, status }: { id: number; status: BugReport['status'] }) =>
+			updateBugStatus(id, status),
+		onError: (err) => {
+			toast.error('Status Not Updated', {
+				description: err instanceof Error ? err.message : 'Failed to update status',
+			});
+		},
+		onSuccess: (_result, variables) => {
+			void queryClient.invalidateQueries({ queryKey: ['bugs', page, limit] });
+			toast.success('Status Updated', {
+				description: `Report #${variables.id} is now ${STATUS_LABEL[variables.status]}.`,
+			});
+		},
 	});
 
 	const bugs = data?.data ?? [];
@@ -52,9 +83,30 @@ function BugsTab() {
 		{
 			accessorKey: 'status',
 			cell: ({ row }) => (
-				<Badge variant={STATUS_VARIANT[row.original.status]}>
-					{STATUS_LABEL[row.original.status]}
-				</Badge>
+				<Select
+					disabled={statusMutation.isPending}
+					onValueChange={(status) => {
+						if (!isBugStatus(status) || status === row.original.status) return;
+						statusMutation.mutate({ id: row.original.id, status });
+					}}
+					value={row.original.status}>
+					<SelectTrigger
+						aria-label={`Status for report ${row.original.id}`}
+						className="w-[150px]">
+						<SelectValue>
+							<Badge variant={STATUS_VARIANT[row.original.status]}>
+								{STATUS_LABEL[row.original.status]}
+							</Badge>
+						</SelectValue>
+					</SelectTrigger>
+					<SelectContent>
+						{BUG_REPORT_STATUSES.map((status) => (
+							<SelectItem key={status} value={status}>
+								{STATUS_LABEL[status]}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			),
 			header: 'Status',
 		},

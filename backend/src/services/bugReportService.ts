@@ -1,6 +1,6 @@
-import type { BugReportKind } from 'spernakit-shared';
+import type { BugReportKind, BugReportStatus } from 'spernakit-shared';
 
-import { count, desc } from 'drizzle-orm';
+import { count, desc, eq } from 'drizzle-orm';
 
 import type { PaginatedResponse } from '../utils/dbHelpers.ts';
 
@@ -22,6 +22,11 @@ interface SubmitBugInput {
 	kind?: BugReportKind | undefined;
 	metadata?: Record<string, unknown> | undefined;
 	userId: number;
+}
+
+interface StatusUpdateResult {
+	previousStatus: BugReportStatus;
+	report: BugReport;
 }
 
 /** Maximum length of the auto-generated title derived from a report's description. */
@@ -112,5 +117,40 @@ function list(page: number, limit: number): PaginatedResponse<BugReport> {
 	);
 }
 
-export { list, submit };
-export type { BugReport, SubmitBugInput };
+/**
+ * Updates a bug report's triage status.
+ * Reads the current row and writes the new status inside a single transaction so the
+ * reported previous status cannot be stale by the time it reaches the audit log.
+ *
+ * @param id - Bug report id
+ * @param status - New status to record
+ * @returns The previous status and the updated report, or undefined when no report has that id
+ */
+function updateStatus(id: number, status: BugReportStatus): StatusUpdateResult | undefined {
+	const db = getDb();
+
+	const result = db.transaction((tx) => {
+		const existing = tx.select().from(bugReports).where(eq(bugReports.id, id)).get();
+		if (!existing) return undefined;
+
+		const report = tx
+			.update(bugReports)
+			.set({ status, updatedAt: new Date() })
+			.where(eq(bugReports.id, id))
+			.returning()
+			.get();
+
+		return { previousStatus: existing.status, report };
+	});
+
+	if (!result) return undefined;
+
+	logger.info(
+		{ bugId: id, previousStatus: result.previousStatus, status },
+		'Bug report status updated',
+	);
+	return result;
+}
+
+export { list, submit, updateStatus };
+export type { BugReport, StatusUpdateResult, SubmitBugInput };
