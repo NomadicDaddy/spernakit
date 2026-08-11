@@ -3,11 +3,7 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
-## [Unreleased]
-
-Rename this heading to the version being cut and bump `package.json` in the same change:
-`check:version-refs` and `check:fresh-release` both require the leading release heading to equal
-the package version, and neither one sees an `[Unreleased]` heading at all.
+## [3.40.0] - 2026-08-11
 
 ### Added
 
@@ -100,6 +96,12 @@ the package version, and neither one sees an `[Unreleased]` heading at all.
 - `license-core-adapter-targets.json.example` is tracked, which `assertRosterHygiene` requires of
   every declared roster group. The group was registered without it, so `test:shared-core-write`
   failed 1 of 74 assertions at v3.39.1.
+- The crawler answers native dialogs. Puppeteer auto-dismisses them when no listener is attached,
+  and dismissing a `beforeunload` prompt means "stay on this page", so once the crawl toggled a
+  switch on `/settings/email` every later `page.goto` blocked on the unsaved-changes guard and
+  timed out. Seven routes failed that way with no console or network error to explain it. The
+  handler accepts `beforeunload` and dismisses anything else after logging it, and it registers in
+  `attachPageHandlers`, which both the initial launch and the mid-crawl browser recycle call.
 
 ### Documentation
 
@@ -111,6 +113,15 @@ the package version, and neither one sees an `[Unreleased]` heading at all.
   `check:version-refs`, which brings the gate to six sites. It had sat at v3.29.0 — the same class
   of drift the gate was written for.
 - The `docs/template/DEPLOYMENT.md` Compose example no longer pins `spernakit-test:3.21.0`.
+- `docs/template/GETTING_STARTED.md` says where the default accounts come from and what a
+  production seed does instead. It listed five passwords under "the template ships with these
+  accounts", which reads as a shipped default rather than a development seed.
+- `docs/template/API_REFERENCE.md` documents the bug intake as its own section: the submit route,
+  the ADMIN list route with its `status`, `kind`, and `search` parameters, and the status-update
+  route. It had a single unannotated line for `POST /api/v1/bugs`.
+- The feature lists in `README.md` and `site/index.html` name the bug and feature-request intake,
+  and the site's Identity card names OAuth/SSO, TOTP, and scoped API keys, which it had left out
+  while describing the same subsystem.
 
 ## [3.39.1] - 2026-08-09
 
