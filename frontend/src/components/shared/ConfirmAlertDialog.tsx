@@ -20,6 +20,12 @@ export interface ConfirmAlertDialogProps {
 	onConfirm: () => void;
 	onOpenChange: (open: boolean) => void;
 	title: string;
+	/**
+	 * Pass `destructive` whenever the body says the action is permanent, cannot be undone, or
+	 * deletes something. Without it the confirm button renders in the primary blue, which is the
+	 * same treatment as the benign action sitting next to it on the page.
+	 */
+	variant?: 'default' | 'destructive';
 }
 
 export function ConfirmAlertDialog({
@@ -31,6 +37,7 @@ export function ConfirmAlertDialog({
 	onConfirm,
 	onOpenChange,
 	title,
+	variant = 'default',
 }: ConfirmAlertDialogProps) {
 	// Radix `AlertDialogDescription` renders a <p>. Plain strings/numbers are
 	// safe inline children, but JSX descriptions may contain block-level
@@ -54,7 +61,7 @@ export function ConfirmAlertDialog({
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel>{cancelText}</AlertDialogCancel>
-					<AlertDialogAction disabled={isPending} onClick={onConfirm}>
+					<AlertDialogAction disabled={isPending} onClick={onConfirm} variant={variant}>
 						{isPending ? `${confirmText}…` : confirmText}
 					</AlertDialogAction>
 				</AlertDialogFooter>

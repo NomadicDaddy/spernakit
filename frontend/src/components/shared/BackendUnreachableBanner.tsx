@@ -29,7 +29,7 @@ function BackendUnreachableBanner() {
 					size="sm"
 					type="button"
 					variant="secondary">
-					<RefreshCw aria-hidden="true" className="mr-2 size-4" />
+					<RefreshCw aria-hidden="true" className="size-4" />
 					Retry now
 				</Button>
 			</AlertDescription>

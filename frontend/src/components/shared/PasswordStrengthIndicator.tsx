@@ -42,11 +42,16 @@ function calculateStrength(password: string): { level: StrengthLevel; score: num
 	return { level, score };
 }
 
+/**
+ * Three semantic hues, four steps. `fair` and `good` share the warning hue and separate on bar
+ * opacity and on the score width, because the app has three state colours and inventing a fourth
+ * raw palette value here is how colour drifts out of the token pipeline in the first place.
+ */
 const strengthConfig: Record<StrengthLevel, { barClass: string; color: string; label: string }> = {
-	fair: { barClass: 'bg-orange-500', color: 'text-orange-500', label: 'Fair' },
-	good: { barClass: 'bg-yellow-500', color: 'text-yellow-500', label: 'Good' },
-	strong: { barClass: 'bg-green-500', color: 'text-green-500', label: 'Strong' },
-	weak: { barClass: 'bg-red-500', color: 'text-red-500', label: 'Weak' },
+	fair: { barClass: 'bg-warning/60', color: 'text-warning', label: 'Fair' },
+	good: { barClass: 'bg-warning', color: 'text-warning', label: 'Good' },
+	strong: { barClass: 'bg-success', color: 'text-success', label: 'Strong' },
+	weak: { barClass: 'bg-destructive', color: 'text-destructive', label: 'Weak' },
 };
 
 function PasswordStrengthIndicator({ className, password }: PasswordStrengthIndicatorProps) {

@@ -7,6 +7,10 @@ import { useBlocker } from 'react-router';
  * Warns the user before navigating away when there are unsaved changes.
  * Handles both browser navigation (beforeunload) and client-side routing (useBlocker).
  *
+ * Prefer `<UnsavedChangesGuard isDirty={…} />`, which pairs this hook with the dialog that
+ * releases the block. Calling this hook and discarding the returned blocker installs a block
+ * with nothing to dismiss it, which strands the user on the page with no explanation.
+ *
  * Returns the blocker so consumers can render a confirmation dialog
  * when `blocker.state === 'blocked'`.
  *
