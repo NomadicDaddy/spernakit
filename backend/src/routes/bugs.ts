@@ -115,12 +115,22 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 		({ query }) => {
 			const page = query.page ?? 1;
 			const limit = query.limit ?? 50;
-			return paginatedResponse(list(page, limit));
+			return paginatedResponse(
+				list(page, limit, {
+					...(query.kind ? { kind: query.kind } : {}),
+					...(query.search ? { search: query.search } : {}),
+					...(query.status ? { status: query.status } : {}),
+				}),
+			);
 		},
 		{
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
-				description: 'Get bug reports with pagination. Requires ADMIN or SYSOP role.',
+				description:
+					'Get bug reports with pagination, newest first. Optionally filtered by ' +
+					'triage status, by kind (bug or feature), and by free-text search over the ' +
+					'description. Every filter is applied in SQL, so the returned total counts ' +
+					'the filtered set rather than the whole inbox. Requires ADMIN or SYSOP role.',
 				responses: {
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
@@ -128,8 +138,11 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				summary: 'List bug reports (ADMIN+)',
 			},
 			query: t.Object({
+				kind: t.Optional(t.Union([t.Literal('bug'), t.Literal('feature')])),
 				limit: t.Optional(t.Numeric({ default: 50, maximum: 200, minimum: 1 })),
 				page: t.Optional(t.Numeric({ default: 1, minimum: 1 })),
+				search: t.Optional(t.String({ maxLength: 200 })),
+				status: t.Optional(statusSchema),
 			}),
 		},
 	)
