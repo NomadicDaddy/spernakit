@@ -344,8 +344,8 @@ config/myapp.staging.json    # Staging settings
 # Create a Compose variable file outside the source tree.
 cat > compose.vars <<'EOF'
 APP_SLUG=spernakit
-APP_IMAGE=spernakit-test:3.21.0
-APP_VERSION=3.21.0
+APP_IMAGE=spernakit-test:3.39.1
+APP_VERSION=3.39.1
 FRONTEND_PORT=3330
 BACKEND_PORT=3331
 APPDATA_ROOT=/opt/appdata
