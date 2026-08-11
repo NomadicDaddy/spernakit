@@ -41,7 +41,7 @@ export const securitySchema = Type.Object({
 		default: '',
 		description:
 			'Dedicated ES256 private key for short-lived MFA challenge tokens. ' +
-			'Generate with `bun run generate-keys`; required in production.',
+			'Generate with `bun run generate-keys -- --only mfa`; required in production.',
 	}),
 	mfaPublicKey: Type.String({
 		default: '',

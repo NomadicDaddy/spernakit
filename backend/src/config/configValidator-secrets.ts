@@ -155,7 +155,7 @@ function validateMfaKeyPair(nodeEnv: string, security: AppConfig['security']): v
 	emitSecretIssues(
 		checkMfaKeyPair(nodeEnv, security),
 		'Incomplete MFA challenge key pair',
-		'\nGenerate the dedicated MFA key pair with: bun run generate-keys',
+		'\nGenerate the dedicated MFA key pair with: bun run generate-keys -- --only mfa',
 	);
 }
 
