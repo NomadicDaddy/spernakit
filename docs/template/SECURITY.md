@@ -156,21 +156,28 @@ Password validation is integrated into the registration, password change, and us
 ### Quick Start
 
 ```bash
-bun run generate-keys
+bun run generate-keys                    # every key group
+bun run generate-keys -- --only mfa      # one key group
 ```
 
 Generates cryptographically secure keys and writes them to `config/{appname}.json` under `security.*`.
+Without `--only` this rewrites every key group, which signs all users out and orphans anything the
+old keys encrypted. Scope the run to the group you actually need.
 
 ### Key Types
 
-| Key                    | Purpose                                               | Format                   |
-| ---------------------- | ----------------------------------------------------- | ------------------------ |
-| `jwtPrivateKey`        | JWT signing (ES256)                                   | EC P-256 PEM private key |
-| `jwtPublicKey`         | JWT verification                                      | EC P-256 PEM public key  |
-| `jwtRefreshPrivateKey` | Refresh token signing                                 | EC P-256 PEM private key |
-| `jwtRefreshPublicKey`  | Refresh token verify                                  | EC P-256 PEM public key  |
-| `encryptionKey`        | AES-256-GCM encryption                                | 64 hex chars (32 bytes)  |
-| `cookieSecret`         | HKDF input for OAuth state/PKCE binding (not cookies) | 32+ chars                |
+| Key                    | Purpose                                               | Format                   | `--only` group          |
+| ---------------------- | ----------------------------------------------------- | ------------------------ | ----------------------- |
+| `jwtPrivateKey`        | JWT signing (ES256)                                   | EC P-256 PEM private key | `jwt`                   |
+| `jwtPublicKey`         | JWT verification                                      | EC P-256 PEM public key  | `jwt`                   |
+| `jwtRefreshPrivateKey` | Refresh token signing                                 | EC P-256 PEM private key | `jwt-refresh`           |
+| `jwtRefreshPublicKey`  | Refresh token verify                                  | EC P-256 PEM public key  | `jwt-refresh`           |
+| `mfaPrivateKey`        | MFA challenge token signing (ES256)                   | EC P-256 PEM private key | `mfa`                   |
+| `mfaPublicKey`         | MFA challenge token verification                      | EC P-256 PEM public key  | `mfa`                   |
+| `encryptionKey`        | AES-256-GCM encryption                                | 64 hex chars (32 bytes)  | `encryption-key`        |
+| `backupEncryptionKey`  | Backup file encryption                                | 64 hex chars (32 bytes)  | `backup-encryption-key` |
+| `cookieSecret`         | HKDF input for OAuth state/PKCE binding (not cookies) | 32+ chars                | `cookie-secret`         |
+| `applicationApiKey`    | Application-to-application API authentication         | 48+ chars                | `app-api-key`           |
 
 ### Manual Configuration
 
@@ -217,7 +224,8 @@ Run `bun run generate-keys` to auto-generate all keys, or edit `config/{appname}
 
 2. **Rotation Steps**
     - Stop application services
-    - Generate new keys: `bun run generate-keys`
+    - Generate new keys: `bun run generate-keys`, or `bun run generate-keys -- --only <group>` when
+      the rotation covers one key group
     - Keys are automatically updated in `config/{appname}.json`
     - If ENCRYPTION_KEY changed: Run data migration script (decrypt with old key, re-encrypt with new key)
     - Restart application services

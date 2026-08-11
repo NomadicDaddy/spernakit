@@ -264,6 +264,16 @@ If you run scripts in a derived application repo, ensure:
     - Generates cryptographically secure keys and updates the JSON config.
 - **Run**
     - `bun run generate-keys`
+    - `bun run generate-keys -- --only mfa` (one or more comma-separated key groups)
+- **Key groups**
+    - `app-api-key`, `backup-encryption-key`, `cookie-secret`, `encryption-key`, `jwt`,
+      `jwt-refresh`, `mfa`
+    - Without `--only` every group is rewritten, which signs all users out and makes data encrypted
+      under the old keys unreadable. Scope the run when only one field needs provisioning.
+    - The catalog and the `--only` parser live in `scripts/lib/key-groups.ts`.
+- **Notes**
+    - The config is rewritten in the indentation, line ending, and trailing-newline style it already
+      has, so a scoped repair changes only the lines it targets in a hand-maintained config.
 
 ### `wait-for-http.ts`
 

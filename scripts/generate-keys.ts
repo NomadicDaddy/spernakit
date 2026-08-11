@@ -5,81 +5,74 @@
  * Generates cryptographically secure keys including EC P-256 key pairs for JWT.
  * Updates the JSON config file (config/{appname}.json) with new keys.
  *
+ * Rotating a key that is already in use destroys whatever that key protects, so
+ * `--only` exists to keep a repair scoped to the field that actually needs one.
+ * The key catalog and the `--only` parser live in scripts/lib/key-groups.ts.
+ *
  * Usage:
- *   bun run generate-keys
+ *   bun run generate-keys                              # every key group
+ *   bun run generate-keys -- --only mfa                # one group
+ *   bun run generate-keys -- --only mfa,cookie-secret  # several groups
  */
 import fs from 'node:fs';
 import path from 'node:path';
 
-import {
-	type EcKeyPair,
-	generateEcKeyPair,
-	generateHexKey,
-	generateSecureKey,
-} from './lib/crypto-keys.ts';
-import { loadJsonConfig } from './load-json-config.js';
+import type { GroupName, SecuritySection } from './lib/key-groups.ts';
 
-interface GeneratedKeys {
-	APPLICATION_API_KEY: string;
-	BACKUP_ENCRYPTION_KEY: string;
-	COOKIE_SECRET: string;
-	ENCRYPTION_KEY: string;
-	JWT_KEY_PAIR: EcKeyPair;
-	JWT_REFRESH_KEY_PAIR: EcKeyPair;
-	MFA_KEY_PAIR: EcKeyPair;
-}
+import { PLACEHOLDER_PATTERN } from '../backend/src/config/configValidator-secrets-checks.ts';
+import { KEY_GROUPS, parseSelection } from './lib/key-groups.ts';
+import { loadJsonConfig } from './load-json-config.js';
 
 interface AppConfig {
 	[key: string]: unknown;
-	security: {
-		applicationApiKey?: string;
-		backupEncryptionKey?: string;
-		cookieSecret?: string;
-		encryptionKey?: string;
-		jwtPrivateKey?: string;
-		jwtPublicKey?: string;
-		jwtRefreshPrivateKey?: string;
-		jwtRefreshPublicKey?: string;
-		mfaPrivateKey?: string;
-		mfaPublicKey?: string;
-	};
+	security: SecuritySection;
 }
 
 const configDir = path.join(process.cwd(), 'config');
 const { appSlug } = loadJsonConfig();
 const configPath = path.join(configDir, `${appSlug}.json`);
-const PRIVATE_KEY_HEADER = '-----BEGIN ' + 'PRIVATE KEY-----';
 
-function generateAllKeys(): GeneratedKeys {
+function generateKeys(selected: GroupName[]): SecuritySection {
 	console.log('Generating secure cryptographic keys...\n');
 
-	const keys: GeneratedKeys = {
-		APPLICATION_API_KEY: generateSecureKey(48),
-		BACKUP_ENCRYPTION_KEY: generateHexKey(32),
-		COOKIE_SECRET: generateSecureKey(32),
-		ENCRYPTION_KEY: generateHexKey(32),
-		JWT_KEY_PAIR: generateEcKeyPair(),
-		JWT_REFRESH_KEY_PAIR: generateEcKeyPair(),
-		MFA_KEY_PAIR: generateEcKeyPair(),
-	};
-
+	const patch: SecuritySection = {};
 	console.log('Generated keys:');
-	console.log(`  APPLICATION_API_KEY: ${keys.APPLICATION_API_KEY.length} characters`);
-	console.log(`  BACKUP_ENCRYPTION_KEY: ${keys.BACKUP_ENCRYPTION_KEY.length} characters`);
-	console.log(`  COOKIE_SECRET: ${keys.COOKIE_SECRET.length} characters`);
-	console.log(`  ENCRYPTION_KEY: ${keys.ENCRYPTION_KEY.length} characters`);
-	console.log(`  JWT_KEY_PAIR: EC P-256 (ES256)`);
-	console.log(`  JWT_REFRESH_KEY_PAIR: EC P-256 (ES256)`);
-	console.log(`  MFA_KEY_PAIR: EC P-256 (ES256)`);
+	for (const name of selected) {
+		Object.assign(patch, KEY_GROUPS[name].generate());
+		console.log(`  ${KEY_GROUPS[name].label}`);
+	}
 
-	return keys;
+	return patch;
 }
 
-function readConfig(): AppConfig {
+function readConfigRaw(): string {
 	if (!fs.existsSync(configPath)) {
 		throw new Error(`Config file not found: ${configPath}`);
 	}
-	return JSON.parse(fs.readFileSync(configPath, 'utf8')) as AppConfig;
+	return fs.readFileSync(configPath, 'utf8');
+}
+
+function readConfig(): AppConfig {
+	return JSON.parse(readConfigRaw()) as AppConfig;
+}
+
+/**
+ * Read the indentation, line ending, and trailing newline of an existing config.
+ *
+ * Every other writer in the template builds `config/{slug}.json` from `defaults.json`,
+ * where the template's own tab style is the correct one. This script is the only one
+ * that edits a file someone else already owns, so a two-key repair here must not
+ * reformat a config an operator maintains by hand.
+ */
+function detectJsonStyle(raw: string): { eol: string; indent: string; trailingNewline: boolean } {
+	// The first indented line of a JSON object is a depth-1 key, so its leading
+	// whitespace is exactly one indent unit.
+	const firstIndent = /\n([ \t]+)"/.exec(raw)?.[1];
+	return {
+		eol: raw.includes('\r\n') ? '\r\n' : '\n',
+		indent: firstIndent ?? '\t',
+		trailingNewline: raw.endsWith('\n'),
+	};
 }
 
 /** Number of config backups to retain (newest first). */
@@ -113,46 +106,54 @@ function pruneOldBackups(): void {
 	}
 }
 
-function updateConfig(keys: GeneratedKeys): void {
+function updateConfig(patch: SecuritySection): void {
 	console.log('\nUpdating JSON config file...');
 
-	const config = readConfig();
-	config.security.jwtPrivateKey = keys.JWT_KEY_PAIR.privateKey;
-	config.security.jwtPublicKey = keys.JWT_KEY_PAIR.publicKey;
-	config.security.jwtRefreshPrivateKey = keys.JWT_REFRESH_KEY_PAIR.privateKey;
-	config.security.jwtRefreshPublicKey = keys.JWT_REFRESH_KEY_PAIR.publicKey;
-	config.security.mfaPrivateKey = keys.MFA_KEY_PAIR.privateKey;
-	config.security.mfaPublicKey = keys.MFA_KEY_PAIR.publicKey;
-	config.security.encryptionKey = keys.ENCRYPTION_KEY;
-	config.security.backupEncryptionKey = keys.BACKUP_ENCRYPTION_KEY;
-	config.security.cookieSecret = keys.COOKIE_SECRET;
-	config.security.applicationApiKey = keys.APPLICATION_API_KEY;
+	const raw = readConfigRaw();
+	const config = JSON.parse(raw) as AppConfig;
+	Object.assign(config.security, patch);
 
-	fs.writeFileSync(configPath, JSON.stringify(config, null, '\t'), 'utf8');
+	const { eol, indent, trailingNewline } = detectJsonStyle(raw);
+	// Every newline JSON.stringify emits is structural; newlines inside string
+	// values (PEM keys) are escaped as \n, so a blanket replace is safe.
+	let serialized = JSON.stringify(config, null, indent);
+	if (eol !== '\n') serialized = serialized.replaceAll('\n', eol);
+	if (trailingNewline) serialized += eol;
+
+	fs.writeFileSync(configPath, serialized, 'utf8');
 	console.log(`Config file updated: ${configPath}`);
 }
 
-function hasExistingKeys(): boolean {
-	if (fs.existsSync(configPath)) {
-		const config = JSON.parse(fs.readFileSync(configPath, 'utf8')) as AppConfig;
-		return Boolean(
-			config.security?.jwtPrivateKey &&
-			config.security.jwtPrivateKey.startsWith(PRIVATE_KEY_HEADER),
-		);
-	}
-	return false;
+/** A field is provisioned when it holds a real value rather than nothing or a placeholder marker. */
+function isProvisioned(value: string | undefined): boolean {
+	const trimmed = value?.trim() ?? '';
+	return trimmed.length > 0 && !PLACEHOLDER_PATTERN.test(trimmed);
+}
+
+/** Selected groups whose fields already hold real values, so rotating them destroys something. */
+function groupsInUse(selected: GroupName[]): GroupName[] {
+	if (!fs.existsSync(configPath)) return [];
+	const security = readConfig().security ?? {};
+	return selected.filter((name) =>
+		KEY_GROUPS[name].fields.some((field) => isProvisioned(security[field])),
+	);
 }
 
 function run(): void {
 	try {
-		console.log(`Secure Key Generator\n`);
-		console.log(`Config file: config/${appSlug}.json\n`);
+		const selected = parseSelection(process.argv.slice(2));
 
-		if (hasExistingKeys()) {
+		console.log(`Secure Key Generator\n`);
+		console.log(`Config file: config/${appSlug}.json`);
+		console.log(`Key groups: ${selected.join(', ')}\n`);
+
+		const inUse = groupsInUse(selected);
+		if (inUse.length > 0) {
 			console.log('WARNING: EXISTING KEYS DETECTED');
-			console.log('You are about to replace existing cryptographic keys.');
-			console.log('- All encrypted data will become UNREADABLE with new keys');
-			console.log('- All user sessions will be INVALIDATED immediately');
+			console.log('You are about to replace keys that are already in use:');
+			for (const name of inUse) {
+				console.log(`- ${name}: ${KEY_GROUPS[name].consequence}`);
+			}
 			console.log('- Application will need to be RESTARTED\n');
 
 			if (process.env['NODE_ENV'] === 'production') {
@@ -168,8 +169,7 @@ function run(): void {
 		}
 
 		backupConfig();
-		const keys = generateAllKeys();
-		updateConfig(keys);
+		updateConfig(generateKeys(selected));
 
 		console.log('\nKey generation completed successfully!');
 		console.log('Restart your application to use the new keys.');
