@@ -33,8 +33,8 @@ export function VitalCard({ vital }: VitalCardProps) {
 	const displayLatest = formatVital(vital.latest, vital.name);
 
 	return (
-		<Card>
-			<CardContent className="flex flex-col gap-2 p-4">
+		<Card className="py-4">
+			<CardContent className="flex flex-col gap-2 px-4">
 				<div className="flex items-center justify-between">
 					<p className="text-sm font-medium">{vital.name}</p>
 					{ratingBadge}

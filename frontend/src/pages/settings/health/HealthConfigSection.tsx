@@ -116,7 +116,7 @@ export function HealthConfigSection({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Health Check Configuration</CardTitle>
+				<CardTitle as="h3">Health Check Configuration</CardTitle>
 				<CardDescription>
 					Configure health check thresholds, alerting, enable/disable checks, and set log
 					retention. Changes require the SYSOP role.
@@ -193,27 +193,34 @@ export function HealthConfigSection({
 									</p>
 								</div>
 							))}
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="logRetention">Log Retention (Days)</Label>
-							<Input
-								autoComplete="off"
-								disabled={isPending}
-								id="logRetention"
-								min="1"
-								onChange={(e) => {
-									const value = Number.parseInt(e.target.value, 10);
-									if (value >= 1) {
-										void mutate({ logRetentionDays: value });
-									}
-								}}
-								step="1"
-								type="number"
-								value={config?.logRetentionDays ?? 30}
-							/>
-							<p className="text-xs text-muted-foreground">
-								Health check logs older than this will be automatically cleaned up
-							</p>
+							{/*
+							 * The fifth numeric field belongs in the same grid as the other four. On
+							 * its own in a bare `space-y-2` it stretched a single number input to the
+							 * full 1094px card to hold the two characters `30`, so the card stepped
+							 * 2-col, 2-col, 1-col-full-bleed for five fields of identical shape.
+							 */}
+							<div className="space-y-2">
+								<Label htmlFor="logRetention">Log Retention (Days)</Label>
+								<Input
+									autoComplete="off"
+									disabled={isPending}
+									id="logRetention"
+									min="1"
+									onChange={(e) => {
+										const value = Number.parseInt(e.target.value, 10);
+										if (value >= 1) {
+											void mutate({ logRetentionDays: value });
+										}
+									}}
+									step="1"
+									type="number"
+									value={config?.logRetentionDays ?? 30}
+								/>
+								<p className="text-xs text-muted-foreground">
+									Health check logs older than this will be automatically cleaned
+									up
+								</p>
+							</div>
 						</div>
 						<div className="space-y-3">
 							<Label>Enabled Checks</Label>

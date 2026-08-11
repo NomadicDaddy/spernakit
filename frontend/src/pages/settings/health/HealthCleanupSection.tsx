@@ -26,7 +26,7 @@ export function HealthCleanupSection({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Cleanup Actions</CardTitle>
+				<CardTitle as="h3">Cleanup Actions</CardTitle>
 				<CardDescription>
 					Cleanup old health check logs and resolve stale alerts.
 				</CardDescription>
@@ -37,14 +37,14 @@ export function HealthCleanupSection({
 						disabled={cleanupLogsMutation.isPending}
 						onClick={() => setShowCleanupLogsConfirm(true)}
 						variant="outline">
-						<Trash2 aria-hidden="true" className="mr-2 size-4" />
+						<Trash2 aria-hidden="true" className="size-4" />
 						Cleanup Old Logs
 					</Button>
 					<Button
 						disabled={cleanupAlertsMutation.isPending}
 						onClick={() => setShowResolveAlertsConfirm(true)}
 						variant="outline">
-						<CheckCircle2 aria-hidden="true" className="mr-2 size-4" />
+						<CheckCircle2 aria-hidden="true" className="size-4" />
 						Resolve Stale Alerts
 					</Button>
 				</div>
@@ -61,6 +61,7 @@ export function HealthCleanupSection({
 				}}
 				onOpenChange={setShowCleanupLogsConfirm}
 				title="Purge Health Check Logs"
+				variant="destructive"
 			/>
 
 			<ConfirmAlertDialog

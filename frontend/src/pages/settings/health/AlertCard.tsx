@@ -38,7 +38,7 @@ export function AlertCard({ alert }: AlertCardProps) {
 			<AlertTriangle
 				aria-hidden="true"
 				className={`mt-0.5 size-4 ${
-					alert.severity === 'critical' ? 'text-red-500' : 'text-yellow-500'
+					alert.severity === 'critical' ? 'text-destructive' : 'text-warning'
 				}`}
 			/>
 			<div className="flex-1">

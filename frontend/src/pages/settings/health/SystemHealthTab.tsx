@@ -1,6 +1,7 @@
 import { RefreshCw } from 'lucide-react';
 
 import { TimeRangeSelector } from '@/components/shared/charts/TimeRangeSelector';
+import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Button } from '@/components/ui/button';
 import {
 	useHealthConfig,
@@ -33,23 +34,19 @@ function SystemHealthTab() {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-lg font-semibold">System Health</h2>
-					<p className="text-sm text-muted-foreground">
-						Monitor system health checks and alerts.
-					</p>
-				</div>
+			<SectionHeader
+				description="Monitor system health checks and alerts."
+				title="System Health">
 				<Button
 					onClick={() => {
 						void refetchDetails();
 					}}
 					size="sm"
 					variant="outline">
-					<RefreshCw aria-hidden="true" className="mr-2 size-4" />
+					<RefreshCw aria-hidden="true" className="size-4" />
 					Refresh
 				</Button>
-			</div>
+			</SectionHeader>
 
 			<HealthConfigSection
 				config={config?.data}
@@ -77,13 +74,12 @@ function SystemHealthTab() {
 				historyLoading={historyLoading}
 			/>
 
-			<div className="flex items-center justify-between">
-				<div>
-					<h3 className="text-sm font-medium">Resource Usage Trends</h3>
-					<p className="text-xs text-muted-foreground">Historical CPU and memory usage</p>
-				</div>
+			<SectionHeader
+				description="Historical CPU and memory usage"
+				level="h3"
+				title="Resource Usage Trends">
 				<TimeRangeSelector onChange={setMetricsHours} value={metricsHours} />
-			</div>
+			</SectionHeader>
 
 			<div className="grid gap-4 md:grid-cols-2">
 				<HealthMetricsSection
