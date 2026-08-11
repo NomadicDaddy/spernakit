@@ -1,5 +1,6 @@
 import { lazyToast } from '@/lib/lazyToast';
 import { WebSocketManager } from '@/lib/websocket/manager';
+import { isAnonymousPath } from '@/routes/publicPaths';
 import { useAuthStore } from '@/stores/authStore';
 
 import { getCommonHeaders, getCsrfHeader } from './requestHelpers';
@@ -85,8 +86,15 @@ async function retryWithFreshToken(url: string, options: RequestInit): Promise<R
  *   → redirect to /login?expired=1 so the login page can show "your session expired"
  * - Cold-start anonymous 401 (user never had a session, initial /auth/me returned 401)
  *   → redirect to plain /login with no query params
+ *
+ * Routes that render without a session are exempt: a 401 there is the expected answer to an
+ * authenticated-only request, not an expiry. Without this guard a single ungated ambient query
+ * evicts an anonymous visitor from a public page — which is what a stray `getUserUiSettings()`
+ * did to every shared-dashboard link.
  */
 function handleSessionExpired(): void {
+	if (isAnonymousPath(window.location.pathname)) return;
+
 	if (!isLoggingOut) {
 		isLoggingOut = true;
 		WebSocketManager.getInstance().disconnect();

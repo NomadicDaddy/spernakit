@@ -26,52 +26,63 @@ import {
 	SettingsLayout,
 	SharedDashboardPage,
 	VerifyEmailPage,
+	WorkspaceBrandingTab,
+	WorkspaceDashboardTab,
+	WorkspaceGeneralTab,
 	WorkspaceManagementPage,
 	WorkspaceSettingsPage,
 } from '@/routes/lazyPages';
+import { PUBLIC_PATHS } from '@/routes/publicPaths';
 import { settingsRoutes } from '@/routes/settingsRoutes';
 
-/** Public auth and shared-dashboard routes that do not require authentication. */
+/**
+ * Public auth and shared-dashboard routes that do not require authentication.
+ *
+ * Paths come from `PUBLIC_PATHS` because the API layer consults the same list to decide
+ * whether a 401 is a session expiry or the expected answer on an anonymous page. Two hand-kept
+ * copies of that list drift, and the drift is invisible until a public route starts evicting
+ * its visitors.
+ */
 export const publicRoutes: RouteObject[] = [
 	{
 		element: <LazyPage Component={LoginPage} />,
-		path: '/login',
+		path: PUBLIC_PATHS.login,
 	},
 	{
 		element: <LazyPage Component={RegisterPage} />,
-		path: '/register',
+		path: PUBLIC_PATHS.register,
 	},
 	{
 		element: <LazyPage Component={ForcePasswordChangePage} />,
-		path: '/change-password',
+		path: PUBLIC_PATHS.changePassword,
 	},
 	{
 		element: <LazyPage Component={ResetPasswordPage} />,
-		path: '/forgot-password',
+		path: PUBLIC_PATHS.forgotPassword,
 	},
 	{
 		element: <LazyPage Component={ResetPasswordConfirmPage} />,
-		path: '/reset-password',
+		path: PUBLIC_PATHS.resetPassword,
 	},
 	{
 		element: <LazyPage Component={OAuthCallbackPage} />,
-		path: '/auth/callback',
+		path: PUBLIC_PATHS.authCallback,
 	},
 	{
 		element: <LazyPage Component={VerifyEmailPage} />,
-		path: '/verify-email',
+		path: PUBLIC_PATHS.verifyEmail,
 	},
 	{
 		element: <LazyPage Component={ConfirmEmailChangePage} />,
-		path: '/confirm-email-change',
+		path: PUBLIC_PATHS.confirmEmailChange,
 	},
 	{
 		element: <LazyPage Component={MfaVerifyPage} />,
-		path: '/mfa-verify',
+		path: PUBLIC_PATHS.mfaVerify,
 	},
 	{
 		element: <LazyPage Component={SharedDashboardPage} />,
-		path: '/dashboards/shared/:token',
+		path: PUBLIC_PATHS.sharedDashboard,
 	},
 ];
 
@@ -132,6 +143,24 @@ export const protectedAppRoutes: RouteObject[] = [
 		path: '/workspaces',
 	},
 	{
+		children: [
+			{
+				element: <Navigate replace to="general" />,
+				index: true,
+			},
+			{
+				element: <LazyPage Component={WorkspaceGeneralTab} />,
+				path: 'general',
+			},
+			{
+				element: <LazyPage Component={WorkspaceBrandingTab} />,
+				path: 'branding',
+			},
+			{
+				element: <LazyPage Component={WorkspaceDashboardTab} />,
+				path: 'dashboard',
+			},
+		],
 		element: <LazyPage Component={WorkspaceSettingsPage} />,
 		path: '/workspaces/:id/settings',
 	},
