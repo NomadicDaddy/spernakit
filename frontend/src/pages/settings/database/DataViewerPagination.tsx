@@ -15,8 +15,13 @@ function DataViewerPagination({
 }: DataViewerPaginationProps) {
 	if (totalPages <= 1) return null;
 
+	/*
+	 * A bordered band inside the table shell, in the same spelling as the shared
+	 * `DataTablePagination`. On the page background it was a third free-floating strip with nothing
+	 * tying it to the rows it counts.
+	 */
 	return (
-		<div className="flex items-center justify-between text-sm">
+		<div className="flex items-center justify-between border-t px-4 py-2 text-sm">
 			<span className="text-muted-foreground">
 				Page {page} of {totalPages} ({total} rows)
 			</span>

@@ -1,15 +1,33 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Database, Key, Search } from 'lucide-react';
+import { ChevronDown, Columns3, Database, Key, Search } from 'lucide-react';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
 
 import type { ColumnInfo, TableMetadata } from '@/api/databaseAdmin';
 
 import { getSchema, getTableDetails } from '@/api/databaseAdmin';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
+
+/**
+ * The scroll cap shared by both lists, in the viewport-relative idiom the ERD panel already uses.
+ *
+ * A fixed `max-h-[500px]` was a cap chosen against no particular screen, and on a tall one it was
+ * the thing keeping the lists short: at 1200px of viewport the cards had 654px of room and showed
+ * 500px of a 1088px list, leaving a large empty band below and 11 of 26 tables reachable without
+ * scrolling. `22rem` is the page chrome above and below these cards — header, tab rails, page
+ * heading, card headers, footer padding — so the cap tracks the window instead of ignoring it.
+ *
+ * `min-h` is the floor for short windows, where `100vh - 22rem` would collapse to a few rows. It
+ * beats `max-h` in the CSS cascade, so the pair reads as `max(24rem, 100vh - 22rem)`.
+ *
+ * Both cards get the identical value, which is what keeps them the same height: they are grid
+ * siblings whose content both overruns the cap, so both land exactly on it.
+ */
+const SCHEMA_LIST_HEIGHT = 'max-h-[calc(100vh-22rem)] min-h-[24rem]';
 
 interface SchemaExplorerPanelProps {
 	onSelectTable?: ((tableName: string) => void) | undefined;
@@ -60,7 +78,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 			{/* Table List */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="flex items-center gap-2 text-base">
+					<CardTitle className="flex items-center gap-2">
 						<Database aria-hidden="true" className="h-4 w-4" />
 						Tables ({tables.length})
 					</CardTitle>
@@ -81,7 +99,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 				</CardHeader>
 				<div className="relative">
 					<CardContent
-						className="max-h-[500px] space-y-1 overflow-y-auto"
+						className={`${SCHEMA_LIST_HEIGHT} space-y-1 overflow-y-auto`}
 						onScroll={() => {
 							const list = tableListRef.current;
 							if (list) {
@@ -127,15 +145,24 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 			{/* Column Details */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="text-base">
+					<CardTitle>
 						{selectedTable ? `Columns: ${selectedTable}` : 'Select a table'}
 					</CardTitle>
 				</CardHeader>
-				<CardContent className="max-h-[500px] overflow-y-auto">
+				<CardContent className={`${SCHEMA_LIST_HEIGHT} overflow-y-auto`}>
+					{/*
+					 * A 654px card holding one muted sentence is the exact case EmptyState's own
+					 * docblock names. `compact` because it sits inside a card that already has a
+					 * header, not as the whole page.
+					 */}
 					{!selectedTable && (
-						<p className="py-8 text-center text-sm text-muted-foreground">
-							Click a table to view its columns
-						</p>
+						<EmptyState
+							description="Pick a table from the list to inspect its columns, types, and foreign keys."
+							headingLevel="h3"
+							icon={Columns3}
+							title="No table selected"
+							variant="compact"
+						/>
 					)}
 					{selectedTable && isLoadingDetails && (
 						<ContentListSkeleton lineCount={5} lineHeight="h-12" spacing="space-y-2" />
@@ -207,19 +234,19 @@ function ColumnRow({
 				<span className="text-sm font-medium">{column.name}</span>
 				<span className="text-xs text-muted-foreground">{column.type}</span>
 			</div>
+			{/*
+			 * These three carried `text-[10px]` — an arbitrary value below the smallest step in the
+			 * scale — while the `N cols` / `N rows` badges 24px to the left used the Badge default,
+			 * so two badge sizes sat side by side in one panel.
+			 */}
 			<div className="flex items-center gap-1.5">
-				{column.notnull && (
-					<Badge className="text-[10px]" variant="destructive">
-						NOT NULL
-					</Badge>
-				)}
+				{/* A column constraint is metadata, not a fault — neutral, like FK beside it. */}
+				{column.notnull && <Badge variant="outline">NOT NULL</Badge>}
 				{column.defaultValue !== null && (
-					<Badge className="text-[10px]" variant="secondary">
-						{column.defaultValue}
-					</Badge>
+					<Badge variant="secondary">{column.defaultValue}</Badge>
 				)}
 				{fk && (
-					<Badge className="text-[10px]" variant="outline">
+					<Badge variant="outline">
 						FK → {fk.targetTable}.{fk.targetColumn}
 					</Badge>
 				)}
