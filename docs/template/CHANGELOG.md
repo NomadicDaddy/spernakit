@@ -3,6 +3,115 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [Unreleased]
+
+Rename this heading to the version being cut and bump `package.json` in the same change:
+`check:version-refs` and `check:fresh-release` both require the leading release heading to equal
+the package version, and neither one sees an `[Unreleased]` heading at all.
+
+### Added
+
+- A status vocabulary in the token layer. The app was reaching for raw palette utilities to colour
+  state, so "healthy" on `/settings/system-health` and "completed" on `/settings/scheduled-tasks`
+  were different greens. Badge now separates state (tinted success/warning/destructive, never a
+  saturated fill that cannot reach AA at 12px/500) from identity and metadata, which stay neutral,
+  and eslint rejects `hsl(var(--token))` under `src`: the themes are OKLCH, so an HSL wrapper
+  renders a different colour without failing.
+- `SectionHeader`, the rung between `PageHeader`'s `h1` and `CardTitle`. Section titles were
+  hand-rolled and had drifted — on `/settings/system-health` three peer sections rendered smaller
+  than the card titles they were heading.
+- `UnsavedChangesGuard`, replacing direct `useUnsavedChanges` calls. The hook returns a blocker
+  that renders nothing on its own, and two of its four call sites blocked navigation without
+  showing a dialog, trapping the user on the page with no way out.
+- `OptionCard`/`OptionCardGroup`, `RequiredMark`, and `SettingsNumberField`/`SettingsToggleRow`.
+  The auth policy form declared the same labelled numeric field five times across three files,
+  each capping its input at a hard 320px that left most of the row empty at wide viewports.
+- A filter on runtime config, with the field list and the matching predicate as separate modules
+  so a section card drops out whole when nothing inside it matches.
+- Server-side filtering on the bug triage inbox: `status`, `kind`, and description `search` are
+  query parameters applied in SQL, plus a status-update endpoint behind the inline selector.
+
+### Changed
+
+- `CardTitle` renders an `h2` by default instead of a `div`, and takes `as` for the rest of the
+  ladder. It was heading appearance with no heading semantics, so most pages had exactly one
+  heading in `<main>`. `EmptyState` and the chart components now take their heading level from the
+  caller instead of assuming one.
+- `DataTable` composes `DataTableEmptyRow` from a grouped `empty` prop in both the paginated and
+  the virtualized body, where it previously drew a bare "No results." cell. The paginated body
+  moves to `DataTableRows`, bringing `DataTable` back under the 300-line cap.
+- Each workspace settings tab is its own route, sharing state through `useWorkspaceSettings`.
+  Member records carry the member's email, so a row can identify a person without printing a row id.
+- Profile preferences group into cards by topic. Thirteen controls previously occupied seven
+  full-width card headers and roughly 1847px of scroll.
+- Audit records render through one `auditAction` helper on both `/settings/audit-logs` and the
+  dashboard's Recent activity card, which had shown the same data in two visual languages. POST
+  drops from `default` to neutral, which had made every create look clickable.
+- Scheduled tasks, backups, workspaces, and users build their tables through `DataTable` and
+  per-surface column hooks, matching the rest of settings.
+- `TabLayout` tracks overflow separately from scroll position, so the scroll arrows and gradient
+  fades appear only on a tab strip that actually scrolls, and it accepts breadcrumbs.
+- The analytics time ranges are named once in `timeRange.ts`, and each KPI tile states its own
+  window — a row mixing range-scoped metrics with fixed-window ones (DAU, MAU) read as four tiles
+  governed by one selector.
+
+### Fixed
+
+- Saving a dashboard layout wrote geometry for every widget on the board, including ones the user
+  never touched, because `onLayoutChange` also fires for react-grid-layout's own reflow. Edits are
+  tracked in `dirtyIds` and committed through `commitLayoutEdit`. The rebuild is keyed on the
+  dashboard id plus its sorted widget ids: `updateDashboard` soft-deletes and re-inserts every
+  widget, so the old identity check saw all-new children and reflowed each unmatched one to
+  `{x:0, w:1, h:1}`.
+- A dashboard with a `NULL` workspace_id — what `importDashboard` and `createFromTemplate` document
+  as "global" — was invisible from every workspace, because `eq(workspaceId, active)` never matches
+  `NULL` in SQL. The list omitted it and the detail route answered 404 for a dashboard the same
+  user owned. `workspaceScope` now matches `NULL` alongside the active workspace.
+- `tokenRefresh`'s global 401 handler consults `PUBLIC_PATHS` (moved to a leaf module so the API
+  layer can read it without pulling in the router). On a page a visitor reaches with no session, a
+  401 is the expected answer, not an expired session — a stray `getUserUiSettings()` was logging
+  shared-dashboard visitors out and hard-navigating them to `/login`. The route announcer skips
+  opaque segments, so `/dashboards/shared/:token` no longer titles the tab with a 64-character hex
+  string.
+- The ERD's `fitToView` measured the host's `clientHeight` — the height the diagram had already
+  been scaled into — so an already-fitting diagram shrank to about 97% of itself, and again on
+  every click. It derives the budget from the host's computed max-height/min-height, fits once on
+  load, and sits in a named, keyboard-reachable scroll region rather than a div only a mouse could
+  pan.
+- `useUrlFilters` gains `setFilters`. React Router resolves the updater against a snapshot
+  refreshed only on render, so two `setFilter` calls in one handler silently cancelled — which is
+  why Clear-all buttons left a filter behind.
+- The bug triage table filtered client-side over the twenty rows already fetched while the footer
+  reported the server's unfiltered total, so it could say "No results." directly above
+  "Showing 1-2 of 2".
+- `dashboardGrid.css` replaces react-grid-layout's light-theme affordances — a black-on-charcoal
+  resize handle hidden until hover, and a `background: red` drop placeholder that read as an error
+  — with app tokens, and `WidgetFrame` stops single-value widgets amputating their digits at the
+  shortest row heights. `OptionCard`'s selection ring gains `ring-offset-background`, which it
+  lacked, so a selected option no longer carries a hard white halo in a dark app.
+- Health status drew a coloured `size-4` glyph beside its badge — two marks saying one thing, on
+  eleven rows of a surface that otherwise reserves colour for exceptions. The glyph moves inside
+  the badge. `healthStatusUtils` drops its `.tsx` extension now that it exports no component; a
+  module exporting both loses fast refresh.
+- The shared-core checker rejects a group whose `source` and `fallbackSource` are byte-identical.
+  It previously kept running and compared every target against a file that no longer distinguished
+  anything: the `ensureHistoryGuard` corruption on 2026-08-09 surfaced as 16 DIVERGED-HOOK findings
+  filed against the wrong repositories, with nothing in the run naming the manifest as the problem.
+- `license-core-adapter-targets.json.example` is tracked, which `assertRosterHygiene` requires of
+  every declared roster group. The group was registered without it, so `test:shared-core-write`
+  failed 1 of 74 assertions at v3.39.1.
+
+### Documentation
+
+- `bun run check-docs` is corrected to `bun run check:docs` in `docs/README.md`,
+  `docs/template/DEVELOPMENT.md`, `docs/template/README.md`, and the usage comment in
+  `scripts/check-docs.ts`. The rename shipped in 3.30.0 and these four sites were missed.
+- `scripts/smoke.md` drops a `bun run clear-logs` row for a script that does not exist.
+- The `docs/template/STACK.md` "Template Version" line is now a checked claim site in
+  `check:version-refs`, which brings the gate to six sites. It had sat at v3.29.0 — the same class
+  of drift the gate was written for.
+- The `docs/template/DEPLOYMENT.md` Compose example no longer pins `spernakit-test:3.21.0`.
+
 ## [3.39.1] - 2026-08-09
 
 ### Fixed
