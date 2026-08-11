@@ -1,12 +1,12 @@
 import type { BugReportKind, BugReportStatus } from 'spernakit-shared';
 
-import { count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq } from 'drizzle-orm';
 
 import type { PaginatedResponse } from '../utils/dbHelpers.ts';
 
 import { getDb } from '../db/index.ts';
 import { bugReports } from '../db/schema/bugReports.ts';
-import { paginatedQuery } from '../utils/dbHelpers.ts';
+import { escapeLikePattern, likeEscaped, paginatedQuery } from '../utils/dbHelpers.ts';
 import { logger } from '../utils/logger.ts';
 import { getUserById } from './userService.ts';
 
@@ -22,6 +22,14 @@ interface SubmitBugInput {
 	kind?: BugReportKind | undefined;
 	metadata?: Record<string, unknown> | undefined;
 	userId: number;
+}
+
+/** Triage filters for {@link list}. An omitted field is not constrained. */
+interface ListFilters {
+	kind?: BugReportKind | undefined;
+	/** Free-text substring match over the report description. */
+	search?: string | undefined;
+	status?: BugReportStatus | undefined;
 }
 
 interface StatusUpdateResult {
@@ -96,12 +104,36 @@ function submit(input: SubmitBugInput): BugReport {
 /**
  * Lists bug reports with pagination, newest first.
  *
+ * The filters are applied in SQL rather than left to the caller because the list is paginated:
+ * a triage view that filtered the twenty rows it had been handed would narrow the page, not the
+ * inbox, and the total it reported alongside would be counting something else entirely.
+ *
+ * `search` is here for that exact reason. The triage table used to pass `searchColumn` to
+ * `DataTable`, which is a client-side TanStack filter, so typing in the box hid rows from the
+ * current page of twenty while the footer kept reporting the server's unfiltered total — the
+ * table said "No results." above "Showing 1-2 of 2". Matching in SQL keeps the rows and the
+ * count answering the same question.
+ *
  * @param page - Page number (1-based)
  * @param limit - Maximum number of items per page
+ * @param filters - Optional triage filters; an omitted field matches every value
  * @returns Paginated bug reports with total count
  */
-function list(page: number, limit: number): PaginatedResponse<BugReport> {
+function list(
+	page: number,
+	limit: number,
+	filters: ListFilters = {},
+): PaginatedResponse<BugReport> {
 	const db = getDb();
+	const conditions = [
+		...(filters.status ? [eq(bugReports.status, filters.status)] : []),
+		...(filters.kind ? [eq(bugReports.kind, filters.kind)] : []),
+		...(filters.search
+			? [likeEscaped(bugReports.description, `%${escapeLikePattern(filters.search)}%`)]
+			: []),
+	];
+	const where = conditions.length > 0 ? and(...conditions) : undefined;
+
 	return paginatedQuery(
 		page,
 		limit,
@@ -109,11 +141,12 @@ function list(page: number, limit: number): PaginatedResponse<BugReport> {
 			db
 				.select()
 				.from(bugReports)
+				.where(where)
 				.orderBy(desc(bugReports.createdAt))
 				.limit(limitNum)
 				.offset(offset)
 				.all(),
-		() => db.select({ count: count() }).from(bugReports).get(),
+		() => db.select({ count: count() }).from(bugReports).where(where).get(),
 	);
 }
 
@@ -153,4 +186,4 @@ function updateStatus(id: number, status: BugReportStatus): StatusUpdateResult |
 }
 
 export { list, submit, updateStatus };
-export type { BugReport, StatusUpdateResult, SubmitBugInput };
+export type { BugReport, ListFilters, StatusUpdateResult, SubmitBugInput };

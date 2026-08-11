@@ -210,7 +210,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					<Button disabled={isSubmitting} onClick={() => void handleSubmit()}>
 						{isSubmitting ? (
 							<>
-								<Spinner className="mr-2" size={16} />
+								<Spinner size={16} />
 								Submitting…
 							</>
 						) : (
