@@ -37,7 +37,10 @@ function AuthPageLayout({ children, description, title }: AuthPageLayoutProps) {
 				<BackendUnreachableBanner />
 				<Card className="w-full" variant="elevated">
 					<CardHeader className="text-center">
-						<CardTitle className="text-display text-3xl">{title}</CardTitle>
+						{/* Auth pages have no PageHeader, so this card title is the page's h1. */}
+						<CardTitle as="h1" className="text-display text-3xl">
+							{title}
+						</CardTitle>
 						{description && <CardDescription>{description}</CardDescription>}
 					</CardHeader>
 					{children}

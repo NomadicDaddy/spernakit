@@ -14,7 +14,7 @@ export function UsernameHint({ status }: UsernameHintProps) {
 	switch (status) {
 		case 'available':
 			content = (
-				<p className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+				<p className="flex items-center gap-1 text-xs text-success">
 					<Check aria-hidden className="size-3" />
 					Username is available
 				</p>
@@ -37,7 +37,7 @@ export function UsernameHint({ status }: UsernameHintProps) {
 			break;
 		case 'taken':
 			content = (
-				<p className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
+				<p className="flex items-center gap-1 text-xs text-destructive">
 					<X aria-hidden className="size-3" />
 					Username is already taken
 				</p>

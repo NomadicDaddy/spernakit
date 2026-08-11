@@ -56,36 +56,50 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 		},
 	});
 
+	/*
+	 * Inline, under the field that is wrong, in the same `text-xs text-destructive` treatment the
+	 * email form uses for the same class of problem. Both of these were toasts, so one page carried
+	 * two error models: a message pinned to the offending control in one card, and a message that
+	 * floated in over the corner of the screen in the next.
+	 */
+	const mismatchError =
+		confirmPassword.length > 0 && newPassword !== confirmPassword
+			? 'Passwords do not match'
+			: null;
+	const complexityError = newPassword
+		? validatePasswordComplexity(newPassword, { requireSpecialCharacter })
+		: null;
+
+	/*
+	 * Disabled until it can succeed, matching the two cards above it. This button used to render at
+	 * full brightness with all three fields blank, so the page showed one "ready" primary action
+	 * that was not ready beside two that correctly were not.
+	 */
+	const canSubmit =
+		!passwordMutation.isPending &&
+		currentPassword.length > 0 &&
+		newPassword.length > 0 &&
+		confirmPassword.length > 0 &&
+		!mismatchError &&
+		!complexityError;
+
 	function handlePasswordSubmit(e: React.FormEvent) {
 		e.preventDefault();
-		if (newPassword !== confirmPassword) {
-			toast.error(
-				'Passwords do not match. Please re-enter your new password in both fields.',
-			);
-			return;
-		}
-		const complexityError = validatePasswordComplexity(newPassword, {
-			requireSpecialCharacter,
-		});
-		if (complexityError) {
-			toast.error(complexityError, {
-				description: 'Choose a password that meets all complexity requirements.',
-			});
-			return;
-		}
+		if (!canSubmit) return;
 		passwordMutation.mutate({ currentPassword, newPassword });
 	}
 
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Change Password</CardTitle>
-				<CardDescription>Enter your current password and choose a new one</CardDescription>
+				{/* Sentence case, matching the cards already on this tab. */}
+				<CardTitle>Change password</CardTitle>
+				<CardDescription>Enter your current password and choose a new one.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form className="space-y-4" onSubmit={handlePasswordSubmit}>
-					<div className="space-y-2">
-						<Label htmlFor="currentPassword">Current Password</Label>
+					<div className="max-w-sm space-y-2">
+						<Label htmlFor="currentPassword">Current password</Label>
 						<Input
 							autoComplete="current-password"
 							id="currentPassword"
@@ -99,8 +113,8 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 							value={currentPassword}
 						/>
 					</div>
-					<div className="space-y-2">
-						<Label htmlFor="newPassword">New Password</Label>
+					<div className="max-w-sm space-y-2">
+						<Label htmlFor="newPassword">New password</Label>
 						<Input
 							autoComplete="new-password"
 							id="newPassword"
@@ -112,11 +126,22 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 							required
 							type="password"
 							value={newPassword}
+							{...(complexityError ? { 'aria-invalid': true } : {})}
+							{...(complexityError
+								? { 'aria-describedby': 'new-password-error' }
+								: {})}
 						/>
 						<PasswordStrengthIndicator password={newPassword} />
+						<div aria-live="polite">
+							{complexityError ? (
+								<p className="text-xs text-destructive" id="new-password-error">
+									{complexityError}
+								</p>
+							) : null}
+						</div>
 					</div>
-					<div className="space-y-2">
-						<Label htmlFor="confirmPassword">Confirm New Password</Label>
+					<div className="max-w-sm space-y-2">
+						<Label htmlFor="confirmPassword">Confirm new password</Label>
 						<Input
 							autoComplete="new-password"
 							id="confirmPassword"
@@ -128,10 +153,21 @@ export function PasswordForm({ onDirtyChange }: PasswordFormProps) {
 							required
 							type="password"
 							value={confirmPassword}
+							{...(mismatchError ? { 'aria-invalid': true } : {})}
+							{...(mismatchError
+								? { 'aria-describedby': 'confirm-password-error' }
+								: {})}
 						/>
+						<div aria-live="polite">
+							{mismatchError ? (
+								<p className="text-xs text-destructive" id="confirm-password-error">
+									{mismatchError}
+								</p>
+							) : null}
+						</div>
 					</div>
-					<Button disabled={passwordMutation.isPending} type="submit">
-						{passwordMutation.isPending ? 'Changing…' : 'Change Password'}
+					<Button disabled={!canSubmit} type="submit">
+						{passwordMutation.isPending ? 'Changing…' : 'Change password'}
 					</Button>
 				</form>
 			</CardContent>

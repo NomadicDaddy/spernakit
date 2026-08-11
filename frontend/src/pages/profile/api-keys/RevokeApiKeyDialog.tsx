@@ -39,6 +39,7 @@ function RevokeApiKeyDialog({ onClose, target, userId }: RevokeApiKeyDialogProps
 			onConfirm={() => target && revokeMutation.mutate(target.id)}
 			onOpenChange={(open) => !open && onClose()}
 			title="Revoke API Key"
+			variant="destructive"
 		/>
 	);
 }

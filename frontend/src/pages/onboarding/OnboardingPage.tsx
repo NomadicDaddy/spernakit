@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { BookOpen, CheckCircle2, LayoutDashboard, Rocket, Shield, Users } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
 import {
@@ -13,142 +13,13 @@ import {
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthorization } from '@/hooks/useAuthorization';
-import { useFormatters } from '@/hooks/useFormatters';
 
 import { OnboardingChecklist } from './OnboardingChecklist';
-
-function QuickStartCard({
-	description,
-	icon: Icon,
-	link,
-	title,
-}: {
-	description: string;
-	icon: React.ComponentType<{ 'aria-hidden'?: 'false' | 'true' | boolean; className?: string }>;
-	link: string;
-	title: string;
-}) {
-	return (
-		<Card className="relative" interactive>
-			<CardContent className="flex items-start gap-3 pt-6">
-				<Icon aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-				<div>
-					<p className="font-medium">
-						<Link className="after:absolute after:inset-0" to={link}>
-							{title}
-						</Link>
-					</p>
-					<p className="text-sm text-muted-foreground">{description}</p>
-				</div>
-			</CardContent>
-		</Card>
-	);
-}
-
-function TipCard({ text, title }: { text: string; title: string }) {
-	return (
-		<div className="flex items-start gap-3 rounded-lg bg-muted/50 p-4">
-			<BookOpen
-				aria-hidden="true"
-				className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-			/>
-			<div>
-				<p className="text-sm font-medium">{title}</p>
-				<p className="text-sm text-muted-foreground">{text}</p>
-			</div>
-		</div>
-	);
-}
-
-function OnboardingCompletionBanner({
-	completedAt,
-	isResetPending,
-	onReset,
-	showReset,
-}: {
-	completedAt: null | string | undefined;
-	isResetPending: boolean;
-	onReset: () => void;
-	showReset: boolean;
-}) {
-	const { formatDate } = useFormatters();
-	return (
-		<Card className="border-primary/20 bg-primary/5">
-			<CardContent className="flex items-center gap-3 pt-6">
-				<CheckCircle2 aria-hidden="true" className="h-6 w-6 shrink-0 text-primary" />
-				<div className="flex-1">
-					<p className="font-medium">Onboarding Complete</p>
-					<p className="text-sm text-muted-foreground">
-						Completed on {completedAt ? formatDate(completedAt) : 'unknown date'}
-					</p>
-				</div>
-				{showReset && (
-					<Button disabled={isResetPending} onClick={onReset} size="sm" variant="outline">
-						Reset
-					</Button>
-				)}
-			</CardContent>
-		</Card>
-	);
-}
-
-function OnboardingQuickStart({ isSysop }: { isSysop: boolean }) {
-	return (
-		<div>
-			<h2 className="mb-3 text-lg font-semibold">Quick Start</h2>
-			<div className="grid gap-3 sm:grid-cols-2">
-				<QuickStartCard
-					description="Invite team members and assign roles."
-					icon={Users}
-					link="/settings/users"
-					title="Manage Users"
-				/>
-				{isSysop && (
-					<QuickStartCard
-						description="Configure security and authentication settings."
-						icon={Shield}
-						link="/settings/authentication"
-						title="Security Settings"
-					/>
-				)}
-				<QuickStartCard
-					description="View the main application dashboard."
-					icon={LayoutDashboard}
-					link="/dashboard"
-					title="View Dashboard"
-				/>
-			</div>
-		</div>
-	);
-}
-
-function OnboardingTips() {
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="text-base">Tips & Best Practices</CardTitle>
-				<CardDescription>Helpful guidance as you set up your application.</CardDescription>
-			</CardHeader>
-			<CardContent className="space-y-3">
-				<TipCard
-					text="Change the default sysop password immediately after your first login for security."
-					title="Change Default Passwords"
-				/>
-				<TipCard
-					text="Set up roles and permissions before inviting your team to ensure proper access control."
-					title="Set Up Roles First"
-				/>
-				<TipCard
-					text="Assign the least-privileged role to each team member. Use VIEWER for read-only access."
-					title="Follow Least Privilege"
-				/>
-			</CardContent>
-		</Card>
-	);
-}
+import { OnboardingCompletionBanner } from './OnboardingCompletionBanner';
+import { OnboardingQuickStart } from './OnboardingQuickStart';
+import { OnboardingTips } from './OnboardingTips';
 
 function OnboardingPage() {
 	const queryClient = useQueryClient();
@@ -208,8 +79,34 @@ function OnboardingPage() {
 					<>
 						Welcome to <span translate="no">{__APP_NAME__}</span>
 					</>
-				}
-			/>
+				}>
+				{/*
+				 * Page-level administration belongs in the page header, not in the checklist's
+				 * footer. Inside the card, "Reset Onboarding" was the only button-weight control in
+				 * the whole panel — so the undo action was the loudest thing on the page while the
+				 * action it wants you to take was a 14px text link buried mid-row.
+				 */}
+				{!status?.isComplete && isAdmin() && (
+					<>
+						<Button
+							disabled={resetMutation.isPending}
+							onClick={() => setShowResetConfirm(true)}
+							size="sm"
+							variant="outline">
+							Reset Onboarding
+						</Button>
+						{allComplete && (
+							<Button
+								disabled={completeMutation.isPending}
+								onClick={() => completeMutation.mutate()}
+								size="sm">
+								<Rocket aria-hidden="true" className="size-4" />
+								{completeMutation.isPending ? 'Completing…' : 'Complete Onboarding'}
+							</Button>
+						)}
+					</>
+				)}
+			</PageHeader>
 
 			{status?.isComplete && (
 				<OnboardingCompletionBanner
@@ -220,35 +117,7 @@ function OnboardingPage() {
 				/>
 			)}
 
-			{!status?.isComplete && (
-				<OnboardingChecklist
-					action={
-						isAdmin() ? (
-							<div className="flex items-center gap-2">
-								<Button
-									disabled={resetMutation.isPending}
-									onClick={() => setShowResetConfirm(true)}
-									size="sm"
-									variant="outline">
-									Reset Onboarding
-								</Button>
-								{allComplete && (
-									<Button
-										disabled={completeMutation.isPending}
-										onClick={() => completeMutation.mutate()}
-										size="lg">
-										<Rocket aria-hidden="true" className="mr-2 h-4 w-4" />
-										{completeMutation.isPending
-											? 'Completing…'
-											: 'Complete Onboarding'}
-									</Button>
-								)}
-							</div>
-						) : undefined
-					}
-					steps={steps}
-				/>
-			)}
+			{!status?.isComplete && <OnboardingChecklist steps={steps} />}
 
 			{!status?.isComplete && <OnboardingQuickStart isSysop={isSysop()} />}
 
@@ -262,6 +131,7 @@ function OnboardingPage() {
 				onConfirm={() => resetMutation.mutate()}
 				onOpenChange={setShowResetConfirm}
 				title="Reset Onboarding"
+				variant="destructive"
 			/>
 		</div>
 	);

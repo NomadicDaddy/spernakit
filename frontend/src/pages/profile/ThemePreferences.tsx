@@ -3,10 +3,12 @@ import { Monitor, Moon, Sun } from 'lucide-react';
 import type { AppTheme } from '@/lib/themes';
 import type { ThemeMode } from '@/stores/themeStore';
 
-import { Button } from '@/components/ui/button';
+import { OptionCard } from '@/components/shared/OptionCard';
+import { OptionCardGroup } from '@/components/shared/OptionCardGroup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_THEMES } from '@/lib/themes';
-import { cn } from '@/lib/utils';
+
+import { PreferenceGroup } from './PreferenceGroup';
 
 type ThemePreferencesProps = {
 	appTheme: AppTheme;
@@ -22,6 +24,9 @@ const themeOptions: { icon: React.ReactNode; label: string; value: ThemeMode }[]
 	{ icon: <Monitor aria-hidden="true" className="size-5" />, label: 'System', value: 'system' },
 ];
 
+/**
+ * The Appearance group: colour scheme and accent, previously two separate full-width cards.
+ */
 function ThemePreferences({
 	appTheme,
 	disabled,
@@ -30,69 +35,60 @@ function ThemePreferences({
 	themeMode,
 }: ThemePreferencesProps) {
 	return (
-		<>
-			<Card>
-				<CardHeader>
-					<CardTitle>Theme</CardTitle>
-					<CardDescription>Choose your preferred color scheme</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="flex gap-3">
+		<Card>
+			<CardHeader>
+				<CardTitle>Appearance</CardTitle>
+				<CardDescription>How the app looks to you on this account</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				<PreferenceGroup
+					description="Follow your system setting, or pick one."
+					label="Color scheme"
+					labelId="pref-color-scheme">
+					<OptionCardGroup
+						className="grid gap-3 sm:grid-cols-3"
+						labelledBy="pref-color-scheme">
 						{themeOptions.map((option) => (
-							<Button
-								aria-pressed={themeMode === option.value}
-								className={cn(
-									'flex items-center gap-2',
-									themeMode === option.value &&
-										'ring-2 ring-primary ring-offset-2',
-								)}
+							<OptionCard
+								disabled={disabled}
+								icon={option.icon}
 								key={option.value}
-								onClick={() => onThemeModeChange(option.value)}
-								variant={themeMode === option.value ? 'default' : 'outline'}>
-								{option.icon}
-								{option.label}
-							</Button>
+								label={option.label}
+								onSelect={() => onThemeModeChange(option.value)}
+								selected={themeMode === option.value}
+							/>
 						))}
-					</div>
-				</CardContent>
-			</Card>
+					</OptionCardGroup>
+				</PreferenceGroup>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>App Theme</CardTitle>
-					<CardDescription>Choose your preferred color accent</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+				<PreferenceGroup
+					description="The accent colour used for primary actions and highlights."
+					label="Accent"
+					labelId="pref-accent">
+					{/*
+					 * Auto-fill, not fixed column counts. `xl:grid-cols-6` made the layout worse
+					 * as the window grew: at 1280 it forced six columns of ~200px and the
+					 * "Monochrome" label overflowed its tile by 13px, so 1280 looked worse than
+					 * 1024. 14rem is the width the longest label plus its swatch needs.
+					 */}
+					<OptionCardGroup
+						className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3"
+						labelledBy="pref-accent">
 						{APP_THEMES.map((theme) => (
-							<button
-								aria-pressed={appTheme === theme.value}
-								className={cn(
-									'flex items-center gap-3 rounded-lg border p-3 text-left transition-colors',
-									appTheme === theme.value
-										? 'border-primary ring-2 ring-primary ring-offset-2'
-										: 'border-border hover:border-primary/50',
-								)}
+							<OptionCard
+								description={theme.description}
 								disabled={disabled}
 								key={theme.value}
-								onClick={() => onAppThemeChange(theme.value)}
-								type="button">
-								<div
-									className="size-8 shrink-0 rounded-full"
-									style={{ backgroundColor: theme.preview }}
-								/>
-								<div className="min-w-0">
-									<div className="text-sm font-medium">{theme.label}</div>
-									<div className="text-xs leading-snug text-muted-foreground">
-										{theme.description}
-									</div>
-								</div>
-							</button>
+								label={theme.label}
+								onSelect={() => onAppThemeChange(theme.value)}
+								selected={appTheme === theme.value}
+								swatch={theme.preview}
+							/>
 						))}
-					</div>
-				</CardContent>
-			</Card>
-		</>
+					</OptionCardGroup>
+				</PreferenceGroup>
+			</CardContent>
+		</Card>
 	);
 }
 

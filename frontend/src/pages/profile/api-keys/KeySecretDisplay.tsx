@@ -63,7 +63,7 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 				className="w-full"
 				onClick={() => downloadCredentials(result)}
 				variant="outline">
-				<Download aria-hidden="true" className="mr-2 size-4" />
+				<Download aria-hidden="true" className="size-4" />
 				Download Credentials
 			</Button>
 			<div className="space-y-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">

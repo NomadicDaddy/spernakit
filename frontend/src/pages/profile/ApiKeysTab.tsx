@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { ApiKey } from '@/api/types';
 
 import { listApiKeys } from '@/api/apiKeys';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,24 +35,42 @@ function ApiKeysTab() {
 		<>
 			<Card>
 				<CardHeader className="flex flex-row items-center justify-between">
-					<div>
+					{/*
+					 * `space-y-1` and a `text-base` title, matching the dashboard cards that use
+					 * this same header-with-trailing-action pattern. The header override turns the
+					 * card's own grid into a flex row, which drops the `gap-2` that normally
+					 * separates the title from its description — they rendered welded together at
+					 * a 0px gap, with the title at the same 14px as the muted line beneath it.
+					 */}
+					<div className="space-y-1">
 						<CardTitle>API Keys</CardTitle>
 						<CardDescription>Manage API keys for programmatic access</CardDescription>
 					</div>
 					<Button onClick={() => setShowCreate(true)} size="sm">
-						<Plus aria-hidden="true" className="mr-2 h-4 w-4" />
+						<Plus aria-hidden="true" className="h-4 w-4" />
 						Generate Key
 					</Button>
 				</CardHeader>
 				<CardContent>
 					{keys.length === 0 ? (
-						<div className="flex flex-col items-center gap-2 py-8 text-center text-muted-foreground">
-							<Key aria-hidden="true" className="h-8 w-8" />
-							<p>No API keys yet</p>
-							<p className="text-sm">
-								Generate a key to access the API programmatically
-							</p>
-						</div>
+						/*
+						 * The shared EmptyState, not a hand-rolled stack. The inline version put its
+						 * title and its description at the same size, weight and colour, so the
+						 * block had no internal hierarchy at all — and /files and /dashboard show
+						 * the tinted icon tile and dashed panel for exactly this situation.
+						 */
+						<EmptyState
+							action={
+								<Button onClick={() => setShowCreate(true)} size="sm">
+									<Plus aria-hidden="true" className="size-4" />
+									Generate Key
+								</Button>
+							}
+							description="Generate a key to access the API programmatically."
+							headingLevel="h3"
+							icon={Key}
+							title="No API keys yet"
+						/>
 					) : (
 						<div className="space-y-3">
 							{keys.map((key) => (

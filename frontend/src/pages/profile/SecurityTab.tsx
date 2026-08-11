@@ -11,6 +11,7 @@ import {
 } from '@/api/mfa';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { Spinner } from '@/components/shared/Spinner';
+import { UnsavedChangesGuard } from '@/components/shared/UnsavedChangesGuard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +27,7 @@ import { Label } from '@/components/ui/label';
 
 import { CopyButton } from './CopyButton';
 import { MfaSetupDialog } from './MfaSetupDialog';
+import { PasswordForm } from './PasswordForm';
 
 const MFA_STATUS_KEY = ['auth', 'mfa', 'status'] as const;
 
@@ -42,6 +44,7 @@ function SecurityTab() {
 	const [regenCode, setRegenCode] = useState('');
 	const [regenerating, setRegenerating] = useState(false);
 	const [newRecoveryCodes, setNewRecoveryCodes] = useState<null | RecoveryCodesResult>(null);
+	const [passwordDirty, setPasswordDirty] = useState(false);
 
 	const refresh = () => {
 		void queryClient.invalidateQueries({ queryKey: MFA_STATUS_KEY });
@@ -101,8 +104,14 @@ function SecurityTab() {
 							: 'Add an extra layer of security by requiring a one-time code from an authenticator app at sign-in.'}
 					</CardDescription>
 				</CardHeader>
-				<CardContent className="space-y-2">
-					{!serverConfigured && (
+				{/*
+				 * Rendered only when it has something in it. `CardContent` was unconditional while
+				 * its only child was gated, so in the normal server-configured state it was a
+				 * zero-height div that still collected the card's 24px flex gap on both sides —
+				 * a 48px hole between the description and the button, double the card's own rhythm.
+				 */}
+				{!serverConfigured && (
+					<CardContent>
 						<p className="text-xs text-muted-foreground">
 							MFA is not configured on this server yet. Run{' '}
 							<code
@@ -112,8 +121,8 @@ function SecurityTab() {
 							</code>{' '}
 							to provision the MFA signing key.
 						</p>
-					)}
-				</CardContent>
+					</CardContent>
+				)}
 				{!enabled && (
 					<CardFooter>
 						<Button
@@ -156,7 +165,7 @@ function SecurityTab() {
 								onClick={() => void handleDisable()}
 								type="button"
 								variant="destructive">
-								{disabling && <Spinner className="mr-2" />}
+								{disabling && <Spinner />}
 								Disable
 							</Button>
 						</div>
@@ -193,7 +202,7 @@ function SecurityTab() {
 								disabled={regenCode.length !== 6 || regenerating}
 								onClick={() => void handleRegenerate()}
 								type="button">
-								{regenerating && <Spinner className="mr-2" />}
+								{regenerating && <Spinner />}
 								Regenerate
 							</Button>
 						</div>
@@ -218,6 +227,16 @@ function SecurityTab() {
 					</CardContent>
 				</Card>
 			)}
+
+			{/*
+			 * The password form, moved here from Personal Info. This tab held MFA and nothing else —
+			 * one 184px card in a 1144px-tall canvas, about 84% of it empty — while the security
+			 * action a user is far likelier to want sat two tabs away under a rule below their
+			 * profile fields. The label "Security" now covers what it promises.
+			 */}
+			<PasswordForm onDirtyChange={setPasswordDirty} />
+
+			<UnsavedChangesGuard isDirty={passwordDirty} />
 
 			<MfaSetupDialog
 				isOpen={setupOpen}
