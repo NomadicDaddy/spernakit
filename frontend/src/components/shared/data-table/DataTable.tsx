@@ -2,18 +2,17 @@ import type { ReactNode } from 'react';
 
 import { type ColumnDef, flexRender } from '@tanstack/react-table';
 
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from '@/components/ui/table';
+import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-import type { DataTablePagination as DataTablePaginationType, DataTableVirtualize } from './types';
+import type {
+	DataTableEmpty as DataTableEmptyType,
+	DataTablePagination as DataTablePaginationType,
+	DataTableVirtualize,
+} from './types';
 
+import { DataTableEmptyRow } from './DataTableEmptyRow';
 import { DataTablePagination } from './DataTablePagination';
+import { DataTableRows } from './DataTableRows';
 import { DataTableToolbar } from './DataTableToolbar';
 import { useDataTableConfig } from './useDataTableConfig';
 import { VirtualTableBody } from './VirtualTableBody';
@@ -25,10 +24,24 @@ import { VirtualTableBody } from './VirtualTableBody';
  * @template TValue - The type of cell values
  */
 interface DataTableProps<TData, TValue> {
-	/** Column definitions for the table using TanStack Table column API */
+	/**
+	 * Column definitions for the table using TanStack Table column API.
+	 *
+	 * A column that declares `size` is rendered at that width; a column that omits it stays
+	 * fluid and absorbs the remaining space. Declare `size` on the narrow, fixed-content
+	 * columns (status, role, actions, expand toggles) and leave the content columns alone —
+	 * declaring a size on every column just reproduces the even split it is meant to fix.
+	 */
 	columns: ColumnDef<TData, TValue>[];
 	/** Array of data to display in the table */
 	data: TData[];
+	/**
+	 * What the table says when it has no rows. Omit it and the table still renders the shared
+	 * empty state with generic wording rather than a bare "No results." cell; supply it to name
+	 * the records, offer the create action, and — for a server-filtered table — tell the table
+	 * that a filter is what emptied it. See `DataTableEmpty`.
+	 */
+	empty?: DataTableEmptyType;
 	/** Placeholder text for the search input (default: "Search…") */
 	filterPlaceholder?: string;
 	/**
@@ -51,6 +64,20 @@ interface DataTableProps<TData, TValue> {
 	 * The dual-mode design supports template reusability across different use cases.
 	 */
 	pagination?: DataTablePaginationType;
+	/**
+	 * Detail panel for an expanded row. Return the panel for the expanded row and a falsy value
+	 * for every other row; the consumer owns the "which row is open" state.
+	 *
+	 * The panel renders as a second `TableRow` spanning every visible column, directly beneath
+	 * its parent, and the parent picks up `data-state="selected"` so the source row is visibly
+	 * the one that opened it. Rendering the panel anywhere else — after the table, after the
+	 * pagination bar — puts the detail an arbitrary distance from the row it describes, which is
+	 * exactly what this replaced on the audit log.
+	 *
+	 * Not supported while `virtualize` is active: the virtual body measures a fixed row height,
+	 * and a variable-height panel would desynchronise the scroll offset from the row positions.
+	 */
+	renderExpandedRow?: (row: TData) => ReactNode;
 	/** Column ID to use for the search filter input */
 	searchColumn?: string;
 	/**
@@ -62,8 +89,16 @@ interface DataTableProps<TData, TValue> {
 	 * same place the list is cleared.
 	 */
 	selectionResetToken?: number | string;
-	/** Consumer-provided filters or actions rendered in the shared table toolbar. */
+	/** Consumer-provided filters rendered at the left of the shared table toolbar. */
 	toolbar?: ReactNode;
+	/**
+	 * The table's primary action, rendered at the right end of the toolbar row beside Columns.
+	 *
+	 * Put "Create X" here rather than in a `div` of its own above or below the table. A primary
+	 * action stranded under the table reads as belonging to the pagination row, and one stacked
+	 * above it costs a whole row of vertical space to say what the toolbar was already saying.
+	 */
+	toolbarActions?: ReactNode;
 	/**
 	 * Virtual scrolling configuration for large datasets.
 	 *
@@ -113,12 +148,15 @@ interface DataTableProps<TData, TValue> {
 function DataTable<TData, TValue>({
 	columns,
 	data,
+	empty,
 	filterPlaceholder = 'Search…',
 	onRowSelectionChange,
 	pagination,
+	renderExpandedRow,
 	searchColumn,
 	selectionResetToken,
 	toolbar,
+	toolbarActions,
 	virtualize,
 }: DataTableProps<TData, TValue>) {
 	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
@@ -135,22 +173,42 @@ function DataTable<TData, TValue>({
 	// from columns.length, which the body span and the virtual row width depend on.
 	const visibleColumnCount = table.getVisibleLeafColumns().length;
 
+	// A server-filtered caller carries its own filter state, so its `isFiltered` is authoritative
+	// where TanStack's is silent; a client-filtered one never sets it and is read from the table.
+	const isFiltered = empty?.isFiltered === true || table.getState().columnFilters.length > 0;
+	const clearFilters = () => {
+		table.resetColumnFilters();
+		empty?.onClearFilters?.();
+	};
+
 	return (
 		<div className="space-y-4">
 			<DataTableToolbar
+				actions={toolbarActions}
 				filterPlaceholder={filterPlaceholder}
 				searchColumn={searchColumn}
 				table={table}>
 				{toolbar}
 			</DataTableToolbar>
 
-			<div className="overflow-x-auto rounded-md border">
+			{/*
+			 * The shell matches the card treatment every other content panel uses, and clips to
+			 * its own radius: `Table` already owns the horizontal scroller, so a second
+			 * `overflow-x-auto` here only nested one scroll region inside another.
+			 */}
+			<div className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => (
-									<TableHead key={header.id}>
+									<TableHead
+										key={header.id}
+										style={
+											header.column.columnDef.size === undefined
+												? undefined
+												: { width: header.getSize() }
+										}>
 										{header.isPlaceholder
 											? null
 											: flexRender(
@@ -167,6 +225,9 @@ function DataTable<TData, TValue>({
 							colCount={visibleColumnCount}
 							containerHeight={virtualize.containerHeight ?? 400}
 							containerRef={virtualContainerRef}
+							empty={empty}
+							isFiltered={isFiltered}
+							onClearFilters={clearFilters}
 							overscan={virtualize.overscan ?? 5}
 							rowHeight={virtualize.rowHeight ?? 35}
 							rows={rows}
@@ -174,43 +235,39 @@ function DataTable<TData, TValue>({
 					) : (
 						<TableBody>
 							{rows.length ? (
-								rows.map((row) => (
-									<TableRow
-										data-state={row.getIsSelected() ? 'selected' : undefined}
-										key={row.id}>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
-												)}
-											</TableCell>
-										))}
-									</TableRow>
-								))
+								<DataTableRows
+									colSpan={visibleColumnCount}
+									renderExpandedRow={renderExpandedRow}
+									rows={rows}
+								/>
 							) : (
-								<TableRow>
-									<TableCell
-										className="h-24 text-center"
-										colSpan={visibleColumnCount}>
-										No results.
-									</TableCell>
-								</TableRow>
+								<DataTableEmptyRow
+									colSpan={visibleColumnCount}
+									empty={empty}
+									isFiltered={isFiltered}
+									onClearFilters={clearFilters}
+								/>
 							)}
 						</TableBody>
 					)}
 				</Table>
-			</div>
 
-			{!isVirtual && (
-				<DataTablePagination
-					currentPage={currentPage}
-					onRowSelectionChange={onRowSelectionChange}
-					pagination={pagination}
-					table={table}
-					totalPages={totalPages}
-				/>
-			)}
+				{/*
+				 * The pager belongs to the table, so it lives inside the shell as a bordered footer
+				 * band. Outside it, the row count and the page controls floated on bare page
+				 * background as a third left/right-split row with nothing tying them to the rows
+				 * they describe.
+				 */}
+				{!isVirtual && (
+					<DataTablePagination
+						currentPage={currentPage}
+						onRowSelectionChange={onRowSelectionChange}
+						pagination={pagination}
+						table={table}
+						totalPages={totalPages}
+					/>
+				)}
+			</div>
 		</div>
 	);
 }

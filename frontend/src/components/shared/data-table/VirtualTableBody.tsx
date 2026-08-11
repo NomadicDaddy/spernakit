@@ -1,7 +1,11 @@
 import { flexRender, type Row } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
-import { TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { TableBody } from '@/components/ui/table';
+
+import type { DataTableEmpty } from './types';
+
+import { DataTableEmptyRow } from './DataTableEmptyRow';
 
 /**
  * Virtualized table body that renders only visible rows.
@@ -10,6 +14,9 @@ function VirtualTableBody<TData>({
 	colCount,
 	containerHeight,
 	containerRef,
+	empty,
+	isFiltered,
+	onClearFilters,
 	overscan,
 	rowHeight,
 	rows,
@@ -17,6 +24,9 @@ function VirtualTableBody<TData>({
 	colCount: number;
 	containerHeight: number;
 	containerRef: React.RefObject<HTMLDivElement | null>;
+	empty: DataTableEmpty | undefined;
+	isFiltered: boolean;
+	onClearFilters: () => void;
 	overscan: number;
 	rowHeight: number;
 	rows: Row<TData>[];
@@ -32,11 +42,12 @@ function VirtualTableBody<TData>({
 	if (rows.length === 0) {
 		return (
 			<TableBody>
-				<TableRow>
-					<TableCell className="h-24 text-center" colSpan={colCount}>
-						No results.
-					</TableCell>
-				</TableRow>
+				<DataTableEmptyRow
+					colSpan={colCount}
+					empty={empty}
+					isFiltered={isFiltered}
+					onClearFilters={onClearFilters}
+				/>
 			</TableBody>
 		);
 	}
