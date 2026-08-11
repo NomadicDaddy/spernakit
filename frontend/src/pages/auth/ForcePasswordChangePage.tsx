@@ -99,7 +99,10 @@ function ForcePasswordChangePage() {
 				<BackendUnreachableBanner />
 				<Card className="w-full">
 					<CardHeader className="text-center">
-						<CardTitle className="text-2xl">Change Your Password</CardTitle>
+						{/* Standalone auth surface: no PageHeader, so this card title is the h1. */}
+						<CardTitle as="h1" className="text-2xl">
+							Change Your Password
+						</CardTitle>
 						<CardDescription>
 							Your account requires a password change before you can continue.
 						</CardDescription>
@@ -145,7 +148,7 @@ function ForcePasswordChangePage() {
 								/>
 							</div>
 							<Button className="w-full" disabled={isPending} type="submit">
-								{isPending && <Spinner className="mr-2" size={16} />}
+								{isPending && <Spinner size={16} />}
 								{isPending ? 'Changing password…' : 'Change Password'}
 							</Button>
 							{state.error && !isPending && (

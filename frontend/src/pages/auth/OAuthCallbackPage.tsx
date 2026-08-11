@@ -82,7 +82,10 @@ function OAuthCallbackPage() {
 				<BackendUnreachableBanner />
 				<Card className="w-full">
 					<CardHeader className="text-center">
-						<CardTitle className="text-2xl">Signing in…</CardTitle>
+						{/* Standalone auth surface: no PageHeader, so this card title is the h1. */}
+						<CardTitle as="h1" className="text-2xl">
+							Signing in…
+						</CardTitle>
 						<CardDescription>Completing authentication</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">

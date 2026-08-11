@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogFooter,
@@ -127,7 +128,13 @@ function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) 
 							<Select
 								onValueChange={(v) => setKeyScope(v as ApiKeyScope)}
 								value={keyScope}>
-								<SelectTrigger id="keyScope">
+								{/*
+								 * Stacked dialog fields share one right edge. `SelectTrigger`
+								 * defaults to `w-fit`, so this sat at 84px directly under a 462px
+								 * Input — the form's right edge stepped in by 378px between field
+								 * one and field two.
+								 */}
+								<SelectTrigger className="w-full" id="keyScope">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -150,9 +157,22 @@ function CreateApiKeyDialog({ onClose, open, userId }: CreateApiKeyDialogProps) 
 					{createdResult ? (
 						<Button onClick={() => handleOpenChange(false)}>Done</Button>
 					) : (
-						<Button disabled={createMutation.isPending} onClick={handleCreate}>
-							{createMutation.isPending ? 'Creating…' : 'Generate'}
-						</Button>
+						<>
+							{/*
+							 * A labelled way out, which every other creation dialog in the app has —
+							 * AddWidgetDialog, FormInputDialog, MfaSetupDialog on the sibling
+							 * Security tab, ResetPasswordDialog, CreateWorkspaceDialog. This footer
+							 * held one button, so the only dismiss was the X in the corner. Not on
+							 * the post-creation step, where the secret is shown once and "Cancel"
+							 * would suggest it can be undone.
+							 */}
+							<DialogClose asChild>
+								<Button variant="outline">Cancel</Button>
+							</DialogClose>
+							<Button disabled={createMutation.isPending} onClick={handleCreate}>
+								{createMutation.isPending ? 'Creating…' : 'Generate'}
+							</Button>
+						</>
 					)}
 				</DialogFooter>
 			</DialogContent>

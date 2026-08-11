@@ -214,7 +214,7 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 							disabled={setup.isPending || currentPassword.length === 0}
 							onClick={() => setup.mutate(currentPassword)}
 							type="button">
-							{setup.isPending && <Spinner className="mr-2" />}
+							{setup.isPending && <Spinner />}
 							{setup.isPending ? 'Verifying…' : 'Continue'}
 						</Button>
 					)}
@@ -223,7 +223,7 @@ function MfaSetupDialogInner({ isOpen, onClose, onEnabled }: MfaSetupDialogProps
 							disabled={verify.isPending || setup.isPending || code.length !== 6}
 							onClick={() => verify.mutate(code)}
 							type="button">
-							{verify.isPending && <Spinner className="mr-2" />}
+							{verify.isPending && <Spinner />}
 							{verify.isPending ? 'Verifying…' : 'Enable MFA'}
 						</Button>
 					)}

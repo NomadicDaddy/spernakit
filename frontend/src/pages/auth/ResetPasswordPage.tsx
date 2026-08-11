@@ -72,7 +72,7 @@ function ResetPasswordPage() {
 						/>
 					</div>
 					<Button className="w-full" disabled={isPending} type="submit">
-						{isPending && <Spinner className="mr-2" size={16} />}
+						{isPending && <Spinner size={16} />}
 						{isPending ? 'Sending…' : 'Send Reset Link'}
 					</Button>
 					<AuthFormError error={state.error} isPending={isPending} />

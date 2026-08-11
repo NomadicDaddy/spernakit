@@ -233,7 +233,7 @@ function RegisterPage() {
 						) : null}
 					</div>
 					<Button className="w-full" disabled={isPending} type="submit">
-						{isPending && <Spinner className="mr-2" size={16} />}
+						{isPending && <Spinner size={16} />}
 						{isPending ? 'Creating account…' : 'Create Account'}
 					</Button>
 					<AuthFormError error={state.error} isPending={isPending} />

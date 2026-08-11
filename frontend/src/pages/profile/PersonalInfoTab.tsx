@@ -1,33 +1,36 @@
 import { useState } from 'react';
 
-import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
-import { Separator } from '@/components/ui/separator';
+import { UnsavedChangesGuard } from '@/components/shared/UnsavedChangesGuard';
 import { useProfile } from '@/hooks/useProfile';
-import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
-import { PasswordForm } from './PasswordForm';
 import { ProfileForm } from './ProfileForm';
 
+/**
+ * Identity only.
+ *
+ * The Change Password card used to live here too, under a `<Separator />`, while a Security tab sat
+ * forty pixels above it in the same rail holding nothing but MFA. A user looking for the password
+ * form goes to Security first, so that is where it is now; this tab is the username, the email and
+ * the role, and nothing else.
+ *
+ * No width cap. `max-w-3xl` clamped these cards to 768px under a tab rule that ran the full 1472px
+ * canvas, and the three sibling tabs in the same rail are all uncapped — so switching between them
+ * re-flowed the content width while the chrome stayed put. Structure comes from the grids and field
+ * widths inside the cards, the way the settings cards already do it.
+ */
 function PersonalInfoTab() {
 	const { data, isLoading } = useProfile();
 
 	const [profileDirty, setProfileDirty] = useState(false);
-	const [passwordDirty, setPasswordDirty] = useState(false);
-
-	const blocker = useUnsavedChanges(profileDirty || passwordDirty);
 
 	const handleProfileDirtyChange = (dirty: boolean) => {
 		setProfileDirty(dirty);
 	};
 
-	const handlePasswordDirtyChange = (dirty: boolean) => {
-		setPasswordDirty(dirty);
-	};
-
 	if (isLoading || !data?.data) {
 		return (
-			<div className="max-w-3xl space-y-6">
+			<div className="space-y-6">
 				<CardSkeleton contentLines={3} descriptionWidth="h-4 w-48" titleWidth="h-6 w-32" />
 			</div>
 		);
@@ -35,23 +38,13 @@ function PersonalInfoTab() {
 
 	return (
 		<>
-			<ConfirmAlertDialog
-				description="You have unsaved changes. Are you sure you want to leave?"
-				isOpen={blocker.state === 'blocked'}
-				onConfirm={() => blocker.proceed?.()}
-				onOpenChange={(open) => {
-					if (!open) blocker.reset?.();
-				}}
-				title="Unsaved Changes"
-			/>
-			<div className="max-w-3xl space-y-6">
+			<UnsavedChangesGuard isDirty={profileDirty} />
+			<div className="space-y-6">
 				<ProfileForm
 					key={data.data.id}
 					onDirtyChange={handleProfileDirtyChange}
 					user={data.data}
 				/>
-				<Separator />
-				<PasswordForm onDirtyChange={handlePasswordDirtyChange} />
 			</div>
 		</>
 	);

@@ -118,7 +118,7 @@ function ResetPasswordConfirmPage() {
 						/>
 					</div>
 					<Button className="w-full" disabled={isPending} type="submit">
-						{isPending && <Spinner className="mr-2" size={16} />}
+						{isPending && <Spinner size={16} />}
 						{isPending ? 'Resetting…' : 'Reset Password'}
 					</Button>
 					{hasError && (

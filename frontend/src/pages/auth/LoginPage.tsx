@@ -134,7 +134,7 @@ function LoginPage() {
 						/>
 					</div>
 					<Button className="w-full" disabled={isPending} type="submit">
-						{isPending && <Spinner className="mr-2" />}
+						{isPending && <Spinner />}
 						{isPending ? 'Signing in…' : 'Sign in'}
 					</Button>
 					<AuthFormError

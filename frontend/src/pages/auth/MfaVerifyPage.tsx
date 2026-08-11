@@ -113,7 +113,7 @@ function MfaVerifyPage() {
 						</div>
 					)}
 					<Button className="w-full" disabled={isPending} type="submit">
-						{isPending && <Spinner className="mr-2" />}
+						{isPending && <Spinner />}
 						{isPending ? 'Verifying…' : 'Verify'}
 					</Button>
 					<AuthFormError error={state.error} isPending={isPending} />

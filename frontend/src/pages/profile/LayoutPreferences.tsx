@@ -1,10 +1,11 @@
 import { Maximize2, Minimize2, PanelLeft, PanelTop } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { OptionCard } from '@/components/shared/OptionCard';
+import { OptionCardGroup } from '@/components/shared/OptionCardGroup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { cn } from '@/lib/utils';
+
+import { PreferenceGroup } from './PreferenceGroup';
 
 interface LayoutPreferencesSettings {
 	containerWidth: 'centered' | 'full-width';
@@ -24,109 +25,127 @@ type LayoutPreferencesProps = {
 	settings: LayoutPreferencesSettings;
 };
 
-const navOptions: { icon: React.ReactNode; label: string; value: 'sidebar' | 'topbar' }[] = [
+const navOptions: {
+	description: string;
+	icon: React.ReactNode;
+	label: string;
+	value: 'sidebar' | 'topbar';
+}[] = [
 	{
+		description: 'Navigation down the left edge.',
 		icon: <PanelLeft aria-hidden="true" className="size-5" />,
 		label: 'Sidebar',
 		value: 'sidebar',
 	},
-	{ icon: <PanelTop aria-hidden="true" className="size-5" />, label: 'Top Bar', value: 'topbar' },
+	{
+		description: 'Navigation across the top.',
+		icon: <PanelTop aria-hidden="true" className="size-5" />,
+		label: 'Top Bar',
+		value: 'topbar',
+	},
 ];
 
 const widthOptions: {
+	description: string;
 	icon: React.ReactNode;
 	label: string;
 	value: 'centered' | 'full-width';
 }[] = [
 	{
+		description: 'Content sits in a fixed-width column.',
 		icon: <Minimize2 aria-hidden="true" className="size-5" />,
 		label: 'Centered',
 		value: 'centered',
 	},
 	{
+		description: 'Content fills the whole window.',
 		icon: <Maximize2 aria-hidden="true" className="size-5" />,
 		label: 'Full Width',
 		value: 'full-width',
 	},
 ];
 
+/**
+ * The Layout group: navigation style, container width and sidebar behaviour, previously three
+ * separate full-width cards (the third of which appeared and disappeared as the first changed).
+ */
 function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 	const { containerWidth, disabled, layoutMode, sidebarCollapsed } = settings;
 	const { onContainerWidthChange, onLayoutModeChange, onSidebarCollapsedChange } = handlers;
+
 	return (
-		<>
-			<Card>
-				<CardHeader>
-					<CardTitle>Navigation</CardTitle>
-					<CardDescription>Choose your preferred navigation style</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="flex gap-3">
+		<Card>
+			<CardHeader>
+				<CardTitle>Layout</CardTitle>
+				<CardDescription>Where navigation sits and how wide pages run</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				<PreferenceGroup
+					description="Choose your preferred navigation style."
+					label="Navigation"
+					labelId="pref-navigation">
+					<OptionCardGroup
+						className="grid gap-3 sm:grid-cols-2"
+						labelledBy="pref-navigation">
 						{navOptions.map((option) => (
-							<Button
-								aria-pressed={layoutMode === option.value}
-								className={cn(
-									'flex items-center gap-2',
-									layoutMode === option.value &&
-										'ring-2 ring-primary ring-offset-2',
-								)}
+							<OptionCard
+								description={option.description}
+								disabled={disabled}
+								icon={option.icon}
 								key={option.value}
-								onClick={() => onLayoutModeChange(option.value)}
-								variant={layoutMode === option.value ? 'default' : 'outline'}>
-								{option.icon}
-								{option.label}
-							</Button>
+								label={option.label}
+								onSelect={() => onLayoutModeChange(option.value)}
+								selected={layoutMode === option.value}
+							/>
 						))}
-					</div>
-				</CardContent>
-			</Card>
+					</OptionCardGroup>
+				</PreferenceGroup>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Container Width</CardTitle>
-					<CardDescription>Choose how wide page content should be</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="flex gap-3">
+				<PreferenceGroup
+					description="Choose how wide page content should be."
+					label="Container width"
+					labelId="pref-container-width">
+					<OptionCardGroup
+						className="grid gap-3 sm:grid-cols-2"
+						labelledBy="pref-container-width">
 						{widthOptions.map((option) => (
-							<Button
-								aria-pressed={containerWidth === option.value}
-								className={cn(
-									'flex items-center gap-2',
-									containerWidth === option.value &&
-										'ring-2 ring-primary ring-offset-2',
-								)}
+							<OptionCard
+								description={option.description}
+								disabled={disabled}
+								icon={option.icon}
 								key={option.value}
-								onClick={() => onContainerWidthChange(option.value)}
-								variant={containerWidth === option.value ? 'default' : 'outline'}>
-								{option.icon}
-								{option.label}
-							</Button>
+								label={option.label}
+								onSelect={() => onContainerWidthChange(option.value)}
+								selected={containerWidth === option.value}
+							/>
 						))}
-					</div>
-				</CardContent>
-			</Card>
+					</OptionCardGroup>
+				</PreferenceGroup>
 
-			{layoutMode === 'sidebar' && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Sidebar</CardTitle>
-						<CardDescription>Configure sidebar behavior</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<div className="flex items-center justify-between">
-							<Label htmlFor="sidebar-collapsed">Collapsed by default</Label>
+				{layoutMode === 'sidebar' && (
+					/*
+					 * A boolean, so it stays a Switch row rather than becoming two tiles. The
+					 * OptionCard idiom is for "pick one of N", not for on/off.
+					 */
+					<PreferenceGroup
+						description="Start each session with the sidebar collapsed."
+						label="Sidebar">
+						{/* The whole row is the target, matching the Notifications card. */}
+						<label
+							className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-3"
+							htmlFor="sidebar-collapsed">
+							<span className="text-sm font-medium">Collapsed by default</span>
 							<Switch
 								checked={sidebarCollapsed}
 								disabled={disabled}
 								id="sidebar-collapsed"
 								onCheckedChange={(checked) => onSidebarCollapsedChange(checked)}
 							/>
-						</div>
-					</CardContent>
-				</Card>
-			)}
-		</>
+						</label>
+					</PreferenceGroup>
+				)}
+			</CardContent>
+		</Card>
 	);
 }
 

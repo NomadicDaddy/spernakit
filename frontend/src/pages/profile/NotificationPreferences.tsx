@@ -2,7 +2,6 @@ import type { NotificationPreferences as NotificationPrefs } from '@/api/notific
 
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
 const preferenceItems: {
@@ -58,22 +57,34 @@ function NotificationPreferences({
 				{isLoading ? (
 					<ContentListSkeleton lineHeight="h-10" />
 				) : (
-					<div className="space-y-4">
+					/*
+					 * Bordered rows, the same treatment the Sidebar switch in the Layout card
+					 * already wears. Bare `justify-between` rows on a full-width card left each
+					 * label and the switch it belongs to over 1100px apart at 2250 with nothing
+					 * tying them together — five near-identical toggles in one column and five
+					 * near-identical labels in another. The border is what binds the pair; the row
+					 * is also the label element, so the whole 1400px of it toggles the switch
+					 * rather than only the 32px control at the far end.
+					 */
+					<div className="space-y-3">
 						{preferenceItems.map((item) => (
-							<div className="flex items-center justify-between" key={item.key}>
-								<div className="space-y-0.5">
-									<Label htmlFor={`pref-${item.key}`}>{item.label}</Label>
-									<p className="text-xs text-muted-foreground">
+							<label
+								className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-3"
+								htmlFor={`pref-${item.key}`}
+								key={item.key}>
+								<span className="space-y-0.5">
+									<span className="block text-sm font-medium">{item.label}</span>
+									<span className="block text-xs text-muted-foreground">
 										{item.description}
-									</p>
-								</div>
+									</span>
+								</span>
 								<Switch
 									checked={preferences?.[item.key] ?? false}
 									disabled={disabled}
 									id={`pref-${item.key}`}
 									onCheckedChange={(checked) => onToggle(item.key, checked)}
 								/>
-							</div>
+							</label>
 						))}
 					</div>
 				)}
