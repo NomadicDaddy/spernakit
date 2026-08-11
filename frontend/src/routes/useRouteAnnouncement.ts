@@ -18,11 +18,22 @@ function humanizeSegment(segment: string): string {
 		.join(' ');
 }
 
+/**
+ * Segments that are an identifier rather than a name — a share token, a hash, an API key id.
+ *
+ * The fallback below titles a page after its last path segment, which on `/dashboards/shared/:token`
+ * is a 64-character hex string. The tab, the bookmark name and the history entry all read as that
+ * token. Anything long and purely hexadecimal is an opaque id, never something to show a reader.
+ */
+const OPAQUE_SEGMENT = /^[0-9a-f]{16,}$/i;
+
 /** Derive a page title from the current pathname via nav config, falling back to the last path segment. */
 function derivePageTitle(pathname: string): string {
 	const navMatch = navItems.find((item) => item.to === pathname);
 	if (navMatch) return navMatch.label;
-	const segments = pathname.split('/').filter((s) => s.length > 0 && !/^\d+$/.test(s));
+	const segments = pathname
+		.split('/')
+		.filter((s) => s.length > 0 && !/^\d+$/.test(s) && !OPAQUE_SEGMENT.test(s));
 	const last = segments.at(-1);
 	return last ? humanizeSegment(last) : 'Home';
 }

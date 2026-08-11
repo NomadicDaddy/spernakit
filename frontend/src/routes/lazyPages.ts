@@ -79,6 +79,18 @@ export const WorkspaceSettingsPage = lazyNamed(
 	() => import('@/pages/workspaces/WorkspaceSettingsPage'),
 	'WorkspaceSettingsPage',
 );
+export const WorkspaceGeneralTab = lazyNamed(
+	() => import('@/pages/workspaces/WorkspaceGeneralTab'),
+	'WorkspaceGeneralTab',
+);
+export const WorkspaceBrandingTab = lazyNamed(
+	() => import('@/pages/workspaces/WorkspaceBrandingTab'),
+	'WorkspaceBrandingTab',
+);
+export const WorkspaceDashboardTab = lazyNamed(
+	() => import('@/pages/workspaces/WorkspaceDashboardTab'),
+	'WorkspaceDashboardTab',
+);
 
 // Profile pages
 export const ProfileLayout = lazyNamed(
