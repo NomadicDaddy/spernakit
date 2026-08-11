@@ -24,11 +24,11 @@ function BulkMemberActions({
 	return (
 		<div className="flex gap-2">
 			<Button disabled={bulkIsPending.add} onClick={onBulkAdd} variant="outline">
-				<Users aria-hidden="true" className="mr-2 size-4" />
+				<Users aria-hidden="true" className="size-4" />
 				Add {selectedCount} with {roleName}
 			</Button>
 			<Button disabled={bulkIsPending.remove} onClick={onBulkRemove} variant="destructive">
-				<Trash2 aria-hidden="true" className="mr-2 size-4" />
+				<Trash2 aria-hidden="true" className="size-4" />
 				Remove {selectedCount}
 			</Button>
 			<Button onClick={onClearSelection} variant="ghost">

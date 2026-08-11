@@ -77,11 +77,17 @@ export function CreateWorkspaceDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>Create Workspace</AlertDialogTitle>
-					<AlertDialogDescription className="sr-only">
-						Create a new workspace
-					</AlertDialogDescription>
+					{/*
+					 * Visible, not `sr-only`. The three dialogs on this surface disagreed about
+					 * their header: the members dialog rendered its description while create and
+					 * edit hid theirs, so two of the three had a one-line header and one had two
+					 * at otherwise identical padding. CreateUserDialog is the reference and shows
+					 * its sentence.
+					 */}
+					<AlertDialogDescription>Set up a new workspace.</AlertDialogDescription>
 				</AlertDialogHeader>
-				<div className="space-y-4 py-4">
+				{/* No `py-4`: AlertDialogContent's grid already supplies the 16px seam. */}
+				<div className="space-y-4">
 					<WorkspaceFormFields
 						description={form.description}
 						idPrefix="workspace"

@@ -37,6 +37,7 @@ function WorkspaceConfirmDialogs({
 					if (!open) onClearDeleteTarget();
 				}}
 				title="Delete Workspace"
+				variant="destructive"
 			/>
 
 			<ConfirmAlertDialog
@@ -53,6 +54,7 @@ function WorkspaceConfirmDialogs({
 					if (!open) onClearRemoveMemberTarget();
 				}}
 				title="Remove Member"
+				variant="destructive"
 			/>
 		</>
 	);

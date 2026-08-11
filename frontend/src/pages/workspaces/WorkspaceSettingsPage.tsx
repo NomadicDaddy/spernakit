@@ -1,142 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, LayoutDashboard, Palette, Settings } from 'lucide-react';
-import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
-import { toast } from 'sonner';
+import type { TabItem } from '@/components/layout/TabLayout';
 
-import type { DashboardConfig } from '@/api/dashboards';
-import type { WorkspaceSettings } from '@/api/types';
-
-import { listDashboards } from '@/api/dashboards';
-import { uploadFile } from '@/api/files';
-import { listWorkspaces, updateWorkspace } from '@/api/workspaces';
+import { TabLayout } from '@/components/layout/TabLayout';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Spinner } from '@/components/shared/Spinner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuthorization } from '@/hooks/useAuthorization';
-import { useWorkspaceStore } from '@/stores/workspaceStore';
 
-import type { BrandingFormData } from './WorkspaceBrandingTab';
-import type { DashboardFormData } from './WorkspaceDashboardTab';
-import type { GeneralFormData } from './WorkspaceGeneralTab';
+import { useWorkspaceSettings } from './useWorkspaceSettings';
 
-import { WorkspaceBrandingTab } from './WorkspaceBrandingTab';
-import { WorkspaceDashboardTab } from './WorkspaceDashboardTab';
-import { WorkspaceGeneralTab } from './WorkspaceGeneralTab';
-
+/**
+ * Shell for the workspace settings tabs.
+ *
+ * The three panels used to be `@/components/ui/tabs` inside one page — the only place under
+ * `pages/` that imported them, so this rail was a filled pill group with icons while every other
+ * tabbed area in the app was TabLayout's underline rail. They are child routes now, which buys the
+ * house rail, the overflow chevrons, and a tab state you can link to and reload into.
+ *
+ * The header says the workspace's name once and nothing else. It used to read
+ * `Default — Settings` under a `Workspaces › Default › Settings` breadcrumb, beside a "Back to
+ * Workspaces" outline button that duplicated the breadcrumb's first crumb — three ways of saying
+ * where you are, one of them occupying the primary-action slot on a page that has no page-level
+ * action. The breadcrumb carries the location and the "Settings" crumb carries the section.
+ */
 function WorkspaceSettingsPage() {
-	const { id } = useParams<{ id: string }>();
-	const navigate = useNavigate();
-	const { can } = useAuthorization();
-	const queryClient = useQueryClient();
-	const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
-	const workspaceId = id ? Number(id) : 0;
+	const { canManage, isLoaded, workspace, workspaceId } = useWorkspaceSettings();
 
-	const { data: workspacesData } = useQuery({
-		queryFn: listWorkspaces,
-		queryKey: ['workspaces'],
-	});
-	const workspace = workspacesData?.data?.find((w) => w.id === workspaceId);
-
-	const { data: dashboardsData } = useQuery({
-		enabled: activeWorkspaceId !== null,
-		queryFn: listDashboards,
-		queryKey: ['dashboards', activeWorkspaceId],
-	});
-	const dashboards: DashboardConfig[] = dashboardsData?.data ?? [];
-
-	const canManage = can('MANAGER') && (workspace?.ownerId !== undefined || can('ADMIN'));
-
-	const settings = workspace?.settings;
-
-	const initialGeneral: GeneralFormData = {
-		currency: settings?.currency ?? '',
-		timezone: settings?.timezone ?? '',
-	};
-	const initialBranding: BrandingFormData = {
-		accentColor: settings?.branding?.accentColor ?? '#6366f1',
-		logoFileId: settings?.branding?.logoFileId ?? null,
-	};
-	const initialDashboard: DashboardFormData = {
-		defaultDashboardId: settings?.defaultDashboardId ?? null,
-	};
-
-	const [generalForm, setGeneralForm] = useState<GeneralFormData>(initialGeneral);
-	const [brandingForm, setBrandingForm] = useState<BrandingFormData>(initialBranding);
-	const [dashboardForm, setDashboardForm] = useState<DashboardFormData>(initialDashboard);
-
-	const uploadMutation = useMutation({
-		mutationFn: (file: File) => uploadFile(file),
-		onError: () => {
-			toast.error('Failed to upload logo', {
-				description:
-					'Check that the file is a valid image under the size limit and try again.',
-			});
-		},
-		onSuccess: (response) => {
-			const fileId = response.data.id;
-			setBrandingForm((prev) => ({ ...prev, logoFileId: fileId }));
-			toast.success('Logo uploaded successfully');
-		},
-	});
-
-	const updateMutation = useMutation({
-		mutationFn: (newSettings: WorkspaceSettings) =>
-			updateWorkspace(workspaceId, { settings: newSettings }),
-		onError: () => {
-			toast.error('Failed to save settings', {
-				description:
-					'Check your network connection and try again. If the problem persists, contact your administrator.',
-			});
-		},
-		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-			toast.success('Settings saved successfully');
-		},
-	});
-
-	const handleSave = (formType: 'branding' | 'dashboard' | 'general') => {
-		const base: WorkspaceSettings = {
-			...(settings?.branding ? { branding: settings.branding } : {}),
-			...(settings?.currency ? { currency: settings.currency } : {}),
-			...(settings?.defaultDashboardId !== null && settings?.defaultDashboardId !== undefined
-				? { defaultDashboardId: settings.defaultDashboardId }
-				: {}),
-			...(settings?.timezone ? { timezone: settings.timezone } : {}),
-		};
-
-		let result: WorkspaceSettings;
-		if (formType === 'general') {
-			result = {
-				...base,
-				...(generalForm.currency ? { currency: generalForm.currency } : {}),
-				...(generalForm.timezone ? { timezone: generalForm.timezone } : {}),
-			};
-		} else if (formType === 'branding') {
-			result = {
-				...base,
-				branding: {
-					accentColor: brandingForm.accentColor,
-					...(brandingForm.logoFileId !== null
-						? { logoFileId: brandingForm.logoFileId }
-						: {}),
-				},
-			};
-		} else {
-			result = {
-				...base,
-				...(dashboardForm.defaultDashboardId !== null
-					? { defaultDashboardId: dashboardForm.defaultDashboardId }
-					: {}),
-			};
-		}
-
-		updateMutation.mutate(result);
-	};
-
-	if (workspace === undefined && workspacesData === undefined) {
+	if (!isLoaded && workspace === undefined) {
 		return (
 			<div className="space-y-6 p-6">
 				<PageHeader title="Workspace Settings" />
@@ -169,95 +56,24 @@ function WorkspaceSettingsPage() {
 		);
 	}
 
+	const base = `/workspaces/${String(workspaceId)}/settings`;
+	const tabs: TabItem[] = [
+		{ label: 'General', to: `${base}/general` },
+		{ label: 'Branding', to: `${base}/branding` },
+		{ label: 'Dashboard', to: `${base}/dashboard` },
+	];
+
 	return (
-		<div className="space-y-6 p-6">
-			<PageHeader
-				breadcrumbs={[
-					{ label: 'Workspaces', to: '/workspaces' },
-					{ label: workspace.name },
-					{ label: 'Settings' },
-				]}
-				title={`${workspace.name} - Settings`}>
-				<Button
-					onClick={() => {
-						void navigate('/workspaces');
-					}}
-					size="sm"
-					variant="outline">
-					<ArrowLeft className="mr-2 h-4 w-4" />
-					Back to Workspaces
-				</Button>
-			</PageHeader>
-
-			<div className="mb-4 text-sm text-muted-foreground">
-				Configure workspace-specific options. Changes are saved per tab.
-			</div>
-
-			<Tabs defaultValue="general">
-				<TabsList>
-					<TabsTrigger value="general">
-						<Settings className="mr-2 h-4 w-4" />
-						General
-					</TabsTrigger>
-					<TabsTrigger value="branding">
-						<Palette className="mr-2 h-4 w-4" />
-						Branding
-					</TabsTrigger>
-					<TabsTrigger value="dashboard">
-						<LayoutDashboard className="mr-2 h-4 w-4" />
-						Dashboard
-					</TabsTrigger>
-				</TabsList>
-
-				<TabsContent className="mt-6" value="general">
-					<Card className="max-w-2xl">
-						<CardContent className="pt-6">
-							<WorkspaceGeneralTab
-								form={generalForm}
-								isPending={updateMutation.isPending}
-								onSave={() => handleSave('general')}
-								setForm={setGeneralForm}
-							/>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent className="mt-6" value="branding">
-					<Card className="max-w-2xl">
-						<CardContent className="pt-6">
-							<WorkspaceBrandingTab
-								form={brandingForm}
-								isPending={updateMutation.isPending}
-								isUploading={uploadMutation.isPending}
-								onSave={() => handleSave('branding')}
-								onUpload={(file) => uploadMutation.mutate(file)}
-								setForm={setBrandingForm}
-							/>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent className="mt-6" value="dashboard">
-					<Card className="max-w-2xl">
-						<CardContent className="pt-6">
-							<WorkspaceDashboardTab
-								dashboards={dashboards}
-								form={dashboardForm}
-								isPending={updateMutation.isPending}
-								onSave={() => handleSave('dashboard')}
-								setForm={setDashboardForm}
-							/>
-						</CardContent>
-					</Card>
-				</TabsContent>
-			</Tabs>
-
-			<div className="text-sm text-muted-foreground">
-				<Link className="underline hover:text-foreground" to="/workspaces">
-					← Back to all workspaces
-				</Link>
-			</div>
-		</div>
+		<TabLayout
+			breadcrumbs={[
+				{ label: 'Workspaces', to: '/workspaces' },
+				{ label: workspace.name },
+				{ label: 'Settings' },
+			]}
+			description="Configure workspace-specific options."
+			tabs={tabs}
+			title={workspace.name}
+		/>
 	);
 }
 

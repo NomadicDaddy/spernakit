@@ -45,7 +45,7 @@ function WorkspaceSwitcher() {
 						<Check
 							aria-hidden="true"
 							className={cn(
-								'mr-2 size-4',
+								'size-4',
 								ws.id === activeWorkspaceId ? 'opacity-100' : 'opacity-0',
 							)}
 						/>

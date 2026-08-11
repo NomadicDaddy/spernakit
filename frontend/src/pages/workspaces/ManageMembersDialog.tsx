@@ -114,14 +114,26 @@ function ManageMembersDialog({
 	return (
 		<>
 			<AlertDialog onOpenChange={onOpenChange} open={isOpen}>
-				<AlertDialogContent className="max-w-2xl">
+				{/*
+				 * `size="lg"`, not `className="max-w-2xl"`. The utility lost the cascade to
+				 * AlertDialogContent's own `data-[size=default]:sm:max-w-lg`, so this panel had
+				 * been rendering at exactly 512px — the same width as the create and edit prompts —
+				 * and squeezing the member list into 462px until it scrolled at five members.
+				 */}
+				<AlertDialogContent size="lg">
 					<AlertDialogHeader>
 						<AlertDialogTitle>Workspace Members</AlertDialogTitle>
 						<AlertDialogDescription>
 							View and manage workspace members.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
-					<div className="space-y-4 py-4">
+					{/*
+					 * No `py-4`. AlertDialogContent is a grid with a 16px gap, so the padding was
+					 * doubling the two seams that frame the body — 32px under the header and 32px
+					 * above the footer — where CreateUserDialog, the reference, puts its form
+					 * straight into the content grid and gets 16px.
+					 */}
+					<div className="space-y-4">
 						<AddMemberFormRow
 							existingMemberIds={existingMemberIds}
 							form={addMemberForm}
@@ -168,6 +180,7 @@ function ManageMembersDialog({
 					if (!open) setShowBulkRemoveConfirm(false);
 				}}
 				title="Remove Members"
+				variant="destructive"
 			/>
 		</>
 	);

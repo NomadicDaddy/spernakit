@@ -40,19 +40,27 @@ function AddMemberFormRow({
 			<Label className="sr-only" htmlFor="addMemberUser">
 				User
 			</Label>
-			<div className="flex gap-2">
+			{/*
+			 * Same column geometry as `ManageMemberRow` below it — `px-3`, `gap-3`, a `w-32` role
+			 * control and a `w-16` action slot — so the role selectors share one right edge instead
+			 * of zig-zagging down the dialog at two widths and two offsets.
+			 */}
+			<div className="flex gap-3 px-3">
 				<UserPicker
 					existingMemberIds={existingMemberIds}
 					onSelect={handleSelect}
 					selectedUser={selectedUser}
 				/>
 				<RoleSelector
-					className="w-32"
+					className="w-32 shrink-0"
 					onValueChange={(role) => onUpdateForm({ role })}
 					roles={WORKSPACE_ROLE_OPTIONS}
 					value={form.role}
 				/>
-				<Button disabled={isPending || form.userId === 0} onClick={onAddMember}>
+				<Button
+					className="w-16 shrink-0"
+					disabled={isPending || form.userId === 0}
+					onClick={onAddMember}>
 					Add
 				</Button>
 			</div>

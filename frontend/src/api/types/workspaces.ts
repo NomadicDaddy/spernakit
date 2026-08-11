@@ -28,6 +28,7 @@ interface Workspace {
 
 /** Workspace member */
 interface WorkspaceMember {
+	email: string;
 	joinedAt: string;
 	role: WorkspaceMemberRole;
 	userId: number;

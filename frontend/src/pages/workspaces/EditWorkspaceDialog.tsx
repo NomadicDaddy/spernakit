@@ -61,11 +61,13 @@ export function EditWorkspaceDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>Edit Workspace</AlertDialogTitle>
-					<AlertDialogDescription className="sr-only">
-						Edit workspace details
+					{/* Visible, and without the `py-4` that doubled the content grid's seams — see
+					    the same two corrections in CreateWorkspaceDialog. */}
+					<AlertDialogDescription>
+						Update this workspace&apos;s name and description.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
-				<div className="space-y-4 py-4">
+				<div className="space-y-4">
 					<WorkspaceFormFields
 						description={form.description ?? ''}
 						idPrefix="edit-workspace"
