@@ -8,6 +8,8 @@ import { workspaceMembers } from '../../db/schema/workspaces.ts';
 const MAX_WORKSPACE_MEMBERS = 500;
 
 interface MemberRecord {
+	/** The member's email, so a member row can identify a person without printing their row id. */
+	email: string;
 	joinedAt: string;
 	role: string;
 	userId: number;
@@ -31,6 +33,7 @@ function getMembers(workspaceId: number): MemberRecord[] {
 
 	const rows = db
 		.select({
+			email: users.email,
 			joinedAt: workspaceMembers.joinedAt,
 			role: workspaceMembers.role,
 			userId: workspaceMembers.userId,
@@ -44,6 +47,7 @@ function getMembers(workspaceId: number): MemberRecord[] {
 		.all();
 
 	return rows.map((r) => ({
+		email: r.email,
 		joinedAt: r.joinedAt.toISOString(),
 		role: r.role,
 		userId: r.userId,

@@ -22,7 +22,12 @@ function MemberList({
 	}
 
 	return (
-		<div className="space-y-2">
+		/*
+		 * One bordered shell with divided rows, in place of five separately bordered cards. At the
+		 * row height this gives (~49px, the same as a table row on the workspace list itself) five
+		 * members occupy roughly 245px instead of 347px and the dialog's scroller disappears.
+		 */
+		<div className="divide-y divide-border/60 overflow-hidden rounded-lg border">
 			{members.map((member) => (
 				<ManageMemberRow
 					isSelected={selectedUserIds.has(member.userId)}

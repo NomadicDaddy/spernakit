@@ -55,7 +55,9 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 					{selectedUser
 						? `${selectedUser.username} (${selectedUser.email})`
 						: 'Select a user…'}
-					<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+					{/* No `ml-2`: Button already sets `gap-2`, and this is the last of the
+					    doubled icon margins on the workspace surface. */}
+					<ChevronsUpDown aria-hidden="true" className="size-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent
@@ -91,7 +93,7 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 										value={`${user.username}-${user.email}-${user.id}`}>
 										<Check
 											className={cn(
-												'mr-2 size-4',
+												'size-4',
 												selectedUser?.id === user.id
 													? 'opacity-100'
 													: 'opacity-0',

@@ -51,10 +51,18 @@ function WorkspaceManagementPage() {
 
 	return (
 		<div className="space-y-6 p-6">
-			<PageHeader title="Workspaces">
+			{/*
+			 * Every other PageHeader call site in the app supplies a description — dashboard,
+			 * files, dashboards, analytics. Without one this page rendered a 36px display title
+			 * alone above the header's rule, with the whole 24px band empty to the left of the
+			 * Create Workspace button.
+			 */}
+			<PageHeader
+				description="Group users and data into isolated workspaces."
+				title="Workspaces">
 				{can('ADMIN') && (
 					<Button onClick={() => setDialog({ type: 'create' })}>
-						<Building2 aria-hidden="true" className="mr-2 h-4 w-4" />
+						<Building2 aria-hidden="true" className="h-4 w-4" />
 						Create Workspace
 					</Button>
 				)}
