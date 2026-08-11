@@ -1,117 +1,27 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, Database, Download, RotateCcw } from 'lucide-react';
+import { Archive, Clock, Database, Download, HardDrive } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { type BackupFile, getBackupStatus, restoreBackup, triggerBackup } from '@/api/backup';
+import { StatCard } from '@/components/shared/charts/StatCard';
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
-import { Badge } from '@/components/ui/badge';
+import { DataTable } from '@/components/shared/data-table/DataTable';
+import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useUrlFilters } from '@/hooks/useUrlFilters';
 import { formatBytes } from '@/lib/formatters';
 
-const BACKUPS_PER_PAGE = 20;
-
-interface BackupListProps {
-	backups: BackupFile[];
-	canRestore: boolean;
-	onPageChange: (page: number) => void;
-	onRestore: (backup: BackupFile) => void;
-	page: number;
-	restoring: boolean;
-}
-
-function BackupList({
-	backups,
-	canRestore,
-	onPageChange,
-	onRestore,
-	page,
-	restoring,
-}: BackupListProps) {
-	const { formatDateTime } = useFormatters();
-	if (backups.length === 0) {
-		return <p className="text-sm text-muted-foreground">No backups available</p>;
-	}
-
-	const totalPages = Math.ceil(backups.length / BACKUPS_PER_PAGE);
-	const safePage = Math.min(page, totalPages);
-	const start = (safePage - 1) * BACKUPS_PER_PAGE;
-	const visible = backups.slice(start, start + BACKUPS_PER_PAGE);
-
-	return (
-		<div className="space-y-3">
-			<div className="space-y-2">
-				{visible.map((backup) => (
-					<div
-						className="flex items-center justify-between rounded-md border p-3"
-						key={backup.filename}>
-						<div className="flex items-center gap-3">
-							<Database aria-hidden="true" className="size-4 text-muted-foreground" />
-							<div>
-								<p className="text-sm font-medium">{backup.filename}</p>
-								<p className="text-xs text-muted-foreground">
-									{formatDateTime(backup.timestamp)}
-									{' — '}
-									{formatBytes(backup.sizeBytes)}
-								</p>
-							</div>
-						</div>
-						{canRestore && (
-							<Button
-								disabled={restoring}
-								onClick={() => onRestore(backup)}
-								size="sm"
-								variant="outline">
-								<RotateCcw aria-hidden="true" className="mr-1 size-3" />
-								Restore
-							</Button>
-						)}
-					</div>
-				))}
-			</div>
-			{totalPages > 1 && (
-				<div className="flex items-center justify-between text-sm">
-					<span className="text-muted-foreground">
-						Page {safePage} of {totalPages} ({backups.length} backups)
-					</span>
-					<div className="flex gap-2">
-						<Button
-							disabled={safePage <= 1}
-							onClick={() => onPageChange(safePage - 1)}
-							size="sm"
-							variant="outline">
-							<ChevronLeft aria-hidden="true" className="mr-1 size-3" />
-							Previous
-						</Button>
-						<Button
-							disabled={safePage >= totalPages}
-							onClick={() => onPageChange(safePage + 1)}
-							size="sm"
-							variant="outline">
-							Next
-							<ChevronRight aria-hidden="true" className="ml-1 size-3" />
-						</Button>
-					</div>
-				</div>
-			)}
-		</div>
-	);
-}
+import { useBackupColumns } from './useBackupColumns';
 
 export function BackupTab() {
 	const { can } = useAuthorization();
 	const canManageBackups = can('ADMIN');
 	const canRestore = can('SYSOP');
 	const queryClient = useQueryClient();
-	const { formatDateTime } = useFormatters();
+	const { formatDateTime, formatTimestamp } = useFormatters();
 	const [restoreTarget, setRestoreTarget] = useState<BackupFile | null>(null);
-	const { getFilter, setFilters } = useUrlFilters();
-	const parsedPage = Number(getFilter('backupPage', '1'));
-	const requestedPage = Number.isFinite(parsedPage) ? Math.max(1, Math.floor(parsedPage)) : 1;
 
 	const { data } = useQuery({
 		enabled: canManageBackups,
@@ -128,12 +38,6 @@ export function BackupTab() {
 		onSuccess: (res) => {
 			if (res.data.success) {
 				toast.success('Backup created successfully');
-				setFilters(
-					(params) => {
-						params.delete('backupPage');
-					},
-					{ replace: false },
-				);
 				void queryClient.invalidateQueries({ queryKey: ['backup-status'] });
 			} else {
 				toast.error('Backup failed. Check available disk space and try again.');
@@ -157,6 +61,12 @@ export function BackupTab() {
 		},
 	});
 
+	const columns = useBackupColumns({
+		canRestore,
+		onRestore: setRestoreTarget,
+		restoring: restoreMutation.isPending,
+	});
+
 	if (!canManageBackups) {
 		return (
 			<div className="flex h-[40vh] items-center justify-center">
@@ -171,68 +81,88 @@ export function BackupTab() {
 	}
 
 	const backups = data?.backups ?? [];
-	const totalPages = Math.max(1, Math.ceil(backups.length / BACKUPS_PER_PAGE));
-	const page = requestedPage > totalPages ? 1 : requestedPage;
-	const setPage = (nextPage: number) => {
-		setFilters(
-			(params) => {
-				if (nextPage <= 1) {
-					params.delete('backupPage');
-				} else {
-					params.set('backupPage', String(nextPage));
-				}
-			},
-			{ replace: false },
-		);
-	};
+	const totalBytes = backups.reduce((sum, backup) => sum + backup.sizeBytes, 0);
+	const latest = data?.lastBackup;
 
 	return (
+		/*
+		 * No outer Card. This tab was the only one on the settings rail that wrapped its whole body
+		 * in one — a card header restating the page header 21px above it, and sixteen bordered rows
+		 * boxed inside a box. The rail's other tabs put a `SectionHeader` on the canvas and let the
+		 * table's own shell be the only frame, which is what happens here.
+		 */
 		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<div className="flex items-center justify-between">
-						<div>
-							<CardTitle className="flex items-center gap-2">
-								<Database aria-hidden="true" className="size-5" />
-								Database Backups
-							</CardTitle>
-							<CardDescription>
-								Manage database backups and restore points
-							</CardDescription>
-						</div>
+			<SectionHeader
+				description="Restore points written by the scheduled backup task, newest first."
+				title="Database Backups"
+			/>
+
+			{/*
+			 * What the strip above the list used to say was `Last backup: 08/09/2026 16:29
+			 * [536.04 KB]` — a verbatim duplicate of the first row 30px below it. The three facts an
+			 * operator actually wants before touching this surface are how recent the newest restore
+			 * point is, how many exist, and what they cost on disk; the count in particular was only
+			 * ever rendered inside a pagination line that stayed hidden below 20 backups.
+			 */}
+			<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<StatCard
+					icon={<Clock aria-hidden="true" className="size-4" />}
+					title="Latest backup"
+					value={latest ? formatTimestamp(latest.timestamp) : 'Never'}
+					{...(latest ? { subtitle: formatDateTime(latest.timestamp) } : {})}
+				/>
+				<StatCard
+					icon={<Database aria-hidden="true" className="size-4" />}
+					title="Restore points"
+					value={backups.length}
+				/>
+				<StatCard
+					icon={<HardDrive aria-hidden="true" className="size-4" />}
+					title="Total size"
+					value={formatBytes(totalBytes)}
+				/>
+			</div>
+
+			{/*
+			 * Client-side pagination — the `pagination` prop is deliberately omitted. The whole
+			 * inventory arrives in one `getBackupStatus` response, so the table pages what it already
+			 * holds. That also retires the `backupPage` URL param the hand-rolled pager carried: it
+			 * only ever appeared above 20 records, and the search box now reaches a named file
+			 * directly rather than by paging to it.
+			 */}
+			<DataTable
+				columns={columns}
+				data={backups}
+				empty={{
+					action: (
 						<Button
 							disabled={triggerMutation.isPending}
-							onClick={() => triggerMutation.mutate()}>
-							<Download aria-hidden="true" className="mr-2 size-4" />
+							onClick={() => triggerMutation.mutate()}
+							size="sm">
+							<Download aria-hidden="true" className="size-4" />
 							{triggerMutation.isPending ? 'Creating…' : 'Create Backup'}
 						</Button>
-					</div>
-				</CardHeader>
-				<CardContent>
-					<div className="mb-4 flex items-center gap-4 text-sm">
-						<span className="text-muted-foreground">Last backup:</span>
-						<span className="font-medium">
-							{data?.lastBackup?.timestamp
-								? formatDateTime(data.lastBackup.timestamp)
-								: 'Never'}
-						</span>
-						{data?.lastBackup && (
-							<Badge variant="outline">
-								{formatBytes(data.lastBackup.sizeBytes)}
-							</Badge>
-						)}
-					</div>
-
-					<BackupList
-						backups={backups}
-						canRestore={canRestore}
-						onPageChange={setPage}
-						onRestore={setRestoreTarget}
-						page={page}
-						restoring={restoreMutation.isPending}
-					/>
-				</CardContent>
-			</Card>
+					),
+					description:
+						'Nothing has been backed up yet. Create one now, or let the schedule take the first.',
+					// The SectionHeader above the table owns the h2.
+					headingLevel: 'h3',
+					icon: Archive,
+					// No `isFiltered`: the search box is `searchColumn`, a TanStack filter the table
+					// already reads out of its own state.
+					title: 'No backups yet',
+				}}
+				filterPlaceholder="Search backups…"
+				searchColumn="filename"
+				toolbarActions={
+					<Button
+						disabled={triggerMutation.isPending}
+						onClick={() => triggerMutation.mutate()}>
+						<Download aria-hidden="true" className="size-4" />
+						{triggerMutation.isPending ? 'Creating…' : 'Create Backup'}
+					</Button>
+				}
+			/>
 
 			<ConfirmAlertDialog
 				confirmText="Restore"
@@ -255,6 +185,7 @@ export function BackupTab() {
 					if (!open) setRestoreTarget(null);
 				}}
 				title="Restore Database"
+				variant="destructive"
 			/>
 		</div>
 	);

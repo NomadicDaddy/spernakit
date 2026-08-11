@@ -17,11 +17,20 @@ import { useFormatters } from '@/hooks/useFormatters';
 
 import { UserStatusBadge } from './UserStatusBadge';
 
-const roleBadgeVariant: Record<UserRole, 'default' | 'destructive' | 'outline' | 'secondary'> = {
-	ADMIN: 'default',
-	MANAGER: 'secondary',
+/**
+ * Role is identity, not state, so it stays in the neutral half of the badge vocabulary. SYSOP was
+ * `destructive` and ADMIN was `default`, which put the app's red and its primary blue on a column
+ * where nothing is wrong and nothing is clickable — and left the actual account state (locked,
+ * failed attempts) as the quietest thing in the row.
+ *
+ * The filled/bordered split marks privileged from unprivileged. The exact tier is carried by the
+ * label, which is the only thing that can carry five values without inventing five colours.
+ */
+const roleBadgeVariant: Record<UserRole, 'outline' | 'secondary'> = {
+	ADMIN: 'secondary',
+	MANAGER: 'outline',
 	OPERATOR: 'outline',
-	SYSOP: 'destructive',
+	SYSOP: 'secondary',
 	VIEWER: 'outline',
 };
 
@@ -107,31 +116,31 @@ export function useUserColumns({
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="end">
 							<DropdownMenuItem onClick={() => onEdit(user)}>
-								<UserPen aria-hidden="true" className="mr-2 size-4" />
+								<UserPen aria-hidden="true" className="size-4" />
 								Edit
 							</DropdownMenuItem>
 							{isSysop() && currentUser?.id !== user.id && (
 								<DropdownMenuItem onClick={() => onImpersonate(user)}>
-									<Eye aria-hidden="true" className="mr-2 size-4" />
+									<Eye aria-hidden="true" className="size-4" />
 									Impersonate
 								</DropdownMenuItem>
 							)}
 							{isAdmin() && currentUser?.id !== user.id && (
 								<DropdownMenuItem onClick={() => onResetPassword(user)}>
-									<KeyRound aria-hidden="true" className="mr-2 size-4" />
+									<KeyRound aria-hidden="true" className="size-4" />
 									Reset Password
 								</DropdownMenuItem>
 							)}
 							{isUserLocked(user) && (
 								<DropdownMenuItem onClick={() => onUnlock(user)}>
-									<LockOpen aria-hidden="true" className="mr-2 size-4" />
+									<LockOpen aria-hidden="true" className="size-4" />
 									Unlock Account
 								</DropdownMenuItem>
 							)}
 							<DropdownMenuItem
 								className="text-destructive"
 								onClick={() => onDelete(user)}>
-								<Trash2 aria-hidden="true" className="mr-2 size-4" />
+								<Trash2 aria-hidden="true" className="size-4" />
 								Delete
 							</DropdownMenuItem>
 						</DropdownMenuContent>

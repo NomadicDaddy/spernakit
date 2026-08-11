@@ -94,7 +94,7 @@ function ResetPasswordDialog({ isOpen, onOpenChange, user }: ResetPasswordDialog
 					<div className="grid gap-2">
 						<Label htmlFor="reset-mode">Reset Mode</Label>
 						<Select onValueChange={handleModeChange} value={mode}>
-							<SelectTrigger id="reset-mode">
+							<SelectTrigger className="w-full" id="reset-mode">
 								<SelectValue placeholder="Select mode" />
 							</SelectTrigger>
 							<SelectContent>
