@@ -183,4 +183,26 @@ export default defineConfig([
 			'react-refresh/only-export-components': 'off',
 		},
 	},
+	{
+		files: ['src/**/*.{ts,tsx}'],
+		rules: {
+			// Theme tokens are OKLCH values, not HSL channel triplets. Stock shadcn snippets
+			// ship `hsl(var(--token))`, which here produces invalid CSS the browser silently
+			// drops — the failure is a missing border or a transparent surface, not an error.
+			// Reference the token directly: `var(--token)`, or use the Tailwind token class.
+			'no-restricted-syntax': [
+				'error',
+				{
+					message:
+						'Theme tokens are OKLCH, not HSL triplets — use var(--token) or the Tailwind token class, not hsl(var(--token)).',
+					selector: 'Literal[value=/hsl\\(\\s*var\\(/]',
+				},
+				{
+					message:
+						'Theme tokens are OKLCH, not HSL triplets — use var(--token) or the Tailwind token class, not hsl(var(--token)).',
+					selector: 'TemplateElement[value.raw=/hsl\\(\\s*var\\(/]',
+				},
+			],
+		},
+	},
 ]);

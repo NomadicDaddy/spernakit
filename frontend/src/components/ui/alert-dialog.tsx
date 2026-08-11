@@ -39,14 +39,23 @@ function AlertDialogContent({
 	size = 'default',
 	...props
 }: {
-	size?: 'default' | 'sm';
+	/**
+	 * Width tier. `default` is the 512px prompt width, `sm` the 320px one, and `lg` the 672px
+	 * management panel used by dialogs that hold a list rather than a question.
+	 *
+	 * Width belongs here rather than in a `max-w-*` utility passed through `className`: the
+	 * default tier is spelled `data-[size=default]:sm:max-w-lg`, whose attribute selector
+	 * outranks a plain `max-w-2xl` and is not merged away by `cn`, so a caller asking for a
+	 * wider dialog still rendered at 512px with the losing class sitting in the class list.
+	 */
+	size?: 'default' | 'lg' | 'sm';
 } & React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
 	return (
 		<AlertDialogPortal>
 			<AlertDialogOverlay />
 			<AlertDialogPrimitive.Content
 				className={cn(
-					'group/alert-dialog-content fixed top-[50%] left-[50%] z-50 grid max-h-[85vh] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-lg border bg-background p-6 shadow-lg duration-200 data-[size=sm]:max-w-xs data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[size=default]:sm:max-w-lg',
+					'group/alert-dialog-content fixed top-[50%] left-[50%] z-50 grid max-h-[85vh] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 overflow-y-auto overscroll-contain rounded-xl border bg-card p-6 text-card-foreground shadow-lg duration-200 data-[size=sm]:max-w-xs data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[size=default]:sm:max-w-lg data-[size=lg]:sm:max-w-2xl',
 					className,
 				)}
 				data-size={size}
