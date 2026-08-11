@@ -2461,11 +2461,19 @@ The following endpoints exist in the codebase but are not fully documented above
 
 - **GET** `/api/v1/settings/app-features` -- Get application feature flags
 
+### Bugs
+
+- **POST** `/api/v1/bugs` -- Submit a bug report or feature request (any authenticated user)
+- **GET** `/api/v1/bugs` -- List bug reports, newest first, paginated (ADMIN+). Optional
+  `status`, `kind` (`bug` \| `feature`), and free-text `search` over the description. Every filter
+  is applied in SQL, so the returned total counts the filtered set rather than the whole inbox.
+- **PATCH** `/api/v1/bugs/:id` -- Update a report's triage status (ADMIN+); writes a
+  `bug.status.updated` audit entry
+
 ### Other
 
 - `/api/v1/onboarding` -- Onboarding flow endpoints
 - `/api/v1/database-admin` -- Database administration endpoints (SYSOP)
-- `/api/v1/bugs` -- Bug reporting endpoints
 
 ---
 
