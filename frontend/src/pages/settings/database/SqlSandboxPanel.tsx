@@ -7,9 +7,9 @@ import { executeQuery } from '@/api/databaseAdmin';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { exportTableData } from '@/lib/tableExport';
+import { SettingsToggleRow } from '@/pages/settings/SettingsToggleRow';
 
 import { SqlResultsTable } from './SqlResultsTable';
 
@@ -81,35 +81,42 @@ function SqlSandboxPanel() {
 			{/* Query input */}
 			<Card>
 				<CardHeader className="pb-3">
-					<CardTitle className="text-base">SQL Query</CardTitle>
+					<CardTitle>SQL Query</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-3">
-					<div
-						className="flex items-center justify-between rounded-md border p-3"
-						title="Safe mode blocks non-SELECT queries client-side before sending to the server.">
-						<div className="space-y-0.5">
-							<Label htmlFor="sql-safe-mode">Safe Mode</Label>
-							<p className="text-xs text-muted-foreground">
-								Block write queries (INSERT, UPDATE, DELETE, etc.) before execution
-							</p>
-						</div>
-						<Switch
-							checked={safeMode}
-							id="sql-safe-mode"
-							onCheckedChange={setSafeMode}
-						/>
-					</div>
+					{/*
+					 * The shared settings row rather than the same markup plus a border, which made
+					 * a card inside a card at the top of this one. The explanation it used to carry
+					 * as a native `title` — invisible to the keyboard — is the description slot.
+					 */}
+					<SettingsToggleRow
+						checked={safeMode}
+						description="Block write queries (INSERT, UPDATE, DELETE, etc.) before execution"
+						id="sql-safe-mode"
+						label="Safe Mode"
+						onCheckedChange={setSafeMode}
+					/>
 					<Label className="sr-only" htmlFor="sql-query">
 						SQL query
 					</Label>
+					{/*
+					 * `rows` never applied: the shared Textarea's `min-h-16` and `field-sizing:
+					 * content` overrode it, so a five-line request rendered 64px — two lines of the
+					 * monospace face. `max-w` caps the measure at a readable ~80 columns; at full
+					 * card width a query ran to about 170 characters per line.
+					 */}
 					<Textarea
+						autoCapitalize="off"
 						autoComplete="off"
-						className="font-mono text-sm"
+						autoCorrect="off"
+						className="min-h-48 max-w-[80ch] font-mono text-sm"
 						id="sql-query"
 						maxLength={4096}
 						onChange={(e) => setSql(e.target.value)}
 						placeholder="SELECT * FROM users LIMIT 10"
-						rows={5}
+						// Identifiers like `sqlite_master` got a red wavy underline, which on a dark
+						// monospace field reads as a validation error on a valid query.
+						spellCheck={false}
 						value={sql}
 					/>
 
@@ -124,7 +131,7 @@ function SqlSandboxPanel() {
 							disabled={!sql.trim() || queryMutation.isPending}
 							onClick={handleExecute}
 							size="sm">
-							<Play className="mr-1.5 h-4 w-4" />
+							<Play className="h-4 w-4" />
 							{queryMutation.isPending ? 'Executing…' : 'Execute'}
 						</Button>
 
@@ -134,14 +141,14 @@ function SqlSandboxPanel() {
 									onClick={() => handleExport('csv')}
 									size="sm"
 									variant="outline">
-									<Download className="mr-1.5 h-4 w-4" />
+									<Download className="h-4 w-4" />
 									CSV
 								</Button>
 								<Button
 									onClick={() => handleExport('json')}
 									size="sm"
 									variant="outline">
-									<Download className="mr-1.5 h-4 w-4" />
+									<Download className="h-4 w-4" />
 									JSON
 								</Button>
 							</>

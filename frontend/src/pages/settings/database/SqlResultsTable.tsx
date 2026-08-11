@@ -31,17 +31,26 @@ function SqlResultsTable({ columns, rowCount, rows }: SqlResultsTableProps) {
 	return (
 		<Card>
 			<CardHeader className="pb-3">
-				<CardTitle className="text-base">
+				<CardTitle>
 					Results ({rowCount} {rowCount === 1 ? 'row' : 'rows'} returned)
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="p-0">
-				<div
-					className="overflow-auto"
-					ref={scrollRef}
-					style={shouldVirtualize ? { maxHeight: 600 } : undefined}>
-					<table className="w-full text-sm">
-						<thead className={shouldVirtualize ? 'sticky top-0 z-10' : undefined}>
+				{/*
+				 * The height cap and the sticky header apply on both paths. Gating them on
+				 * `shouldVirtualize` meant a 90-row result scrolled its column names away and pushed
+				 * the rest of the page down, while a 110-row result did neither — two visibly
+				 * different tables from one control, decided by a threshold the user cannot see.
+				 */}
+				<div className="max-h-[600px] overflow-auto" ref={scrollRef}>
+					{/*
+					 * `w-auto min-w-full`, not `w-full`: a one-column result was stretched across the
+					 * whole card, leaving each value alone at the left of a 1470px band. Columns now
+					 * size to their content and the table still fills the card when there is enough
+					 * of it to fill.
+					 */}
+					<table className="w-auto min-w-full text-sm">
+						<thead className="sticky top-0 z-10">
 							<tr className="border-b bg-card">
 								{columns.map((col) => (
 									<th

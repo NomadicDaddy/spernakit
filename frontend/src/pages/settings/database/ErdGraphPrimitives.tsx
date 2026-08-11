@@ -48,11 +48,19 @@ function TableNode({
 			onMouseLeave={onMouseLeave}
 			role="button"
 			tabIndex={0}>
+			{/*
+			 * The stroke comes from token classes, not an inline `hsl(var(--primary))`.
+			 * The theme ships OKLCH values, so wrapping one in hsl() yields invalid CSS and
+			 * the browser drops the declaration — which is what left every node bodiless.
+			 */}
 			<rect
-				className={isActive || isAdjacent ? 'fill-primary/5' : 'fill-card'}
+				className={
+					isActive || isAdjacent
+						? 'fill-primary/5 stroke-primary'
+						: 'fill-card stroke-border'
+				}
 				height={position.height}
 				rx={6}
-				stroke={isActive || isAdjacent ? 'hsl(var(--primary))' : 'hsl(var(--border))'}
 				strokeWidth={isActive ? 2.5 : isAdjacent ? 1.75 : 1}
 				width={position.width}
 				x={position.x}
