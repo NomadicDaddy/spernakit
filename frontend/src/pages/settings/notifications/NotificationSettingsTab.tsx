@@ -4,9 +4,16 @@ import { toast } from 'sonner';
 
 import type { Setting } from '@/api/types';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 import { useNotificationRetentionPolicy } from '@/hooks/notifications/useNotifications';
 import { useSaveSetting, useSettings } from '@/hooks/settings/useSettingsHooks';
 import { useAuthorization } from '@/hooks/useAuthorization';
@@ -50,40 +57,47 @@ const DELIVERY_TOGGLES: ToggleConfig[] = [
 	},
 ];
 
+/*
+ * Labels match /profile/preferences one-to-one so an operator can read the global default and the
+ * per-user control by the same name. The "enabled by default" suffix the labels used to carry is
+ * already stated by the card title and description; repeating it five times cost each row 20
+ * characters and left no room for the description slot, so these rows scanned at a 34px pitch
+ * against the 48px pitch of the card directly above them.
+ */
 const DEFAULT_PREF_TOGGLES: ToggleConfig[] = [
 	{
 		fallback: true,
 		id: 'defaultEmail',
 		key: 'app.notification_default_email',
-		label: 'Email notifications enabled by default',
+		label: 'Email notifications',
 		toastLabel: 'Default email notifications',
 	},
 	{
 		fallback: true,
 		id: 'defaultPush',
 		key: 'app.notification_default_push',
-		label: 'Push notifications enabled by default',
+		label: 'Push notifications',
 		toastLabel: 'Default push notifications',
 	},
 	{
 		fallback: true,
 		id: 'defaultSecurity',
 		key: 'app.notification_default_security',
-		label: 'Security alerts enabled by default',
+		label: 'Security alerts',
 		toastLabel: 'Default security alerts',
 	},
 	{
 		fallback: true,
 		id: 'defaultSystem',
 		key: 'app.notification_default_system',
-		label: 'System alerts enabled by default',
+		label: 'System alerts',
 		toastLabel: 'Default system alerts',
 	},
 	{
 		fallback: false,
 		id: 'defaultMarketing',
 		key: 'app.notification_default_marketing',
-		label: 'Marketing emails enabled by default',
+		label: 'Marketing emails',
 		toastLabel: 'Default marketing emails',
 	},
 ];
@@ -131,29 +145,26 @@ function NotificationSettingsTab() {
 
 	return (
 		<div className="space-y-6">
-			{isAdmin() && (
-				<Card>
-					<CardHeader>
-						<CardTitle>Broadcast Notification</CardTitle>
-						<CardDescription>
-							Send a notification to all users in the system
-						</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<Button onClick={() => setShowBroadcast(true)} variant="outline">
-							<Megaphone aria-hidden="true" className="mr-2 size-4" />
-							Send Broadcast
-						</Button>
-					</CardContent>
-				</Card>
-			)}
-
+			{/*
+			 * The broadcast action used to own the top card — a 152px shell holding one button,
+			 * whose title and description repeated the dialog's own header word for word. In the
+			 * delivery card's action slot it costs no vertical space and the page opens on real
+			 * settings.
+			 */}
 			<Card>
 				<CardHeader>
 					<CardTitle>Notification Delivery</CardTitle>
 					<CardDescription>
 						Configure global notification delivery settings for all users
 					</CardDescription>
+					{isAdmin() && (
+						<CardAction>
+							<Button onClick={() => setShowBroadcast(true)} variant="outline">
+								<Megaphone aria-hidden="true" className="size-4" />
+								Send Broadcast
+							</Button>
+						</CardAction>
+					)}
 				</CardHeader>
 				<CardContent>
 					<div className="space-y-4">
@@ -184,24 +195,39 @@ function NotificationSettingsTab() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<div className="flex items-center justify-between">
-							<div className="space-y-0.5">
-								<Label>Deleted notifications</Label>
-								<p className="text-xs text-muted-foreground">
-									Soft-deleted notifications are permanently purged after this
-									window. Read notifications are not auto-purged.
-								</p>
+						{/*
+						 * Reported server config, rendered in the read-only idiom RuntimeConfigTab
+						 * uses for exactly this content: a `divide-y` field list with a muted label
+						 * and a Badge holding the value. Built from the editable toggle row's shape
+						 * — bold Label, right-aligned slot — the only thing marking it as not a
+						 * control was the missing switch.
+						 */}
+						<dl className="divide-y divide-border/40">
+							<div className="flex items-start justify-between gap-6 py-2 first:pt-0 last:pb-0">
+								<div className="space-y-0.5">
+									<dt className="text-sm text-muted-foreground">
+										Deleted notifications
+									</dt>
+									<dd className="text-xs text-muted-foreground">
+										Soft-deleted notifications are permanently purged after this
+										window. Read notifications are not auto-purged.
+									</dd>
+								</div>
+								<dd className="shrink-0">
+									<Badge variant="outline">
+										{retentionLoading
+											? '…'
+											: deletedNotificationsDays === undefined
+												? 'Unavailable'
+												: `${deletedNotificationsDays} ${
+														deletedNotificationsDays === 1
+															? 'day'
+															: 'days'
+													}`}
+									</Badge>
+								</dd>
 							</div>
-							<span className="text-sm text-muted-foreground">
-								{retentionLoading
-									? '…'
-									: deletedNotificationsDays === undefined
-										? 'Unavailable'
-										: `${deletedNotificationsDays} ${
-												deletedNotificationsDays === 1 ? 'day' : 'days'
-											}`}
-							</span>
-						</div>
+						</dl>
 					</CardContent>
 				</Card>
 			)}
@@ -219,6 +245,7 @@ function NotificationSettingsTab() {
 						{DEFAULT_PREF_TOGGLES.map((t) => (
 							<SettingsToggleRow
 								checked={resolve(t.key, t.fallback)}
+								description={`${t.fallback ? 'On' : 'Off'} for new users unless they change it.`}
 								disabled={isLoading || saveSetting.isPending}
 								id={t.id}
 								key={t.id}

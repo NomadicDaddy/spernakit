@@ -1,53 +1,44 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 interface FeatureToggleConfig {
-	description: string;
+	/** Only where the row carries a constraint the card header does not already state. */
+	description?: string;
 	key: string;
 	label: string;
 	settingKey: string;
 }
 
+/*
+ * Labels are the navigation item's own name, not a sentence about it.
+ *
+ * Every row used to read "<Name> in navigation" over "Show the <Name> item in the navigation for
+ * all users" — the phrase "in navigation" appeared thirteen times in one card whose header already
+ * says "Control which items appear in the navigation", and six of the seven descriptions were one
+ * sentence with a noun swapped. The three rows that genuinely differ — Analytics, Onboarding and
+ * the bug report button — had their real constraint buried in that boilerplate. Now they are the
+ * only rows with a description, so the distinction is what stands out instead of what is hidden.
+ */
 const FEATURE_TOGGLES: FeatureToggleConfig[] = [
+	{ key: 'workspaces', label: 'Workspaces', settingKey: 'app.workspaces_enabled' },
+	{ key: 'files', label: 'Files', settingKey: 'app.files_enabled' },
+	{ key: 'dashboards', label: 'Custom Dashboards', settingKey: 'app.dashboards_enabled' },
 	{
-		description: 'Show the Workspaces item in the navigation for all users',
-		key: 'workspaces',
-		label: 'Workspaces in navigation',
-		settingKey: 'app.workspaces_enabled',
-	},
-	{
-		description: 'Show the Files item in the navigation for all users',
-		key: 'files',
-		label: 'Files in navigation',
-		settingKey: 'app.files_enabled',
-	},
-	{
-		description: 'Show the Custom Dashboards item in the navigation for all users',
-		key: 'dashboards',
-		label: 'Custom Dashboards in navigation',
-		settingKey: 'app.dashboards_enabled',
-	},
-	{
-		description: 'Show the Analytics item in the navigation for authorized users',
+		description: 'Authorized users only',
 		key: 'analytics',
-		label: 'Analytics in navigation',
+		label: 'Analytics',
 		settingKey: 'app.analytics_enabled',
 	},
+	{ key: 'notifications', label: 'Notifications', settingKey: 'app.notifications_enabled' },
 	{
-		description: 'Show the Notifications item in the navigation for all users',
-		key: 'notifications',
-		label: 'Notifications in navigation',
-		settingKey: 'app.notifications_enabled',
-	},
-	{
-		description: 'Show the Onboarding page for admin users',
+		description: 'Admin users only',
 		key: 'onboarding',
-		label: 'Onboarding in navigation',
+		label: 'Onboarding',
 		settingKey: 'app.onboarding_enabled',
 	},
 	{
-		description: 'Show the bug report button in the header',
+		description: 'Shown in the header',
 		key: 'bugReport',
 		label: 'Bug report button',
 		settingKey: 'app.bug_report_enabled',
@@ -65,25 +56,43 @@ function FeatureFlagsSection({ features, onFeatureChange, pending }: FeatureFlag
 		<Card>
 			<CardHeader>
 				<CardTitle>Navigation Features</CardTitle>
-				<CardDescription>Control which items appear in the navigation</CardDescription>
+				{/*
+				 * The commit model, stated before the interaction rather than after it. These seven
+				 * switches change what every user of the installation sees, and the surface had no
+				 * Save button, no footer and no dirty marker — nothing said whether a flip was live
+				 * until a toast fired. Notification Retention already states its scope this way.
+				 */}
+				<CardDescription>
+					Control which items appear in the navigation. Changes apply immediately for all
+					users.
+				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-6">
-				{FEATURE_TOGGLES.map((toggle) => (
-					<div
-						className="flex flex-row items-center justify-between rounded-lg border p-4"
-						key={toggle.key}>
-						<div className="space-y-0.5">
-							<Label htmlFor={toggle.key}>{toggle.label}</Label>
-							<p className="text-sm text-muted-foreground">{toggle.description}</p>
-						</div>
-						<Switch
+			{/*
+			 * Two columns of `SettingsToggleRow`, not seven full-bleed bordered boxes.
+			 *
+			 * Each row used to be a `rounded-lg border p-4` box nested inside the card — card-in-card
+			 * chrome that exists nowhere else in settings, drawn in the language the app uses for
+			 * *clickable* cards while only the 32x18px Switch responded to the pointer. Stretched to
+			 * the card width it left up to 1083px of dead space between a label and the control it
+			 * belongs to, with no rule or column edge to bind them. The shared row (used by the
+			 * sibling Notifications tab) drops the nested shell and restores the 12px description
+			 * step; the two-column grid is the one /profile/preferences uses for the same job and
+			 * halves both the label-to-switch distance and the card's height.
+			 */}
+			<CardContent>
+				<div className="grid gap-4 sm:grid-cols-2">
+					{FEATURE_TOGGLES.map((toggle) => (
+						<SettingsToggleRow
 							checked={features[toggle.key] ?? true}
 							disabled={pending}
 							id={toggle.key}
+							key={toggle.key}
+							label={toggle.label}
 							onCheckedChange={(checked) => onFeatureChange(toggle.key, checked)}
+							{...(toggle.description ? { description: toggle.description } : {})}
 						/>
-					</div>
-				))}
+					))}
+				</div>
 			</CardContent>
 		</Card>
 	);

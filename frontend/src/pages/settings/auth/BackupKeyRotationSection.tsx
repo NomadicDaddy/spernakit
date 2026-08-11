@@ -69,6 +69,7 @@ function BackupKeyRotationSection() {
 				}}
 				onOpenChange={setShowRotateConfirm}
 				title="Re-encrypt All Backups"
+				variant="destructive"
 			/>
 		</>
 	);

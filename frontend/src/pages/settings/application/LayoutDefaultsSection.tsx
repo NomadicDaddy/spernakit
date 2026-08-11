@@ -1,16 +1,27 @@
 import { PanelLeft, PanelTop } from 'lucide-react';
 
-import { Button } from '@/components/ui/button';
+import { OptionCard } from '@/components/shared/OptionCard';
+import { OptionCardGroup } from '@/components/shared/OptionCardGroup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 
-const layoutOptions: { icon: React.ReactNode; label: string; value: 'sidebar' | 'topbar' }[] = [
+const layoutOptions: {
+	description: string;
+	icon: React.ReactNode;
+	label: string;
+	value: 'sidebar' | 'topbar';
+}[] = [
 	{
+		description: 'Navigation down the left edge.',
 		icon: <PanelLeft aria-hidden="true" className="size-5" />,
 		label: 'Sidebar',
 		value: 'sidebar',
 	},
-	{ icon: <PanelTop aria-hidden="true" className="size-5" />, label: 'Top Bar', value: 'topbar' },
+	{
+		description: 'Navigation across the top.',
+		icon: <PanelTop aria-hidden="true" className="size-5" />,
+		label: 'Top Bar',
+		value: 'topbar',
+	},
 ];
 
 interface LayoutDefaultsSectionProps {
@@ -27,33 +38,35 @@ function LayoutDefaultsSection({
 	return (
 		<Card>
 			<CardHeader>
+				{/* A real `h2`: the surface exposed exactly one heading — `h1 Settings` — so there
+				    was nothing to jump between its two sections. */}
 				<CardTitle>Default Layout</CardTitle>
 				<CardDescription>
 					Default layout for new users. Users can override in their preferences.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<div className="flex gap-3">
+				{/*
+				 * Same option idiom as /profile/preferences — this sets the default for the very
+				 * control the user meets there, so the two must not look like different kinds of
+				 * choice.
+				 */}
+				<OptionCardGroup className="grid gap-3 sm:grid-cols-2" label="Default layout">
 					{layoutOptions.map((option) => (
-						<Button
-							aria-pressed={defaultLayoutMode === option.value}
-							className={cn(
-								'flex items-center gap-2',
-								defaultLayoutMode === option.value &&
-									'ring-2 ring-primary ring-offset-2',
-							)}
+						<OptionCard
+							description={option.description}
 							disabled={pending}
+							icon={option.icon}
 							key={option.value}
-							onClick={() => {
+							label={option.label}
+							onSelect={() => {
 								if (option.value === defaultLayoutMode) return;
 								onDefaultLayoutChange(option.value);
 							}}
-							variant={defaultLayoutMode === option.value ? 'default' : 'outline'}>
-							{option.icon}
-							{option.label}
-						</Button>
+							selected={defaultLayoutMode === option.value}
+						/>
 					))}
-				</div>
+				</OptionCardGroup>
 			</CardContent>
 		</Card>
 	);

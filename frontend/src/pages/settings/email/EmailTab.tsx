@@ -1,14 +1,12 @@
-import { Mail } from 'lucide-react';
 import { useState } from 'react';
 
 import { type updateSmtpConfig } from '@/api/smtp';
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
+import { UnsavedChangesGuard } from '@/components/shared/UnsavedChangesGuard';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEmailSettings } from '@/hooks/settings/useEmailSettings';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useFormatters } from '@/hooks/useFormatters';
-import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { getFormString } from '@/lib/utils';
 
 import { EmailConfigForm } from './EmailConfigForm';
@@ -20,7 +18,6 @@ function EmailTab() {
 	const { config, configLoading, status, statusLoading, testMutation, updateMutation } =
 		useEmailSettings();
 	const [smtpFormDirty, setSmtpFormDirty] = useState(false);
-	useUnsavedChanges(smtpFormDirty);
 
 	function handleSave(e: React.FormEvent<HTMLFormElement>) {
 		e.preventDefault();
@@ -50,51 +47,41 @@ function EmailTab() {
 		return <CardSkeleton contentLines={3} descriptionWidth="h-4 w-64" />;
 	}
 
+	/*
+	 * The surface used to open on a 176px card holding one badge, two sentences and no controls —
+	 * a title naming the same subject as the card directly below it and a description pointing at
+	 * a form that lived in that other card. Folding the state into the header of the card that
+	 * changes it puts status beside its control and brings the whole surface inside one 1440x1200
+	 * screen.
+	 */
+	const headerStatus = (
+		<div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+			{status.configured ? (
+				<Badge variant="success">Configured</Badge>
+			) : (
+				<Badge variant="secondary">Not configured</Badge>
+			)}
+			{status.lastTestAt && (
+				<>
+					<Badge variant={status.lastTestSuccess ? 'success' : 'destructive'}>
+						{status.lastTestSuccess ? 'Test passed' : 'Test failed'}
+					</Badge>
+					<span className="text-xs text-muted-foreground">
+						{formatDateTime(status.lastTestAt)}
+					</span>
+				</>
+			)}
+		</div>
+	);
+
 	return (
 		<div className="space-y-6">
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<Mail aria-hidden="true" className="size-5" />
-						Email Configuration
-					</CardTitle>
-					<CardDescription>
-						SMTP settings are stored in database and managed via this form.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<div className="space-y-3">
-						<div className="flex items-center gap-3">
-							<span className="text-sm font-medium">SMTP Status:</span>
-							{status.configured ? (
-								<Badge variant="default">Configured</Badge>
-							) : (
-								<Badge variant="secondary">Not configured</Badge>
-							)}
-						</div>
-						{status.lastTestAt && (
-							<div className="flex items-center gap-3">
-								<span className="text-sm font-medium">Last Test:</span>
-								<Badge variant={status.lastTestSuccess ? 'default' : 'destructive'}>
-									{status.lastTestSuccess ? 'Success' : 'Failed'}
-								</Badge>
-								<span className="text-sm text-muted-foreground">
-									{formatDateTime(status.lastTestAt)}
-								</span>
-							</div>
-						)}
-						{!status.configured && (
-							<p className="text-sm text-muted-foreground">
-								To enable email, configure SMTP settings below.
-							</p>
-						)}
-					</div>
-				</CardContent>
-			</Card>
-
+			<UnsavedChangesGuard isDirty={smtpFormDirty} />
 			{isSysop() && (
 				<EmailConfigForm
 					config={config}
+					dirty={smtpFormDirty}
+					headerStatus={headerStatus}
 					onDirtyChange={setSmtpFormDirty}
 					onSave={handleSave}
 					savePending={updateMutation.isPending}
@@ -105,6 +92,7 @@ function EmailTab() {
 				onSendTest={handleSendTest}
 				status={status}
 				testPending={testMutation.isPending}
+				{...(isSysop() ? {} : { headerStatus })}
 			/>
 		</div>
 	);
