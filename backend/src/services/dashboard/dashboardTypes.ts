@@ -1,6 +1,7 @@
+import type { SQL } from 'drizzle-orm';
 import type { MetricType, WidgetType } from 'spernakit-shared';
 
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull, or } from 'drizzle-orm';
 
 import { getDb } from '../../db/index.ts';
 import { dashboardConfigs, dashboardWidgets } from '../../db/schema/dashboards.ts';
@@ -163,6 +164,26 @@ function mapWidgetInputsToValues(
  * @param workspaceId - Active workspace context, or null for cross-workspace (SYSOP)
  * @returns The dashboard config or undefined if not found.
  */
+/**
+ * The workspace predicate every owner-scoped dashboard query shares.
+ *
+ * A `workspace_id` of NULL means *global*: that is what `importDashboard` and `createFromTemplate`
+ * document when they accept `null` as the destination workspace. A bare `eq(workspaceId, active)`
+ * never matches NULL in SQL, so those global rows were invisible from every workspace — the list
+ * returned nothing while the record existed, and the detail route answered 404 for a dashboard the
+ * same user owned. Because the frontend attaches `X-Workspace-ID` to every request as soon as a
+ * workspace is selected, there was no way back to the row from inside the product at all. Matching
+ * NULL alongside the active workspace restores the documented meaning of the column.
+ *
+ * @param workspaceId - Active workspace context, or null for the cross-workspace (SYSOP) view
+ * @returns A condition to AND into the query, or `undefined` when the query is unscoped
+ */
+function workspaceScope(workspaceId: null | number): SQL | undefined {
+	if (workspaceId === null) return undefined;
+
+	return or(eq(dashboardConfigs.workspaceId, workspaceId), isNull(dashboardConfigs.workspaceId));
+}
+
 function findOwnedDashboard(
 	dashboardId: number,
 	userId: number,
@@ -174,8 +195,9 @@ function findOwnedDashboard(
 		eq(dashboardConfigs.userId, userId),
 		eq(dashboardConfigs.isDeleted, false),
 	];
-	if (workspaceId !== null) {
-		conditions.push(eq(dashboardConfigs.workspaceId, workspaceId));
+	const scope = workspaceScope(workspaceId);
+	if (scope) {
+		conditions.push(scope);
 	}
 	return db
 		.select()
@@ -191,4 +213,10 @@ export type {
 	DashboardWithWidgets,
 	WidgetInput,
 };
-export { createWidget, findOwnedDashboard, getWidgetsForDashboard, mapWidgetInputsToValues };
+export {
+	createWidget,
+	findOwnedDashboard,
+	getWidgetsForDashboard,
+	mapWidgetInputsToValues,
+	workspaceScope,
+};

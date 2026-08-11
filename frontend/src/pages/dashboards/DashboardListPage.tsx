@@ -3,9 +3,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
+import { EmptyState } from '@/components/shared/EmptyState';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { useDashboards } from '@/hooks/dashboards/useDashboards';
 import { useAuthorization } from '@/hooks/useAuthorization';
 
@@ -63,18 +63,18 @@ function DashboardListPage() {
 							onClick={() => fileInputRef.current?.click()}
 							size="sm"
 							variant="outline">
-							<Upload aria-hidden="true" className="mr-2 size-4" />
+							<Upload aria-hidden="true" className="size-4" />
 							Import
 						</Button>
 						<Button
 							onClick={() => setDialog({ kind: 'template' })}
 							size="sm"
 							variant="outline">
-							<LayoutGrid aria-hidden="true" className="mr-2 size-4" />
+							<LayoutGrid aria-hidden="true" className="size-4" />
 							From Template
 						</Button>
 						<Button onClick={() => setDialog({ kind: 'create' })} size="sm">
-							<Plus aria-hidden="true" className="mr-2 size-4" />
+							<Plus aria-hidden="true" className="size-4" />
 							New Dashboard
 						</Button>
 					</>
@@ -84,37 +84,38 @@ function DashboardListPage() {
 			{isLoading ? (
 				<DashboardCardSkeleton cardCount={3} />
 			) : !dashboards?.data.length ? (
-				<Card>
-					<CardContent className="flex flex-col items-center justify-center py-12">
-						<LayoutGrid
-							aria-hidden="true"
-							className="mb-4 size-12 text-muted-foreground"
-						/>
-						<h2 className="text-lg font-semibold">No custom dashboards yet</h2>
-						<p className="mt-1 text-sm text-muted-foreground">
-							{canMutate
-								? 'Create a dashboard from scratch or use a template to get started.'
-								: 'No dashboards have been shared with you yet.'}
-						</p>
-						{canMutate && (
-							<div className="mt-4 flex gap-2">
-								<Button
-									onClick={() => setDialog({ kind: 'template' })}
-									size="sm"
-									variant="outline">
-									<LayoutGrid aria-hidden="true" className="mr-2 size-4" />
-									From Template
-								</Button>
-								<Button onClick={() => setDialog({ kind: 'create' })} size="sm">
-									<Plus aria-hidden="true" className="mr-2 size-4" />
-									New Dashboard
-								</Button>
-							</div>
-						)}
-					</CardContent>
-				</Card>
+				/*
+				 * No action pair here. "From Template" and "New Dashboard" rendered twice in one
+				 * viewport — once in the page header and again ~320px below inside this panel —
+				 * so two identical blue primaries competed on a page whose whole convention is
+				 * one primary per header. The panel sits directly under the header that owns
+				 * them, so the description points at those controls instead of duplicating them.
+				 */
+				<EmptyState
+					description={
+						canMutate
+							? 'Use New Dashboard to start from scratch, or From Template for a ready-made layout.'
+							: 'No dashboards have been shared with you yet.'
+					}
+					icon={LayoutGrid}
+					title="No custom dashboards yet"
+				/>
 			) : (
-				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				/*
+				 * The ladder is shifted up one step, and a fourth column added at `2xl`. Column
+				 * count was picked off the viewport while the grid lives inside a canvas the 240px
+				 * sidebar and 24px padding have already shrunk: at a 1024 viewport the `lg:` step
+				 * fired against 728px of real canvas, giving 232px cards whose titles wrapped to
+				 * three lines and grew the card from 102px to 170px for identical content. At the
+				 * top end the grid stopped at three columns with 1472px available, so cards
+				 * stretched to 480px around 248px of content.
+				 *
+				 * `role="list"` because these are visually a list of items but structurally bare
+				 * divs — assistive tech got no count and no item boundaries.
+				 */
+				<div
+					className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+					role="list">
 					{dashboards.data.map((d) => (
 						<DashboardCard
 							canMutate={canMutate}
@@ -153,6 +154,7 @@ function DashboardListPage() {
 					if (!open) closeDialog();
 				}}
 				title="Delete Dashboard"
+				variant="destructive"
 			/>
 		</div>
 	);

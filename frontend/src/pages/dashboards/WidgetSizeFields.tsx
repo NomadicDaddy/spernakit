@@ -1,9 +1,10 @@
 import type { RefObject } from 'react';
+import type { WidgetType } from 'spernakit-shared';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { WIDGET_HEIGHT_MIN, WIDGET_WIDTH_MAX, WIDGET_WIDTH_MIN } from './widgetSize';
+import { getWidgetMinRows, WIDGET_WIDTH_MAX, WIDGET_WIDTH_MIN } from './widgetSize';
 
 interface WidgetSizeFieldsProps {
 	height: number;
@@ -11,6 +12,8 @@ interface WidgetSizeFieldsProps {
 	heightRef: RefObject<HTMLInputElement | null>;
 	onHeightChange: (height: number) => void;
 	onWidthChange: (width: number) => void;
+	/** Drives the height floor — a chart needs more rows than a stat card to render at all. */
+	widgetType: WidgetType;
 	width: number;
 	widthError: null | string;
 	widthRef: RefObject<HTMLInputElement | null>;
@@ -29,6 +32,7 @@ export function WidgetSizeFields({
 	heightRef,
 	onHeightChange,
 	onWidthChange,
+	widgetType,
 	width,
 	widthError,
 	widthRef,
@@ -66,7 +70,7 @@ export function WidgetSizeFields({
 					autoComplete="off"
 					id="widget-height"
 					inputMode="numeric"
-					min={WIDGET_HEIGHT_MIN}
+					min={getWidgetMinRows(widgetType)}
 					onChange={(e) => onHeightChange(Number(e.target.value))}
 					ref={heightRef}
 					type="number"

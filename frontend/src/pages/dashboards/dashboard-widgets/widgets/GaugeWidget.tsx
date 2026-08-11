@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { useWidgetData } from '@/hooks/dashboards/useWidgetData';
 
 import { METRIC_ICON, resolveMetricValue } from '../widgetHelpers';
+import { WidgetFrame } from './WidgetFrame';
 import { WidgetSkeleton } from './WidgetSkeleton';
 
 /** Metrics that represent percentage values and should display a % suffix. */
@@ -31,22 +32,18 @@ export function GaugeWidget({
 	const hasNumericValue = typeof value === 'number';
 
 	return (
-		<div className="flex h-full flex-col">
-			<div className="flex items-center justify-between pb-1">
-				<span className="text-xs font-medium text-muted-foreground">{widget.title}</span>
-				{METRIC_ICON[widget.metricType]}
-			</div>
+		<WidgetFrame icon={METRIC_ICON[widget.metricType]} title={widget.title}>
 			<div className="space-y-2">
 				<div
 					className={
 						hasNumericValue
-							? 'text-2xl font-bold tabular-nums'
+							? 'text-2xl leading-tight font-bold tabular-nums'
 							: 'text-sm font-medium text-muted-foreground'
 					}>
 					{formatGaugeValue(widget.metricType, value)}
 				</div>
 				{hasNumericValue && <Progress value={value} />}
 			</div>
-		</div>
+		</WidgetFrame>
 	);
 }

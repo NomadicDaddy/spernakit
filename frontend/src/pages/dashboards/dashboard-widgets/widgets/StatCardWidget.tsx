@@ -3,6 +3,7 @@ import type { DashboardWidget } from '@/api/dashboards';
 import { useWidgetData } from '@/hooks/dashboards/useWidgetData';
 
 import { METRIC_ICON, NO_WIDGET_DATA_LABEL, resolveMetricValue } from '../widgetHelpers';
+import { WidgetFrame } from './WidgetFrame';
 import { WidgetSkeleton } from './WidgetSkeleton';
 
 export function StatCardWidget({
@@ -19,19 +20,15 @@ export function StatCardWidget({
 	const value = resolveMetricValue(widget.metricType, dashboardData, { formatWithUnit: true });
 
 	return (
-		<div className="flex h-full flex-col">
-			<div className="flex items-center justify-between pb-1">
-				<span className="text-xs font-medium text-muted-foreground">{widget.title}</span>
-				{METRIC_ICON[widget.metricType]}
-			</div>
+		<WidgetFrame icon={METRIC_ICON[widget.metricType]} title={widget.title}>
 			<div
 				className={
 					value === NO_WIDGET_DATA_LABEL
 						? 'text-sm font-medium text-muted-foreground'
-						: 'text-2xl font-bold tabular-nums'
+						: 'text-2xl leading-tight font-bold tabular-nums'
 				}>
 				{value}
 			</div>
-		</div>
+		</WidgetFrame>
 	);
 }

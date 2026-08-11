@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react';
 
-import { ArrowLeft, Pencil, Share2 } from 'lucide-react';
-import { Link } from 'react-router';
+import { Pencil, Share2 } from 'lucide-react';
 
+import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 
 interface DashboardHeaderFrameProps {
+	/** Label for the first breadcrumb — the list this dashboard was opened from. */
+	backLabel?: string;
 	backTo: string;
 	canMutate: boolean;
 	canShare: boolean;
@@ -17,7 +19,19 @@ interface DashboardHeaderFrameProps {
 	widgetCount: number;
 }
 
+/**
+ * Header shell shared by the view and edit modes of a custom dashboard.
+ *
+ * Built on `PageHeader` rather than hand-rolled. The bespoke version was a `flex items-center
+ * justify-between` with an unlabelled back arrow, an inline `h1`, a pencil button wedged beside
+ * the heading and a plain `<p>` subtitle — so this page had no breadcrumb trail (the only way
+ * back was a bare glyph) and none of the eyebrow/description structure every other page carries.
+ * It also had no `flex-wrap` and no `min-w-0`, so in edit mode below 1280 the five action buttons
+ * crowded into the second line of a wrapped title. `PageHeader` already solves both: the trail is
+ * a real `nav[aria-label="Breadcrumb"]`, and the action cluster drops to its own row under `md`.
+ */
 function DashboardHeaderFrame({
+	backLabel = 'Custom Dashboards',
 	backTo,
 	canMutate,
 	canShare,
@@ -29,41 +43,29 @@ function DashboardHeaderFrame({
 	widgetCount,
 }: DashboardHeaderFrameProps) {
 	return (
-		<div className="flex items-center justify-between">
-			<div className="flex items-center gap-3">
-				<Button aria-label="Go back" asChild size="icon" variant="ghost">
-					<Link to={backTo}>
-						<ArrowLeft className="size-4" />
-					</Link>
+		<PageHeader
+			breadcrumbs={[{ label: backLabel, to: backTo }, { label: dashboardName }]}
+			description={`${widgetCount} widget${widgetCount !== 1 ? 's' : ''}`}
+			title={dashboardName}>
+			{/*
+			 * Rename joins the action cluster with a visible label instead of sitting inside the
+			 * heading as a 14px pencil. A control nested in an `h1` is read as part of the
+			 * heading, and at icon size it was the smallest target on the page.
+			 */}
+			{canMutate && (
+				<Button onClick={onRename} size="sm" variant="ghost">
+					<Pencil aria-hidden className="size-4" />
+					Rename
 				</Button>
-				<div>
-					<div className="flex items-center gap-2">
-						<h1 className="text-h1">{dashboardName}</h1>
-						{canMutate && (
-							<Button
-								aria-label="Rename dashboard"
-								onClick={onRename}
-								size="icon"
-								variant="ghost">
-								<Pencil className="size-3.5" />
-							</Button>
-						)}
-					</div>
-					<p className="text-sm text-muted-foreground">
-						{widgetCount} widget{widgetCount !== 1 ? 's' : ''}
-					</p>
-				</div>
-			</div>
-			<div className="flex gap-2">
-				{canShare && (
-					<Button disabled={isSharePending} onClick={onShare} size="sm" variant="outline">
-						<Share2 aria-hidden className="mr-2 size-4" />
-						Share
-					</Button>
-				)}
-				{children}
-			</div>
-		</div>
+			)}
+			{canShare && (
+				<Button disabled={isSharePending} onClick={onShare} size="sm" variant="outline">
+					<Share2 aria-hidden className="size-4" />
+					Share
+				</Button>
+			)}
+			{children}
+		</PageHeader>
 	);
 }
 

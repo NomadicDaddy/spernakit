@@ -20,7 +20,10 @@ import { RenameDashboardDialog } from './RenameDashboardDialog';
 import { ShareDashboardDialog } from './ShareDashboardDialog';
 
 type DialogState =
-	{ kind: 'addWidget' } | { kind: 'none' } | { kind: 'rename' } | { kind: 'share'; url: string };
+	| { expiresAt: string; kind: 'share'; url: string }
+	| { kind: 'addWidget' }
+	| { kind: 'none' }
+	| { kind: 'rename' };
 
 function CustomDashboardPage() {
 	const { id } = useParams<{ id: string }>();
@@ -41,7 +44,15 @@ function CustomDashboardPage() {
 
 	const dashboard = data?.data;
 
-	const { currentLayout, handleLayoutChange, layoutMap } = useDashboardLayout(dashboard);
+	const {
+		clearLayoutEdits,
+		commitLayoutEdit,
+		currentLayout,
+		handleGestureStart,
+		handleLayoutChange,
+		layoutMap,
+		resetLayout,
+	} = useDashboardLayout(dashboard);
 
 	const {
 		handleAddWidget,
@@ -57,7 +68,12 @@ function CustomDashboardPage() {
 		dashboardName: dashboard?.name || '',
 		layoutMap,
 		onAddWidgetSuccess: closeDialog,
-		onSaveSuccess: () => setEditMode(false),
+		onSaveSuccess: () => {
+			// What was edited is now what is stored, so nothing is pending for the next mutation to
+			// carry — a rename after a save must not re-send the geometry a second time.
+			clearLayoutEdits();
+			setEditMode(false);
+		},
 	});
 
 	const shareMutation = useMutation({
@@ -65,10 +81,17 @@ function CustomDashboardPage() {
 		onSuccess: (result) => {
 			const token = result.data.shareToken;
 			setDialog({
+				expiresAt: result.data.shareExpiresAt,
 				kind: 'share',
 				url: `${window.location.origin}/dashboards/shared/${token}`,
 			});
-			toast.success('Share link generated');
+			/*
+			 * The endpoint deliberately reuses an existing unexpired token rather than rotating
+			 * it, so a fixed "Share link generated" reported an action that had not happened and
+			 * implied the link already handed out might have been replaced. `shareToken` on the
+			 * dashboard record tells the two cases apart before the call is made.
+			 */
+			toast.success(dashboard?.shareToken ? 'Share link ready' : 'Share link created');
 		},
 	});
 
@@ -108,7 +131,7 @@ function CustomDashboardPage() {
 	}
 
 	return (
-		<div className="space-y-4 p-6">
+		<div className="space-y-6 p-6">
 			{editMode ? (
 				<DashboardEditHeader
 					backTo="/dashboards"
@@ -118,7 +141,15 @@ function CustomDashboardPage() {
 					isSavePending={saveMutation.isPending}
 					isSharePending={shareMutation.isPending}
 					onAddWidget={() => setDialog({ kind: 'addWidget' })}
-					onCancel={() => setEditMode(false)}
+					onCancel={() => {
+						/*
+						 * Cancel discards the arrangement instead of merely leaving edit mode.
+						 * The layout used to survive it in component state, so a rename or an
+						 * Add Widget minutes later saved the moves the user had just abandoned.
+						 */
+						resetLayout();
+						setEditMode(false);
+					}}
 					onRename={handleRenameClick}
 					onSave={handleSave}
 					onShare={handleShareClick}
@@ -145,7 +176,9 @@ function CustomDashboardPage() {
 						setEditMode(true);
 						setDialog({ kind: 'addWidget' });
 					},
+					onGestureStart: handleGestureStart,
 					onLayoutChange: handleLayoutChange,
+					onLayoutEdit: commitLayoutEdit,
 					onRemoveWidget: handleRemoveWidget,
 				}}
 				layout={{ containerRef, currentLayout, width }}
@@ -179,6 +212,7 @@ function CustomDashboardPage() {
 					if (!open) closeDialog();
 				}}
 				shareUrl={dialog.kind === 'share' ? dialog.url : ''}
+				{...(dialog.kind === 'share' ? { expiresAt: dialog.expiresAt } : {})}
 			/>
 		</div>
 	);

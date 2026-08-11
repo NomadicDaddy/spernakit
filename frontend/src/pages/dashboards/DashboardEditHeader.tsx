@@ -46,15 +46,15 @@ function DashboardEditHeader({
 			{canMutate && (
 				<>
 					<Button onClick={onAddWidget} size="sm" variant="outline">
-						<Plus aria-hidden className="mr-2 size-4" />
+						<Plus aria-hidden className="size-4" />
 						Add Widget
 					</Button>
 					<Button disabled={isSavePending} onClick={onSave} size="sm">
-						<Save aria-hidden className="mr-2 size-4" />
+						<Save aria-hidden className="size-4" />
 						Save
 					</Button>
 					<Button onClick={onCancel} size="sm" variant="ghost">
-						<X aria-hidden className="mr-2 size-4" />
+						<X aria-hidden className="size-4" />
 						Cancel
 					</Button>
 				</>
