@@ -1,16 +1,26 @@
 import { useQuery } from '@tanstack/react-query';
+import { CalendarClock } from 'lucide-react';
 import { useState } from 'react';
 
+import type { TaskInfo } from '@/api/tasks';
+
 import { getTaskHistory, listTasks } from '@/api/tasks';
+import { DataTable } from '@/components/shared/data-table/DataTable';
+import { SectionHeader } from '@/components/shared/SectionHeader';
+import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@/components/ui/table';
 import { useFormatters } from '@/hooks/useFormatters';
 
-import { StatusIcon } from './StatusIcon';
-import { TaskRow } from './TaskRow';
+import { useScheduledTaskColumns } from './useScheduledTaskColumns';
 
 function ScheduledTasksTab() {
 	const { formatDateTime } = useFormatters();
@@ -27,103 +37,116 @@ function ScheduledTasksTab() {
 		queryKey: ['task-history', selectedTask],
 	});
 
-	return (
-		<div className="space-y-6">
-			<div>
-				<h2 className="text-lg font-semibold">Scheduled Tasks</h2>
-				<p className="text-sm text-muted-foreground">
-					View and manage background scheduled tasks.
-				</p>
-			</div>
+	const columns = useScheduledTaskColumns({
+		onViewHistory: (name) => setSelectedTask((current) => (current === name ? null : name)),
+		openHistoryTask: selectedTask,
+	});
 
-			{/* Task List */}
-			{isLoading ? (
-				<div className="space-y-1">
-					{Array.from({ length: 6 }).map((_, i) => (
-						<Skeleton className="h-8 w-full" key={i} />
-					))}
-				</div>
-			) : (
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>Task</TableHead>
-							<TableHead className="w-16">Enabled</TableHead>
-							<TableHead>Schedule</TableHead>
-							<TableHead>Status</TableHead>
-							<TableHead>Last Run</TableHead>
-							<TableHead>Duration</TableHead>
-							<TableHead className="w-20">Actions</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{data?.data.map((task) => (
-							<TaskRow key={task.name} onViewHistory={setSelectedTask} task={task} />
-						))}
-					</TableBody>
-				</Table>
-			)}
+	/*
+	 * The history renders as the expanded row of the task it belongs to.
+	 *
+	 * It used to append a Card below the whole 13-row table with no scroll: activating it on row 1
+	 * at 1440x1200 put the card's top at y=1055 in a 1144px viewport, so 89px of a 280px panel was
+	 * on screen and not one history entry was visible — and the clicked row got no selected state,
+	 * so after scrolling there was nothing tying the panel back to its task but the title string.
+	 * `renderExpandedRow` is the app's own answer to that, already used by the audit log, and it
+	 * marks the source row `data-state="selected"` for free.
+	 */
+	function renderHistory(task: TaskInfo) {
+		if (task.name !== selectedTask) return null;
 
-			{/* Execution History */}
-			{selectedTask && (
-				<Card>
-					<CardHeader>
-						<CardTitle className="text-base">
-							Execution History: {selectedTask}
-						</CardTitle>
-						<CardDescription>Recent execution results for this task.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						{historyLoading ? (
-							<Skeleton className="h-40 w-full" />
-						) : historyData?.data && historyData.data.length > 0 ? (
-							<div className="max-h-64 space-y-1 overflow-y-auto">
+		return (
+			<div className="border-t bg-muted/40 p-4">
+				<p className="mb-2 text-sm font-medium">Recent executions</p>
+				{historyLoading ? (
+					<Skeleton className="h-24 w-full" />
+				) : historyData?.data && historyData.data.length > 0 ? (
+					/*
+					 * The shared table, not a stack of flex rows. Unaligned, `43ms`, `35ms` and
+					 * `90ms` started at three different x positions from the timestamps sharing
+					 * their line, and the error text had no reserved column at all.
+					 */
+					<div className="max-h-64 overflow-y-auto rounded-md border bg-card">
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>Status</TableHead>
+									<TableHead className="text-right">Duration</TableHead>
+									<TableHead>Error</TableHead>
+									<TableHead className="text-right">Started</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
 								{historyData.data.map((entry) => (
-									<div
-										className="flex items-center gap-3 rounded px-2 py-1.5 text-sm"
-										key={entry.id}>
-										<StatusIcon status={entry.status} />
-										<Badge
-											className="text-xs"
-											variant={
-												entry.status === 'completed'
-													? 'default'
-													: entry.status === 'running'
-														? 'secondary'
-														: 'destructive'
-											}>
-											{entry.status}
-										</Badge>
-										<span className="text-xs text-muted-foreground">
+									<TableRow key={entry.id}>
+										<TableCell>
+											<Badge
+												variant={
+													entry.status === 'completed'
+														? 'success'
+														: entry.status === 'running'
+															? 'secondary'
+															: 'destructive'
+												}>
+												{entry.status}
+											</Badge>
+										</TableCell>
+										<TableCell className="text-right text-muted-foreground tabular-nums">
 											{entry.durationMs !== null
 												? `${entry.durationMs}ms`
-												: '-'}
-										</span>
-										{entry.error && (
-											<span className="truncate text-xs text-red-500">
-												{entry.error}
-											</span>
-										)}
-										<span className="ml-auto text-xs text-muted-foreground">
+												: '—'}
+										</TableCell>
+										<TableCell className="max-w-xs truncate text-destructive">
+											{entry.error ?? ''}
+										</TableCell>
+										<TableCell className="text-right text-muted-foreground">
 											{formatDateTime(entry.startedAt)}
-										</span>
-									</div>
+										</TableCell>
+									</TableRow>
 								))}
-							</div>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								No execution history for this task.
-							</p>
-						)}
-						<Button
-							className="mt-3"
-							onClick={() => setSelectedTask(null)}
-							size="sm"
-							variant="ghost">
-							Close
-						</Button>
-					</CardContent>
-				</Card>
+							</TableBody>
+						</Table>
+					</div>
+				) : (
+					<p className="text-sm text-muted-foreground">
+						No execution history for this task.
+					</p>
+				)}
+			</div>
+		);
+	}
+
+	return (
+		<div className="space-y-6">
+			<SectionHeader
+				description="View and manage background scheduled tasks."
+				title="Scheduled Tasks"
+			/>
+
+			{/*
+			 * Client-side pagination — the `pagination` prop is deliberately omitted. The task set
+			 * is a fixed handful defined in the scheduler, not a growing table, so paging it on the
+			 * server would add a round trip to sort a list that fits on one page.
+			 */}
+			{isLoading ? (
+				<TableSkeleton />
+			) : (
+				<DataTable
+					columns={columns}
+					data={data?.data ?? []}
+					empty={{
+						description:
+							'The scheduler defines its task set at startup; none is registered.',
+						// The SectionHeader above the table owns the h2.
+						headingLevel: 'h3',
+						icon: CalendarClock,
+						// No `isFiltered`: the search box is `searchColumn`, a filter the table owns.
+						title: 'No scheduled tasks',
+					}}
+					filterPlaceholder="Search tasks…"
+					renderExpandedRow={renderHistory}
+					searchColumn="name"
+				/>
 			)}
 		</div>
 	);

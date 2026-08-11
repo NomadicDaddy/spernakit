@@ -14,7 +14,7 @@ export function HealthAlertsSection({ historyData, historyLoading }: HealthAlert
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="text-base">Active Alerts</CardTitle>
+				<CardTitle as="h3">Active Alerts</CardTitle>
 				<CardDescription>Unresolved health check alerts.</CardDescription>
 			</CardHeader>
 			<CardContent>

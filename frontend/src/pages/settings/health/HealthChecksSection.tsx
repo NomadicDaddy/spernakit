@@ -1,9 +1,7 @@
-import { Play } from 'lucide-react';
-
 import type { HealthCheck } from '@/api/health';
 
+import { SectionHeader } from '@/components/shared/SectionHeader';
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
-import { Button } from '@/components/ui/button';
 
 import { CheckCard } from './CheckCard';
 
@@ -13,6 +11,8 @@ interface HealthChecksSectionProps {
 	runCheckMutation: {
 		isPending: boolean;
 		mutate: (checkName: string) => void;
+		/** The checkType currently in flight, so pending state is scoped to the row that caused it. */
+		variables?: string | undefined;
 	};
 }
 
@@ -22,26 +22,27 @@ export function HealthChecksSection({
 	runCheckMutation,
 }: HealthChecksSectionProps) {
 	return (
-		<div>
-			<h3 className="mb-3 text-sm font-medium">Health Checks</h3>
+		<div className="space-y-3">
+			<SectionHeader
+				description="Each check and the last result it reported."
+				level="h3"
+				title="Health Checks"
+			/>
 			{detailsLoading ? (
 				<ContentListSkeleton lineHeight="h-16" spacing="space-y-2" />
 			) : (
 				<div className="space-y-2">
 					{details?.checks?.map((check) => (
-						<div className="flex items-center gap-2" key={check.checkType}>
-							<div className="flex-1">
-								<CheckCard check={check} />
-							</div>
-							<Button
-								disabled={runCheckMutation.isPending}
-								onClick={() => void runCheckMutation.mutate(check.checkType)}
-								size="sm"
-								variant="outline">
-								<Play aria-hidden="true" className="mr-1 size-3" />
-								Run
-							</Button>
-						</div>
+						<CheckCard
+							check={check}
+							isRunning={
+								runCheckMutation.isPending &&
+								runCheckMutation.variables === check.checkType
+							}
+							key={check.checkType}
+							onRun={(checkType) => void runCheckMutation.mutate(checkType)}
+							runDisabled={runCheckMutation.isPending}
+						/>
 					))}
 				</div>
 			)}
