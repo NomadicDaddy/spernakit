@@ -21,7 +21,7 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 
-import { getWidgetHeightError, getWidgetWidthError } from './widgetSize';
+import { getWidgetHeightError, getWidgetMinRows, getWidgetWidthError } from './widgetSize';
 import { WidgetSizeFields } from './WidgetSizeFields';
 
 const WIDGET_TYPE_OPTIONS: { label: string; value: WidgetType }[] = [
@@ -89,11 +89,17 @@ export function AddWidgetDialog({
 		const metricAllowed = willBeChart
 			? TIME_SERIES_METRIC_VALUES.includes(newWidget.metricType)
 			: true;
+		// The height floor moves with the type — a chart needs more rows than a stat card. Raise a
+		// height that has just fallen below the new floor rather than letting the user discover it
+		// as a validation error on a field they never touched.
+		const height = Math.max(newWidget.height, getWidgetMinRows(v));
 		onUpdateWidget({
 			...newWidget,
+			height,
 			metricType: metricAllowed ? newWidget.metricType : 'cpu_usage',
 			widgetType: v,
 		});
+		if (!getWidgetHeightError(height, v)) setHeightError(null);
 	};
 
 	// Every field is marked at once so the user sees the full set of corrections, but focus
@@ -103,7 +109,7 @@ export function AddWidgetDialog({
 		if (isPending) return;
 		const nextTitleError = newWidget.title.trim() ? null : 'Title is required';
 		const nextWidthError = getWidgetWidthError(newWidget.width);
-		const nextHeightError = getWidgetHeightError(newWidget.height);
+		const nextHeightError = getWidgetHeightError(newWidget.height, newWidget.widgetType);
 		setTitleError(nextTitleError);
 		setWidthError(nextWidthError);
 		setHeightError(nextHeightError);
@@ -174,7 +180,7 @@ export function AddWidgetDialog({
 							<Select
 								onValueChange={(v) => handleWidgetTypeChange(v as WidgetType)}
 								value={newWidget.widgetType}>
-								<SelectTrigger id="widget-type">
+								<SelectTrigger className="w-full" id="widget-type">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -196,7 +202,7 @@ export function AddWidgetDialog({
 									})
 								}
 								value={newWidget.metricType}>
-								<SelectTrigger id="widget-metric">
+								<SelectTrigger className="w-full" id="widget-metric">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
@@ -218,12 +224,15 @@ export function AddWidgetDialog({
 								onUpdateWidget({ ...newWidget, height });
 								// Only ever clears, matching the title field: an error appears on
 								// submit, not while the user is still typing a value.
-								if (!getWidgetHeightError(height)) setHeightError(null);
+								if (!getWidgetHeightError(height, newWidget.widgetType)) {
+									setHeightError(null);
+								}
 							}}
 							onWidthChange={(width) => {
 								onUpdateWidget({ ...newWidget, width });
 								if (!getWidgetWidthError(width)) setWidthError(null);
 							}}
+							widgetType={newWidget.widgetType}
 							width={newWidget.width}
 							widthError={widthError}
 							widthRef={widthInputRef}
@@ -235,7 +244,7 @@ export function AddWidgetDialog({
 									onUpdateWidget({ ...newWidget, timeRange: v })
 								}
 								value={newWidget.timeRange ?? '6h'}>
-								<SelectTrigger id="widget-time-range">
+								<SelectTrigger className="w-full" id="widget-time-range">
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>

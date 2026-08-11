@@ -71,34 +71,38 @@ function FormInputDialog({
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
-				<div className="space-y-4 py-4">
-					<div className="space-y-2">
-						<Label htmlFor={fieldId}>{fieldLabel}</Label>
-						<Input
-							aria-describedby={fieldError ? fieldErrorId : undefined}
-							autoComplete="off"
-							id={fieldId}
-							onChange={(e) => {
-								setValue(e.target.value);
-								if (e.target.value.trim()) {
-									setFieldError(null);
-								}
-							}}
-							placeholder={placeholder}
-							ref={inputRef}
-							required
-							value={value}
-							{...(fieldError ? { 'aria-invalid': true } : {})}
-						/>
-						{fieldError && (
-							<p
-								aria-live="polite"
-								className="text-sm text-destructive"
-								id={fieldErrorId}>
-								{fieldError}
-							</p>
-						)}
-					</div>
+				{/*
+				 * DialogContent's `gap-4` owns the rhythm between header, body and footer. The
+				 * body used to add `py-4` on top of it, which made the measured rhythm inside a
+				 * one-field panel 8px / 32px / 8px / 32px — doubled where the regions meet and
+				 * tight where the label meets its input.
+				 */}
+				<div className="space-y-2">
+					<Label htmlFor={fieldId}>{fieldLabel}</Label>
+					<Input
+						aria-describedby={fieldError ? fieldErrorId : undefined}
+						autoComplete="off"
+						id={fieldId}
+						onChange={(e) => {
+							setValue(e.target.value);
+							if (e.target.value.trim()) {
+								setFieldError(null);
+							}
+						}}
+						placeholder={placeholder}
+						ref={inputRef}
+						required
+						value={value}
+						{...(fieldError ? { 'aria-invalid': true } : {})}
+					/>
+					{fieldError && (
+						<p
+							aria-live="polite"
+							className="text-sm text-destructive"
+							id={fieldErrorId}>
+							{fieldError}
+						</p>
+					)}
 				</div>
 				<DialogFooter>
 					<Button onClick={() => handleOpenChange(false)} variant="outline">

@@ -1,0 +1,40 @@
+/*
+ * Overrides for react-grid-layout's stock stylesheet.
+ *
+ * `react-grid-layout/css/styles.css` ships light-theme affordances that land untouched in a
+ * near-black UI. Two of them are not merely off-palette but invisible:
+ *
+ *   - The resize handle is a 5x5px corner mark drawn in `rgba(0,0,0,0.4)` — black on a charcoal
+ *     card — and it is `opacity: 0` until the widget is hovered. Nothing was discoverable at rest,
+ *     and on a dark card nothing was discoverable on hover either.
+ *   - `.react-grid-placeholder`, the drop target shown while dragging, is painted `background: red`
+ *     by the stock sheet, so the one piece of feedback that says "this is where it lands" read as
+ *     an error state.
+ *
+ * Imported after the library sheet in DashboardGrid.tsx, so these win on order alone and need no
+ * `!important`. Everything here uses the app's own tokens.
+ */
+
+.react-grid-item > .react-resizable-handle {
+	/* Shown whenever resizing is enabled, not gated behind hover. */
+	opacity: 1;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+	width: 8px;
+	height: 8px;
+	border-right: 2px solid var(--muted-foreground);
+	border-bottom: 2px solid var(--muted-foreground);
+	opacity: 0.7;
+}
+
+.react-grid-item:hover > .react-resizable-handle::after {
+	opacity: 1;
+}
+
+.react-grid-placeholder {
+	background: var(--primary);
+	opacity: 0.15;
+	border: 1px dashed var(--primary);
+	border-radius: var(--radius);
+}

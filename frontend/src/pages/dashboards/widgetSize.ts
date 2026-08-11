@@ -1,3 +1,5 @@
+import type { WidgetType } from 'spernakit-shared';
+
 /**
  * Widget size bounds and their validators.
  *
@@ -10,9 +12,41 @@
  * Height deliberately has no maximum here. The server does not impose one, and a client-only
  * ceiling would refuse a widget the API would have accepted.
  */
-const WIDGET_HEIGHT_MIN = 1;
 const WIDGET_WIDTH_MAX = 12;
 const WIDGET_WIDTH_MIN = 1;
+
+/**
+ * The shortest each widget type may be, in grid rows.
+ *
+ * The server's floor is 1, and 1 is not a height any of these widgets can actually render at: a
+ * row is 80px, the widget card spends 24px of it on its own vertical padding, and what remains
+ * does not hold a title line plus the `text-2xl` value a stat card, gauge or health tile exists to
+ * display — the number rendered below the bottom edge of its own card. Charts and lists get 3
+ * because a plot area under 160px is a line, not a chart.
+ *
+ * This is a client floor, deliberately stricter than the API's. It is enforced in three places for
+ * the three ways a widget gets its height: this validator for the Add Widget dialog, `minH` on the
+ * grid layout for the resize handles, and a raise in `widgetsToLayout` for heights already stored
+ * below it.
+ *
+ * Only the first two of those decide what is stored. The raise is a read-time repair: it makes an
+ * undersized widget legible without rewriting the record, because a floor the user never asked for
+ * should not become the height they are recorded as having chosen.
+ */
+const WIDGET_MIN_ROWS: Record<WidgetType, number> = {
+	alert_list: 2,
+	bar_chart: 3,
+	gauge: 2,
+	health_status: 2,
+	line_chart: 3,
+	stat_card: 2,
+	table: 3,
+};
+
+/** The row floor for a widget type. Falls back to 2 so an unrecognised type is never allowed 1. */
+function getWidgetMinRows(widgetType: WidgetType): number {
+	return WIDGET_MIN_ROWS[widgetType] ?? 2;
+}
 
 /**
  * Returns the validation message for a widget width, or null when it is acceptable.
@@ -31,21 +65,27 @@ function getWidgetWidthError(width: number): null | string {
 	return null;
 }
 
-/** Returns the validation message for a widget height, or null when it is acceptable. */
-function getWidgetHeightError(height: number): null | string {
+/**
+ * Returns the validation message for a widget height, or null when it is acceptable.
+ *
+ * The floor depends on the widget type, so the message names the number the user has to reach
+ * rather than a generic minimum they would have to discover by trying.
+ */
+function getWidgetHeightError(height: number, widgetType: WidgetType): null | string {
+	const min = getWidgetMinRows(widgetType);
 	if (!Number.isInteger(height)) {
-		return `Height must be a whole number of ${String(WIDGET_HEIGHT_MIN)} or more`;
+		return `Height must be a whole number of ${String(min)} or more`;
 	}
-	if (height < WIDGET_HEIGHT_MIN) {
-		return `Height must be ${String(WIDGET_HEIGHT_MIN)} or more`;
+	if (height < min) {
+		return `Height must be ${String(min)} or more for this widget type`;
 	}
 	return null;
 }
 
 export {
 	getWidgetHeightError,
+	getWidgetMinRows,
 	getWidgetWidthError,
-	WIDGET_HEIGHT_MIN,
 	WIDGET_WIDTH_MAX,
 	WIDGET_WIDTH_MIN,
 };

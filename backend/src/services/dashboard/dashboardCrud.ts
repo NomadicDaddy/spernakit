@@ -15,6 +15,7 @@ import {
 	getWidgetsForDashboard,
 	mapWidgetInputsToValues,
 	MAX_WIDGETS_PER_DASHBOARD,
+	workspaceScope,
 } from './dashboardTypes.ts';
 
 /* -------------------------------------------------------------------------- */
@@ -61,8 +62,9 @@ function softDeleteWidgets(dashboardId: number, userId: number, tx?: DbTransacti
 /**
  * List all dashboards belonging to a user, optionally scoped to a workspace.
  *
- * When workspaceId is a number, only dashboards in that workspace are returned.
- * When null (SYSOP cross-workspace view), all workspaces for the user are returned.
+ * When workspaceId is a number, dashboards in that workspace are returned along with the user's
+ * global (NULL-workspace) dashboards — see `workspaceScope`. When null (SYSOP cross-workspace
+ * view), all workspaces for the user are returned.
  *
  * @param userId
  * @param workspaceId - Active workspace context, or null for cross-workspace
@@ -72,8 +74,9 @@ function listDashboards(userId: number, workspaceId: null | number = null): Dash
 	const db = getDb();
 	const maxPerUser = getConfig().dashboards.maxPerUser;
 	const conditions = [eq(dashboardConfigs.userId, userId), eq(dashboardConfigs.isDeleted, false)];
-	if (workspaceId !== null) {
-		conditions.push(eq(dashboardConfigs.workspaceId, workspaceId));
+	const scope = workspaceScope(workspaceId);
+	if (scope) {
+		conditions.push(scope);
 	}
 	// Bound the result set with the same per-user cap enforced by createDashboard so the
 	// "all database operations must be bounded" invariant holds even if rows accumulate

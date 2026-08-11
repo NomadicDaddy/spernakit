@@ -39,7 +39,7 @@ function DashboardViewHeader({
 			widgetCount={widgetCount}>
 			{canMutate && (
 				<Button onClick={onEdit} size="sm" variant="outline">
-					<Edit2 aria-hidden className="mr-2 size-4" />
+					<Edit2 aria-hidden className="size-4" />
 					Edit
 				</Button>
 			)}
