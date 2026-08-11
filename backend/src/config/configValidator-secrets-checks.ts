@@ -209,5 +209,6 @@ export {
 	checkPlaceholderPemKeys,
 	checkPlaceholderSecrets,
 	checkSecretStrength,
+	PLACEHOLDER_PATTERN,
 };
 export type { PemKeyField, SecretField, ValidationIssue };

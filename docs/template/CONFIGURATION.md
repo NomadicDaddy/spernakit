@@ -309,10 +309,27 @@ bun run generate-keys
 # This generates:
 # - jwtPrivateKey / jwtPublicKey (EC P-256 key pair, PEM format)
 # - jwtRefreshPrivateKey / jwtRefreshPublicKey (EC P-256 key pair, PEM format)
+# - mfaPrivateKey / mfaPublicKey (EC P-256 key pair, PEM format)
 # - encryptionKey (64 hex characters)
+# - backupEncryptionKey (64 hex characters)
 # - cookieSecret (32 characters)
 # - applicationApiKey (48 characters)
 ```
+
+**Generating one key group:**
+
+Pass `--only` to rewrite a single group and leave the rest of the config untouched. Use this when
+one field is missing or has to be replaced; regenerating everything to fill one gap logs every user
+out and orphans encrypted data.
+
+```bash
+bun run generate-keys -- --only mfa
+bun run generate-keys -- --only backup-encryption-key,cookie-secret
+```
+
+Group names: `app-api-key`, `backup-encryption-key`, `cookie-secret`, `encryption-key`, `jwt`,
+`jwt-refresh`, `mfa`. The script prints what each selected group destroys before it writes, and only
+for groups that already hold a real value.
 
 **Key Requirements:**
 
@@ -322,7 +339,10 @@ bun run generate-keys
 | `jwtPublicKey`         | EC P-256 PEM public key  | JWT token verification     |
 | `jwtRefreshPrivateKey` | EC P-256 PEM private key | Refresh token signing      |
 | `jwtRefreshPublicKey`  | EC P-256 PEM public key  | Refresh token verification |
+| `mfaPrivateKey`        | EC P-256 PEM private key | MFA challenge signing      |
+| `mfaPublicKey`         | EC P-256 PEM public key  | MFA challenge verification |
 | `encryptionKey`        | 64 hex chars             | Data encryption (AES-256)  |
+| `backupEncryptionKey`  | 64 hex chars             | Backup file encryption     |
 | `cookieSecret`         | 32+ chars                | Cookie signing             |
 | `applicationApiKey`    | 48+ chars                | API authentication         |
 
@@ -347,6 +367,9 @@ FORCE_KEY_GENERATION=true bun run generate-keys
 
 # 4. Restart application
 ```
+
+Scope the rotation with `--only` when the reason for rotating covers one key group. Rotating
+`cookie-secret` alone leaves encrypted data readable and keeps sessions alive.
 
 ---
 
