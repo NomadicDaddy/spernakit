@@ -44,7 +44,10 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
 	return (
 		<tr
 			className={cn(
-				'border-b transition-colors [contain-intrinsic-size:0_48px] [content-visibility:auto] hover:bg-muted/50 data-[state=selected]:bg-muted',
+				// Selection is a tint, not a shade: `bg-muted` is the exact colour the bulk-action
+				// bar and every other muted surface computes to, so a selected row and the strip
+				// describing it read as one flat grey with no relationship between them.
+				'border-b transition-colors [contain-intrinsic-size:0_48px] [content-visibility:auto] hover:bg-muted/50 data-[state=selected]:bg-primary/10',
 				className,
 			)}
 			data-slot="table-row"
@@ -57,7 +60,11 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 	return (
 		<th
 			className={cn(
-				'h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+				// The header band separates from the data band on colour and size, not on
+				// weight alone: at the same 14px and the same foreground colour, a 100-weight
+				// step is not enough and the header reads as one more row. `h-10` is kept so
+				// the sharper type costs no row height.
+				'h-10 px-2 text-left align-middle text-xs font-medium tracking-wide whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
 				className,
 			)}
 			data-slot="table-head"
