@@ -64,6 +64,11 @@ const CLAIM_SITES: ClaimSite[] = [
 		pattern: /the Spernakit v(\d+\.\d+\.\d+) application template as it ships today/g,
 	},
 	{
+		file: 'docs/template/STACK.md',
+		label: 'stack reference "Template Version" line',
+		pattern: /^\*\*Spernakit v(\d+\.\d+\.\d+)\*\* - See \[CHANGELOG\.md\]/gm,
+	},
+	{
 		file: 'docs/template/CHANGELOG.md',
 		label: 'newest changelog entry',
 		pattern: /^## \[(\d+\.\d+\.\d+)\]/gm,
