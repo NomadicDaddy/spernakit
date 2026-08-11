@@ -184,7 +184,7 @@ Visit http://localhost:3331/api/v1/health to confirm the backend is up.
 
 ## Default Users
 
-The template ships with these accounts for testing:
+A development seed creates these accounts, each with the password `{username}123`:
 
 | Username | Password    | Role     | Description               |
 | -------- | ----------- | -------- | ------------------------- |
@@ -194,7 +194,10 @@ The template ships with these accounts for testing:
 | operator | operator123 | OPERATOR | Standard operator         |
 | viewer   | viewer123   | VIEWER   | Read-only access          |
 
-**Important**: these accounts use fixed demo passwords. Remove them or change every password before deploying to production.
+**Important**: these are development passwords. A seed run with `NODE_ENV=production` creates the
+same five accounts with generated 24-character passwords instead, printed once and unrecoverable
+afterwards, and requires a password change on first login. Remove these accounts or change every
+password before deploying to production.
 
 ---
 
