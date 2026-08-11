@@ -14,10 +14,12 @@ export interface EcKeyPair {
 
 export interface SecurityKeys {
 	appApiKey: string;
+	backupEncryptionKey: string;
 	cookieSecret: string;
 	encryptionKey: string;
 	jwtKeyPair: EcKeyPair;
 	jwtRefreshKeyPair: EcKeyPair;
+	mfaKeyPair: EcKeyPair;
 }
 
 export function generateSecretKey(length = 64): string {
@@ -53,9 +55,12 @@ export function generateEcKeyPair(): EcKeyPair {
 export function generateKeys(): SecurityKeys {
 	return {
 		appApiKey: generateAlphanumericKey(48),
+		backupEncryptionKey: generateSecretKey(32),
 		cookieSecret: generateAlphanumericKey(32),
 		encryptionKey: generateSecretKey(32),
 		jwtKeyPair: generateEcKeyPair(),
 		jwtRefreshKeyPair: generateEcKeyPair(),
+		// Dedicated pair: checkMfaKeyPair rejects an MFA key that reuses either JWT pair.
+		mfaKeyPair: generateEcKeyPair(),
 	};
 }

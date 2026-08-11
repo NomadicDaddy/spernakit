@@ -93,12 +93,15 @@ export function createJsonConfig(s: SetupSettings, keys: SecurityKeys): void {
 	const security = defaults['security'] as Record<string, unknown>;
 	Object.assign(security, {
 		applicationApiKey: keys.appApiKey,
+		backupEncryptionKey: keys.backupEncryptionKey,
 		cookieSecret: keys.cookieSecret,
 		encryptionKey: keys.encryptionKey,
 		jwtPrivateKey: keys.jwtKeyPair.privateKey,
 		jwtPublicKey: keys.jwtKeyPair.publicKey,
 		jwtRefreshPrivateKey: keys.jwtRefreshKeyPair.privateKey,
 		jwtRefreshPublicKey: keys.jwtRefreshKeyPair.publicKey,
+		mfaPrivateKey: keys.mfaKeyPair.privateKey,
+		mfaPublicKey: keys.mfaKeyPair.publicKey,
 	});
 
 	// Dev instances ship with rate limiting off so crawltest / spernakit-tester
