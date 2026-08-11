@@ -76,6 +76,7 @@ authoritative and update this README.
 - Database backup, restore, and optional backup encryption with key rotation and re-encryption of existing backups
 - Database admin suite: schema explorer, ERD diagram, data viewer, and read-only SQL sandbox with safe mode
 - Guided onboarding checklist for first-run setup with auto-detected step completion
+- In-app bug and feature-request intake with an ADMIN triage inbox filtered by status, kind, and description search
 - Web Vitals collection and server-side storage
 
 ### File Management
