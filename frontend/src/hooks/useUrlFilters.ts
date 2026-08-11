@@ -20,6 +20,11 @@ function useUrlFilters(pageSize = 20) {
 	/**
 	 * Set a URL filter parameter. Empty/default values delete the param.
 	 * Automatically resets pagination to page 1.
+	 *
+	 * **One param per event.** The updater below looks functional, but react-router resolves it
+	 * against a snapshot it only refreshes on render — so a second `setFilter` in the same handler
+	 * recomputes from the pre-click params and silently reinstates whatever the first one deleted.
+	 * To change several filters at once (a Clear-all button), use `setFilters`.
 	 */
 	const setFilter = (key: string, value: string) => {
 		setSearchParams(
@@ -37,6 +42,7 @@ function useUrlFilters(pageSize = 20) {
 		);
 	};
 
+	/** Change several filters in one navigation. See the warning on `setFilter`. */
 	const setFilters = (
 		update: (params: URLSearchParams) => void,
 		options: { replace?: boolean } = { replace: true },
