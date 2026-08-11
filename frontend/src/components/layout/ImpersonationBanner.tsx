@@ -35,8 +35,8 @@ function ImpersonationBanner() {
 	}
 
 	return (
-		<div className="bg-warning/10 border-warning/20 border-b px-4 py-1.5 text-center text-sm">
-			<span className="text-warning font-medium">
+		<div className="border-b border-warning/20 bg-warning/10 px-4 py-1.5 text-center text-sm">
+			<span className="font-medium text-warning">
 				Impersonating <strong>{user.username}</strong>
 			</span>
 			<Button

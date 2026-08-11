@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
+import type { Breadcrumb } from '@/components/shared/PageHeader';
 import type { UserRole } from '@/types/roles';
 
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -15,6 +16,8 @@ interface TabItem {
 }
 
 interface TabLayoutProps {
+	/** Breadcrumb trail for a tabbed page reached from somewhere else — a workspace, a record. */
+	breadcrumbs?: Breadcrumb[];
 	description: string;
 	headerAction?: ReactNode;
 	onTabClick?: (tab: TabItem) => void;
@@ -22,12 +25,20 @@ interface TabLayoutProps {
 	title: string;
 }
 
-function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLayoutProps) {
+function TabLayout({
+	breadcrumbs,
+	description,
+	headerAction,
+	onTabClick,
+	tabs,
+	title,
+}: TabLayoutProps) {
 	const location = useLocation();
 	const navRef = useRef<HTMLElement>(null);
 	const tabRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
 	const [canScrollLeft, setCanScrollLeft] = useState(false);
 	const [canScrollRight, setCanScrollRight] = useState(false);
+	const [isOverflowing, setIsOverflowing] = useState(false);
 
 	const updateScrollIndicators = () => {
 		const nav = navRef.current;
@@ -35,6 +46,7 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 		const { clientWidth, scrollLeft, scrollWidth } = nav;
 		// Small threshold to avoid sub-pixel issues
 		const threshold = 2;
+		setIsOverflowing(scrollWidth > clientWidth + threshold);
 		setCanScrollLeft(scrollLeft > threshold);
 		setCanScrollRight(scrollLeft + clientWidth < scrollWidth - threshold);
 	};
@@ -79,23 +91,26 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 
 	return (
 		<div className="space-y-6 p-6">
-			<PageHeader className="pb-0 md:border-b-0" description={description} title={title}>
+			<PageHeader
+				className="pb-0 md:border-b-0"
+				description={description}
+				title={title}
+				{...(breadcrumbs ? { breadcrumbs } : {})}>
 				{headerAction}
 			</PageHeader>
 
-			<div className="relative border-b">
-				{/* Trailing gradient fade — shows when there is content to scroll right */}
-				{canScrollRight && (
-					<div className="pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-gradient-to-l from-background to-transparent" />
-				)}
-				{/* Leading gradient fade — shows when scrolled past start */}
-				{canScrollLeft && (
-					<div className="pointer-events-none absolute top-0 left-0 z-10 h-full w-12 bg-gradient-to-r from-background to-transparent" />
-				)}
-				{canScrollLeft && (
+			{/*
+			 * The chevrons are flex siblings of the scrolling nav, not absolutely positioned
+			 * over it, so they can never cover the first or last tab label. They appear
+			 * together as soon as the rail overflows and the unusable one is disabled rather
+			 * than unmounted — mounting one at a time would resize the rail on every scroll.
+			 */}
+			<div className="flex items-center border-b">
+				{isOverflowing && (
 					<Button
 						aria-label="Scroll section tabs left"
-						className="absolute top-1/2 left-0 z-20 size-8 -translate-y-1/2 rounded-full bg-background/95 shadow-sm"
+						className="mr-1 size-8 shrink-0 rounded-full"
+						disabled={!canScrollLeft}
 						onClick={() => scrollTabs('left')}
 						size="icon"
 						type="button"
@@ -103,10 +118,47 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 						<ChevronLeft aria-hidden="true" className="size-4" />
 					</Button>
 				)}
-				{canScrollRight && (
+				<div className="relative min-w-0 flex-1">
+					{/* Trailing gradient fade — shows when there is content to scroll right */}
+					{canScrollRight && (
+						<div className="pointer-events-none absolute top-0 right-0 z-10 h-full w-12 bg-gradient-to-l from-background to-transparent" />
+					)}
+					{/* Leading gradient fade — shows when scrolled past start */}
+					{canScrollLeft && (
+						<div className="pointer-events-none absolute top-0 left-0 z-10 h-full w-12 bg-gradient-to-r from-background to-transparent" />
+					)}
+					<nav
+						className="-mb-px flex scrollbar-none gap-4 overflow-x-auto"
+						onScroll={updateScrollIndicators}
+						ref={navRef}>
+						{tabs.map((tab) => (
+							<NavLink
+								className={cn(
+									'rounded-sm border-b-2 px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
+									location.pathname === tab.to
+										? 'border-primary text-foreground'
+										: 'border-transparent text-muted-foreground hover:text-foreground',
+								)}
+								key={tab.to}
+								onClick={onTabClick ? () => onTabClick(tab) : undefined}
+								ref={(el) => {
+									if (el) {
+										tabRefs.current.set(tab.to, el);
+									} else {
+										tabRefs.current.delete(tab.to);
+									}
+								}}
+								to={tab.to}>
+								{tab.label}
+							</NavLink>
+						))}
+					</nav>
+				</div>
+				{isOverflowing && (
 					<Button
 						aria-label="Scroll section tabs right"
-						className="absolute top-1/2 right-0 z-20 size-8 -translate-y-1/2 rounded-full bg-background/95 shadow-sm"
+						className="ml-1 size-8 shrink-0 rounded-full"
+						disabled={!canScrollRight}
 						onClick={() => scrollTabs('right')}
 						size="icon"
 						type="button"
@@ -114,32 +166,6 @@ function TabLayout({ description, headerAction, onTabClick, tabs, title }: TabLa
 						<ChevronRight aria-hidden="true" className="size-4" />
 					</Button>
 				)}
-				<nav
-					className="-mb-px flex scrollbar-none gap-4 overflow-x-auto"
-					onScroll={updateScrollIndicators}
-					ref={navRef}>
-					{tabs.map((tab) => (
-						<NavLink
-							className={cn(
-								'rounded-sm border-b-2 px-1 pb-3 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
-								location.pathname === tab.to
-									? 'border-primary text-foreground'
-									: 'border-transparent text-muted-foreground hover:text-foreground',
-							)}
-							key={tab.to}
-							onClick={onTabClick ? () => onTabClick(tab) : undefined}
-							ref={(el) => {
-								if (el) {
-									tabRefs.current.set(tab.to, el);
-								} else {
-									tabRefs.current.delete(tab.to);
-								}
-							}}
-							to={tab.to}>
-							{tab.label}
-						</NavLink>
-					))}
-				</nav>
 			</div>
 
 			<Outlet />
