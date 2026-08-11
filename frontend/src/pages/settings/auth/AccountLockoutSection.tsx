@@ -1,8 +1,7 @@
-import type { InputHTMLAttributes } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { SettingsNumberField } from '../SettingsNumberField';
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 /** Typed state for the account lockout section. */
 interface AccountLockoutState {
@@ -20,6 +19,16 @@ interface AccountLockoutActions {
 
 type AccountLockoutSectionProps = AccountLockoutActions & AccountLockoutState;
 
+/**
+ * One of the four policy groups on /settings/auth, each now its own Card.
+ *
+ * All four used to share a single "Authentication Security" card, inside which every group was a
+ * `rounded-lg border p-4` box separated from its neighbours by exactly 24px — the same 24px that
+ * separated a switch from the detail panel it controls. Only one of the six boxes carried a title,
+ * so "Max Failed Login Attempts" floated in an unlabelled panel with nothing tying it to the toggle
+ * that revealed it. A Card per group is what /profile/preferences does, and it makes the group name
+ * a real heading instead of a `text-sm` label inside a border.
+ */
 function AccountLockoutSection({
 	enableAccountLocking,
 	lockoutDurationMinutes,
@@ -29,82 +38,45 @@ function AccountLockoutSection({
 	onMaxLoginAttemptsChange,
 }: AccountLockoutSectionProps) {
 	return (
-		<>
-			<div className="flex flex-row items-center justify-between rounded-lg border p-4">
-				<div className="space-y-0.5">
-					<Label htmlFor="enableAccountLocking">Account Lockout</Label>
-					<p className="text-sm text-muted-foreground">
-						Lock user accounts after repeated failed login attempts
-					</p>
-				</div>
-				<Switch
+		<Card>
+			<CardHeader>
+				<CardTitle>Account Lockout</CardTitle>
+				<CardDescription>
+					Lock user accounts after repeated failed login attempts.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<SettingsToggleRow
 					checked={enableAccountLocking}
 					id="enableAccountLocking"
+					label="Enable account lockout"
 					onCheckedChange={onEnableAccountLockingChange}
 				/>
-			</div>
 
-			{enableAccountLocking && (
-				<div className="space-y-4 rounded-lg border p-4">
-					<div className="space-y-2">
-						<Label htmlFor="maxLoginAttempts">Max Failed Login Attempts</Label>
-						<NumberInput
+				{enableAccountLocking && (
+					<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+						<SettingsNumberField
+							hint="Failed attempts before the account locks (1–100)."
 							id="maxLoginAttempts"
+							label="Max Failed Login Attempts"
 							max={100}
 							min={1}
 							onChange={onMaxLoginAttemptsChange}
 							value={maxLoginAttempts}
 						/>
-						<p className="text-sm text-muted-foreground">
-							Number of failed attempts before account is locked (1-100)
-						</p>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="lockoutDurationMinutes">Lockout Duration (minutes)</Label>
-						<NumberInput
+						<SettingsNumberField
+							hint="How long the account stays locked (1–1440 minutes)."
 							id="lockoutDurationMinutes"
+							label="Lockout Duration (minutes)"
 							max={1440}
 							min={1}
 							onChange={onLockoutDurationChange}
 							value={lockoutDurationMinutes}
 						/>
-						<p className="text-sm text-muted-foreground">
-							How long the account remains locked (1-1440 minutes)
-						</p>
 					</div>
-				</div>
-			)}
-		</>
-	);
-}
-
-/** Shared numeric input for auth security forms. */
-function NumberInput({
-	id,
-	max,
-	min,
-	onChange,
-	value,
-}: {
-	id: string;
-	max: number;
-	min: number;
-	onChange: (value: string) => void;
-	value: string;
-} & Pick<InputHTMLAttributes<HTMLInputElement>, never>) {
-	return (
-		<Input
-			autoComplete="off"
-			className="max-w-xs"
-			id={id}
-			inputMode="numeric"
-			max={max}
-			min={min}
-			onChange={(e) => onChange(e.target.value)}
-			type="number"
-			value={value}
-		/>
+				)}
+			</CardContent>
+		</Card>
 	);
 }
 

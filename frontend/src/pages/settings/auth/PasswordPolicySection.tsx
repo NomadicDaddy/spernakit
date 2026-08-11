@@ -1,6 +1,7 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { SettingsNumberField } from '../SettingsNumberField';
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 /** Typed state for the password policy section. */
 interface PasswordPolicyState {
@@ -45,101 +46,84 @@ function PasswordPolicySection({
 	const passwordHistoryCount = Number.parseInt(passwordHistoryDepth, 10);
 
 	return (
-		<div className="space-y-4 rounded-lg border p-4">
-			<h2 className="text-sm font-medium">Password Policy</h2>
-
-			<div className="space-y-2">
-				<Label htmlFor="passwordExpiryDays">Password Expiry (days)</Label>
-				<Input
-					autoComplete="off"
-					className="max-w-xs"
-					id="passwordExpiryDays"
-					inputMode="numeric"
-					max={365}
-					min={0}
-					onChange={(e) => onPasswordExpiryDaysChange(e.target.value)}
-					type="number"
-					value={passwordExpiryDays}
-				/>
-				<p className="text-sm text-muted-foreground">
-					{passwordExpiryDayCount === 0
-						? 'Passwords never expire'
-						: `Passwords expire after ${formatDays(passwordExpiryDays)}`}
-				</p>
-			</div>
-
-			<div className="flex flex-row items-center justify-between">
-				<div className="space-y-0.5">
-					<Label htmlFor="requirePasswordChange">
-						Require Password Change on First Login
-					</Label>
-					<p className="text-sm text-muted-foreground">
-						Force users to change password when logging in
-					</p>
+		<Card>
+			<CardHeader>
+				{/*
+				 * The group name was an `h2.text-sm.font-medium` inside a bordered box — 14px/500,
+				 * lighter than the CardTitle above it and indented 17px from it, and one of two
+				 * `<h2>` elements on the surface rendering at two different sizes. `CardTitle asChild`
+				 * gives all four policy groups one title treatment and no ad-hoc heading sizes.
+				 */}
+				<CardTitle>Password Policy</CardTitle>
+				<CardDescription>
+					Rules applied when a user sets or changes a password.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				{/*
+				 * Three numeric fields across, not three rows of one 320px input. Each holds one or
+				 * two digits, and OAuthProvidersSection on this same surface already pairs its inputs
+				 * this way.
+				 */}
+				<div className="grid gap-4 sm:grid-cols-3">
+					<SettingsNumberField
+						hint={
+							passwordExpiryDayCount === 0
+								? 'Passwords never expire.'
+								: `Passwords expire after ${formatDays(passwordExpiryDays)}.`
+						}
+						id="passwordExpiryDays"
+						label="Password Expiry (days)"
+						max={365}
+						min={0}
+						onChange={onPasswordExpiryDaysChange}
+						value={passwordExpiryDays}
+					/>
+					<SettingsNumberField
+						hint={
+							passwordHistoryCount === 0
+								? 'Password reuse is not prevented.'
+								: `Users cannot reuse the last ${String(passwordHistoryCount)} password${passwordHistoryCount === 1 ? '' : 's'}.`
+						}
+						id="passwordHistoryDepth"
+						label="Password History Depth"
+						max={100}
+						min={0}
+						onChange={onPasswordHistoryDepthChange}
+						value={passwordHistoryDepth}
+					/>
+					<SettingsNumberField
+						hint={
+							minPasswordAgeDayCount === 0
+								? 'Users can change password anytime.'
+								: `Users must wait ${formatDays(minPasswordAgeDays)} before changing again.`
+						}
+						id="minPasswordAgeDays"
+						label="Minimum Password Age (days)"
+						max={365}
+						min={0}
+						onChange={onMinPasswordAgeDaysChange}
+						value={minPasswordAgeDays}
+					/>
 				</div>
-				<Switch
+
+				<SettingsToggleRow
 					checked={requirePasswordChange}
+					description="Force users to change password when logging in."
 					id="requirePasswordChange"
+					label="Require password change on first login"
 					onCheckedChange={onRequirePasswordChangeChange}
 				/>
-			</div>
 
-			<div className="flex flex-row items-center justify-between">
-				<div className="space-y-0.5">
-					<Label htmlFor="requireSpecialCharacter">
-						Require Special Character in Passwords
-					</Label>
-					<p className="text-sm text-muted-foreground">
-						Passwords must contain at least one special character
-					</p>
-				</div>
-				<Switch
+				<SettingsToggleRow
 					checked={requireSpecialCharacter}
+					description="Passwords must contain at least one special character."
 					id="requireSpecialCharacter"
+					label="Require special character in passwords"
 					onCheckedChange={onRequireSpecialCharacterChange}
 				/>
-			</div>
-
-			<div className="space-y-2">
-				<Label htmlFor="passwordHistoryDepth">Password History Depth</Label>
-				<Input
-					autoComplete="off"
-					className="max-w-xs"
-					id="passwordHistoryDepth"
-					inputMode="numeric"
-					max={100}
-					min={0}
-					onChange={(e) => onPasswordHistoryDepthChange(e.target.value)}
-					type="number"
-					value={passwordHistoryDepth}
-				/>
-				<p className="text-sm text-muted-foreground">
-					{passwordHistoryCount === 0
-						? 'Password reuse is not prevented'
-						: `Users cannot reuse the last ${passwordHistoryCount} password${passwordHistoryCount === 1 ? '' : 's'}`}
-				</p>
-			</div>
-
-			<div className="space-y-2">
-				<Label htmlFor="minPasswordAgeDays">Minimum Password Age (days)</Label>
-				<Input
-					autoComplete="off"
-					className="max-w-xs"
-					id="minPasswordAgeDays"
-					inputMode="numeric"
-					max={365}
-					min={0}
-					onChange={(e) => onMinPasswordAgeDaysChange(e.target.value)}
-					type="number"
-					value={minPasswordAgeDays}
-				/>
-				<p className="text-sm text-muted-foreground">
-					{minPasswordAgeDayCount === 0
-						? 'Users can change password anytime'
-						: `Users must wait ${formatDays(minPasswordAgeDays)} before changing password again`}
-				</p>
-			</div>
-		</div>
+			</CardContent>
+		</Card>
 	);
 }
 

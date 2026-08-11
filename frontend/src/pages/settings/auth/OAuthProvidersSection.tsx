@@ -8,7 +8,9 @@ import {
 	testOAuthProviderConnection,
 	updateOAuthProviderSetting,
 } from '@/api/oauthProviderSettings';
+import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -179,28 +181,31 @@ function OAuthProvidersSection() {
 	if (!isSysop()) return null;
 
 	if (isLoading) {
-		return (
-			<div className="space-y-4">
-				<h2 className="text-lg font-semibold">OAuth / SSO Providers</h2>
-				<div className="text-sm text-muted-foreground">Loading…</div>
-			</div>
-		);
+		return <CardSkeleton contentLines={3} titleWidth="h-6 w-48" />;
 	}
 
 	const providers = data?.providers ?? [];
 
+	/*
+	 * The section was a hand-rolled `h2.text-lg.font-semibold` + `p.text-sm` on the bare page
+	 * background, sitting between four real Cards. Its heading rendered at the same size as a
+	 * CardTitle but with none of the surface behind it, so the page read as three cards, a gap,
+	 * some loose text, then more cards. The standard shell puts every section on one plane.
+	 */
 	return (
-		<div className="space-y-4">
-			<h2 className="text-lg font-semibold">OAuth / SSO Providers</h2>
-			<p className="text-sm text-muted-foreground">
-				Configure OAuth providers for single sign-on. Changes take effect immediately.
-			</p>
-			<div className="space-y-3">
+		<Card>
+			<CardHeader>
+				<CardTitle>OAuth / SSO Providers</CardTitle>
+				<CardDescription>
+					Configure OAuth providers for single sign-on. Changes take effect immediately.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-3">
 				{providers.map((provider) => (
 					<ProviderRow key={provider.provider} settings={provider} />
 				))}
-			</div>
-		</div>
+			</CardContent>
+		</Card>
 	);
 }
 

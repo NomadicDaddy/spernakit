@@ -22,6 +22,20 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
+
+/**
+ * Broadcast severities, each with the semantic token the app already spends on that state.
+ *
+ * The select used to list four bare words, so an operator picked a severity without seeing the
+ * colour every recipient would get — the one thing the choice actually decides.
+ */
+const BROADCAST_TYPES: { dot: string; label: string; value: string }[] = [
+	{ dot: 'bg-primary', label: 'Info', value: 'info' },
+	{ dot: 'bg-warning', label: 'Warning', value: 'warning' },
+	{ dot: 'bg-destructive', label: 'Error', value: 'error' },
+	{ dot: 'bg-success', label: 'Success', value: 'success' },
+];
 
 interface BroadcastDialogProps {
 	isOpen: boolean;
@@ -92,14 +106,19 @@ export function BroadcastDialog({ isOpen, onOpenChange }: BroadcastDialogProps) 
 					<div className="space-y-2">
 						<Label htmlFor="broadcast-type">Type</Label>
 						<Select onValueChange={setType} value={type}>
-							<SelectTrigger id="broadcast-type">
+							<SelectTrigger className="w-full" id="broadcast-type">
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="info">Info</SelectItem>
-								<SelectItem value="warning">Warning</SelectItem>
-								<SelectItem value="error">Error</SelectItem>
-								<SelectItem value="success">Success</SelectItem>
+								{BROADCAST_TYPES.map((t) => (
+									<SelectItem key={t.value} value={t.value}>
+										<span
+											aria-hidden="true"
+											className={cn('size-2 shrink-0 rounded-full', t.dot)}
+										/>
+										{t.label}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>

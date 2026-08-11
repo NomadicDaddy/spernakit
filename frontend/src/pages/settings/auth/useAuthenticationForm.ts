@@ -2,8 +2,6 @@ import { useState } from 'react';
 
 import type { AuthSecuritySettings } from '@/api/authSecurity';
 
-import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-
 interface FormOverrides {
 	authRateLimitEnabled?: boolean;
 	authRateLimitMaxRequests?: string;
@@ -95,8 +93,10 @@ function useAuthenticationForm(
 	serverData: AuthSecuritySettings | undefined,
 ): AuthenticationFormState {
 	const [overrides, setOverrides] = useState<FormOverrides>({});
+	// `dirty` is returned, not consumed here: navigation blocking belongs to
+	// <UnsavedChangesGuard />, which the consuming page mounts. A hook that only
+	// installs the blocker has no way to render the dialog that releases it.
 	const dirty = Object.keys(overrides).length > 0;
-	useUnsavedChanges(dirty);
 
 	function booleanValue(key: keyof FormOverrides, fallback: boolean): boolean {
 		return (

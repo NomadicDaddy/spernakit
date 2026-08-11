@@ -1,5 +1,6 @@
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 /** Typed state for the self-registration section. */
 interface SelfRegistrationState {
@@ -18,21 +19,27 @@ function SelfRegistrationSection({
 	selfRegistrationEnabled,
 }: SelfRegistrationSectionProps) {
 	return (
-		<div className="flex flex-row items-center justify-between rounded-lg border p-4">
-			<div className="space-y-0.5">
-				<Label htmlFor="selfRegistrationEnabled">Self-Registration</Label>
-				<p className="text-sm text-muted-foreground">
-					{selfRegistrationEnabled
-						? 'New users can create their own accounts via the registration page'
-						: 'Registration page is disabled - only admins can create accounts'}
-				</p>
-			</div>
-			<Switch
-				checked={selfRegistrationEnabled}
-				id="selfRegistrationEnabled"
-				onCheckedChange={onSelfRegistrationEnabledChange}
-			/>
-		</div>
+		<Card>
+			<CardHeader>
+				<CardTitle>Self-Registration</CardTitle>
+				<CardDescription>
+					Whether visitors can create their own accounts from the registration page.
+				</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<SettingsToggleRow
+					checked={selfRegistrationEnabled}
+					description={
+						selfRegistrationEnabled
+							? 'New users can create their own accounts.'
+							: 'Registration page is disabled — only admins can create accounts.'
+					}
+					id="selfRegistrationEnabled"
+					label="Allow self-registration"
+					onCheckedChange={onSelfRegistrationEnabledChange}
+				/>
+			</CardContent>
+		</Card>
 	);
 }
 

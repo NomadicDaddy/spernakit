@@ -1,6 +1,7 @@
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { SettingsNumberField } from '../SettingsNumberField';
+import { SettingsToggleRow } from '../SettingsToggleRow';
 
 /** Typed state for the auth rate limit section. */
 interface AuthRateLimitState {
@@ -27,67 +28,53 @@ function AuthRateLimitSection({
 	onAuthRateLimitWindowMinutesChange,
 }: AuthRateLimitSectionProps) {
 	return (
-		<>
-			<div className="flex flex-row items-center justify-between rounded-lg border p-4">
-				<div className="space-y-0.5">
-					<Label htmlFor="authRateLimitEnabled">Auth Rate Limiting</Label>
-					<p className="text-sm text-muted-foreground">
-						Throttle login, registration, and password-reset requests by IP to slow
-						brute-force attempts
-					</p>
-				</div>
-				<Switch
+		<Card>
+			<CardHeader>
+				<CardTitle>Auth Rate Limiting</CardTitle>
+				<CardDescription>
+					Throttle login, registration and password-reset requests by IP to slow
+					brute-force attempts.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<SettingsToggleRow
 					checked={authRateLimitEnabled}
 					id="authRateLimitEnabled"
+					label="Enable auth rate limiting"
 					onCheckedChange={onAuthRateLimitEnabledChange}
 				/>
-			</div>
 
-			{authRateLimitEnabled && (
-				<div className="space-y-4 rounded-lg border p-4">
-					<div className="space-y-2">
-						<Label htmlFor="authRateLimitMaxRequests">Max Requests per Window</Label>
-						<Input
-							autoComplete="off"
-							className="max-w-xs"
-							id="authRateLimitMaxRequests"
-							inputMode="numeric"
-							max={1000}
-							min={1}
-							onChange={(e) => onAuthRateLimitMaxRequestsChange(e.target.value)}
-							type="number"
-							value={authRateLimitMaxRequests}
-						/>
-						<p className="text-sm text-muted-foreground">
-							Maximum auth requests a single IP may issue in one window (1-1000)
+				{authRateLimitEnabled && (
+					<>
+						<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+							<SettingsNumberField
+								hint="Auth requests one IP may issue per window (1–1000)."
+								id="authRateLimitMaxRequests"
+								label="Max Requests per Window"
+								max={1000}
+								min={1}
+								onChange={onAuthRateLimitMaxRequestsChange}
+								value={authRateLimitMaxRequests}
+							/>
+							<SettingsNumberField
+								hint="Rolling window size for the limit (1–1440 minutes)."
+								id="authRateLimitWindowMinutes"
+								label="Window (minutes)"
+								max={1440}
+								min={1}
+								onChange={onAuthRateLimitWindowMinutesChange}
+								value={authRateLimitWindowMinutes}
+							/>
+						</div>
+
+						<p className="text-xs text-muted-foreground">
+							Enforced by the backend auth rate limit plugin. Changes take effect on
+							the next auth request.
 						</p>
-					</div>
-
-					<div className="space-y-2">
-						<Label htmlFor="authRateLimitWindowMinutes">Window (minutes)</Label>
-						<Input
-							autoComplete="off"
-							className="max-w-xs"
-							id="authRateLimitWindowMinutes"
-							inputMode="numeric"
-							max={1440}
-							min={1}
-							onChange={(e) => onAuthRateLimitWindowMinutesChange(e.target.value)}
-							type="number"
-							value={authRateLimitWindowMinutes}
-						/>
-						<p className="text-sm text-muted-foreground">
-							Rolling window size for the limit (1-1440 minutes)
-						</p>
-					</div>
-
-					<p className="text-xs text-muted-foreground">
-						Enforced by the backend auth rate limit plugin. Changes take effect on the
-						next auth request.
-					</p>
-				</div>
-			)}
-		</>
+					</>
+				)}
+			</CardContent>
+		</Card>
 	);
 }
 

@@ -1,125 +1,23 @@
-import { Info, Lock } from 'lucide-react';
+import { Info, Lock, Search } from 'lucide-react';
+import { useState } from 'react';
 
 import type { ConfigSection, SnapshotValue } from '@/api/runtimeConfig';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRuntimeConfig } from '@/hooks/settings/useRuntimeConfig';
 import { useAuthorization } from '@/hooks/useAuthorization';
 
-const REDACTED = '[REDACTED]';
-const NOT_SET = '(not set)';
-
-/** Turn a camelCase config key into a human-readable label. */
-function formatLabel(key: string): string {
-	const spaced = key.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
-	return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
-
-function isPlainObject(value: SnapshotValue): value is Record<string, SnapshotValue> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** Render a single scalar value with sensible read-only styling. */
-function ScalarValue({ value }: { value: boolean | number | string }) {
-	if (typeof value === 'boolean') {
-		return (
-			<Badge variant={value ? 'secondary' : 'outline'}>
-				{value ? 'Enabled' : 'Disabled'}
-			</Badge>
-		);
-	}
-	if (value === REDACTED) {
-		return (
-			<Badge className="font-mono" variant="outline">
-				<Lock aria-hidden="true" className="size-3" />
-				Redacted
-			</Badge>
-		);
-	}
-	if (value === NOT_SET || value === '') {
-		return <span className="text-sm text-muted-foreground italic">Not set</span>;
-	}
-	return <span className="font-mono text-sm break-all text-foreground">{String(value)}</span>;
-}
-
-/** Render an array value as a list of badges, or an empty-state hint. */
-function ArrayValue({ values }: { values: SnapshotValue[] }) {
-	if (values.length === 0) {
-		return <span className="text-sm text-muted-foreground italic">None</span>;
-	}
-	if (values.every((v) => typeof v !== 'object')) {
-		return (
-			<div className="flex flex-wrap justify-end gap-1">
-				{values.map((v, i) => (
-					<Badge className="font-mono" key={`${String(v)}-${i}`} variant="outline">
-						{String(v)}
-					</Badge>
-				))}
-			</div>
-		);
-	}
-	return (
-		<div className="space-y-2">
-			{values.map((v, i) => (
-				<div className="rounded-md border border-border/60 p-2" key={i}>
-					{isPlainObject(v) ? (
-						<FieldList fields={v} />
-					) : (
-						<ScalarValue value={v as string} />
-					)}
-				</div>
-			))}
-		</div>
-	);
-}
-
-/** Render one labelled field, dispatching on the value shape. */
-function Field({ label, value }: { label: string; value: SnapshotValue }) {
-	if (isPlainObject(value)) {
-		return (
-			<div className="space-y-1">
-				<p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-					{label}
-				</p>
-				<div className="ml-1 border-l border-border/60 pl-3">
-					<FieldList fields={value} />
-				</div>
-			</div>
-		);
-	}
-	return (
-		<div className="flex items-start justify-between gap-4 py-1.5">
-			<span className="text-sm text-muted-foreground">{label}</span>
-			<div className="text-right">
-				{Array.isArray(value) ? (
-					<ArrayValue values={value} />
-				) : (
-					<ScalarValue value={value} />
-				)}
-			</div>
-		</div>
-	);
-}
-
-/** Render every field of a section/object in stable, alphabetical order. */
-function FieldList({ fields }: { fields: ConfigSection | Record<string, SnapshotValue> }) {
-	const entries = Object.entries(fields).sort(([a], [b]) => a.localeCompare(b));
-	return (
-		<div className="divide-y divide-border/40">
-			{entries.map(([key, value]) => (
-				<Field key={key} label={formatLabel(key)} value={value} />
-			))}
-		</div>
-	);
-}
+import { FieldList } from './RuntimeConfigFieldList';
+import { filterFields, formatLabel } from './runtimeConfigFilter';
 
 function RuntimeConfigTab() {
 	const { isSysop } = useAuthorization();
 	const sysop = isSysop();
 	const { data, error, isLoading } = useRuntimeConfig(sysop);
+	const [search, setSearch] = useState('');
 
 	if (!sysop) {
 		return (
@@ -136,9 +34,18 @@ function RuntimeConfigTab() {
 	const snapshot = data?.data;
 	// The snapshot names its own source; prefer it over a placeholder operators cannot act on.
 	const appSlug = typeof snapshot?.app?.slug === 'string' ? snapshot.app.slug : null;
-	const sections = snapshot
+	const sections: [string, ConfigSection | Record<string, SnapshotValue>][] = snapshot
 		? Object.entries(snapshot).sort(([a], [b]) => a.localeCompare(b))
 		: [];
+
+	const query = search.trim().toLowerCase();
+	const visible: [string, ConfigSection | Record<string, SnapshotValue>][] = query
+		? sections.flatMap(([name, section]) => {
+				if (formatLabel(name).toLowerCase().includes(query)) return [[name, section]];
+				const filtered = filterFields(section, query);
+				return filtered ? [[name, filtered]] : [];
+			})
+		: sections;
 
 	return (
 		<div className="space-y-6">
@@ -146,16 +53,24 @@ function RuntimeConfigTab() {
 				<Info aria-hidden="true" className="size-4" />
 				<AlertTitle>Read-only runtime configuration</AlertTitle>
 				<AlertDescription>
-					The effective startup configuration loaded from{' '}
-					{appSlug ? (
-						<code translate="no">config/{appSlug}.json</code>
-					) : (
-						'the application config file'
-					)}{' '}
-					merged with defaults. These values change only on restart and cannot be edited
-					here - settings that require a restart stay in the config file. Secrets (keys,
-					cookie and webhook secrets, database and storage credentials) are redacted and
-					never sent to the browser.
+					{/*
+					 * One `<p>`, not five bare children. `AlertDescription` is a `grid gap-1`, so each
+					 * text node and the inline `<code>` became its own grid row and a single sentence
+					 * rendered as three stacked fragments at every viewport. The component already
+					 * styles `[&_p]:leading-relaxed` for exactly this.
+					 */}
+					<p>
+						The effective startup configuration loaded from{' '}
+						{appSlug ? (
+							<code translate="no">config/{appSlug}.json</code>
+						) : (
+							'the application config file'
+						)}{' '}
+						merged with defaults. These values change only on restart and cannot be
+						edited here — settings that require a restart stay in the config file.
+						Secrets (keys, cookie and webhook secrets, database and storage credentials)
+						are redacted and never sent to the browser.
+					</p>
 				</AlertDescription>
 			</Alert>
 
@@ -176,19 +91,73 @@ function RuntimeConfigTab() {
 			)}
 
 			{!isLoading && !error && snapshot && (
-				<div className="grid items-start gap-4 lg:grid-cols-2">
-					{sections.map(([name, section]) => (
-						<Card key={name}>
-							<CardHeader>
-								<CardTitle>{formatLabel(name)}</CardTitle>
-								<CardDescription>Read-only effective values</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<FieldList fields={section} />
-							</CardContent>
-						</Card>
-					))}
-				</div>
+				<>
+					{/*
+					 * A filter, because this is 4,062px of unindexed scroll — three and a half
+					 * screens of fifteen alphabetical cards with no index and no jump list, so
+					 * finding `server.trustProxy` meant reading everything above it. Matching a
+					 * section keeps the whole card; matching a field keeps that field and the groups
+					 * that contain it.
+					 */}
+					<div className="flex flex-wrap items-center gap-3">
+						<div className="relative max-w-sm min-w-52 flex-1">
+							<Search
+								aria-hidden="true"
+								className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+							/>
+							<Input
+								aria-label="Filter configuration"
+								autoComplete="off"
+								className="pl-9"
+								onChange={(e) => setSearch(e.target.value)}
+								placeholder="Filter sections and keys…"
+								value={search}
+							/>
+						</div>
+						<p className="text-sm text-muted-foreground">
+							{query
+								? `${String(visible.length)} of ${String(sections.length)} sections`
+								: `${String(sections.length)} sections`}
+						</p>
+					</div>
+
+					{visible.length === 0 ? (
+						<p className="text-sm text-muted-foreground">
+							No configuration key matches “{search.trim()}”.
+						</p>
+					) : (
+						/*
+						 * A column flow rather than a two-column grid. The cards range from 150px
+						 * (Metrics) to 798px (Database) and a grid row is as tall as its taller card,
+						 * so at 1440 the eight rows left 1,959px of hard empty rectangle inside a
+						 * 3,704px grid — Database Admin sat beside Database with a 647px void under
+						 * it. Each card now starts directly under the previous one in its column.
+						 * `gap-6` matches the 24px page rhythm the outer stack already uses; the old
+						 * `gap-4` changed the rhythm halfway down the surface.
+						 */
+						<div className="columns-1 gap-6 lg:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
+							{visible.map(([name, section]) => (
+								<Card key={name}>
+									<CardHeader>
+										<CardTitle>{formatLabel(name)}</CardTitle>
+										{/*
+										 * The config key path, not "Read-only effective values"
+										 * fifteen times. That string restated the Alert above it and
+										 * told the operator nothing they could act on; the key is
+										 * what they need to find the block in the file.
+										 */}
+										<CardDescription className="font-mono text-xs">
+											{name}
+										</CardDescription>
+									</CardHeader>
+									<CardContent>
+										<FieldList fields={section} />
+									</CardContent>
+								</Card>
+							))}
+						</div>
+					)}
+				</>
 			)}
 		</div>
 	);
