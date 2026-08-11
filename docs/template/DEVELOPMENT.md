@@ -97,7 +97,7 @@ lint subset. The full gate remains required before completion.
 11. `bun run check:max-lines` - Source file size gate
 12. `bun run check-application` - Application structure validation
 13. `bun run check:destructive-confirmation` - Destructive action confirmation check
-14. `bun run check-docs` - Documentation link check
+14. `bun run check:docs` - Documentation link check
 15. `bun run typecheck` - Verify TypeScript types
 16. `bun run lint` - ESLint rules
 17. `bun run build` - Production build validation
