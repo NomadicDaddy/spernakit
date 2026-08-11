@@ -66,5 +66,5 @@ and finish with `bun run smoke:qc`.
 ## Documentation maintenance
 
 Keep examples aligned with the live source and update the relevant guide in the same change as
-the behavior it describes. Run `bun run check-docs` for links and consistency, then run the full
+the behavior it describes. Run `bun run check:docs` for links and consistency, then run the full
 quality gate before release.

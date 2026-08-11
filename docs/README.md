@@ -77,8 +77,8 @@ Always use full paths when linking to other docs:
 The project includes automated link checking to catch broken documentation links:
 
 ```bash
-# Run link checking (if implemented)
-bun run check-docs
+# Run link checking
+bun run check:docs
 ```
 
 ## Documentation Types

@@ -394,7 +394,6 @@ The following bun scripts are available in `package.json`:
 | Script                        | Description                                         |
 | ----------------------------- | --------------------------------------------------- |
 | `bun run reset-packages`      | Remove node_modules, dist, lock files and reinstall |
-| `bun run clear-logs`          | Clear log and PID files from logs/ directory        |
 | `bun run db:migrate`          | Run pending Drizzle migrations                      |
 | `bun run db:migrate:status`   | Show migration status                               |
 | `bun run db:migrate:baseline` | Mark migrations as applied (for existing databases) |
