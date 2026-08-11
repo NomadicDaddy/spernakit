@@ -37,10 +37,12 @@ function ActiveAlerts({ className }: { className?: string }) {
 		<Card className={cn('flex flex-col', className)}>
 			<CardHeader className="flex flex-row items-center justify-between space-y-0">
 				<div className="space-y-1">
-					<CardTitle className="text-base">Active alerts</CardTitle>
+					<CardTitle>Active alerts</CardTitle>
 					<CardDescription>Health issues requiring attention</CardDescription>
 				</div>
+				{/* Named for what it opens — see the matching link on the Recent activity card. */}
 				<Link
+					aria-label="View all health alerts"
 					className="text-sm font-medium text-primary hover:underline"
 					to="/settings/system-health">
 					View all

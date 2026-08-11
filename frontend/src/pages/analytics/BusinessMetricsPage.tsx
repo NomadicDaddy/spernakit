@@ -12,9 +12,10 @@ import { useAuthorization } from '@/hooks/useAuthorization';
 
 import { DashboardStatsSection } from './DashboardStatsSection';
 import { EventSummarySection } from './EventSummarySection';
+import { ANALYTICS_RANGES, DEFAULT_ANALYTICS_DAYS } from './timeRange';
 import { UserActivitySection } from './UserActivitySection';
 
-const VALID_DAYS = new Set([30, 365, 7, 90]);
+const VALID_DAYS = new Set(ANALYTICS_RANGES.map((r) => r.days));
 
 export function BusinessMetricsPage() {
 	const { can } = useAuthorization();
@@ -22,11 +23,11 @@ export function BusinessMetricsPage() {
 	const canViewUserActivity = can('ADMIN');
 	const [searchParams, setSearchParams] = useSearchParams();
 	const daysParam = Number(searchParams.get('days'));
-	const days = VALID_DAYS.has(daysParam) ? daysParam : 30;
+	const days = VALID_DAYS.has(daysParam) ? daysParam : DEFAULT_ANALYTICS_DAYS;
 	const setDays = (value: number) => {
 		setSearchParams(
 			(prev) => {
-				if (value === 30) prev.delete('days');
+				if (value === DEFAULT_ANALYTICS_DAYS) prev.delete('days');
 				else prev.set('days', String(value));
 				return prev;
 			},
@@ -55,10 +56,11 @@ export function BusinessMetricsPage() {
 						<SelectValue />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value="7">Last 7 days</SelectItem>
-						<SelectItem value="30">Last 30 days</SelectItem>
-						<SelectItem value="90">Last 90 days</SelectItem>
-						<SelectItem value="365">Last year</SelectItem>
+						{ANALYTICS_RANGES.map((range) => (
+							<SelectItem key={range.days} value={String(range.days)}>
+								{range.label}
+							</SelectItem>
+						))}
 					</SelectContent>
 				</Select>
 			</PageHeader>

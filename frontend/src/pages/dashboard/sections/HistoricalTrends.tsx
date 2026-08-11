@@ -1,7 +1,9 @@
 import { lazy, Suspense } from 'react';
 
 import { TimeRangeSelector } from '@/components/shared/charts/TimeRangeSelector';
+import { SectionHeader } from '@/components/shared/SectionHeader';
 import { ChartSkeleton } from '@/components/shared/skeletons/ChartSkeleton';
+import { CHART_SERIES } from '@/lib/chartConstants';
 
 const MetricChart = lazy(() =>
 	import('@/components/shared/charts/MetricChart').then((m) => ({ default: m.MetricChart })),
@@ -25,15 +27,15 @@ function HistoricalTrends({
 	metricsLoading: boolean;
 	onMetricsHoursChange: (hours: number) => void;
 }) {
+	/* The section owns the range, so it owns the phrase that names it inside each chart. */
+	const rangeLabel = `over the last ${metricsHours} ${metricsHours === 1 ? 'hour' : 'hours'}`;
+
 	return (
 		<>
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-lg font-semibold">Historical Trends</h2>
-					<p className="mt-1 text-sm text-muted-foreground">Resource usage over time</p>
-				</div>
+			{/* The shared section rung, with the range picker in its trailing slot. */}
+			<SectionHeader description="Resource usage over time" title="Historical Trends">
 				<TimeRangeSelector onChange={onMetricsHoursChange} value={metricsHours} />
-			</div>
+			</SectionHeader>
 
 			<div className="grid gap-4 md:grid-cols-2">
 				{metricsLoading ? (
@@ -50,15 +52,17 @@ function HistoricalTrends({
 							</>
 						}>
 						<MetricChart
-							color="hsl(220, 70%, 55%)"
+							color={CHART_SERIES.cpu}
 							data={cpuData}
+							rangeLabel={rangeLabel}
 							title="CPU Usage"
 							unit="%"
 							yMax={100}
 						/>
 						<MetricChart
-							color="hsl(150, 60%, 45%)"
+							color={CHART_SERIES.memory}
 							data={memoryData}
+							rangeLabel={rangeLabel}
 							title="Memory Usage"
 							unit="%"
 							yMax={100}
