@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 
 import type { UserRole } from '@/api/types';
 
+import { RequiredMark } from '@/components/shared/RequiredMark';
 import { Button } from '@/components/ui/button';
 import {
 	Dialog,
@@ -162,7 +163,9 @@ export function CreateUserDialog({
 						{...(liveErrors.username ? { usernameError: liveErrors.username } : {})}
 					/>
 					<div className="space-y-2">
-						<Label htmlFor="create-password">Password</Label>
+						<Label htmlFor="create-password">
+							Password <RequiredMark />
+						</Label>
 						<Input
 							aria-describedby={hasPasswordError ? passwordErrorId : passwordHelperId}
 							autoComplete="new-password"
@@ -175,15 +178,20 @@ export function CreateUserDialog({
 							value={form.password}
 							{...(hasPasswordError ? { 'aria-invalid': true } : {})}
 						/>
+						{/*
+						 * The password rule is the one constraint kept at rest — a user needs it
+						 * before typing, not after failing. It sits at `text-xs` so the 14px labels
+						 * outrank it.
+						 */}
 						{hasPasswordError ? (
 							<p
 								aria-live="polite"
-								className="text-sm text-destructive"
+								className="text-xs text-destructive"
 								id={passwordErrorId}>
 								{liveErrors.password}
 							</p>
 						) : (
-							<p className="text-sm text-muted-foreground" id={passwordHelperId}>
+							<p className="text-xs text-muted-foreground" id={passwordHelperId}>
 								Must be at least {PASSWORD_MIN_LENGTH} characters
 							</p>
 						)}

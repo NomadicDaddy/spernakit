@@ -1,4 +1,4 @@
-import { Plus, Shield, Trash2 } from 'lucide-react';
+import { Plus, Shield, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import type { User } from '@/api/types';
@@ -34,7 +34,7 @@ type DialogState =
 	| null;
 
 function UsersTab() {
-	const { getFilter, limit, page, setFilter, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
 	const search = getFilter('search');
 	const roleFilter = getFilter('role');
 	const [selectedRows, setSelectedRows] = useState<User[]>([]);
@@ -106,38 +106,31 @@ function UsersTab() {
 
 	return (
 		<div className="space-y-4">
-			<UserTableFilters
-				onRoleFilterChange={(value) => setFilter('role', value)}
-				onSearchChange={(value) => setFilter('search', value)}
-				roleFilter={roleFilter}
-				search={search}
-			/>
-
-			{isAdmin() && selectedRows.length > 0 && (
-				<div className="flex items-center gap-2 rounded-md bg-muted px-4 py-2">
-					<span className="text-sm text-muted-foreground">
-						{selectedRows.length} selected
-					</span>
-					<Button
-						onClick={() => setDialog({ type: 'bulkDelete' })}
-						size="sm"
-						variant="destructive">
-						<Trash2 aria-hidden="true" className="mr-2 size-4" />
-						Delete Selected
-					</Button>
-					<Button
-						onClick={() => setDialog({ newRole: 'OPERATOR', type: 'bulkRole' })}
-						size="sm"
-						variant="outline">
-						<Shield aria-hidden="true" className="mr-2 size-4" />
-						Change Role
-					</Button>
-				</div>
-			)}
-
 			<DataTable
 				columns={columns}
 				data={users}
+				empty={{
+					action: (
+						<Button onClick={() => setDialog({ type: 'create' })} size="sm">
+							<Plus aria-hidden="true" className="size-4" />
+							Create User
+						</Button>
+					),
+					description: 'Create the first account to start assigning roles.',
+					icon: Users,
+					// Both filters are server-side, so the table's own filter state stays empty and
+					// it would otherwise report "no users" while the search box held a string.
+					isFiltered: search !== '' || roleFilter !== '',
+					// One navigation, not two — see the warning on `setFilter`.
+					onClearFilters: () => {
+						setFilters((params) => {
+							params.delete('search');
+							params.delete('role');
+							params.delete('page');
+						});
+					},
+					title: 'No users yet',
+				}}
 				{...(isAdmin() ? { onRowSelectionChange: setSelectedRows } : {})}
 				pagination={{
 					limit,
@@ -150,14 +143,50 @@ function UsersTab() {
 					total,
 				}}
 				selectionResetToken={selectionResetToken}
+				toolbar={
+					<UserTableFilters
+						onRoleFilterChange={(value) => setFilter('role', value)}
+						onSearchChange={(value) => setFilter('search', value)}
+						roleFilter={roleFilter}
+						search={search}
+					/>
+				}
+				toolbarActions={
+					<Button onClick={() => setDialog({ type: 'create' })} size="sm">
+						<Plus aria-hidden="true" className="size-4" />
+						Create User
+					</Button>
+				}
 			/>
 
-			<div className="ml-auto">
-				<Button onClick={() => setDialog({ type: 'create' })} size="sm">
-					<Plus aria-hidden="true" className="mr-2 size-4" />
-					Create User
-				</Button>
-			</div>
+			{/*
+			 * The bulk bar used to be inserted above the table, so ticking a checkbox shoved every
+			 * row 64px down and out from under the pointer. Below the table and sticky, it never
+			 * moves the rows it acts on. It also carries the card surface rather than `bg-muted`,
+			 * which is the exact colour a selected row computes to — bar and selection used to be
+			 * one flat grey.
+			 */}
+			{isAdmin() && selectedRows.length > 0 && (
+				<div className="sticky bottom-4 z-20 flex items-center gap-2 rounded-xl border bg-card px-4 py-2 shadow-[var(--shadow-card)]">
+					<span className="text-sm text-muted-foreground">
+						{selectedRows.length} selected
+					</span>
+					<Button
+						onClick={() => setDialog({ type: 'bulkDelete' })}
+						size="sm"
+						variant="destructive">
+						<Trash2 aria-hidden="true" className="size-4" />
+						Delete Selected
+					</Button>
+					<Button
+						onClick={() => setDialog({ newRole: 'OPERATOR', type: 'bulkRole' })}
+						size="sm"
+						variant="outline">
+						<Shield aria-hidden="true" className="size-4" />
+						Change Role
+					</Button>
+				</div>
+			)}
 
 			<CreateUserDialog
 				isOpen={dialog?.type === 'create'}

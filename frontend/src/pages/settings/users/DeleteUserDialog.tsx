@@ -28,6 +28,7 @@ export function DeleteUserDialog({
 			}}
 			onOpenChange={onOpenChange}
 			title="Delete User"
+			variant="destructive"
 		/>
 	);
 }

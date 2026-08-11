@@ -2,6 +2,7 @@ import type { Ref } from 'react';
 
 import type { UserRole } from '@/api/types';
 
+import { RequiredMark } from '@/components/shared/RequiredMark';
 import { RoleSelector } from '@/components/shared/RoleSelector';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -42,20 +43,28 @@ export function UserFormFields({
 }: UserFormFieldsProps) {
 	const { roleLabel } = useAuthorization();
 	const usernameErrorId = `${idPrefix}-username-error`;
-	const usernameHelperId = `${idPrefix}-username-helper`;
 	const emailErrorId = `${idPrefix}-email-error`;
-	const emailHelperId = `${idPrefix}-email-helper`;
 	const hasUsernameError = typeof usernameError === 'string' && usernameError.length > 0;
 	const hasEmailError = typeof emailError === 'string' && emailError.length > 0;
 
+	/*
+	 * The constraint lines ("At least 2 characters", "Must be a valid email address") used to sit
+	 * under every field at rest, at the same 14px as the labels above them — a four-field form
+	 * carrying eight lines of equal-weight copy, spelling out formats nobody needs stated while no
+	 * label marked which fields were required. The rules now surface as errors, in the same slot,
+	 * one tier below the labels.
+	 */
 	return (
 		<>
 			<div className="space-y-2">
-				<Label htmlFor={`${idPrefix}-username`}>Username</Label>
+				<Label htmlFor={`${idPrefix}-username`}>
+					Username <RequiredMark />
+				</Label>
 				<Input
-					aria-describedby={hasUsernameError ? usernameErrorId : usernameHelperId}
+					aria-describedby={hasUsernameError ? usernameErrorId : undefined}
 					autoComplete="off"
 					id={`${idPrefix}-username`}
+					minLength={USERNAME_MIN_LENGTH}
 					onBlur={onUsernameBlur}
 					onChange={(e) => onUsernameChange(e.target.value)}
 					ref={usernameInputRef}
@@ -64,20 +73,18 @@ export function UserFormFields({
 					value={username}
 					{...(hasUsernameError ? { 'aria-invalid': true } : {})}
 				/>
-				{hasUsernameError ? (
-					<p aria-live="polite" className="text-sm text-destructive" id={usernameErrorId}>
+				{hasUsernameError && (
+					<p aria-live="polite" className="text-xs text-destructive" id={usernameErrorId}>
 						{usernameError}
-					</p>
-				) : (
-					<p className="text-sm text-muted-foreground" id={usernameHelperId}>
-						At least {USERNAME_MIN_LENGTH} characters
 					</p>
 				)}
 			</div>
 			<div className="space-y-2">
-				<Label htmlFor={`${idPrefix}-email`}>Email</Label>
+				<Label htmlFor={`${idPrefix}-email`}>
+					Email <RequiredMark />
+				</Label>
 				<Input
-					aria-describedby={hasEmailError ? emailErrorId : emailHelperId}
+					aria-describedby={hasEmailError ? emailErrorId : undefined}
 					autoComplete="off"
 					id={`${idPrefix}-email`}
 					onBlur={onEmailBlur}
@@ -89,13 +96,9 @@ export function UserFormFields({
 					value={email}
 					{...(hasEmailError ? { 'aria-invalid': true } : {})}
 				/>
-				{hasEmailError ? (
-					<p aria-live="polite" className="text-sm text-destructive" id={emailErrorId}>
+				{hasEmailError && (
+					<p aria-live="polite" className="text-xs text-destructive" id={emailErrorId}>
 						{emailError}
-					</p>
-				) : (
-					<p className="text-sm text-muted-foreground" id={emailHelperId}>
-						Must be a valid email address
 					</p>
 				)}
 			</div>

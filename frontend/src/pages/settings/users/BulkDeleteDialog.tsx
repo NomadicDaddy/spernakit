@@ -26,6 +26,7 @@ function BulkDeleteDialog({
 			onConfirm={onConfirm}
 			onOpenChange={onOpenChange}
 			title={`Delete ${selectedRows.length} users?`}
+			variant="destructive"
 		/>
 	);
 }
