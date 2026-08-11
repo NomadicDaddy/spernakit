@@ -2,7 +2,7 @@
  * Page event handlers for crawltest: console messages, page errors,
  * failed requests, and HTTP error responses.
  */
-import type { ConsoleMessage, HTTPRequest, HTTPResponse, Page } from 'puppeteer';
+import type { ConsoleMessage, Dialog, HTTPRequest, HTTPResponse, Page } from 'puppeteer';
 
 import type { TestResults } from './crawltest-results';
 import type { CrawlerState } from './crawltest-types';
@@ -23,6 +23,7 @@ export interface CrawlEventContext {
 
 export function attachPageHandlers(page: Page, getCtx: () => CrawlEventContext): void {
 	page.on('console', (msg) => handleConsoleMessage(getCtx(), msg));
+	page.on('dialog', (dialog) => void handleDialog(dialog));
 	page.on('pageerror', (err: unknown) => handlePageError(getCtx(), err));
 	page.on('requestfailed', (req) => handleRequestFailed(getCtx(), req));
 	page.on('response', (res) => handleResponse(getCtx(), res));
@@ -88,6 +89,23 @@ function handleConsoleMessage(ctx: CrawlEventContext, msg: ConsoleMessage): void
 		ctx.results.addConsoleError(text, ctx.page.url());
 		console.log(`❌ Console Error: ${text}`);
 	}
+}
+
+// Puppeteer auto-dismisses dialogs when no listener is attached, and dismissing a `beforeunload`
+// means "stay on this page". The crawl dirties a form on its way through a settings tab — toggling
+// a switch is one of the interactions it is there to perform — and every later `page.goto` then
+// blocked on an unsaved-changes prompt nothing answered, timing out after the full navigation
+// budget. The guard firing is correct application behavior, so accept it and leave.
+async function handleDialog(dialog: Dialog): Promise<void> {
+	if (dialog.type() === 'beforeunload') {
+		await dialog.accept();
+		return;
+	}
+
+	// The app builds its own dialogs, so a native one is worth naming. Dismiss rather than accept:
+	// a crawl should not confirm a prompt whose wording it never read.
+	console.log(`⚠️  Native ${dialog.type()} dialog dismissed: ${dialog.message()}`);
+	await dialog.dismiss();
 }
 
 function handlePageError(ctx: CrawlEventContext, err: unknown): void {
