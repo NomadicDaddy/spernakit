@@ -117,9 +117,9 @@ function SecurityTab() {
 							<code
 								className="rounded bg-muted px-1 font-mono text-xs"
 								translate="no">
-								bun run generate-keys
+								bun run generate-keys -- --only mfa
 							</code>{' '}
-							to provision the MFA signing key.
+							to provision the MFA signing key without rotating any other key.
 						</p>
 					</CardContent>
 				)}

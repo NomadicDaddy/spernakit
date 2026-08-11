@@ -843,7 +843,7 @@
 				},
 				"mfaPrivateKey": {
 					"default": "",
-					"description": "Dedicated ES256 private key for short-lived MFA challenge tokens. Generate with `bun run generate-keys`; required in production.",
+					"description": "Dedicated ES256 private key for short-lived MFA challenge tokens. Generate with `bun run generate-keys -- --only mfa`; required in production.",
 					"type": "string"
 				},
 				"mfaPublicKey": {

@@ -48,7 +48,7 @@ async function handleMfaSetup({ body, set, user }: AuthCtx<{ currentPassword: st
 	if (!mfaPrivateKey || !mfaPublicKey) {
 		set.status = HTTP_STATUS.CONFLICT;
 		return conflictError(
-			'MFA is not configured on this server. Run `bun run generate-keys` to provision the MFA signing key.',
+			'MFA is not configured on this server. Run `bun run generate-keys -- --only mfa` to provision the MFA signing key without rotating any other key.',
 			AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED,
 		);
 	}
