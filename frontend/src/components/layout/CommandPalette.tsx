@@ -23,7 +23,7 @@ import { commandPaletteRoutes } from './commandPaletteRoutes';
 /** Resize a navConfig icon element for command palette display. */
 function resizeIcon(icon: React.ReactNode): React.ReactNode {
 	if (isValidElement<{ className?: string }>(icon)) {
-		return cloneElement(icon, { className: 'mr-2 size-4' });
+		return cloneElement(icon, { className: 'size-4' });
 	}
 	return icon;
 }
@@ -123,18 +123,18 @@ function CommandPalette({ canAccess, onNavigate }: CommandPaletteProps) {
 		{
 			icon:
 				themeMode === 'dark' ? (
-					<Sun aria-hidden="true" className="mr-2 size-4" />
+					<Sun aria-hidden="true" className="size-4" />
 				) : (
-					<Moon aria-hidden="true" className="mr-2 size-4" />
+					<Moon aria-hidden="true" className="size-4" />
 				),
 			label: `Toggle theme (current: ${themeMode})`,
 			onSelect: toggleTheme,
 		},
 		{
 			icon: collapsed ? (
-				<PanelLeftOpen aria-hidden="true" className="mr-2 size-4" />
+				<PanelLeftOpen aria-hidden="true" className="size-4" />
 			) : (
-				<PanelLeftClose aria-hidden="true" className="mr-2 size-4" />
+				<PanelLeftClose aria-hidden="true" className="size-4" />
 			),
 			label: `${collapsed ? 'Expand' : 'Collapse'} sidebar`,
 			onSelect: handleToggleSidebar,

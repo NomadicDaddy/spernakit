@@ -1,79 +1,48 @@
-import { AlertCircle, Info, Megaphone, Shield, ShieldAlert, Sparkles } from 'lucide-react';
+import { Inbox, Mail } from 'lucide-react';
 
 import type { NotificationStatistics } from '@/api/types';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { StatCard } from '@/components/shared/charts/StatCard';
+import { StatCardSkeleton } from '@/components/shared/skeletons/StatCardSkeleton';
 
-interface StatCard {
-	color: string;
-	getValue: (stats: NotificationStatistics) => number;
-	icon: typeof Info;
-	label: string;
-}
-
-const STAT_CARDS: StatCard[] = [
-	{ color: 'text-blue-500', getValue: (s) => s.total, icon: Info, label: 'Total' },
-	{ color: 'text-amber-500', getValue: (s) => s.unread, icon: AlertCircle, label: 'Unread' },
-	{ color: 'text-sky-500', getValue: (s) => s.byType.info ?? 0, icon: Info, label: 'Info' },
-	{
-		color: 'text-orange-500',
-		getValue: (s) => s.byType.warning ?? 0,
-		icon: ShieldAlert,
-		label: 'Warning',
-	},
-	{
-		color: 'text-red-500',
-		getValue: (s) => s.byType.error ?? 0,
-		icon: AlertCircle,
-		label: 'Error',
-	},
-	{
-		color: 'text-green-500',
-		getValue: (s) => s.byType.success ?? 0,
-		icon: Sparkles,
-		label: 'Success',
-	},
-	{
-		color: 'text-purple-500',
-		getValue: (s) => s.byType.security ?? 0,
-		icon: Shield,
-		label: 'Security',
-	},
-	{
-		color: 'text-pink-500',
-		getValue: (s) => s.byType.marketing ?? 0,
-		icon: Megaphone,
-		label: 'Marketing',
-	},
-];
-
+/**
+ * Two numbers, rendered with the shared `StatCard`.
+ *
+ * This was eight bespoke tiles — Total, Unread and six per-type counts — in a `lg:grid-cols-8` row
+ * that cost 126px of vertical band to deliver eight integers. Three problems compounded: the tiles
+ * were a local Card composition rather than the `StatCard` every other KPI row in the app uses, so
+ * the same idea rendered at a different size and rhythm here; the per-type tiles restated the
+ * options in the type filter directly below them, without being clickable and without a System
+ * tile, so they were redundant *and* incomplete; and eight columns at `lg` meant ~85px tiles at
+ * 1024, where the untruncated labels painted straight through the card borders.
+ *
+ * The per-type counts were not dropped — they moved into the type filter's own option labels, where
+ * they are exhaustive by construction (the list is built from `NOTIFICATION_TYPES`) and where the
+ * number is next to the control it would make you press. What is left here is the two figures an
+ * operator acts on.
+ */
 function NotificationStatsGrid({ stats }: { stats: NotificationStatistics | undefined }) {
-	if (stats) {
+	if (!stats) {
 		return (
-			<div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-				{STAT_CARDS.map(({ color, getValue, icon: Icon, label }) => (
-					<Card key={label}>
-						<CardContent className="flex items-center gap-3 p-4">
-							<Icon aria-hidden="true" className={`size-5 shrink-0 ${color}`} />
-							<div className="min-w-0">
-								<p className="text-xs text-muted-foreground">{label}</p>
-								<p className="text-lg font-semibold tabular-nums">
-									{getValue(stats)}
-								</p>
-							</div>
-						</CardContent>
-					</Card>
-				))}
+			<div className="grid gap-4 sm:grid-cols-2">
+				<StatCardSkeleton />
+				<StatCardSkeleton />
 			</div>
 		);
 	}
 
 	return (
-		<div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-			{STAT_CARDS.map(({ label }) => (
-				<Skeleton className="h-[72px] w-full" key={label} />
-			))}
+		<div className="grid gap-4 sm:grid-cols-2">
+			<StatCard
+				icon={<Mail aria-hidden="true" className="size-5 text-muted-foreground" />}
+				title="Unread"
+				value={stats.unread}
+			/>
+			<StatCard
+				icon={<Inbox aria-hidden="true" className="size-5 text-muted-foreground" />}
+				title="Total"
+				value={stats.total}
+			/>
 		</div>
 	);
 }

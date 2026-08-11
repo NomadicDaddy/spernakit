@@ -16,7 +16,7 @@ function NotFoundPage() {
 			</div>
 			<Button asChild variant="outline">
 				<Link to="/dashboard">
-					<ArrowLeft aria-hidden="true" className="mr-2 size-4" />
+					<ArrowLeft aria-hidden="true" className="size-4" />
 					Back to Dashboard
 				</Link>
 			</Button>

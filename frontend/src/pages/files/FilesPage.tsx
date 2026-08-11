@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText } from 'lucide-react';
-import { useState } from 'react';
+import { FileText, Upload } from 'lucide-react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+
+import type { FileUploadHandle } from '@/components/shared/FileUpload';
 
 import { deleteFile, downloadFile, type FileRecord, listFiles, uploadFile } from '@/api/files';
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
@@ -10,7 +12,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { FileUpload } from '@/components/shared/FileUpload';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useFileColumns } from '@/hooks/useFileColumns';
@@ -18,9 +20,13 @@ import { usePagination } from '@/hooks/usePagination';
 import { downloadBlob } from '@/lib/download';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+/** The server's own per-file ceiling, stated once so the header trigger and the drop zone agree. */
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
 function FilesPage() {
 	const queryClient = useQueryClient();
 	const { limit, page, setLimit, setPage } = usePagination(20, true);
+	const uploadRef = useRef<FileUploadHandle>(null);
 	const [downloadingId, setDownloadingId] = useState<null | number>(null);
 	const [deleteTarget, setDeleteTarget] = useState<FileRecord | null>(null);
 	const { user } = useAuth();
@@ -88,33 +94,58 @@ function FilesPage() {
 
 	return (
 		<div className="space-y-6 p-6">
-			<PageHeader description="Upload and manage files for your workspace" title="Files" />
+			<PageHeader description="Upload and manage files for your workspace" title="Files">
+				{/*
+				 * The surface had no primary action at all: an empty header actions row and, as the
+				 * only way to act on the page, a dashed outline labelled in 14px muted text. Nothing
+				 * carried the blue the rest of the app reserves for the main action. This opens the
+				 * same picker the drop zone does — drag-and-drop stays the secondary path.
+				 */}
+				{canManageFiles('OPERATOR') && (
+					<Button onClick={() => uploadRef.current?.open()} size="sm">
+						<Upload aria-hidden="true" className="size-4" />
+						Upload File
+					</Button>
+				)}
+			</PageHeader>
 
 			{canManageFiles('OPERATOR') && (isLoading || files.length > 0) && (
 				<FileUpload
 					isPending={uploadMutation.isPending}
-					maxSizeBytes={10 * 1024 * 1024}
+					maxSizeBytes={MAX_UPLOAD_BYTES}
 					onFileSelect={(file) => uploadMutation.mutate(file)}
+					ref={uploadRef}
 				/>
 			)}
 
 			{isLoading ? (
 				<TableSkeleton />
 			) : files.length === 0 && canManageFiles('OPERATOR') ? (
-				<Card>
-					<CardHeader className="text-center">
-						<CardTitle>No files uploaded yet</CardTitle>
-						<CardDescription>Upload a file to get started.</CardDescription>
-					</CardHeader>
-					<CardContent>
-						<FileUpload
-							className="mx-auto max-w-3xl"
-							isPending={uploadMutation.isPending}
-							maxSizeBytes={10 * 1024 * 1024}
-							onFileSelect={(file) => uploadMutation.mutate(file)}
-						/>
-					</CardContent>
-				</Card>
+				/*
+				 * The shared EmptyState, not a hand-built card. This branch used to render a solid
+				 * panel with a centred CardHeader — no icon, and a title at 14px, the same size as
+				 * the body copy it sat above — while the other no-files branch three lines below
+				 * used EmptyState. One page shipped two empty-state languages. EmptyState's own
+				 * docblock says it is for "whenever a page section would otherwise be a blank card
+				 * or dashed placeholder", which is exactly this, and its `action` slot takes the
+				 * drop zone so the nested panel disappears with it.
+				 */
+				<EmptyState
+					action={
+						<div className="mx-auto w-full max-w-3xl">
+							<FileUpload
+								isPending={uploadMutation.isPending}
+								maxSizeBytes={MAX_UPLOAD_BYTES}
+								onFileSelect={(file) => uploadMutation.mutate(file)}
+								ref={uploadRef}
+							/>
+						</div>
+					}
+					className="w-full"
+					description="Upload a file to get started."
+					icon={FileText}
+					title="No files uploaded yet"
+				/>
 			) : files.length === 0 ? (
 				<EmptyState
 					description="No files are available in this workspace."
@@ -147,6 +178,7 @@ function FilesPage() {
 					if (!open) setDeleteTarget(null);
 				}}
 				title="Delete File"
+				variant="destructive"
 			/>
 		</div>
 	);

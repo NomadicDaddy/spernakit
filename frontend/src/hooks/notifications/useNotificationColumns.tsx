@@ -43,7 +43,14 @@ export function useNotificationColumns({
 				) : (
 					<Circle className="size-4 fill-current text-primary" />
 				),
-			header: '',
+			/*
+			 * An sr-only name rather than an empty string: the column had no name in the
+			 * accessibility tree at all, so a screen reader announced the read/unread dot as a cell
+			 * in an unnamed column. `enableHiding: false` keeps it out of the Columns menu, where it
+			 * appeared as the raw field name `readAt` — a token printed nowhere else in the UI.
+			 */
+			enableHiding: false,
+			header: () => <span className="sr-only">Read status</span>,
 			size: 40,
 		},
 		{
@@ -67,10 +74,13 @@ export function useNotificationColumns({
 		},
 		{
 			accessorKey: 'message',
+			/*
+			 * No `max-w-xs`. The cap held the message to 320px however wide its cell grew, so at
+			 * 1920 it clamped inside a 409px track and truncated text there was room to show.
+			 * `line-clamp-1` still keeps every row one line tall.
+			 */
 			cell: ({ row }) => (
-				<span className="line-clamp-1 max-w-xs text-muted-foreground">
-					{row.original.message}
-				</span>
+				<span className="line-clamp-1 text-muted-foreground">{row.original.message}</span>
 			),
 			header: 'Message',
 		},
@@ -107,7 +117,10 @@ export function useNotificationColumns({
 					</Button>
 				</div>
 			),
-			header: '',
+			/* Control column, not data: hiding it would remove the row's buttons with nothing in the
+			 * menu to say what had been switched off. */
+			enableHiding: false,
+			header: () => <span className="sr-only">Actions</span>,
 			id: 'actions',
 			size: 80,
 		},

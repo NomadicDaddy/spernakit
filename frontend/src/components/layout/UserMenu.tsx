@@ -29,10 +29,10 @@ interface UserMenuProps {
 }
 
 const themeModes: { icon: React.ReactNode; label: string; value: ThemeMode }[] = [
-	{ icon: <Sun aria-hidden="true" className="mr-2 size-4" />, label: 'Light', value: 'light' },
-	{ icon: <Moon aria-hidden="true" className="mr-2 size-4" />, label: 'Dark', value: 'dark' },
+	{ icon: <Sun aria-hidden="true" className="size-4" />, label: 'Light', value: 'light' },
+	{ icon: <Moon aria-hidden="true" className="size-4" />, label: 'Dark', value: 'dark' },
 	{
-		icon: <Monitor aria-hidden="true" className="mr-2 size-4" />,
+		icon: <Monitor aria-hidden="true" className="size-4" />,
 		label: 'System',
 		value: 'system',
 	},
@@ -72,13 +72,13 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 				<DropdownMenuSeparator />
 				<DropdownMenuItem asChild>
 					<Link to="/profile/personal">
-						<User aria-hidden="true" className="mr-2 size-4" />
+						<User aria-hidden="true" className="size-4" />
 						Account
 					</Link>
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
 					<Link to="/profile/preferences">
-						<Settings2 aria-hidden="true" className="mr-2 size-4" />
+						<Settings2 aria-hidden="true" className="size-4" />
 						Preferences
 					</Link>
 				</DropdownMenuItem>
@@ -86,7 +86,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 				<DropdownMenuSub>
 					<DropdownMenuSubTrigger>
 						{themeModes.find((t) => t.value === mode)?.icon ?? (
-							<Monitor aria-hidden="true" className="mr-2 size-4" />
+							<Monitor aria-hidden="true" className="size-4" />
 						)}
 						Theme
 					</DropdownMenuSubTrigger>
@@ -115,7 +115,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 					onClick={() => {
 						window.dispatchEvent(new Event('shortcuts-help:open'));
 					}}>
-					<Keyboard aria-hidden="true" className="mr-2 size-4" />
+					<Keyboard aria-hidden="true" className="size-4" />
 					Keyboard Shortcuts
 					<span className="ml-auto text-xs text-muted-foreground">?</span>
 				</DropdownMenuItem>
@@ -124,7 +124,7 @@ export function UserMenu({ onLogout }: UserMenuProps) {
 					onClick={() => {
 						void onLogout();
 					}}>
-					<LogOut aria-hidden="true" className="mr-2 size-4" />
+					<LogOut aria-hidden="true" className="size-4" />
 					Sign out
 				</DropdownMenuItem>
 			</DropdownMenuContent>

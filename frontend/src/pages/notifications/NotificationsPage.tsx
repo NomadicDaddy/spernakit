@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { CheckCheck, Trash2 } from 'lucide-react';
+import { BellOff, CheckCheck, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import type { DataResponse, Notification, NotificationStatistics } from '@/api/types';
@@ -24,38 +24,47 @@ const VALID_READ_FILTERS = new Set<string>(['all', 'read', 'unread']);
 
 function NotificationPageHeader({
 	markAllReadIsPending,
-	markAllReadUnavailableReason,
 	onMarkAllRead,
 	onShowBulkDelete,
 	selectedCount,
-	totalLabel,
+	statsLoading,
+	unreadCount,
 }: {
 	markAllReadIsPending: boolean;
-	markAllReadUnavailableReason: null | string;
 	onMarkAllRead: () => void;
 	onShowBulkDelete: () => void;
 	selectedCount: number;
-	totalLabel: string;
+	statsLoading: boolean;
+	unreadCount: number;
 }) {
 	return (
-		<PageHeader description={totalLabel} title="Notifications">
-			<Button
-				aria-describedby={markAllReadUnavailableReason ? 'mark-all-read-status' : undefined}
-				disabled={markAllReadIsPending || markAllReadUnavailableReason !== null}
-				onClick={onMarkAllRead}
-				size="sm"
-				variant="outline">
-				<CheckCheck aria-hidden="true" className="mr-2 size-4" />
-				Mark all read
-			</Button>
-			{markAllReadUnavailableReason && (
-				<span className="sr-only" id="mark-all-read-status">
-					{markAllReadUnavailableReason}
-				</span>
+		/*
+		 * The description no longer prints a count. It said "N total notifications" directly above a
+		 * Total tile saying the same thing, and the table's own pagination summary states the
+		 * filtered count — three renderings of one number down the same column.
+		 */
+		<PageHeader description="Alerts and messages for your workspace" title="Notifications">
+			{/*
+			 * Hidden rather than permanently disabled. With nothing unread this rendered as a greyed
+			 * control in the page's most prominent action slot, and the only explanation — "There
+			 * are no unread notifications." — lived in an sr-only span. A `title` would not have
+			 * fixed that: the Button sets `disabled:pointer-events-none`, so a native tooltip never
+			 * fires on it. An action that cannot apply is better absent than dead, and the Unread
+			 * tile beside it already says why.
+			 */}
+			{(statsLoading || unreadCount > 0) && (
+				<Button
+					disabled={statsLoading || markAllReadIsPending}
+					onClick={onMarkAllRead}
+					size="sm"
+					variant="outline">
+					<CheckCheck aria-hidden="true" className="size-4" />
+					Mark all read
+				</Button>
 			)}
 			{selectedCount > 0 && (
 				<Button onClick={onShowBulkDelete} size="sm" variant="destructive">
-					<Trash2 aria-hidden="true" className="mr-2 size-4" />
+					<Trash2 aria-hidden="true" className="size-4" />
 					Delete ({selectedCount})
 				</Button>
 			)}
@@ -96,6 +105,7 @@ function NotificationDeleteDialogs({
 					if (!open) onClearDeleteTarget();
 				}}
 				title="Delete notification"
+				variant="destructive"
 			/>
 
 			<ConfirmAlertDialog
@@ -116,13 +126,14 @@ function NotificationDeleteDialogs({
 				}}
 				onOpenChange={onShowBulkDeleteChange}
 				title={`Delete ${selectedRows.length} notifications`}
+				variant="destructive"
 			/>
 		</>
 	);
 }
 
 function NotificationsPage() {
-	const { getFilter, limit, page, setFilter, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
 	const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
 	const readParam = getFilter('read', 'all');
@@ -170,21 +181,16 @@ function NotificationsPage() {
 		onDelete: (notification) => setDeleteTarget(notification),
 		onMarkAsRead: (id) => markReadMutation.mutate(id),
 	});
-	const markAllReadUnavailableReason = statsLoading
-		? 'Notification status is loading.'
-		: (statsResponse?.data.unread ?? 0) === 0
-			? 'There are no unread notifications.'
-			: null;
 
 	return (
 		<div className="space-y-6 p-6">
 			<NotificationPageHeader
 				markAllReadIsPending={markAllReadMutation.isPending}
-				markAllReadUnavailableReason={markAllReadUnavailableReason}
 				onMarkAllRead={() => markAllReadMutation.mutate()}
 				onShowBulkDelete={() => setShowBulkDelete(true)}
 				selectedCount={selectedRows.length}
-				totalLabel={isLoading ? 'Loading…' : `${data?.total ?? 0} total notifications`}
+				statsLoading={statsLoading}
+				unreadCount={statsResponse?.data.unread ?? 0}
 			/>
 
 			<NotificationStatsGrid stats={statsResponse?.data} />
@@ -195,6 +201,21 @@ function NotificationsPage() {
 				<DataTable
 					columns={columns}
 					data={data?.data ?? []}
+					empty={{
+						description:
+							'Alerts about your workspace arrive here. There is nothing to catch up on.',
+						icon: BellOff,
+						// Both filters are server-side, so the table cannot read them itself.
+						isFiltered: readFilter !== 'all' || typeFilter !== 'all',
+						onClearFilters: () => {
+							setFilters((params) => {
+								params.delete('read');
+								params.delete('type');
+								params.delete('page');
+							});
+						},
+						title: 'You are all caught up',
+					}}
 					onRowSelectionChange={setSelectedRows}
 					pagination={{
 						limit,
@@ -226,6 +247,7 @@ function NotificationsPage() {
 								});
 							}}
 							readFilter={readFilter}
+							typeCounts={statsResponse?.data.byType}
 							typeFilter={typeFilter}
 						/>
 					}
