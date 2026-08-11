@@ -103,11 +103,30 @@ export function StatCard({
 			)}
 			style={index !== undefined ? { animationDelay: `${index * 40}ms` } : undefined}>
 			<CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-				<CardTitle className="text-sm font-medium">{title}</CardTitle>
+				{/*
+					`as="div"` on purpose. A stat card's title is the *label* for the number
+					underneath it — "Total Users", "Active Sessions" — not a heading for a region
+					of the page. Promoting eight of those to headings would fill the document
+					outline with the same words the values already say.
+				*/}
+				<CardTitle as="div" className="text-sm font-medium">
+					{title}
+				</CardTitle>
 				<div className={cn(variantIconClasses[variant])}>{icon}</div>
 			</CardHeader>
 			<CardContent className={progress !== undefined ? 'space-y-2' : undefined}>
-				<div className="text-2xl font-bold tracking-tight tabular-nums">{value}</div>
+				{/*
+				 * Tabular figures are for figures. `tabular-nums` was unconditional, so the one
+				 * card whose value is a word — System Health, reading "healthy" — rendered its
+				 * status in a monospaced-digit face alongside "5" and "79".
+				 */}
+				<div
+					className={cn(
+						'text-2xl font-bold tracking-tight',
+						typeof value === 'number' && 'tabular-nums',
+					)}>
+					{value}
+				</div>
 				{subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
 				{trend && <TrendIndicator trend={trend} />}
 				{sparkline && sparkline.points.length > 1 && (

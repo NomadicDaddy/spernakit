@@ -29,7 +29,7 @@ export function ContentListSkeleton({
 	if (showCard) {
 		return (
 			<Card>
-				<CardContent className="p-6">{lines}</CardContent>
+				<CardContent>{lines}</CardContent>
 			</Card>
 		);
 	}

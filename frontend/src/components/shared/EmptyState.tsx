@@ -7,6 +7,12 @@ interface EmptyStateProps {
 	action?: ReactNode;
 	className?: string;
 	description?: ReactNode;
+	/**
+	 * Outline level for the title. `h2` suits an empty state that stands in for a whole page
+	 * region. Pass a lower level when the empty state sits *inside* a card — its `CardTitle` is
+	 * already a heading, and an `h2` under an `h3` card title walks the outline backwards.
+	 */
+	headingLevel?: 'h2' | 'h3' | 'h4';
 	icon: LucideIcon;
 	title: string;
 	variant?: 'compact' | 'default';
@@ -21,6 +27,7 @@ function EmptyState({
 	action,
 	className,
 	description,
+	headingLevel: Heading = 'h2',
 	icon: Icon,
 	title,
 	variant = 'default',
@@ -38,7 +45,7 @@ function EmptyState({
 				<Icon className="size-6" />
 			</div>
 			<div className="space-y-1.5">
-				<h2 className="text-h3">{title}</h2>
+				<Heading className="text-h3">{title}</Heading>
 				{description && (
 					<p className="mx-auto max-w-md text-sm text-muted-foreground">{description}</p>
 				)}

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserUiSettings } from '@/api/userSettings';
+import { useAuthStore } from '@/stores/authStore';
 
 interface Formatters {
 	formatCurrency: (amount: number) => string;
@@ -90,9 +91,16 @@ function timeOptionsFor(
  *
  * Language controls locale for all Intl formatters. Falls back to browser
  * defaults while settings are loading.
+ *
+ * The query is gated on `isAuthenticated` — the same gate its sibling `useSyncUiSettings`
+ * uses. Ungated, this hook fires an authenticated-only request from every surface that
+ * formats a date, including the anonymous shared-dashboard route, where the resulting 401
+ * reaches the global session-expiry handler and evicts the visitor to /login.
  */
 function useFormatters(): Formatters {
+	const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 	const { data } = useQuery({
+		enabled: isAuthenticated,
 		queryFn: getUserUiSettings,
 		queryKey: ['user-ui-settings'],
 		throwOnError: false,
@@ -138,7 +146,13 @@ function useFormatters(): Formatters {
 		if (diffMins < 60) return relFmt.format(-diffMins, 'minute');
 		if (diffHours < 24) return relFmt.format(-diffHours, 'hour');
 		if (diffDays < 7) return relFmt.format(-diffDays, 'day');
-		return formatDate(ts);
+		/*
+		 * The fallback keeps the time. Every branch above this one is precise to the minute or the
+		 * hour, and then at exactly seven days — the point where relative phrasing stops being
+		 * useful and the reader starts wanting the actual instant — the helper dropped time of day
+		 * entirely. On the audit log that made two records from the same morning indistinguishable.
+		 */
+		return formatDateTime(ts);
 	}
 
 	function formatDateTime(ts: string): string {

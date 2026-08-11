@@ -1,9 +1,22 @@
 import { FileUp, X } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { useImperativeHandle, useRef, useState } from 'react';
 
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+/**
+ * What a page-level trigger can do to this component.
+ *
+ * A surface whose primary action is "upload" needs a real primary Button in its `PageHeader`, but
+ * the file input, the size validation and the selected-file confirmation row all live in here. So
+ * the header button opens this component's picker rather than growing a second upload path with
+ * its own, inevitably divergent, validation.
+ */
+interface FileUploadHandle {
+	/** Open the native file picker, as clicking the drop zone does. */
+	open: () => void;
+}
 
 interface FileUploadProps {
 	/** Accepted file types (MIME patterns for the input accept attribute) */
@@ -14,10 +27,21 @@ interface FileUploadProps {
 	disabled?: boolean;
 	/** Whether an upload is currently in progress */
 	isPending?: boolean;
+	/**
+	 * Id of the element that names this drop zone — usually the field's visible `Label`.
+	 *
+	 * Without it the zone's only accessible name is the generic "File upload drop zone", which
+	 * says what the control is but not what it is for; a form with two of them is two identically
+	 * named buttons. A `<Label htmlFor>` cannot do this job because the zone is a `<button>` the
+	 * label has no id to point at, which is how one call site ended up labelling nothing at all.
+	 */
+	labelledBy?: string;
 	/** Maximum file size in bytes (client-side validation) */
 	maxSizeBytes?: number;
 	/** Called when a valid file is selected or dropped */
 	onFileSelect: (file: File) => void;
+	/** Imperative handle for a trigger rendered outside this component. */
+	ref?: React.Ref<FileUploadHandle>;
 }
 
 const BYTES_PER_KB = 1024;
@@ -36,13 +60,17 @@ function FileUpload({
 	className,
 	disabled = false,
 	isPending = false,
+	labelledBy,
 	maxSizeBytes,
 	onFileSelect,
+	ref,
 }: FileUploadProps) {
 	const [dragOver, setDragOver] = useState(false);
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [sizeError, setSizeError] = useState<null | string>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	useImperativeHandle(ref, () => ({ open: () => inputRef.current?.click() }), []);
 
 	function validateAndSelect(file: File) {
 		setSizeError(null);
@@ -99,13 +127,27 @@ function FileUpload({
 
 	return (
 		<div className={cn('space-y-3', className)}>
+			{/*
+			 * Three things this zone did not do. It was intrinsically sized, so a 342px target sat
+			 * flush-left inside a centred wrapper up to 768px wide and drifted further off the card's
+			 * centre axis as the viewport grew — `w-full` makes it fill the width its wrapper was
+			 * already given. It carried the app's only 2px border, on a page whose every other edge
+			 * is 1px, so the loudest element on a restrained surface was a dashed rectangle — the
+			 * `bg-muted/30` fill now carries the affordance the extra pixel was doing. And as the
+			 * primary control on its surface it was the one element still falling back to the UA's
+			 * focus outline instead of the app's ring.
+			 */}
 			<button
-				aria-label="File upload drop zone - click or drag a file here"
+				aria-label={
+					labelledBy ? undefined : 'File upload drop zone - click or drag a file here'
+				}
+				aria-labelledby={labelledBy}
 				className={cn(
-					'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-colors',
+					'flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition-colors',
+					'outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
 					dragOver && isInteractive
 						? 'border-primary bg-primary/5'
-						: 'border-muted-foreground/25 hover:border-muted-foreground/50',
+						: 'border-border/60 bg-muted/30 hover:border-muted-foreground/50',
 					!isInteractive && 'cursor-not-allowed opacity-50',
 				)}
 				disabled={!isInteractive}
@@ -114,7 +156,7 @@ function FileUpload({
 				onDragOver={handleDragOver}
 				onDrop={handleDrop}
 				type="button">
-				<FileUp aria-hidden className="mb-2 h-8 w-8 text-muted-foreground" />
+				<FileUp aria-hidden className="mb-2 size-8 text-muted-foreground" />
 				<p className="text-sm text-muted-foreground">
 					Drag and drop a file here, or click to browse
 				</p>
@@ -151,7 +193,7 @@ function FileUpload({
 						<Button disabled={isPending} onClick={handleUpload} size="sm">
 							{isPending ? (
 								<>
-									<Spinner className="mr-1" size={12} />
+									<Spinner size={12} />
 									Uploading…
 								</>
 							) : (
@@ -175,4 +217,4 @@ function FileUpload({
 }
 
 export { FileUpload };
-export type { FileUploadProps };
+export type { FileUploadHandle, FileUploadProps };

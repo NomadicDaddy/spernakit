@@ -14,21 +14,31 @@ import { DataTable } from '@/components/shared/data-table/DataTable';
 <DataTable
 	columns={columns}
 	data={users}
-	searchKey="username"
-	searchPlaceholder="Search users..."
+	searchColumn="username"
+	filterPlaceholder="Search users…"
+	toolbarActions={<Button size="sm">Create User</Button>}
 />;
 ```
 
 #### Key Props
 
-| Prop                 | Type                       | Description                         |
-| -------------------- | -------------------------- | ----------------------------------- |
-| `columns`            | `ColumnDef<T>[]`           | TanStack Table column definitions   |
-| `data`               | `T[]`                      | Row data array                      |
-| `searchKey`          | `string`                   | Column key for the search filter    |
-| `searchPlaceholder`  | `string`                   | Placeholder text for search input   |
-| `pageCount`          | `number`                   | Total pages (server-side mode)      |
-| `onPaginationChange` | `(page, pageSize) => void` | Callback for server-side pagination |
+| Prop                   | Type                    | Description                                                  |
+| ---------------------- | ----------------------- | ------------------------------------------------------------ |
+| `columns`              | `ColumnDef<T>[]`        | TanStack Table column definitions                            |
+| `data`                 | `T[]`                   | Row data array                                               |
+| `searchColumn`         | `string`                | Column id the built-in search input filters on               |
+| `filterPlaceholder`    | `string`                | Placeholder text for that search input                       |
+| `pagination`           | `DataTablePagination`   | Server-side paging; omit it for client-side paging           |
+| `toolbar`              | `ReactNode`             | Filters, rendered at the **left** of the toolbar row         |
+| `toolbarActions`       | `ReactNode`             | The primary action, rendered at the **right** beside Columns |
+| `renderExpandedRow`    | `(row: T) => ReactNode` | Detail panel rendered as a row directly beneath its parent   |
+| `onRowSelectionChange` | `(rows: T[]) => void`   | Enables selection; pair with `createSelectColumn()`          |
+| `selectionResetToken`  | `number \| string`      | Change it to clear the table's checkbox state                |
+| `virtualize`           | `DataTableVirtualize`   | Virtual scrolling; incompatible with `renderExpandedRow`     |
+
+The toolbar has two slots and the side matters: `toolbar` holds the controls that narrow what the
+table shows, `toolbarActions` holds what the user came to do. Putting a "Create X" button in a `div`
+above or below the table instead leaves the primary action in a different place on every page.
 
 ### ErrorBoundary
 
@@ -44,12 +54,19 @@ import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 ### MetricChart
 
-Time-series area chart inside a shadcn Card. Displays metric data points with customizable color, units, and Y-axis domain. Uses Recharts.
+Time-series area chart inside a shadcn Card. Displays metric data points with customizable color,
+units, and Y-axis domain. Uses Recharts.
+
+Pass `color` a `CHART_SERIES` entry, never a literal colour — a hard-coded hue stays the same hue
+through both themes. `CHART_SERIES` deliberately excludes `--chart-1/2/3`: those are the green,
+amber and red the health badges use, so a utilization series drawn in one of them asserts a status
+it has no way to know.
 
 ```tsx
 import { MetricChart } from '@/components/shared/charts/MetricChart';
+import { CHART_SERIES } from '@/lib/chartConstants';
 
-<MetricChart title="CPU Usage" data={points} color="#3b82f6" unit="%" />;
+<MetricChart title="CPU Usage" data={points} color={CHART_SERIES.cpu} unit="%" />;
 ```
 
 ### TimeRangeSelector
@@ -65,6 +82,39 @@ import { TimeRangeSelector } from '@/components/shared/charts/TimeRangeSelector'
 ### ConfirmAlertDialog
 
 Reusable confirmation dialog built on AlertDialog for destructive actions.
+
+Pass `variant="destructive"` whenever the description says the action is permanent, cannot be
+undone, or deletes something — otherwise the confirm button renders in the primary colour and reads
+as no more consequential than the benign action next to it. Leave it at the default `"default"` for
+reversible confirmations (impersonation, bulk state changes).
+
+### UnsavedChangesGuard
+
+Blocks navigation while a form is dirty and owns the "Unsaved Changes" confirmation dialog. Mount
+one per page instead of calling `useUnsavedChanges` directly — the hook alone installs the block
+without rendering anything to release it.
+
+```tsx
+import { UnsavedChangesGuard } from '@/components/shared/UnsavedChangesGuard';
+
+<UnsavedChangesGuard isDirty={form.dirty} />;
+```
+
+### SectionHeader
+
+Heading for a page section that is not itself a card — a group of cards, a chart pair, a table with
+its own controls. The rung between `PageHeader` (the page's `h1`) and `CardTitle` (a heading inside a
+card).
+
+Renders the title at `text-h3`, an optional description, and a trailing action slot (`children`) for
+a refresh button or a time-range selector. `level` picks `h2` or `h3` for the document outline; both
+render at the same size, because a section header's size says "this is a section", not "this is the
+third one down".
+
+Use it instead of a hand-written `<h2>`/`<h3>` with hand-picked type classes. Hand-written section
+titles drift: three peer sections on `/settings/system-health` were `text-sm font-medium`, smaller
+than the `text-base` card titles they were heading. A section that is a _single_ panel does not need
+this — give that panel a `CardHeader` with a `CardTitle`.
 
 ### RoleSelector
 
