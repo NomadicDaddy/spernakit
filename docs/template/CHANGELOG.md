@@ -37,6 +37,13 @@ this release.
 - `generate-keys` now imports `PLACEHOLDER_PATTERN` from `configValidator-secrets-checks.ts`
   instead of carrying its own copy, so the script and the validator agree on what counts as
   provisioned.
+- The `cookie-secret` rotation warning claimed that cookies signed with the current secret would be
+  rejected. `cookieSecret` signs nothing; it is the HKDF input that binds OAuth state and PKCE, as
+  `SECURITY.md` already described. The warning and the `CONFIGURATION.md` note now both say that
+  the rotation fails OAuth logins already in flight and leaves sessions alone.
+- `generate-keys` threw a `TypeError` when the config on disk had no `security` section at all,
+  after it had already written the backup and printed the new keys to the console. It creates the
+  section instead, matching how the existing-key check already reads the config.
 
 ### Changed
 

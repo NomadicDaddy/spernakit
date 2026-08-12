@@ -369,7 +369,9 @@ FORCE_KEY_GENERATION=true bun run generate-keys
 ```
 
 Scope the rotation with `--only` when the reason for rotating covers one key group. Rotating
-`cookie-secret` alone leaves encrypted data readable and keeps sessions alive.
+`cookie-secret` alone leaves encrypted data readable and keeps sessions alive, but OAuth logins
+already in flight fail, because the state and PKCE binding derived from the old secret no longer
+verifies.
 
 ---
 
