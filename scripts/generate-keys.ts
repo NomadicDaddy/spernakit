@@ -25,7 +25,8 @@ import { loadJsonConfig } from './load-json-config.js';
 
 interface AppConfig {
 	[key: string]: unknown;
-	security: SecuritySection;
+	// Optional because the parse is a cast over whatever is on disk, not a validated shape.
+	security?: SecuritySection;
 }
 
 const configDir = path.join(process.cwd(), 'config');
@@ -111,6 +112,10 @@ function updateConfig(patch: SecuritySection): void {
 
 	const raw = readConfigRaw();
 	const config = JSON.parse(raw) as AppConfig;
+	// A config written before the security section existed parses without one, and by this point
+	// the backup is already on disk and the keys are already on screen. Create the section rather
+	// than throwing there. groupsInUse guards the same absence when it reads the config.
+	config.security ??= {};
 	Object.assign(config.security, patch);
 
 	const { eol, indent, trailingNewline } = detectJsonStyle(raw);

@@ -45,7 +45,8 @@ export const KEY_GROUPS = {
 		label: 'BACKUP_ENCRYPTION_KEY (64 hex characters)',
 	},
 	'cookie-secret': {
-		consequence: 'cookies signed with the current secret are rejected',
+		consequence:
+			'OAuth logins already in flight fail because their state and PKCE binding no longer verifies',
 		fields: ['cookieSecret'],
 		generate: () => ({ cookieSecret: generateSecureKey(32) }),
 		label: 'COOKIE_SECRET (32 characters)',
