@@ -3,6 +3,46 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.41.0] - 2026-08-12
+
+### Added
+
+- `--only <group>` on `bun run generate-keys`, covering seven groups: `app-api-key`,
+  `backup-encryption-key`, `cookie-secret`, `encryption-key`, `jwt`, `jwt-refresh`, and `mfa`.
+  The script rotated all ten security fields on every run, so provisioning one missing key also
+  invalidated every session, every integration credential, and every encrypted value. Selection is
+  validated before any backup or write, and the existing-key warning is per group and names what
+  that specific rotation breaks rather than the worst case across all ten. It fires only for groups
+  that already hold a real value.
+- `scripts/lib/key-groups.ts`, holding the key catalog, its field types, and the `--only` parser.
+  `generate-keys.ts` crossed the 300 line gate once selection logic landed in it.
+
+### Fixed
+
+- `bun run setup` left `security.backupEncryptionKey` and the MFA key pair at their
+  `defaults.json` placeholders while generating the other five secret types. A freshly set up app
+  therefore failed its own `bun run config:validate -- --node-env production` preflight on a
+  placeholder value, which is the first step of `smoke:docker-prod`, so `bun run supertest` could
+  not run at all. `checkMfaKeyPair` no-ops when both MFA fields are empty, so the missing pair
+  stayed invisible until production graded the config.
+- `generate-keys` rewrote the config with a fixed tab and LF serialization. It is the only script
+  that edits an operator owned `config/<slug>.json` in place, so a scoped repair reflowed a
+  hand maintained file. It now carries the existing indentation, line endings, and trailing newline
+  through the write.
+- The MFA remedy text pointed at the unscoped `bun run generate-keys` in three places: the config
+  schema hint, the `/api/v1/auth/mfa` handler, and the profile Security tab. Following it to
+  provision one missing key rotated the other nine. All three now name
+  `bun run generate-keys -- --only mfa`. The placeholder and weak secret hints deliberately still
+  name the unscoped command.
+- `generate-keys` now imports `PLACEHOLDER_PATTERN` from `configValidator-secrets-checks.ts`
+  instead of carrying its own copy, so the script and the validator agree on what counts as
+  provisioned.
+
+### Changed
+
+- `github/codeql-action/upload-sarif` pinned to v4.37.6.
+- Frontend and development dependencies updated.
+
 ## [3.40.0] - 2026-08-11
 
 ### Added
