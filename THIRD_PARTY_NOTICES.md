@@ -4625,7 +4625,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.30.0
+### lucide-react@1.31.0
 
 License: ISC
 
@@ -6216,7 +6216,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### sonner@2.0.7
+### sonner@2.0.8
 
 License: MIT
 
