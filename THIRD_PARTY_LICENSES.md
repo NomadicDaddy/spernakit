@@ -55,14 +55,14 @@ by license family, and it does not inventory the Alpine base system.
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.30.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.31.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
 | [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.4   | MIT        |
 | [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.0   | MIT        |
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
-| [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.7   | MIT        |
+| [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.8   | MIT        |
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
 | [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.1.0   | Apache-2.0 |
 | [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.14  | MIT        |
