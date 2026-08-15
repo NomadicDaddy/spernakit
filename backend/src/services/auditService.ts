@@ -1,9 +1,25 @@
-import { and, count, desc, eq, gte, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, count, eq, gte, isNull, lte, or, sql } from 'drizzle-orm';
 
 import { getDb } from '../db/index.ts';
 import { auditLogs } from '../db/schema/auditLogs.ts';
 import { users } from '../db/schema/users.ts';
 import { escapeLikePattern, isDefined, likeEscaped, paginatedQuery } from '../utils/dbHelpers.ts';
+import { resolveSort } from '../utils/sorting.ts';
+
+/**
+ * Columns the audit log may be sorted by, keyed as the client sends them.
+ *
+ * The keys are the table's own column ids on /settings/audit-logs, so a header the reader can click
+ * and a column the query can order by are the same list by construction. `resource` maps to
+ * `entityType` because that is what the API renames it to on the way out.
+ */
+const AUDIT_SORT_COLUMNS = {
+	action: auditLogs.action,
+	createdAt: auditLogs.createdAt,
+	ipAddress: auditLogs.ipAddress,
+	resource: auditLogs.entityType,
+	username: users.username,
+};
 
 interface AuditEntry {
 	action: string;
@@ -34,6 +50,10 @@ interface QueryParams {
 	limit?: number;
 	page?: number;
 	search?: string;
+	/** A key of AUDIT_SORT_COLUMNS; anything else falls back to newest first. */
+	sortBy?: string;
+	/** `asc`, or descending for anything else. */
+	sortDir?: string;
 	userId?: number;
 	workspaceId?: null | number;
 }
@@ -122,7 +142,23 @@ function query(params: QueryParams): {
 				.from(auditLogs)
 				.leftJoin(users, eq(auditLogs.userId, users.id))
 				.where(whereClause)
-				.orderBy(desc(auditLogs.createdAt))
+				/*
+				 * `id` as the tiebreaker, always — `resolveSort` returns it with the sort. Pagination
+				 * here is LIMIT/OFFSET, so an order that leaves ties unresolved lets SQLite return two
+				 * equal rows in either sequence between one page request and the next — the same
+				 * record appearing on page 1 and page 2 while another is never returned at all.
+				 * Sorting by `username` over 179 rows written by two accounts is that case almost
+				 * everywhere.
+				 */
+				.orderBy(
+					...resolveSort(
+						AUDIT_SORT_COLUMNS,
+						auditLogs.createdAt,
+						params.sortBy,
+						params.sortDir,
+						auditLogs.id,
+					),
+				)
 				.limit(limitNum)
 				.offset(offset)
 				.all();

@@ -112,10 +112,10 @@ function useWorkspaceColumns({
 										Edit
 									</DropdownMenuItem>
 									<DropdownMenuItem
-										className="text-destructive"
 										onClick={() =>
 											onDeleteWorkspace(workspace.id, workspace.name)
-										}>
+										}
+										variant="destructive">
 										<Trash2 aria-hidden="true" className="size-4" />
 										Delete
 									</DropdownMenuItem>

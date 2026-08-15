@@ -5,14 +5,32 @@ import type { NotificationType } from './notificationBroadcastService.ts';
 import { getDb } from '../../db/index.ts';
 import { notifications } from '../../db/schema/notifications.ts';
 import { paginatedQuery } from '../../utils/dbHelpers.ts';
+import { resolveSort } from '../../utils/sorting.ts';
 import { broadcastToUser } from '../websocketService.ts';
 
 type Notification = typeof notifications.$inferSelect;
+
+/**
+ * Columns /notifications may be sorted by, keyed as its table's own column ids so a clickable
+ * header and an orderable column are the same list. `message` is deliberately absent: it is the
+ * long free-text column, and ordering a list of alerts alphabetically by their body is not an
+ * order anyone reads for.
+ */
+const NOTIFICATION_SORT_COLUMNS = {
+	createdAt: notifications.createdAt,
+	readAt: notifications.readAt,
+	title: notifications.title,
+	type: notifications.type,
+};
 
 interface ListOptions {
 	limit: number;
 	page: number;
 	readStatus?: 'all' | 'read' | 'unread';
+	/** A key of NOTIFICATION_SORT_COLUMNS; anything else falls back to newest first. */
+	sortBy?: string;
+	/** `asc`, or descending for anything else. */
+	sortDir?: string;
 	type?: NotificationType;
 	userId: number;
 	workspaceId?: null | number;
@@ -76,7 +94,17 @@ function list(options: ListOptions): {
 				.select()
 				.from(notifications)
 				.where(where)
-				.orderBy(sql`${notifications.createdAt} DESC`)
+				// `id` as the tiebreaker, returned with the sort — see auditService for why an
+				// unresolved tie under LIMIT/OFFSET can show one row twice and another not at all.
+				.orderBy(
+					...resolveSort(
+						NOTIFICATION_SORT_COLUMNS,
+						notifications.createdAt,
+						options.sortBy,
+						options.sortDir,
+						notifications.id,
+					),
+				)
 				.limit(limitNum)
 				.offset(offset)
 				.all(),

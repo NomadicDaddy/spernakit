@@ -45,6 +45,9 @@ const notificationCrudRoutes = new Elysia({
 				limit: query.limit ?? DEFAULT_PAGE_LIMIT,
 				page: query.page ?? DEFAULT_PAGE,
 				...(query.readStatus ? { readStatus: query.readStatus } : {}),
+				// The service owns the sortable-column allowlist; see the note in routes/audit.ts.
+				...(query.sortBy ? { sortBy: query.sortBy } : {}),
+				...(query.sortDir ? { sortDir: query.sortDir } : {}),
 				...(query.type ? { type: query.type } : {}),
 				userId: authUser.id,
 				...(!userIsSysop && workspaceId ? { workspaceId } : {}),
@@ -68,6 +71,20 @@ const notificationCrudRoutes = new Elysia({
 				),
 				page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 				readStatus: t.Optional(NotificationReadStatusSchema),
+				sortBy: t.Optional(
+					t.String({
+						description:
+							'Column to sort by: createdAt, readAt, title, type. Anything else ' +
+							'sorts by createdAt.',
+						maxLength: 32,
+					}),
+				),
+				sortDir: t.Optional(
+					t.String({
+						description: '`asc`, or descending for anything else.',
+						maxLength: 4,
+					}),
+				),
 				type: t.Optional(NotificationTypeSchema),
 			}),
 		},
