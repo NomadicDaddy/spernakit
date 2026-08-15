@@ -10,6 +10,12 @@ import { DataTableEmptyRow } from './DataTableEmptyRow';
 
 /**
  * Virtualized table body that renders only visible rows.
+ *
+ * Pinned columns (`meta.sticky`, see `stickyColumns.ts`) are deliberately not honoured here. This
+ * body replaces the table rows with absolutely-positioned flex rows inside its OWN vertical
+ * scroller, so `position: sticky` in it would resolve against that container and not against the
+ * horizontal table scroller a pinned column has to track. A virtualized table that needs pinning
+ * needs the pinning done in the virtualizer, not bolted onto these divs.
  */
 function VirtualTableBody<TData extends RowData>({
 	colCount,

@@ -19,6 +19,8 @@ interface DataTableToolbarProps<TData extends RowData> {
 	actions?: ReactNode;
 	children?: ReactNode;
 	filterPlaceholder: string;
+	/** The table's size — "Showing 1–20 of 92" — rendered in the row's dead middle. */
+	rowSummary?: string;
 	searchColumn: string | undefined;
 	table: ReactTable<DataTableFeatures, TData>;
 }
@@ -52,6 +54,7 @@ export function DataTableToolbar<TData extends RowData>({
 	actions,
 	children,
 	filterPlaceholder = 'Search…',
+	rowSummary,
 	searchColumn,
 	table,
 }: DataTableToolbarProps<TData>) {
@@ -68,10 +71,43 @@ export function DataTableToolbar<TData extends RowData>({
 					value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''}
 				/>
 			)}
-			<div className="ml-auto flex shrink-0 items-center gap-2">
+			<div className="ml-auto flex min-w-0 items-center gap-2">
+				{/*
+				 * The table's size, in the gap the row already had. On /settings/audit-logs at 2560
+				 * the span between the search box and the Columns button measured 829px of nothing,
+				 * and the only statement of how many records the table held was in the footer band
+				 * below the fold — its top at y=1461 against a 1384px-tall <main>, so it was never on
+				 * screen on arrival.
+				 *
+				 * Inside this group rather than loose before it, because loose is not a position. A
+				 * consumer whose filter region grows (AuditLogsTab's wrapper is `flex-1`) pushed the
+				 * count to x=1869, hard against Columns; one whose region does not (BugsTab) left it
+				 * at x=1178, hard against the filters. Same component, same row, 691px apart. Anchored
+				 * to Columns it is in one place on every table, and it sits with the other control
+				 * that describes the view rather than the ones that narrow the data.
+				 *
+				 * `min-w-0 truncate` so the count is what abbreviates when the row runs out of width —
+				 * everything else in this group is a control.
+				 */}
+				{rowSummary && (
+					<span className="min-w-0 truncate text-sm text-muted-foreground">
+						{rowSummary}
+					</span>
+				)}
 				<DropdownMenu>
+					{/*
+					 * Default size, not `sm`. This is the only control in the row that was 32px —
+					 * the search Input, every consumer filter Select and anything passed into
+					 * `actions` are all 36px — so it read as a shorter pill at the right end of an
+					 * otherwise even row, on every table in the app. /settings/backup showed it
+					 * worst, sitting immediately beside a default-size "Create Backup".
+					 */}
 					<DropdownMenuTrigger asChild>
-						<Button aria-label="Toggle column visibility" size="sm" variant="outline">
+						{/* shrink-0 so the count beside it is the only thing this group gives up width. */}
+						<Button
+							aria-label="Toggle column visibility"
+							className="shrink-0"
+							variant="outline">
 							Columns <ChevronDown aria-hidden="true" className="ml-2 size-4" />
 						</Button>
 					</DropdownMenuTrigger>

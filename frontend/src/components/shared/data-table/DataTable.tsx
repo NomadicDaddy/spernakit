@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 
-import { type ColumnDef, flexRender, type RowData } from '@tanstack/react-table';
+import { type ColumnDef, type RowData } from '@tanstack/react-table';
 
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableHeader, TableRow } from '@/components/ui/table';
 
 import type { DataTableFeatures } from './features';
 import type {
@@ -12,10 +12,13 @@ import type {
 } from './types';
 
 import { DataTableEmptyRow } from './DataTableEmptyRow';
+import { DataTableHeadCell } from './DataTableHeadCell';
 import { DataTablePagination } from './DataTablePagination';
 import { DataTableRows } from './DataTableRows';
 import { DataTableToolbar } from './DataTableToolbar';
+import { resolveStickyColumns } from './stickyColumns';
 import { useDataTableConfig } from './useDataTableConfig';
+import { useStickyColumnWidths } from './useStickyColumnWidths';
 import { VirtualTableBody } from './VirtualTableBody';
 
 /**
@@ -159,7 +162,7 @@ function DataTable<TData extends RowData>({
 	toolbarActions,
 	virtualize,
 }: DataTableProps<TData>) {
-	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
+	const { currentPage, isVirtual, rows, rowSummary, table, totalPages, virtualContainerRef } =
 		useDataTableConfig({
 			columns,
 			data,
@@ -171,7 +174,18 @@ function DataTable<TData extends RowData>({
 
 	// Column visibility toggles and the optional select column both move this away
 	// from columns.length, which the body span and the virtual row width depend on.
-	const visibleColumnCount = table.getVisibleLeafColumns().length;
+	const visibleLeafColumns = table.getVisibleLeafColumns();
+	const visibleColumnCount = visibleLeafColumns.length;
+
+	/*
+	 * Resolved from the live visible columns rather than the incoming defs, so hiding a pinned
+	 * column through the Columns menu removes its inset instead of leaving a gap, and from the
+	 * measured header widths rather than the declared ones. Empty unless a table opts in.
+	 */
+	const { headerRowRef, widths } = useStickyColumnWidths(
+		visibleLeafColumns.map((column) => column.id).join(','),
+	);
+	const stickyColumns = resolveStickyColumns(visibleLeafColumns, widths);
 
 	// A server-filtered caller carries its own filter state, so its `isFiltered` is authoritative
 	// where TanStack's is silent; a client-filtered one never sets it and is read from the table.
@@ -186,6 +200,7 @@ function DataTable<TData extends RowData>({
 			<DataTableToolbar
 				actions={toolbarActions}
 				filterPlaceholder={filterPlaceholder}
+				rowSummary={rowSummary}
 				searchColumn={searchColumn}
 				table={table}>
 				{toolbar}
@@ -199,23 +214,18 @@ function DataTable<TData extends RowData>({
 			<div className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
 				<Table>
 					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
+						{table.getHeaderGroups().map((headerGroup, groupIndex, groups) => (
+							<TableRow
+								key={headerGroup.id}
+								// The leaf row carries the pinned columns, so it is the row whose
+								// cell widths the insets are measured from.
+								ref={groupIndex === groups.length - 1 ? headerRowRef : undefined}>
 								{headerGroup.headers.map((header) => (
-									<TableHead
+									<DataTableHeadCell
+										header={header}
 										key={header.id}
-										style={
-											header.column.columnDef.size === undefined
-												? undefined
-												: { width: header.getSize() }
-										}>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
-									</TableHead>
+										sticky={stickyColumns.get(header.column.id)}
+									/>
 								))}
 							</TableRow>
 						))}
@@ -239,6 +249,7 @@ function DataTable<TData extends RowData>({
 									colSpan={visibleColumnCount}
 									renderExpandedRow={renderExpandedRow}
 									rows={rows}
+									stickyColumns={stickyColumns}
 								/>
 							) : (
 								<DataTableEmptyRow
@@ -261,7 +272,6 @@ function DataTable<TData extends RowData>({
 				{!isVirtual && (
 					<DataTablePagination
 						currentPage={currentPage}
-						onRowSelectionChange={onRowSelectionChange}
 						pagination={pagination}
 						table={table}
 						totalPages={totalPages}

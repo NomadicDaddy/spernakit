@@ -67,4 +67,34 @@ const dataTableFeatures = tableFeatures({
 
 type DataTableFeatures = typeof dataTableFeatures;
 
-export { dataTableFeatures, type DataTableFeatures };
+/**
+ * The `defaultColumn.size` that means "this column declared no width".
+ *
+ * `columnSizingFeature` ships a default column def of `{ size: 150, minSize: 20, maxSize: … }` and
+ * merges it into every `columnDef`, so `columnDef.size === undefined` is never true once the
+ * feature is registered — and it has been registered since this table existed. `DataTable` used
+ * that comparison as its "did the author declare a width" test, so the test never fired: every
+ * `<th>` got an inline `width: 150`, the browser scaled all of them proportionally to fill the
+ * card, and the declared numbers were discarded. On /settings/users, whose columns declare no
+ * sizes at all, that rendered `username`, `email`, `role` and `status` at an identical 198px.
+ *
+ * Overriding the default with a value no author would type gives the question an answer the
+ * library does not fabricate. It is read through `declaredColumnWidth`, never compared inline.
+ * `getSize()` still clamps this to `minSize`, so anything that goes through the sizing API keeps
+ * working; only the "was this authored" question uses the sentinel.
+ */
+const UNSIZED_COLUMN = 0;
+
+/**
+ * The width an author actually declared on a column, or `undefined` when they declared none.
+ *
+ * @param columnDef - The column's resolved definition, defaults already merged in.
+ * @returns The declared width in pixels, or `undefined` for a fluid column.
+ */
+function declaredColumnWidth(columnDef: { size?: number | undefined }): number | undefined {
+	return columnDef.size === undefined || columnDef.size === UNSIZED_COLUMN
+		? undefined
+		: columnDef.size;
+}
+
+export { dataTableFeatures, type DataTableFeatures, declaredColumnWidth, UNSIZED_COLUMN };

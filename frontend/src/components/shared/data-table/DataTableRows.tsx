@@ -4,6 +4,7 @@ import { Fragment, type ReactNode } from 'react';
 import { TableCell, TableRow } from '@/components/ui/table';
 
 import type { DataTableFeatures } from './features';
+import type { StickyColumn } from './stickyColumns';
 
 /**
  * The paginated table's rows.
@@ -17,10 +18,13 @@ function DataTableRows<TData extends RowData>({
 	colSpan,
 	renderExpandedRow,
 	rows,
+	stickyColumns,
 }: {
 	colSpan: number;
 	renderExpandedRow: ((row: TData) => ReactNode) | undefined;
 	rows: Row<DataTableFeatures, TData>[];
+	/** Pinned columns keyed by column id, resolved once by `DataTable`. Empty when none opt in. */
+	stickyColumns: Map<string, StickyColumn>;
 }) {
 	return (
 		<>
@@ -34,11 +38,17 @@ function DataTableRows<TData extends RowData>({
 						 */}
 						<TableRow
 							data-state={row.getIsSelected() || expanded ? 'selected' : undefined}>
-							{row.getVisibleCells().map((cell) => (
-								<TableCell key={cell.id}>
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</TableCell>
-							))}
+							{row.getVisibleCells().map((cell) => {
+								const sticky = stickyColumns.get(cell.column.id);
+								return (
+									<TableCell
+										className={sticky?.cellClassName}
+										key={cell.id}
+										style={sticky?.style}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								);
+							})}
 						</TableRow>
 						{expanded && (
 							<TableRow>
