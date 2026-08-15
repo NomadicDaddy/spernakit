@@ -45,8 +45,15 @@ function ThemePreferences({
 					description="Follow your system setting, or pick one."
 					label="Color scheme"
 					labelId="pref-color-scheme">
+					{/*
+					 * 12rem, not the 18rem the description-bearing groups take: these three tiles
+					 * carry an icon and one word. `sm:grid-cols-3` gave them 466px each around 78px
+					 * of content at 2560, and put three wide bars directly above the six narrow
+					 * Accent tiles in the same card — one card showing two different sizes of the
+					 * same idiom.
+					 */}
 					<OptionCardGroup
-						className="grid gap-3 sm:grid-cols-3"
+						className="grid grid-cols-[repeat(auto-fill,minmax(min(12rem,100%),1fr))] gap-3"
 						labelledBy="pref-color-scheme">
 						{themeOptions.map((option) => (
 							<OptionCard
@@ -69,10 +76,11 @@ function ThemePreferences({
 					 * Auto-fill, not fixed column counts. `xl:grid-cols-6` made the layout worse
 					 * as the window grew: at 1280 it forced six columns of ~200px and the
 					 * "Monochrome" label overflowed its tile by 13px, so 1280 looked worse than
-					 * 1024. 14rem is the width the longest label plus its swatch needs.
+					 * 1024. 14rem is the width the longest label plus its swatch needs, and the
+					 * `min(…,100%)` matches the group above so no track can outgrow the card.
 					 */}
 					<OptionCardGroup
-						className="grid grid-cols-[repeat(auto-fill,minmax(14rem,1fr))] gap-3"
+						className="grid grid-cols-[repeat(auto-fill,minmax(min(14rem,100%),1fr))] gap-3"
 						labelledBy="pref-accent">
 						{APP_THEMES.map((theme) => (
 							<OptionCard

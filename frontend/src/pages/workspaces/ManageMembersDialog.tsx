@@ -4,14 +4,13 @@ import type { WorkspaceMember } from '@/api/types';
 
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 
 import { AddMemberFormRow } from './AddMemberFormRow';
 import { BulkMemberActions } from './BulkMemberActions';
@@ -113,22 +112,23 @@ function ManageMembersDialog({
 
 	return (
 		<>
-			<AlertDialog onOpenChange={onOpenChange} open={isOpen}>
+			{/* `Dialog`, not `AlertDialog` — see the note in CreateWorkspaceDialog. */}
+			<Dialog onOpenChange={onOpenChange} open={isOpen}>
 				{/*
-				 * `size="lg"`, not `className="max-w-2xl"`. The utility lost the cascade to
-				 * AlertDialogContent's own `data-[size=default]:sm:max-w-lg`, so this panel had
-				 * been rendering at exactly 512px — the same width as the create and edit prompts —
-				 * and squeezing the member list into 462px until it scrolled at five members.
+				 * The width and the scroll cap are spelled out here because DialogContent, unlike
+				 * AlertDialogContent, has neither a `size` prop nor a built-in height cap. Dropping
+				 * to the default `sm:max-w-lg` would put this panel back at 512px — the width of the
+				 * create and edit prompts — and squeeze the member list into 462px until it scrolled
+				 * at five members; dropping `max-h-[85vh] overflow-y-auto` would let a long roster
+				 * run off both ends of the viewport with no way to reach the footer.
 				 */}
-				<AlertDialogContent size="lg">
-					<AlertDialogHeader>
-						<AlertDialogTitle>Workspace Members</AlertDialogTitle>
-						<AlertDialogDescription>
-							View and manage workspace members.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
+				<DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
+					<DialogHeader>
+						<DialogTitle>Workspace Members</DialogTitle>
+						<DialogDescription>View and manage workspace members.</DialogDescription>
+					</DialogHeader>
 					{/*
-					 * No `py-4`. AlertDialogContent is a grid with a 16px gap, so the padding was
+					 * No `py-4`. DialogContent is a grid with a 16px gap, so the padding was
 					 * doubling the two seams that frame the body — 32px under the header and 32px
 					 * above the footer — where CreateUserDialog, the reference, puts its form
 					 * straight into the content grid and gets 16px.
@@ -159,11 +159,10 @@ function ManageMembersDialog({
 							/>
 						</div>
 					</div>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Close</AlertDialogCancel>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
+					{/* `showCloseButton` renders exactly the outline "Close" this footer had. */}
+					<DialogFooter showCloseButton />
+				</DialogContent>
+			</Dialog>
 
 			<ConfirmAlertDialog
 				confirmText="Remove"

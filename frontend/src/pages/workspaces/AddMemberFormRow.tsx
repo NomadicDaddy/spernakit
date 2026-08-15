@@ -41,24 +41,30 @@ function AddMemberFormRow({
 				User
 			</Label>
 			{/*
-			 * Same column geometry as `ManageMemberRow` below it — `px-3`, `gap-3`, a `w-32` role
-			 * control and a `w-16` action slot — so the role selectors share one right edge instead
-			 * of zig-zagging down the dialog at two widths and two offsets.
+			 * At `sm` and up: the same column geometry as `ManageMemberRow` below it — `px-3`,
+			 * `gap-3`, a `w-32` role control and a `w-16` action slot — so the role selectors share
+			 * one right edge instead of zig-zagging down the dialog at two widths and two offsets.
+			 *
+			 * Below `sm` it stacks. Flat, the three controls are unbreakable — a 167px picker, a
+			 * 128px role select and a 64px Add button, none of which shrink — so the row demanded
+			 * 407px and set the min-content floor that burst the dialog's grid track at 360. The
+			 * widths are gated, not removed: they exist to align this row with the member list on a
+			 * 672px panel, and deleting them would trade a mobile defect for a desktop one.
 			 */}
-			<div className="flex gap-3 px-3">
+			<div className="flex flex-col gap-2 px-3 sm:flex-row sm:gap-3">
 				<UserPicker
 					existingMemberIds={existingMemberIds}
 					onSelect={handleSelect}
 					selectedUser={selectedUser}
 				/>
 				<RoleSelector
-					className="w-32 shrink-0"
+					className="w-full shrink-0 sm:w-32"
 					onValueChange={(role) => onUpdateForm({ role })}
 					roles={WORKSPACE_ROLE_OPTIONS}
 					value={form.role}
 				/>
 				<Button
-					className="w-16 shrink-0"
+					className="w-full shrink-0 sm:w-16"
 					disabled={isPending || form.userId === 0}
 					onClick={onAddMember}>
 					Add
