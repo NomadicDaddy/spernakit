@@ -29,6 +29,14 @@ const ZERO_SIZE: ContainerSize = { height: 0, width: 0 };
  * reference on every measurement, so an unconditional `setSize` would re-render on every observer
  * frame even when nothing changed — and a chart sized from that state would re-render with it.
  *
+ * **Caller obligation.** Neither of the guards above can stop a feedback loop that runs through
+ * layout rather than through React. If the observed element sits under a min-content-floored
+ * ancestor and its child is given an explicit width taken from this hook, the child widens the
+ * ancestor, the ancestor widens the observed element, and the next measurement is larger — a
+ * ratchet that grows monotonically and never shrinks, one frame at a time, with every individual
+ * update perfectly legitimate. Give the observed element `min-w-0 overflow-hidden` so it cannot
+ * be sized by its own child. MetricChart carries exactly that for this reason.
+ *
  * @returns A tuple of `[ref, size]`. Attach the ref to the element you want to track; `size` holds
  * the current `clientWidth`/`clientHeight` (rounded), or zeroes before the element exists.
  */

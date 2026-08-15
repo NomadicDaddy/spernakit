@@ -6,7 +6,21 @@ import { useContainerWidth } from '@/hooks/useContainerWidth';
 import { useFormatters } from '@/hooks/useFormatters';
 import { CHART_MARGIN, CHART_SERIES } from '@/lib/chartConstants';
 
-const TICK_STYLE = { fontSize: 11 };
+/*
+ * `fill` lives in the tick object, not in a className. recharts writes a `fill` presentation
+ * attribute onto the tick `<text>` itself, while a className given to `<XAxis>` never reaches that
+ * element — so `fill-muted-foreground` could only ever set an *inherited* fill, and an inherited
+ * value loses to a presentation attribute written directly on the element. The class was inert and
+ * the labels painted recharts' built-in #666: 3.13:1 against the card at 11px in dark, where
+ * --muted-foreground gives 6.91:1. Passing the colour through `tick` puts it where recharts
+ * actually reads it, so the attribute it writes is the themed one.
+ *
+ * This is not a blanket "classes lose to presentation attributes" rule — `CartesianGrid` below
+ * styles its lines with `stroke-border` and wins, because there the class lands on the same element
+ * that carries recharts' `stroke="#ccc"`, and a CSS declaration outranks a presentation attribute.
+ * The deciding question is always whether the class reaches the element being painted.
+ */
+const TICK_STYLE = { fill: 'var(--muted-foreground)', fontSize: 11 };
 const ACTIVE_DOT = { r: 4, strokeWidth: 0 };
 const CHART_HEIGHT = 200;
 const numFmt1 = new Intl.NumberFormat(undefined, { maximumFractionDigits: 1 });
@@ -112,7 +126,11 @@ function MetricChart({
 	].join('');
 
 	return (
-		<Card>
+		// `min-w-0` because this card is routinely a grid item, and a grid item's automatic
+		// minimum size is its min-content — which the explicitly-sized chart below sets. Sizing
+		// the track with `minmax(0,1fr)` is only half the fix: without this the item still
+		// overflows the track it was just allowed to shrink.
+		<Card className="min-w-0">
 			<CardHeader className="pb-2">
 				{/*
 				 * No local type override. At `text-sm font-medium` a chart card's title computed to
@@ -130,9 +148,17 @@ function MetricChart({
 						No data available
 					</div>
 				) : (
+					// `min-w-0 overflow-hidden` breaks a ResizeObserver ratchet, and is not
+					// cosmetic. The child AreaChart is given an explicit `width={containerWidth}`
+					// measured from this element, so without it the fixed-width child contributes
+					// to its ancestors' min-content size, widens this container, gets re-measured
+					// wider, and grows again — monotonically, never shrinking. At 360px that left
+					// two 327px chart cards inside a 345px column on /settings/system-health.
+					// Clipping the child severs its contribution and cuts the loop at the source;
+					// see the useContainerWidth docblock for the two earlier variants of this bug.
 					<div
 						aria-label={chartLabel}
-						className="h-[200px] w-full"
+						className="h-[200px] w-full min-w-0 overflow-hidden"
 						ref={containerRef}
 						role="img">
 						{containerWidth > 0 && (
@@ -156,7 +182,6 @@ function MetricChart({
 								/>
 								<XAxis
 									axisLine={false}
-									className="fill-muted-foreground"
 									dataKey="timestamp"
 									minTickGap={40}
 									tick={TICK_STYLE}
@@ -165,7 +190,6 @@ function MetricChart({
 								/>
 								<YAxis
 									axisLine={false}
-									className="fill-muted-foreground"
 									domain={domain}
 									tick={TICK_STYLE}
 									tickFormatter={tickFormatter}

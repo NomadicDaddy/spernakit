@@ -53,12 +53,25 @@ const variantCardClasses: Record<string, string> = {
 		'border-[oklch(0.795_0.184_86/20%)] bg-gradient-to-br from-[oklch(0.795_0.184_86/8%)] to-card',
 };
 
+/**
+ * The tint only. The box the tint paints is constant across variants — see ICON_BOX.
+ *
+ * These used to carry `rounded-xl … p-2` as well, so a card with a variant had a 36px icon chip and
+ * a card without one had a bare 20px glyph. On /dashboard that put the single variant card in the
+ * Overview grid out of step with the five beside it: at 2560x1440 "System Health" sat at y=308
+ * against y=300 for "Total Users", its value at y=368 against y=352, and the whole first row was
+ * inflated to 150px against the second row's 134px — one six-card band reading as two mismatched
+ * strips. The chip is the card's shape; the tint is the variant's contribution to it.
+ */
 const variantIconClasses: Record<string, string> = {
 	default: '',
-	destructive: 'rounded-xl bg-destructive/10 p-2',
-	success: 'rounded-xl bg-[oklch(0.723_0.219_149/15%)] p-2',
-	warning: 'rounded-xl bg-[oklch(0.795_0.184_86/15%)] p-2',
+	destructive: 'bg-destructive/10',
+	success: 'bg-[oklch(0.723_0.219_149/15%)]',
+	warning: 'bg-[oklch(0.795_0.184_86/15%)]',
 };
+
+/** Constant icon chip: 36px is what `p-2` around the size-5 glyph these cards pass already measured. */
+const ICON_BOX = 'flex size-9 shrink-0 items-center justify-center rounded-xl';
 
 function TrendIndicator({ trend }: { trend: StatCardTrend }) {
 	const Icon = trend.value > 0 ? TrendingUp : trend.value < 0 ? TrendingDown : Minus;
@@ -75,7 +88,17 @@ function TrendIndicator({ trend }: { trend: StatCardTrend }) {
 	return (
 		<div className={cn('mt-2 flex items-center gap-1', color)}>
 			<Icon aria-hidden="true" className="size-4" />
-			<span className="text-sm font-medium">{Math.abs(trend.value)}%</span>
+			{/*
+			 * Signed, because the unsigned number reads as a second measurement. The System Metrics
+			 * row printed "157% vs 6h ago" directly under a CPU value of "7.6%" in the same "%" glyph,
+			 * and direction was carried only by a 16px arrow and a colour — so a red 157% under a
+			 * 7.6% reading parses as a CPU figure before it parses as a change. U+2212 rather than a
+			 * hyphen: it is the minus that matches the "+" in width and height.
+			 */}
+			<span className="text-sm font-medium">
+				{trend.value > 0 ? '+' : trend.value < 0 ? '−' : ''}
+				{Math.abs(trend.value)}%
+			</span>
 			<span className="text-xs text-muted-foreground">{trend.label}</span>
 		</div>
 	);
@@ -112,7 +135,7 @@ export function StatCard({
 				<CardTitle as="div" className="text-sm font-medium">
 					{title}
 				</CardTitle>
-				<div className={cn(variantIconClasses[variant])}>{icon}</div>
+				<div className={cn(ICON_BOX, variantIconClasses[variant])}>{icon}</div>
 			</CardHeader>
 			<CardContent className={progress !== undefined ? 'space-y-2' : undefined}>
 				{/*
