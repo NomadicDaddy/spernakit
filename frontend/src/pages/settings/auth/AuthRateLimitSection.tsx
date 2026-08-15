@@ -1,4 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShieldAlert } from 'lucide-react';
+
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 
 import { SettingsNumberField } from '../SettingsNumberField';
 import { SettingsToggleRow } from '../SettingsToggleRow';
@@ -35,10 +44,27 @@ function AuthRateLimitSection({
 					Throttle login, registration and password-reset requests by IP to slow
 					brute-force attempts.
 				</CardDescription>
+				{/* SecurityHealthSection's own risk marker, on the card whose off state is the
+				    risk. See AccountLockoutSection for the reasoning. */}
+				{!authRateLimitEnabled && (
+					<CardAction>
+						<ShieldAlert
+							aria-label="Auth rate limiting is off"
+							className="size-5 text-warning"
+						/>
+					</CardAction>
+				)}
 			</CardHeader>
 			<CardContent className="space-y-4">
+				{/* The gating switch gets the two-line rhythm its non-gating siblings have, so it
+				    stops reading as a peer of the fields it governs. */}
 				<SettingsToggleRow
 					checked={authRateLimitEnabled}
+					description={
+						authRateLimitEnabled
+							? 'Repeated auth requests from one IP are throttled.'
+							: 'Auth requests are unthrottled, however many one IP sends.'
+					}
 					id="authRateLimitEnabled"
 					label="Enable auth rate limiting"
 					onCheckedChange={onAuthRateLimitEnabledChange}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { User } from '@/api/types';
 import type { CreateUserInput } from '@/api/users';
 
+import { BulkActionBar } from '@/components/shared/data-table/BulkActionBar';
 import { DataTable } from '@/components/shared/data-table/DataTable';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -66,6 +67,26 @@ function UsersTab() {
 	const users = data?.data ?? [];
 	const total = data?.total ?? 0;
 
+	/*
+	 * How many selected rows the current filter is hiding.
+	 *
+	 * Both filters are server-side, so `users` is exactly what is on screen and a selected row
+	 * missing from it is a row the operator cannot see or untick. Changing page clears the
+	 * selection outright (see `clearSelection`), so anything counted here was hidden by a filter
+	 * rather than by pagination — which is what makes offering "Clear filters" the right escape.
+	 */
+	const visibleIds = new Set(users.map((u) => u.id));
+	const hiddenSelectedCount = selectedRows.filter((u) => !visibleIds.has(u.id)).length;
+
+	// One navigation, not two — see the warning on `setFilter`.
+	function clearFilters() {
+		setFilters((params) => {
+			params.delete('search');
+			params.delete('role');
+			params.delete('page');
+		});
+	}
+
 	// Selection is held here but rendered by the table, and the table unmounts while a
 	// new page loads. Clearing both together keeps the bulk bar from offering actions
 	// on rows the user can no longer see or uncheck.
@@ -121,14 +142,7 @@ function UsersTab() {
 					// Both filters are server-side, so the table's own filter state stays empty and
 					// it would otherwise report "no users" while the search box held a string.
 					isFiltered: search !== '' || roleFilter !== '',
-					// One navigation, not two — see the warning on `setFilter`.
-					onClearFilters: () => {
-						setFilters((params) => {
-							params.delete('search');
-							params.delete('role');
-							params.delete('page');
-						});
-					},
+					onClearFilters: clearFilters,
 					title: 'No users yet',
 				}}
 				{...(isAdmin() ? { onRowSelectionChange: setSelectedRows } : {})}
@@ -160,17 +174,23 @@ function UsersTab() {
 			/>
 
 			{/*
-			 * The bulk bar used to be inserted above the table, so ticking a checkbox shoved every
-			 * row 64px down and out from under the pointer. Below the table and sticky, it never
-			 * moves the rows it acts on. It also carries the card surface rather than `bg-muted`,
-			 * which is the exact colour a selected row computes to — bar and selection used to be
-			 * one flat grey.
+			 * The bar's own layout and the hidden-selection disclosure live in BulkActionBar; only
+			 * the actions and the counts are this page's business. `hiddenSelectedCount` is what
+			 * stops the bar claiming a bare "1 selected" over a table reading "No matching rows".
 			 */}
-			{isAdmin() && selectedRows.length > 0 && (
-				<div className="sticky bottom-4 z-20 flex items-center gap-2 rounded-xl border bg-card px-4 py-2 shadow-[var(--shadow-card)]">
-					<span className="text-sm text-muted-foreground">
-						{selectedRows.length} selected
-					</span>
+			{isAdmin() && (
+				<BulkActionBar
+					hiddenCount={hiddenSelectedCount}
+					/*
+					 * Only while rows are on screen. With none, the table has already rendered its
+					 * own empty state — "No matching rows", and a Clear filters button of its own —
+					 * and a second identical button in the bar 120px below it says nothing the first
+					 * did not. The empty state owns the affordance when it is showing; the bar owns
+					 * it the rest of the time, which is exactly when the empty state is absent. Every
+					 * hidden-selection case still has one way out, never two and never none.
+					 */
+					{...(users.length > 0 ? { onClearFilters: clearFilters } : {})}
+					selectedCount={selectedRows.length}>
 					<Button
 						onClick={() => setDialog({ type: 'bulkDelete' })}
 						size="sm"
@@ -185,7 +205,7 @@ function UsersTab() {
 						<Shield aria-hidden="true" className="size-4" />
 						Change Role
 					</Button>
-				</div>
+				</BulkActionBar>
 			)}
 
 			<CreateUserDialog

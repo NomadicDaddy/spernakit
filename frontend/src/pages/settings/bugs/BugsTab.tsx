@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bug } from 'lucide-react';
 import { toast } from 'sonner';
 import { BUG_REPORT_STATUSES } from 'spernakit-shared';
@@ -45,6 +45,12 @@ function BugsTab() {
 	const kind = isBugKind(kindFilter) ? kindFilter : undefined;
 
 	const { data, isLoading } = useQuery<PaginatedResponse<BugReport>>({
+		// `search` is part of the query key, so every keystroke started a new query. Without
+		// placeholderData that makes `isPending` — and therefore `isLoading` — true again, the
+		// early return below unmounted the search input and focus fell to BODY, so the field
+		// accepted exactly one character per tap. useUsers, useNotifications, useHealthChecks
+		// and useAppFeatures all set this already; this inline query was the only one that did not.
+		placeholderData: keepPreviousData,
 		queryFn: () => listBugs(page, limit, { kind, search, status }),
 		queryKey: ['bugs', page, limit, status, kind, search],
 	});
@@ -89,9 +95,20 @@ function BugsTab() {
 		{
 			accessorKey: 'description',
 			// No `max-w-md`. At 1920 and 2250 that cap held the text to 448px inside a 664px column
-			// and left a 208px void before Reporter, so the layout got emptier as the viewport grew;
-			// `line-clamp-2` alone already bounds the row height, and the column bounds the measure.
-			cell: ({ row }) => <span className="line-clamp-2">{row.original.description}</span>,
+			// and left a 208px void before Reporter, so the layout got emptier as the viewport grew.
+			//
+			// `line-clamp-2` alone does NOT bound this — an earlier comment here claimed it did.
+			// TableCell sets `whitespace-nowrap` on every cell in the app, and a clamp cannot clamp
+			// text forbidden to wrap, so the clamp was inert and the column was sized by the whole
+			// string: one 3,493-character report produced a 23,155px table inside a 332px mobile
+			// scroller, putting the Status control 22,823px off screen. `whitespace-normal` re-enables
+			// wrapping locally so the clamp can bind; the `ch` cap bounds the measure without
+			// reintroducing the fixed-px void described above.
+			cell: ({ row }) => (
+				<span className="line-clamp-2 max-w-[60ch] break-words whitespace-normal">
+					{row.original.description}
+				</span>
+			),
 			header: 'Description',
 		},
 		{

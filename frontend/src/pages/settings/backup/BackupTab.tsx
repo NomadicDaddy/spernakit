@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Archive, Clock, Database, Download, HardDrive } from 'lucide-react';
+import { Archive, Clock, Database, HardDrive, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -139,7 +139,7 @@ export function BackupTab() {
 							disabled={triggerMutation.isPending}
 							onClick={() => triggerMutation.mutate()}
 							size="sm">
-							<Download aria-hidden="true" className="size-4" />
+							<Plus aria-hidden="true" className="size-4" />
 							{triggerMutation.isPending ? 'Creating…' : 'Create Backup'}
 						</Button>
 					),
@@ -155,10 +155,18 @@ export function BackupTab() {
 				filterPlaceholder="Search backups…"
 				searchColumn="filename"
 				toolbarActions={
+					/*
+					 * `Plus`, not `Download`. This action creates a backup file server-side and
+					 * downloads nothing, but it was the one download-shaped glyph on the page — the
+					 * per-row Actions menu is where an actual download lives. The table exemplar
+					 * /settings/users fronts its equivalent create action with `Plus`, so a create
+					 * action on a table toolbar now looks the same in both places and the download
+					 * glyph stays free for something that downloads.
+					 */
 					<Button
 						disabled={triggerMutation.isPending}
 						onClick={() => triggerMutation.mutate()}>
-						<Download aria-hidden="true" className="size-4" />
+						<Plus aria-hidden="true" className="size-4" />
 						{triggerMutation.isPending ? 'Creating…' : 'Create Backup'}
 					</Button>
 				}

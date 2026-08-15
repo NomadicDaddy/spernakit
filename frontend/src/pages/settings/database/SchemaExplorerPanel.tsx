@@ -1,16 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Columns3, Database, Key, Search } from 'lucide-react';
+import { ChevronDown, Columns3, Search } from 'lucide-react';
 import { useDeferredValue, useEffect, useRef, useState } from 'react';
-
-import type { ColumnInfo, TableMetadata } from '@/api/databaseAdmin';
 
 import { getSchema, getTableDetails } from '@/api/databaseAdmin';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
+import { scrollIntoViewWithin } from '@/lib/scrollIntoViewWithin';
+
+import { ColumnList, TableRow } from './SchemaExplorerRows';
 
 /**
  * The scroll cap shared by both lists, in the viewport-relative idiom the ERD panel already uses.
@@ -38,6 +38,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 	const [search, setSearch] = useState('');
 	const [hasMoreTablesBelow, setHasMoreTablesBelow] = useState(false);
 	const tableListRef = useRef<HTMLDivElement>(null);
+	const detailsCardRef = useRef<HTMLDivElement>(null);
 
 	const { data: schemaResponse, isLoading: isLoadingSchema } = useQuery({
 		queryFn: getSchema,
@@ -73,15 +74,47 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 		return () => observer.disconnect();
 	}, [filteredTables.length, isLoadingSchema]);
 
+	/*
+	 * Below `md` the two cards stack, so the details card starts a full list-height below the row
+	 * that was just tapped — off screen, every time. Tapping a table changed the card title and
+	 * filled it with columns and the user saw none of it: the tap produced no observable result at
+	 * all, which reads as a dead control rather than a slow one.
+	 *
+	 * `scrollIntoViewWithin` rather than `Element.scrollIntoView` because the latter scrolls every
+	 * scrollable ancestor, and the tab rail above this panel is one of them — see
+	 * remediation-20260815-mobile-tablayout-scroll-jack for that defect in its own right.
+	 *
+	 * At `md` and up the details card is the grid sibling beside the list and is already in view, so
+	 * scrolling there would move the page out from under a user who can see the answer already.
+	 */
+	useEffect(() => {
+		const card = detailsCardRef.current;
+		if (!selectedTable || !card) return;
+		if (window.matchMedia('(min-width: 48rem)').matches) return;
+		scrollIntoViewWithin(card, { offset: 8 });
+	}, [selectedTable]);
+
 	return (
-		<div className="grid gap-4 md:grid-cols-2">
+		/*
+		 * `grid-cols-1` and `minmax(0,1fr)` are both load-bearing. With no base column this grid
+		 * had one implicit `auto` track, whose automatic minimum is its content's min-content size
+		 * — a definite container width does not clamp that. The track computed to 390.30px inside
+		 * a 334px container at 360px wide, and the column widths inside the schema table (which
+		 * `whitespace-nowrap` forbids from wrapping) set the floor. Bare `1fr` at `md` is shorthand
+		 * for `minmax(auto,1fr)` and carries the identical floor, so it is spelled out here.
+		 */
+		<div className="grid grid-cols-1 gap-4 md:grid-cols-[repeat(2,minmax(0,1fr))]">
 			{/* Table List */}
-			<Card>
+			<Card className="min-w-0">
 				<CardHeader className="pb-3">
-					<CardTitle className="flex items-center gap-2">
-						<Database aria-hidden="true" className="h-4 w-4" />
-						Tables ({tables.length})
-					</CardTitle>
+					{/*
+					 * Plain text, like the other three. This surface has four panel card titles —
+					 * Tables, Select a table, Entity Relationship Diagram, SQL Query — and this was the
+					 * only one carrying a glyph. The panel rail directly above already gives all four
+					 * an icon, so the rail is where the iconography lives; repeating it on one card
+					 * header out of four read as an oversight rather than as emphasis.
+					 */}
+					<CardTitle>Tables ({tables.length})</CardTitle>
 					<div className="relative">
 						<Search
 							aria-hidden="true"
@@ -143,7 +176,7 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 			</Card>
 
 			{/* Column Details */}
-			<Card>
+			<Card className="min-w-0" ref={detailsCardRef}>
 				<CardHeader className="pb-3">
 					<CardTitle>
 						{selectedTable ? `Columns: ${selectedTable}` : 'Select a table'}
@@ -172,85 +205,6 @@ function SchemaExplorerPanel({ onSelectTable, selectedTable }: SchemaExplorerPan
 					)}
 				</CardContent>
 			</Card>
-		</div>
-	);
-}
-
-function TableRow({
-	isSelected,
-	onSelect,
-	table,
-}: {
-	isSelected: boolean;
-	onSelect: () => void;
-	table: TableMetadata;
-}) {
-	return (
-		<button
-			className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors ${
-				isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-			}`}
-			onClick={onSelect}
-			type="button">
-			<span className="font-medium">{table.tableName}</span>
-			<div className="flex gap-2">
-				<Badge variant="secondary">{table.columnCount} cols</Badge>
-				<Badge variant="outline">{table.rowCount} rows</Badge>
-			</div>
-		</button>
-	);
-}
-
-function ColumnList({
-	columns,
-	foreignKeys,
-}: {
-	columns: ColumnInfo[];
-	foreignKeys: { sourceColumn: string; targetColumn: string; targetTable: string }[];
-}) {
-	const fkMap = new Map(foreignKeys.map((fk) => [fk.sourceColumn, fk]));
-	return (
-		<div className="space-y-2">
-			{columns.map((col) => (
-				<ColumnRow column={col} fk={fkMap.get(col.name)} key={col.name} />
-			))}
-		</div>
-	);
-}
-
-function ColumnRow({
-	column,
-	fk,
-}: {
-	column: ColumnInfo;
-	fk: { sourceColumn: string; targetColumn: string; targetTable: string } | undefined;
-}) {
-	return (
-		<div className="flex items-center justify-between rounded-md border px-3 py-2">
-			<div className="flex items-center gap-2">
-				{column.isPrimaryKey && (
-					<Key aria-hidden="true" className="h-3.5 w-3.5 text-primary" />
-				)}
-				<span className="text-sm font-medium">{column.name}</span>
-				<span className="text-xs text-muted-foreground">{column.type}</span>
-			</div>
-			{/*
-			 * These three carried `text-[10px]` — an arbitrary value below the smallest step in the
-			 * scale — while the `N cols` / `N rows` badges 24px to the left used the Badge default,
-			 * so two badge sizes sat side by side in one panel.
-			 */}
-			<div className="flex items-center gap-1.5">
-				{/* A column constraint is metadata, not a fault — neutral, like FK beside it. */}
-				{column.notnull && <Badge variant="outline">NOT NULL</Badge>}
-				{column.defaultValue !== null && (
-					<Badge variant="secondary">{column.defaultValue}</Badge>
-				)}
-				{fk && (
-					<Badge variant="outline">
-						FK → {fk.targetTable}.{fk.targetColumn}
-					</Badge>
-				)}
-			</div>
 		</div>
 	);
 }

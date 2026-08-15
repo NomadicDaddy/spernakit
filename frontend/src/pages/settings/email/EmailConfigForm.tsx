@@ -88,25 +88,27 @@ export function EmailConfigForm({
 					</div>
 
 					{/*
-					 * Label left, switch pinned right, matching every other toggle in settings —
-					 * this row used to invert the pattern with the switch first and the label
-					 * trailing it, floating unaligned between two field grids. It runs the full
-					 * card width rather than SettingsToggleRow's `max-w-2xl` so the switch lands on
-					 * the right edge of the grid above it.
+					 * The same bordered whole-row `<label>` SettingsToggleRow renders, down to the
+					 * classes — this row used to invert the pattern with the switch first and the
+					 * label trailing it, floating unaligned between two field grids, and then sat
+					 * borderless while every other toggle in settings gained an edge.
 					 *
 					 * The row cannot use SettingsToggleRow itself: that component is controlled and
 					 * this form reads its values back through FormData. `onCheckedChange` marks the
-					 * form dirty because Radix's Switch does not emit a bubbling `input` event.
+					 * form dirty because Radix's Switch does not emit a bubbling `input` event. The
+					 * markup is duplicated rather than the component being made to serve both, which
+					 * is one uncontrolled caller's worth of duplication against an uncontrolled mode
+					 * on every caller.
 					 */}
-					<div className="flex items-center justify-between gap-6">
-						<div className="space-y-0.5">
-							<Label className="cursor-pointer" htmlFor="secure">
-								Use SSL/TLS
-							</Label>
-							<p className="text-xs text-muted-foreground">
+					<label
+						className="flex cursor-pointer items-center justify-between gap-4 rounded-lg border p-3"
+						htmlFor="secure">
+						<span className="space-y-0.5">
+							<span className="block text-sm font-medium">Use SSL/TLS</span>
+							<span className="block text-xs text-muted-foreground">
 								Connect over an implicit TLS port, typically 465.
-							</p>
-						</div>
+							</span>
+						</span>
 						<Switch
 							defaultChecked={config.secure}
 							id="secure"
@@ -114,7 +116,7 @@ export function EmailConfigForm({
 							onCheckedChange={() => onDirtyChange?.(true)}
 							value="true"
 						/>
-					</div>
+					</label>
 
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">

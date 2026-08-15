@@ -10,8 +10,16 @@ import {
 import { CardSkeleton } from '@/components/shared/skeletons/CardSkeleton';
 import { UnsavedChangesGuard } from '@/components/shared/UnsavedChangesGuard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 import { useAuthorization } from '@/hooks/useAuthorization';
+import { cn } from '@/lib/utils';
 
 import { AccountLockoutSection } from './AccountLockoutSection';
 import { AuthRateLimitSection } from './AuthRateLimitSection';
@@ -126,9 +134,74 @@ function AuthenticationTab() {
 					{...form.rateLimitActions}
 				/>
 
-				<Button disabled={!form.dirty || mutation.isPending} type="submit">
-					{mutation.isPending ? 'Saving…' : 'Save Settings'}
-				</Button>
+				{/*
+				 * A real Card + CardFooter, so the form ends on the plane the rest of the surface
+				 * uses. At `md` and up the Save button was a bare child of the <form>, painted at
+				 * x=660 on the raw page background in the 24px gap between the Auth Rate Limiting
+				 * card and the OAuth card — the only primary action on any settings or profile
+				 * surface sitting outside a card. Three more cards follow it that it does not
+				 * govern, and the OAuth card commits on blur rather than on save, so nothing on
+				 * screen marked where the form ended. The card edge is that boundary now, the same
+				 * way SecurityTab's CardFooter bounds the password form.
+				 *
+				 * Axes set where the padding contract puts them (`py-*` on Card, `px-*` on
+				 * CardFooter) and tightened below `md`: the default `py-6`/`px-6` would spend 48px
+				 * of an 844px viewport on a two-control row that the mobile pass had already tuned
+				 * down to 8px.
+				 *
+				 * Sticky below `md` while the form is dirty, in the shape of the /settings/users bulk
+				 * bar — same `bottom-4`, same card surface, same `flex-wrap gap-y-2`.
+				 *
+				 * This form is 12 settings and 2652px against an 844px viewport, and its only commit
+				 * control sat at y=1889 — 71% of the way down, past eleven unrelated controls, with
+				 * nothing along the way saying a change was pending. Sticky rather than fixed is what
+				 * answers the "does it cover the last control" question: the bar still occupies real
+				 * flow space at the end of the form, so it floats while scrolling and then settles
+				 * into the gap it always had, and no scroll container needs compensating padding.
+				 *
+				 * Pinned only when dirty. A bar pinned permanently spends 56px of an 844px viewport
+				 * to say nothing, and the disabled button that used to be here said it in place.
+				 * Only the *pinning* is dirty-gated now — the card surface is unconditional,
+				 * because a footer that materialises on first keystroke is the boundary appearing
+				 * at the moment it stops being needed. Discard sits beside Save because a bar that
+				 * can only commit turns a mis-tap into a decision the user cannot back out of;
+				 * `form.reset()` is the same call the mutation makes on success, so there is no
+				 * second notion of "clean".
+				 *
+				 * At `md` and up it settles back into the flow as an ordinary footer card: at
+				 * 1440x900 the form is 1.4 viewports and the control was never hard to find.
+				 */}
+				<Card
+					className={cn('py-2 md:py-4', form.dirty && 'sticky bottom-4 z-20 md:static')}>
+					<CardFooter className="flex flex-wrap items-center gap-2 gap-y-2 px-4 md:px-6">
+						{form.dirty && (
+							<span className="text-sm text-muted-foreground md:hidden">
+								Unsaved changes
+							</span>
+						)}
+						{/*
+						 * The two buttons wrap as a pair, not individually. Flat, the three items are
+						 * 110 + 123 + 83px plus gaps against 295px of content width at 390, so the row
+						 * broke three ways and the bar stood 98px tall — 12% of the viewport to hold two
+						 * controls. Kept together they take one 214px line under the label, and on a
+						 * wider phone the whole bar collapses back to a single line on its own.
+						 */}
+						<div className="flex flex-wrap items-center gap-2 gap-y-2">
+							<Button disabled={!form.dirty || mutation.isPending} type="submit">
+								{mutation.isPending ? 'Saving…' : 'Save Settings'}
+							</Button>
+							{form.dirty && (
+								<Button
+									disabled={mutation.isPending}
+									onClick={form.reset}
+									type="button"
+									variant="ghost">
+									Discard
+								</Button>
+							)}
+						</div>
+					</CardFooter>
+				</Card>
 			</form>
 			<OAuthProvidersSection />
 			<BackupKeyRotationSection />
