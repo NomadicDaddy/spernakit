@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
 import type { BugReport, PaginatedResponse } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { listBugs, updateBugStatus } from '@/api/bugs';
 import { DataTable } from '@/components/shared/data-table/DataTable';
@@ -76,7 +77,7 @@ function BugsTab() {
 	 * the surface already names rows that way internally (the status trigger's accessible name is
 	 * "Status for report 2", and the toast says "Report #2 is now Resolved") but never showed it.
 	 */
-	const columns: ColumnDef<BugReport, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, BugReport, unknown>[] = [
 		{
 			accessorKey: 'id',
 			cell: ({ row }) => (

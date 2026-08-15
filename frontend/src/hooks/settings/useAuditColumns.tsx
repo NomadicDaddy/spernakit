@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 
 import type { AuditLog } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,7 +22,7 @@ interface AuditColumnsProps {
 export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsProps) {
 	const { formatDateTime, formatTimestamp } = useFormatters();
 
-	const columns: ColumnDef<AuditLog, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, AuditLog, unknown>[] = [
 		{
 			cell: ({ row }) => {
 				const isOpen = expandedRow === row.original.id;

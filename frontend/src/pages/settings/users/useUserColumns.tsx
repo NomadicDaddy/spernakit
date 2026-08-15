@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Eye, KeyRound, LockOpen, MoreHorizontal, Trash2, UserPen } from 'lucide-react';
 
 import type { User, UserRole } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { createSelectColumn } from '@/components/shared/data-table/selectColumn';
 import { Badge } from '@/components/ui/badge';
@@ -63,7 +64,7 @@ export function useUserColumns({
 	const { roleLabel } = useAuthorization();
 	const { formatDate } = useFormatters();
 
-	const columns: ColumnDef<User, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, User, unknown>[] = [
 		...(enableSelection ? [createSelectColumn<User>()] : []),
 		{
 			accessorKey: 'username',

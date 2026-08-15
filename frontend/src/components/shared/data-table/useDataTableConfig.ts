@@ -1,21 +1,20 @@
 import {
 	type ColumnDef,
 	type ColumnFiltersState,
-	getCoreRowModel,
-	getFilteredRowModel,
-	getPaginationRowModel,
-	getSortedRowModel,
+	type ColumnVisibilityState,
+	type RowData,
 	type RowSelectionState,
 	type SortingState,
-	useReactTable,
-	type VisibilityState,
+	useTable,
 } from '@tanstack/react-table';
 import { useEffect, useRef, useState } from 'react';
 
 import type { DataTablePagination, DataTableVirtualize } from './types';
 
-interface UseDataTableConfigOptions<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[];
+import { dataTableFeatures, type DataTableFeatures } from './features';
+
+interface UseDataTableConfigOptions<TData extends RowData> {
+	columns: ColumnDef<DataTableFeatures, TData>[];
 	data: TData[];
 	onRowSelectionChange?: ((selectedRows: TData[]) => void) | undefined;
 	pagination?: DataTablePagination | undefined;
@@ -23,17 +22,17 @@ interface UseDataTableConfigOptions<TData, TValue> {
 	virtualize?: DataTableVirtualize | undefined;
 }
 
-function useDataTableConfig<TData, TValue>({
+function useDataTableConfig<TData extends RowData>({
 	columns,
 	data,
 	onRowSelectionChange,
 	pagination,
 	selectionResetToken,
 	virtualize,
-}: UseDataTableConfigOptions<TData, TValue>) {
+}: UseDataTableConfigOptions<TData>) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+	const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	// setRowSelection is queued, so two toggles inside one tick would both read the
 	// same rendered `rowSelection` and the second would report only its own row to
@@ -57,14 +56,10 @@ function useDataTableConfig<TData, TValue>({
 	const isServerPagination = !!pagination;
 	const isVirtual = virtualize?.enabled ?? false;
 
-	// eslint-disable-next-line react-hooks/incompatible-library -- TanStack Table API is not React Compiler compatible
-	const table = useReactTable({
+	const table = useTable({
 		columns,
 		data,
-		getCoreRowModel: getCoreRowModel(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
+		features: dataTableFeatures,
 		manualPagination: isServerPagination || isVirtual,
 		onColumnFiltersChange: setColumnFilters,
 		onColumnVisibilityChange: setColumnVisibility,
@@ -119,9 +114,7 @@ function useDataTableConfig<TData, TValue>({
 			: 0
 		: table.getPageCount();
 
-	const currentPage = isServerPagination
-		? pagination.page
-		: table.getState().pagination.pageIndex + 1;
+	const currentPage = isServerPagination ? pagination.page : table.state.pagination.pageIndex + 1;
 
 	return { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef };
 }

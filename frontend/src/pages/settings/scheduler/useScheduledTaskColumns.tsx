@@ -1,6 +1,7 @@
 import { type ColumnDef } from '@tanstack/react-table';
 
 import type { TaskInfo } from '@/api/tasks';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { useFormatters } from '@/hooks/useFormatters';
 import { cn } from '@/lib/utils';
@@ -24,7 +25,7 @@ interface ScheduledTaskColumnsProps {
 function useScheduledTaskColumns({ onViewHistory, openHistoryTask }: ScheduledTaskColumnsProps) {
 	const { formatDateTime } = useFormatters();
 
-	const columns: ColumnDef<TaskInfo, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, TaskInfo, unknown>[] = [
 		{
 			accessorKey: 'name',
 			cell: ({ row }) => (

@@ -1,4 +1,4 @@
-import type { Table } from '@tanstack/react-table';
+import type { ReactTable, RowData } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -9,20 +9,21 @@ import {
 	SelectValue,
 } from '@/components/ui/select';
 
+import type { DataTableFeatures } from './features';
 import type { DataTablePagination } from './types';
 
-interface DataTablePaginationProps<TData> {
+interface DataTablePaginationProps<TData extends RowData> {
 	currentPage: number;
 	onRowSelectionChange: ((selectedRows: TData[]) => void) | undefined;
 	pagination: DataTablePagination | undefined;
-	table: Table<TData>;
+	table: ReactTable<DataTableFeatures, TData>;
 	totalPages: number;
 }
 
 /**
  * Pagination component for DataTable with page size and navigation controls.
  */
-export function DataTablePagination<TData>({
+export function DataTablePagination<TData extends RowData>({
 	currentPage,
 	onRowSelectionChange,
 	pagination,
@@ -31,7 +32,7 @@ export function DataTablePagination<TData>({
 }: DataTablePaginationProps<TData>) {
 	const isServerPagination = !!pagination;
 
-	const pageSize = isServerPagination ? pagination.limit : table.getState().pagination.pageSize;
+	const pageSize = isServerPagination ? pagination.limit : table.state.pagination.pageSize;
 	const totalRows = isServerPagination
 		? pagination.total
 		: table.getFilteredRowModel().rows.length;

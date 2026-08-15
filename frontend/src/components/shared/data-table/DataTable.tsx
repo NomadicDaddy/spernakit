@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 
-import { type ColumnDef, flexRender } from '@tanstack/react-table';
+import { type ColumnDef, flexRender, type RowData } from '@tanstack/react-table';
 
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+import type { DataTableFeatures } from './features';
 import type {
 	DataTableEmpty as DataTableEmptyType,
 	DataTablePagination as DataTablePaginationType,
@@ -21,9 +22,8 @@ import { VirtualTableBody } from './VirtualTableBody';
  * Props for the DataTable component.
  *
  * @template TData - The type of data for each row
- * @template TValue - The type of cell values
  */
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends RowData> {
 	/**
 	 * Column definitions for the table using TanStack Table column API.
 	 *
@@ -32,7 +32,7 @@ interface DataTableProps<TData, TValue> {
 	 * columns (status, role, actions, expand toggles) and leave the content columns alone —
 	 * declaring a size on every column just reproduces the even split it is meant to fix.
 	 */
-	columns: ColumnDef<TData, TValue>[];
+	columns: ColumnDef<DataTableFeatures, TData>[];
 	/** Array of data to display in the table */
 	data: TData[];
 	/**
@@ -145,7 +145,7 @@ interface DataTableProps<TData, TValue> {
  * />
  * ```
  */
-function DataTable<TData, TValue>({
+function DataTable<TData extends RowData>({
 	columns,
 	data,
 	empty,
@@ -158,7 +158,7 @@ function DataTable<TData, TValue>({
 	toolbar,
 	toolbarActions,
 	virtualize,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
 	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
 		useDataTableConfig({
 			columns,
@@ -175,7 +175,7 @@ function DataTable<TData, TValue>({
 
 	// A server-filtered caller carries its own filter state, so its `isFiltered` is authoritative
 	// where TanStack's is silent; a client-filtered one never sets it and is read from the table.
-	const isFiltered = empty?.isFiltered === true || table.getState().columnFilters.length > 0;
+	const isFiltered = empty?.isFiltered === true || table.state.columnFilters.length > 0;
 	const clearFilters = () => {
 		table.resetColumnFilters();
 		empty?.onClearFilters?.();

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { type Column, type Table } from '@tanstack/react-table';
+import { type Column, type ReactTable, type RowData } from '@tanstack/react-table';
 import { ChevronDown } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 
-interface DataTableToolbarProps<TData> {
+import type { DataTableFeatures } from './features';
+
+interface DataTableToolbarProps<TData extends RowData> {
 	/** The table's primary action, rendered at the right end of the row next to Columns. */
 	actions?: ReactNode;
 	children?: ReactNode;
 	filterPlaceholder: string;
 	searchColumn: string | undefined;
-	table: Table<TData>;
+	table: ReactTable<DataTableFeatures, TData>;
 }
 
 /**
@@ -30,7 +32,7 @@ interface DataTableToolbarProps<TData> {
  * that is what the menu uses; the humanised id is only a fallback for a column whose header is a
  * render function rather than a string.
  */
-function columnLabel<TData>(column: Column<TData>): string {
+function columnLabel<TData extends RowData>(column: Column<DataTableFeatures, TData>): string {
 	const { header } = column.columnDef;
 	if (typeof header === 'string' && header.length > 0) return header;
 	return column.id
@@ -46,7 +48,7 @@ function columnLabel<TData>(column: Column<TData>): string {
  * and sits right, so a table's primary action is always in the same place instead of wherever the
  * page happened to leave it.
  */
-export function DataTableToolbar<TData>({
+export function DataTableToolbar<TData extends RowData>({
 	actions,
 	children,
 	filterPlaceholder = 'Search…',
@@ -76,8 +78,8 @@ export function DataTableToolbar<TData>({
 					<DropdownMenuContent align="end">
 						{table
 							.getAllColumns()
-							.filter((column: Column<TData>) => column.getCanHide())
-							.map((column: Column<TData>) => (
+							.filter((column) => column.getCanHide())
+							.map((column) => (
 								<DropdownMenuCheckboxItem
 									checked={column.getIsVisible()}
 									key={column.id}

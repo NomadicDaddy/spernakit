@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, RotateCcw } from 'lucide-react';
 
 import type { BackupFile } from '@/api/backup';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +33,7 @@ interface BackupColumnsProps {
 function useBackupColumns({ canRestore, onRestore, restoring }: BackupColumnsProps) {
 	const { formatDateTime } = useFormatters();
 
-	const columns: ColumnDef<BackupFile, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, BackupFile, unknown>[] = [
 		{
 			accessorKey: 'filename',
 			cell: ({ row }) => (

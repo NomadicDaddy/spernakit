@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Circle, CircleCheck, MailOpen, Trash2 } from 'lucide-react';
 
 import type { Notification } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { createSelectColumn } from '@/components/shared/data-table/selectColumn';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ export function useNotificationColumns({
 }: NotificationColumnsProps) {
 	const { formatTimestamp } = useFormatters();
 
-	const columns: ColumnDef<Notification, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, Notification, unknown>[] = [
 		...(enableSelection ? [createSelectColumn<Notification>()] : []),
 		{
 			accessorKey: 'readAt',

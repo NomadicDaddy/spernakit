@@ -3,6 +3,32 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [Unreleased]
+
+### Changed
+
+- `@tanstack/react-table` to v9.1.2, on the v9 architecture rather than the package's own
+  `legacy` shim. v9 rearchitects the library around an opt-in feature registry, so
+  `frontend/src/components/shared/data-table/features.ts` now declares the one set every table
+  shares — column filtering, sizing, and visibility, row pagination, selection, and sorting, with
+  their client row-model factories — and exports the `DataTableFeatures` type that the table
+  internals and all eight column definitions under `frontend/src` reference. The registry also
+  carries the `filterFns` and
+  `sortFns` slots, because v9 no longer bundles the built-in filter and sort functions: a column
+  left on the default `'auto'` resolves its function by name out of those registries, an
+  unregistered filter name makes the filtered row model drop the filter entirely, and an
+  unregistered sort name falls back to `basic`. Registered are the names auto-resolution can
+  pick, which keeps search narrowing rows and keeps text columns sorting case-insensitively
+  (`Alice, bob, Carol`) and numeric-suffixed ones naturally (`item2` before `item10`) as they did
+  on v8. The v8 API names are gone with it: `useReactTable`
+  becomes `useTable`, the `get*RowModel()` options become feature factories, `VisibilityState`
+  becomes `ColumnVisibilityState`, `Table.getState()` becomes `table.state`, and every generic
+  gains the leading `TFeatures` parameter (`ColumnDef<DataTableFeatures, TData>`) plus a
+  `TData extends RowData` constraint now that `RowData` is no longer `any`. `DataTable` and
+  `useDataTableConfig` drop their unused `TValue` parameter; it was `unknown` at every call site
+  and v9 makes that value (`CellData`) the default.
+- Frontend and development dependencies updated.
+
 ## [3.41.0] - 2026-08-12
 
 ### Added
