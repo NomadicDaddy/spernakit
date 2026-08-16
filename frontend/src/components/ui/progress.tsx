@@ -15,6 +15,17 @@ function Progress({
 				className,
 			)}
 			data-slot="progress"
+			/*
+			 * `value` reaches the Radix root, not only the indicator's transform. Upstream's snippet
+			 * destructures it for the `translateX` and never forwards it, so every progress bar in
+			 * the app rendered `data-state="indeterminate"` with no `aria-valuenow` — the fill moved
+			 * on screen and the accessibility tree reported a bar of unknown progress. Found on
+			 * /onboarding, where the checklist bar was switched to this component precisely for the
+			 * progressbar semantics it was not in fact emitting. Affects StatCard and GaugeWidget
+			 * too; neither styles off `data-state`, so the only change is that a determinate value
+			 * now announces itself.
+			 */
+			value={value}
 			{...props}>
 			<ProgressPrimitive.Indicator
 				className="h-full w-full flex-1 bg-primary transition-transform"

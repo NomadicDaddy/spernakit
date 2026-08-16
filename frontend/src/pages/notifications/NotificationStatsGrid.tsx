@@ -6,6 +6,22 @@ import { StatCard } from '@/components/shared/charts/StatCard';
 import { StatCardSkeleton } from '@/components/shared/skeletons/StatCardSkeleton';
 
 /**
+ * The wide step every other KPI row in the app has and this one did not.
+ *
+ * Stopping at `sm:grid-cols-2` meant two tiles split the whole canvas between them: 728px wide at
+ * 2560, twice the width of the tiles on /dashboard and /analytics, to carry a label and a single
+ * integer. Inside each one the value sat at the far left with ~690px of empty card to its right and
+ * the icon that annotates the label 609px away from it — the card's own composition pulled apart by
+ * width it had no content for. Two tracks left unfilled at the end of a row is ordinary page
+ * whitespace; 690px of it inside a card is a broken card.
+ *
+ * `xl:grid-cols-4`, matching DashboardStatsSection, rather than the `xl:grid-cols-3` of
+ * MetricsSummary — 4 puts these tiles at the same width as the KPI band on /analytics, which is the
+ * row this one most resembles: a small fixed set of totals above a table.
+ */
+const STATS_GRID = 'grid gap-4 sm:grid-cols-2 xl:grid-cols-4';
+
+/**
  * Two numbers, rendered with the shared `StatCard`.
  *
  * This was eight bespoke tiles — Total, Unread and six per-type counts — in a `lg:grid-cols-8` row
@@ -24,7 +40,7 @@ import { StatCardSkeleton } from '@/components/shared/skeletons/StatCardSkeleton
 function NotificationStatsGrid({ stats }: { stats: NotificationStatistics | undefined }) {
 	if (!stats) {
 		return (
-			<div className="grid gap-4 sm:grid-cols-2">
+			<div className={STATS_GRID}>
 				<StatCardSkeleton />
 				<StatCardSkeleton />
 			</div>
@@ -32,7 +48,7 @@ function NotificationStatsGrid({ stats }: { stats: NotificationStatistics | unde
 	}
 
 	return (
-		<div className="grid gap-4 sm:grid-cols-2">
+		<div className={STATS_GRID}>
 			<StatCard
 				icon={<Mail aria-hidden="true" className="size-5 text-muted-foreground" />}
 				title="Unread"

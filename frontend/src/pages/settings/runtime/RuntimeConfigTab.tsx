@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type { ConfigSection, SnapshotValue } from '@/api/runtimeConfig';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRuntimeConfig } from '@/hooks/settings/useRuntimeConfig';
@@ -134,24 +134,42 @@ function RuntimeConfigTab() {
 						 * it. Each card now starts directly under the previous one in its column.
 						 * `gap-6` matches the 24px page rhythm the outer stack already uses; the old
 						 * `gap-4` changed the rhythm halfway down the surface.
+						 *
+						 * A third column at `2xl`, the breakpoint the app already uses for its
+						 * widest step (`2xl:grid-cols-4` on DashboardListPage, `2xl:grid-cols-3`
+						 * on RolesTab). The flow stopped adapting at `lg`: 1440, 1920, 2250 and
+						 * 2560 all rendered the same two columns, so inside the 95rem cap each
+						 * card was 724px from 1920 up. Every field row is `justify-between` with
+						 * the value right-aligned, so that width became dead space in the middle
+						 * of the row rather than density — measured label-to-value gaps in the
+						 * Alerting card ran 425–499px against a 653–674px row, across ~200 rows
+						 * and 3,365px of inner scroll. Three columns puts each card near 480px at
+						 * 1920–2560, roughly halving every gap, and leaves the 1440 layout alone.
 						 */
-						<div className="columns-1 gap-6 lg:columns-2 [&>*]:mb-6 [&>*]:break-inside-avoid">
+						<div className="columns-1 gap-6 lg:columns-2 2xl:columns-3 [&>*]:mb-6 [&>*]:break-inside-avoid">
 							{visible.map(([name, section]) => (
 								<Card key={name}>
 									<CardHeader>
-										<CardTitle>{formatLabel(name)}</CardTitle>
 										{/*
-										 * The config key path, not "Read-only effective values"
-										 * fifteen times. That string restated the Alert above it and
-										 * told the operator nothing they could act on; the key is
-										 * what they need to find the block in the file.
+										 * The config key path on the title line, not on a row of
+										 * its own. Keeping it is right — it is what an operator
+										 * greps for — but for 10 of the 15 cards it is simply the
+										 * title lowercased (Alerting/alerting, Server/server…), so
+										 * two thirds of the surface spent a second header line
+										 * restating the heading directly above it. As a trailing
+										 * muted mono token it stays available to the five cards
+										 * where it differs and disappears into the title for the
+										 * rest.
 										 */}
-										<CardDescription className="font-mono text-xs">
-											{name}
-										</CardDescription>
+										<CardTitle className="flex flex-wrap items-baseline gap-2">
+											{formatLabel(name)}
+											<span className="font-mono text-xs font-normal text-muted-foreground">
+												{name}
+											</span>
+										</CardTitle>
 									</CardHeader>
 									<CardContent>
-										<FieldList fields={section} />
+										<FieldList fields={section} path={name} />
 									</CardContent>
 								</Card>
 							))}

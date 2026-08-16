@@ -3,12 +3,22 @@ import type { HealthHistoryEntry } from '@/api/health';
 import { useFormatters } from '@/hooks/useFormatters';
 import { cn } from '@/lib/utils';
 
+/*
+ * The semantic status tokens, not the chart palette. Both sets carry the same three hue angles, so
+ * the split was invisible in source and obvious on screen: the badges drew healthy from `--success`
+ * (oklch(0.8 0.18 149) in dark) while the strip 300px below drew the same status from `--chart-1`
+ * (oklch(0.723 0.219 149)), and System Health showed two greens for one state. The chart palette is
+ * for series identity; status belongs to the tokens the badges already use.
+ *
+ * `--chart-4` stays as the fallback, and stays correct there: it is equal to `--muted-foreground`,
+ * which is what an unrecognised status should look like.
+ */
 const STATUS_COLORS: Record<string, string> = {
-	degraded: 'var(--chart-2)',
-	healthy: 'var(--chart-1)',
-	pass: 'var(--chart-1)',
-	unhealthy: 'var(--chart-3)',
-	warn: 'var(--chart-2)',
+	degraded: 'var(--warning)',
+	healthy: 'var(--success)',
+	pass: 'var(--success)',
+	unhealthy: 'var(--destructive)',
+	warn: 'var(--warning)',
 };
 
 /** The statuses the strip should shout about. Everything else is background. */

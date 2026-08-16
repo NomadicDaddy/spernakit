@@ -156,13 +156,23 @@ function DashboardPage() {
 						metricsLoading={metricsLoading}
 						onMetricsHoursChange={handleMetricsHoursChange}
 					/>
+					{/*
+					 * `grid-cols-1` below `lg` is required, not redundant. With no base column
+					 * definition this grid had a single implicit `auto` track, and an `auto` track
+					 * takes its automatic minimum from its content's min-content size — which a
+					 * definite container width does NOT clamp. The track computed to 456.6px inside
+					 * a 334px container and pushed `main` 136px past the viewport at 360px, the
+					 * largest overflow on any surface. `minmax(0,1fr)` does the same job at `lg`:
+					 * bare `1fr` is shorthand for `minmax(auto,1fr)` and carries the identical
+					 * min-content floor.
+					 */}
 					{isAdmin && (
-						<div className="grid gap-4 lg:grid-cols-3">
+						<div className="grid grid-cols-1 gap-4 lg:grid-cols-[repeat(3,minmax(0,1fr))]">
 							<RecentActivity
 								canUseGlobalScope={canUseGlobalScope}
-								className="lg:col-span-2"
+								className="min-w-0 lg:col-span-2"
 							/>
-							<ActiveAlerts />
+							<ActiveAlerts className="min-w-0" />
 						</div>
 					)}
 				</>

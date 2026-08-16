@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, Crown, Eye, Settings, Shield, ShieldCheck, Users } from 'lucide-react';
+import { ChevronDown, Crown, Eye, Settings, ShieldCheck, Users } from 'lucide-react';
+import { Fragment } from 'react';
 
 import type { PaginatedResponse, User, UserRole } from '@/api/types';
 
@@ -9,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuthorization } from '@/hooks/useAuthorization';
+import { roleBadgeVariant } from '@/lib/roleBadge';
 
 interface RoleDefinition {
 	description: string;
@@ -17,7 +19,6 @@ interface RoleDefinition {
 	level: number;
 	permissions: string[];
 	role: UserRole;
-	variant: 'default' | 'destructive' | 'outline' | 'secondary';
 }
 
 const ROLE_DEFINITIONS: RoleDefinition[] = [
@@ -35,7 +36,6 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
 			'View all audit logs',
 		],
 		role: 'SYSOP',
-		variant: 'destructive',
 	},
 	{
 		description: 'Application administration. User management and system settings.',
@@ -51,7 +51,6 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
 			'Broadcast notifications',
 		],
 		role: 'ADMIN',
-		variant: 'default',
 	},
 	{
 		description: 'Team and workspace member management.',
@@ -64,7 +63,6 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
 			'Assign roles within workspace',
 		],
 		role: 'MANAGER',
-		variant: 'secondary',
 	},
 	{
 		description: 'Standard operations including data entry and modification.',
@@ -79,7 +77,6 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
 			'View settings',
 		],
 		role: 'OPERATOR',
-		variant: 'outline',
 	},
 	{
 		description: 'Read-only access to permitted resources.',
@@ -93,7 +90,6 @@ const ROLE_DEFINITIONS: RoleDefinition[] = [
 			'Read workspace data',
 		],
 		role: 'VIEWER',
-		variant: 'outline',
 	},
 ];
 
@@ -134,15 +130,33 @@ function RolesTab() {
 				title="Roles & Hierarchy"
 			/>
 
-			{/* Hierarchy visualization */}
-			<div className="flex flex-wrap items-center gap-2 text-sm">
+			{/*
+			 * Hierarchy visualization.
+			 *
+			 * `gap-3` on the run, `gap-1.5` inside each role — the breadcrumb `ol` in PageHeader
+			 * uses the same pair for the same job. Every gap in this strip was 8px: badge-to-level,
+			 * level-to-chevron and chevron-to-next-badge alike, so the separator that is supposed
+			 * to break ten items into five tiers got no more room than the items it joins, and the
+			 * whole row read as one undifferentiated run.
+			 *
+			 * The level span also loses `font-mono`. It was the only monospace in the content area
+			 * — the app's other mono glyphs are the "Ctrl K" keycap, where mono means "keyboard
+			 * key" — and it set the same datum a second way 90px above the card title that sets it
+			 * in Inter.
+			 */}
+			<div className="flex flex-wrap items-center gap-3 text-sm">
 				{ROLE_DEFINITIONS.map((def, idx) => {
 					const label = roleLabels?.[def.role]?.label ?? def.label;
 					return (
-						<span className="flex items-center gap-2" key={def.role}>
-							<Badge variant={def.variant}>{label}</Badge>
-							<span className="font-mono text-xs text-muted-foreground">
-								(Level {def.level})
+						<Fragment key={def.role}>
+							{/* The chevron is a sibling of the roles, not a child of one — inside
+							    the pair it would sit 6px from the level it does not separate and
+							    12px from the badge it does. */}
+							<span className="flex items-center gap-1.5">
+								<Badge variant={roleBadgeVariant[def.role]}>{label}</Badge>
+								<span className="text-xs text-muted-foreground">
+									(Level {def.level})
+								</span>
 							</span>
 							{idx < ROLE_DEFINITIONS.length - 1 && (
 								<ChevronDown
@@ -151,7 +165,7 @@ function RolesTab() {
 									size={16}
 								/>
 							)}
-						</span>
+						</Fragment>
 					);
 				})}
 			</div>
@@ -187,18 +201,30 @@ function RolesTab() {
 											as="h3"
 											className="flex flex-wrap items-center gap-2">
 											{label}
-											<Badge variant={def.variant}>{def.role}</Badge>
+											<Badge variant={roleBadgeVariant[def.role]}>
+												{def.role}
+											</Badge>
 											<span className="text-xs font-normal text-muted-foreground">
 												Level {def.level}
 											</span>
+											{/*
+											 * A bare `text-xs` count, matching the "Level N"
+											 * beside it. Two things: the `Shield` glyph is the
+											 * app's *permission* icon doing duty as a label for
+											 * a person count — two cards away in this same grid
+											 * `Users` is the icon that means "role: Manager" —
+											 * and it was the only iconed count anywhere in the
+											 * app, every other one being bare `tabular-nums`.
+											 * And at `text-sm` it stood a step above "Level N",
+											 * so two metadata items of equal rank were set at
+											 * different sizes inside one title line. The role's
+											 * own icon tile at the left of the card already
+											 * carries the glyph.
+											 */}
 											{isLoading ? (
 												<Skeleton className="h-4 w-16" />
 											) : (
-												<span className="inline-flex items-center gap-1 text-sm font-normal text-muted-foreground tabular-nums">
-													<Shield
-														aria-hidden="true"
-														className="size-3.5"
-													/>
+												<span className="text-xs font-normal text-muted-foreground tabular-nums">
 													{count} {count === 1 ? 'user' : 'users'}
 												</span>
 											)}

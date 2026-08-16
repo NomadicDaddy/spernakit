@@ -1,16 +1,24 @@
-import { flexRender, type Row } from '@tanstack/react-table';
+import { type Row, type RowData } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { TableBody } from '@/components/ui/table';
 
+import type { DataTableFeatures } from './features';
 import type { DataTableEmpty } from './types';
 
 import { DataTableEmptyRow } from './DataTableEmptyRow';
+import { renderCell } from './renderCell';
 
 /**
  * Virtualized table body that renders only visible rows.
+ *
+ * Pinned columns (`meta.sticky`, see `stickyColumns.ts`) are deliberately not honoured here. This
+ * body replaces the table rows with absolutely-positioned flex rows inside its OWN vertical
+ * scroller, so `position: sticky` in it would resolve against that container and not against the
+ * horizontal table scroller a pinned column has to track. A virtualized table that needs pinning
+ * needs the pinning done in the virtualizer, not bolted onto these divs.
  */
-function VirtualTableBody<TData>({
+function VirtualTableBody<TData extends RowData>({
 	colCount,
 	containerHeight,
 	containerRef,
@@ -29,7 +37,7 @@ function VirtualTableBody<TData>({
 	onClearFilters: () => void;
 	overscan: number;
 	rowHeight: number;
-	rows: Row<TData>[];
+	rows: Row<DataTableFeatures, TData>[];
 }) {
 	// eslint-disable-next-line react-hooks/incompatible-library -- @tanstack/react-virtual API is not React Compiler compatible
 	const virtualizer = useVirtualizer({
@@ -96,7 +104,7 @@ function VirtualTableBody<TData>({
 													textOverflow: 'ellipsis',
 													whiteSpace: 'nowrap',
 												}}>
-												{flexRender(
+												{renderCell(
 													cell.column.columnDef.cell,
 													cell.getContext(),
 												)}

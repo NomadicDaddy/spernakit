@@ -1,5 +1,5 @@
 import { FileUp, X } from 'lucide-react';
-import { useImperativeHandle, useRef, useState } from 'react';
+import { useId, useImperativeHandle, useRef, useState } from 'react';
 
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
@@ -69,6 +69,7 @@ function FileUpload({
 	const [selectedFile, setSelectedFile] = useState<File | null>(null);
 	const [sizeError, setSizeError] = useState<null | string>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const tapLabelId = useId();
 
 	useImperativeHandle(ref, () => ({ open: () => inputRef.current?.click() }), []);
 
@@ -137,13 +138,45 @@ function FileUpload({
 			 * primary control on its surface it was the one element still falling back to the UA's
 			 * focus outline instead of the app's ring.
 			 */}
+			{/*
+			 * Below `md` this is a button, not a drop zone. The zone below was the largest element on
+			 * /files at 284x150 — 42,600px² — and its headline instruction was "Drag and drop a file
+			 * here", a gesture a phone cannot perform, while the control that does work was a smaller
+			 * button 232px above it. The most prominent thing on the surface told the user to do the
+			 * one thing they could not.
+			 *
+			 * The split is by viewport, not by touch capability: a touch laptop can still drag, and
+			 * `pointer: coarse` would take the drag path away from it. Two elements toggled in CSS
+			 * rather than one element switched by `matchMedia`, so the correct one is in the first
+			 * paint and neither needs a resize listener.
+			 *
+			 * `aria-labelledby` lists the field label AND this button's own caption, so the name is
+			 * "Backup file Choose files" rather than either the field name alone or a second
+			 * indistinguishable "Choose files" in a form that has two uploads — the same failure the
+			 * `labelledBy` prop was added to fix for the zone.
+			 */}
+			<Button
+				aria-labelledby={labelledBy ? `${labelledBy} ${tapLabelId}` : undefined}
+				className="w-full md:hidden"
+				disabled={!isInteractive}
+				onClick={() => inputRef.current?.click()}
+				type="button">
+				<FileUp aria-hidden className="size-4" />
+				<span id={tapLabelId}>Choose files</span>
+			</Button>
+			{maxSizeBytes && (
+				<p className="text-center text-xs text-muted-foreground/70 md:hidden">
+					Maximum size: {formatFileSize(maxSizeBytes)}
+				</p>
+			)}
+
 			<button
 				aria-label={
 					labelledBy ? undefined : 'File upload drop zone - click or drag a file here'
 				}
 				aria-labelledby={labelledBy}
 				className={cn(
-					'flex w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition-colors',
+					'hidden w-full cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-6 transition-colors md:flex',
 					'outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
 					dragOver && isInteractive
 						? 'border-primary bg-primary/5'

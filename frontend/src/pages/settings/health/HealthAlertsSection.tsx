@@ -1,5 +1,8 @@
+import { ShieldCheck } from 'lucide-react';
+
 import type { HealthAlert } from '@/api/health';
 
+import { EmptyState } from '@/components/shared/EmptyState';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -27,7 +30,20 @@ export function HealthAlertsSection({ historyData, historyLoading }: HealthAlert
 						))}
 					</div>
 				) : (
-					<p className="text-sm text-muted-foreground">No active alerts.</p>
+					/*
+					 * The shared empty state, not a bare sentence. /settings/system-health said
+					 * "nothing to report" twice on one screen at two different ranks — the Web
+					 * Vitals panel through EmptyState, this one as 14px muted body copy — so the
+					 * same fact looked like two different kinds of thing.
+					 */
+					<EmptyState
+						description="Health checks are passing; alerts appear here when one fails."
+						frame="none"
+						headingLevel="h4"
+						icon={ShieldCheck}
+						title="No active alerts"
+						variant="compact"
+					/>
 				)}
 			</CardContent>
 		</Card>

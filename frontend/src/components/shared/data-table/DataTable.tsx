@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 
-import { type ColumnDef, flexRender } from '@tanstack/react-table';
+import { type ColumnDef, type RowData } from '@tanstack/react-table';
 
-import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableHeader, TableRow } from '@/components/ui/table';
 
+import type { DataTableFeatures } from './features';
 import type {
 	DataTableEmpty as DataTableEmptyType,
 	DataTablePagination as DataTablePaginationType,
@@ -11,19 +12,21 @@ import type {
 } from './types';
 
 import { DataTableEmptyRow } from './DataTableEmptyRow';
+import { DataTableHeadCell } from './DataTableHeadCell';
 import { DataTablePagination } from './DataTablePagination';
 import { DataTableRows } from './DataTableRows';
 import { DataTableToolbar } from './DataTableToolbar';
+import { resolveStickyColumns } from './stickyColumns';
 import { useDataTableConfig } from './useDataTableConfig';
+import { useStickyColumnWidths } from './useStickyColumnWidths';
 import { VirtualTableBody } from './VirtualTableBody';
 
 /**
  * Props for the DataTable component.
  *
  * @template TData - The type of data for each row
- * @template TValue - The type of cell values
  */
-interface DataTableProps<TData, TValue> {
+interface DataTableProps<TData extends RowData> {
 	/**
 	 * Column definitions for the table using TanStack Table column API.
 	 *
@@ -32,7 +35,7 @@ interface DataTableProps<TData, TValue> {
 	 * columns (status, role, actions, expand toggles) and leave the content columns alone —
 	 * declaring a size on every column just reproduces the even split it is meant to fix.
 	 */
-	columns: ColumnDef<TData, TValue>[];
+	columns: ColumnDef<DataTableFeatures, TData>[];
 	/** Array of data to display in the table */
 	data: TData[];
 	/**
@@ -145,7 +148,7 @@ interface DataTableProps<TData, TValue> {
  * />
  * ```
  */
-function DataTable<TData, TValue>({
+function DataTable<TData extends RowData>({
 	columns,
 	data,
 	empty,
@@ -158,8 +161,8 @@ function DataTable<TData, TValue>({
 	toolbar,
 	toolbarActions,
 	virtualize,
-}: DataTableProps<TData, TValue>) {
-	const { currentPage, isVirtual, rows, table, totalPages, virtualContainerRef } =
+}: DataTableProps<TData>) {
+	const { currentPage, isVirtual, rows, rowSummary, table, totalPages, virtualContainerRef } =
 		useDataTableConfig({
 			columns,
 			data,
@@ -171,11 +174,24 @@ function DataTable<TData, TValue>({
 
 	// Column visibility toggles and the optional select column both move this away
 	// from columns.length, which the body span and the virtual row width depend on.
-	const visibleColumnCount = table.getVisibleLeafColumns().length;
+	const visibleLeafColumns = table.getVisibleLeafColumns();
+	const visibleColumnCount = visibleLeafColumns.length;
+
+	/*
+	 * Resolved from the live visible columns rather than the incoming defs, so hiding a pinned
+	 * column through the Columns menu removes its inset instead of leaving a gap, and from the
+	 * measured header widths rather than the declared ones. Empty unless a table opts in.
+	 */
+	const { headerRowRef, widths } = useStickyColumnWidths(
+		visibleLeafColumns.map((column) => column.id).join(','),
+	);
+	// Empty while virtualized: VirtualTableBody deliberately ignores pinning, so resolving it
+	// anyway would pin the header cells against body cells that scroll freely underneath them.
+	const stickyColumns = resolveStickyColumns(isVirtual ? [] : visibleLeafColumns, widths);
 
 	// A server-filtered caller carries its own filter state, so its `isFiltered` is authoritative
 	// where TanStack's is silent; a client-filtered one never sets it and is read from the table.
-	const isFiltered = empty?.isFiltered === true || table.getState().columnFilters.length > 0;
+	const isFiltered = empty?.isFiltered === true || table.state.columnFilters.length > 0;
 	const clearFilters = () => {
 		table.resetColumnFilters();
 		empty?.onClearFilters?.();
@@ -186,6 +202,7 @@ function DataTable<TData, TValue>({
 			<DataTableToolbar
 				actions={toolbarActions}
 				filterPlaceholder={filterPlaceholder}
+				rowSummary={rowSummary}
 				searchColumn={searchColumn}
 				table={table}>
 				{toolbar}
@@ -199,23 +216,18 @@ function DataTable<TData, TValue>({
 			<div className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)]">
 				<Table>
 					<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow key={headerGroup.id}>
+						{table.getHeaderGroups().map((headerGroup, groupIndex, groups) => (
+							<TableRow
+								key={headerGroup.id}
+								// The leaf row carries the pinned columns, so it is the row whose
+								// cell widths the insets are measured from.
+								ref={groupIndex === groups.length - 1 ? headerRowRef : undefined}>
 								{headerGroup.headers.map((header) => (
-									<TableHead
+									<DataTableHeadCell
+										header={header}
 										key={header.id}
-										style={
-											header.column.columnDef.size === undefined
-												? undefined
-												: { width: header.getSize() }
-										}>
-										{header.isPlaceholder
-											? null
-											: flexRender(
-													header.column.columnDef.header,
-													header.getContext(),
-												)}
-									</TableHead>
+										sticky={stickyColumns.get(header.column.id)}
+									/>
 								))}
 							</TableRow>
 						))}
@@ -239,6 +251,7 @@ function DataTable<TData, TValue>({
 									colSpan={visibleColumnCount}
 									renderExpandedRow={renderExpandedRow}
 									rows={rows}
+									stickyColumns={stickyColumns}
 								/>
 							) : (
 								<DataTableEmptyRow
@@ -261,7 +274,6 @@ function DataTable<TData, TValue>({
 				{!isVirtual && (
 					<DataTablePagination
 						currentPage={currentPage}
-						onRowSelectionChange={onRowSelectionChange}
 						pagination={pagination}
 						table={table}
 						totalPages={totalPages}

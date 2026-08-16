@@ -15,7 +15,7 @@ interface FeatureToggleConfig {
  *
  * Every row used to read "<Name> in navigation" over "Show the <Name> item in the navigation for
  * all users" — the phrase "in navigation" appeared thirteen times in one card whose header already
- * says "Control which items appear in the navigation", and six of the seven descriptions were one
+ * says where these items appear, and six of the seven descriptions were one
  * sentence with a noun swapped. The three rows that genuinely differ — Analytics, Onboarding and
  * the bug report button — had their real constraint buried in that boilerplate. Now they are the
  * only rows with a description, so the distinction is what stands out instead of what is hidden.
@@ -55,7 +55,15 @@ function FeatureFlagsSection({ features, onFeatureChange, pending }: FeatureFlag
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Navigation Features</CardTitle>
+				{/*
+				 * "Interface", not "Navigation". Six of the seven toggles are navigation items;
+				 * the seventh is the bug report button, which carried its own contradicting
+				 * helper line — "Shown in the header" — and sat alone in the fourth grid row.
+				 * The one control the header did not describe was also the one the layout
+				 * singled out. Widening the framing is the smaller fix than splitting a
+				 * seven-row card into a six-row card and a one-row card.
+				 */}
+				<CardTitle>Interface Features</CardTitle>
 				{/*
 				 * The commit model, stated before the interaction rather than after it. These seven
 				 * switches change what every user of the installation sees, and the surface had no
@@ -63,24 +71,29 @@ function FeatureFlagsSection({ features, onFeatureChange, pending }: FeatureFlag
 				 * until a toast fired. Notification Retention already states its scope this way.
 				 */}
 				<CardDescription>
-					Control which items appear in the navigation. Changes apply immediately for all
-					users.
+					Control which items appear in the navigation and header. Changes apply
+					immediately for all users.
 				</CardDescription>
 			</CardHeader>
 			{/*
-			 * Two columns of `SettingsToggleRow`, not seven full-bleed bordered boxes.
+			 * Two columns of `SettingsToggleRow`, not seven full-bleed boxes.
 			 *
-			 * Each row used to be a `rounded-lg border p-4` box nested inside the card — card-in-card
-			 * chrome that exists nowhere else in settings, drawn in the language the app uses for
-			 * *clickable* cards while only the 32x18px Switch responded to the pointer. Stretched to
-			 * the card width it left up to 1083px of dead space between a label and the control it
-			 * belongs to, with no rule or column edge to bind them. The shared row (used by the
-			 * sibling Notifications tab) drops the nested shell and restores the 12px description
-			 * step; the two-column grid is the one /profile/preferences uses for the same job and
+			 * Each row used to carry its own hand-rolled `rounded-lg border p-4` shell, stretched to
+			 * the card width: up to 1083px of dead space between a label and the control it belongs
+			 * to, drawn in the language the app uses for *clickable* cards while only the 32x18px
+			 * Switch responded to the pointer. The shared row is bordered too, but the border is
+			 * earned — the row is a `<label>`, so all of it toggles the switch. What this grid fixes
+			 * is the width: two columns is what /profile/preferences uses for the same job, and it
 			 * halves both the label-to-switch distance and the card's height.
+			 *
+			 * `max-w-4xl`, not the `max-w-2xl` the one-column settings sections cap their stacks at.
+			 * The cap exists to bound the row, not the container, and two columns need twice the
+			 * measure to land a row at the same width — 4xl gives 442px rows against 2xl's 624px in a
+			 * single column, where 2xl here would give 330px and start wrapping the descriptions.
+			 * Uncapped the rows ran 705px at 2560, which is the number two columns were meant to fix.
 			 */}
 			<CardContent>
-				<div className="grid gap-4 sm:grid-cols-2">
+				<div className="grid max-w-4xl gap-3 sm:grid-cols-2">
 					{FEATURE_TOGGLES.map((toggle) => (
 						<SettingsToggleRow
 							checked={features[toggle.key] ?? true}

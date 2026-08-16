@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface HealthCleanupSectionProps {
 	cleanupAlertsMutation: {
@@ -30,9 +30,20 @@ export function HealthCleanupSection({
 				<CardDescription>
 					Cleanup old health check logs and resolve stale alerts.
 				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div className="flex gap-2">
+				{/*
+				 * The actions sit in CardAction, the way HealthHistorySection already places its
+				 * disclosure control. As a CardContent row they were ~285px of buttons at the left
+				 * edge of a 1472px card, and the card spent 156px of height to hold one 36px row —
+				 * about 1140px of its interior was empty. Header-only, it matches the Overall Status
+				 * card's proportions and the buttons land on the same right edge as the Run buttons
+				 * and Refresh above them.
+				 *
+				 * `flex-wrap`. Button carries `whitespace-nowrap`, correctly — a label broken across
+				 * lines reads worse than a wrapped row — so these two are rigid, and unwrapped their
+				 * combined width exceeded the 334px card at 360px and pushed "Resolve Stale Alerts"
+				 * past the card's clipped edge. The row wraps; the labels do not.
+				 */}
+				<CardAction className="flex flex-wrap gap-2">
 					<Button
 						disabled={cleanupLogsMutation.isPending}
 						onClick={() => setShowCleanupLogsConfirm(true)}
@@ -47,8 +58,8 @@ export function HealthCleanupSection({
 						<CheckCircle2 aria-hidden="true" className="size-4" />
 						Resolve Stale Alerts
 					</Button>
-				</div>
-			</CardContent>
+				</CardAction>
+			</CardHeader>
 
 			<ConfirmAlertDialog
 				confirmText="Purge Logs"

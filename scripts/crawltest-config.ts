@@ -153,6 +153,16 @@ export function parseTest404(argv: string[]): boolean {
 	return argv.includes('--404');
 }
 
+/**
+ * Whether this crawl may change data. Read-only is the default and the opt-out is explicit, because
+ * the crawl runs against a live development database and clicks controls it cannot read: it is not
+ * possible to tell from a label whether a button writes, so the safe direction has to be the one you
+ * get by not thinking about it.
+ */
+export function parseReadOnly(argv: string[]): boolean {
+	return !argv.includes('--allow-writes');
+}
+
 export function parseTestBug(argv: string[]): boolean {
 	return argv.includes('--bug');
 }
@@ -175,6 +185,7 @@ export interface CrawlConfig {
 	maxDepth: number;
 	mode: string;
 	pageSettleDelay: number;
+	readOnly: boolean;
 	screenshotDir: null | string;
 	singlePage: null | string;
 	startFrom: null | string;
@@ -199,6 +210,11 @@ export function logCrawlConfig(c: CrawlConfig): void {
 	console.log(`   Interaction Delay: ${c.interactionDelay}ms`);
 	console.log(`   Page Settle Delay: ${c.pageSettleDelay}ms`);
 	console.log(`   Content Min Length: ${c.contentMinLength} chars`);
+	console.log(
+		c.readOnly
+			? '   Writes: blocked (read-only guard active)'
+			: '   Writes: ALLOWED — this crawl will change data',
+	);
 	if (c.screenshotDir) {
 		console.log(`   Screenshots: ${c.screenshotDir}`);
 	}

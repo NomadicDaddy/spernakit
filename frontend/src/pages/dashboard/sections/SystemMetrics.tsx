@@ -53,7 +53,8 @@ function SystemMetrics({
 	const memorySeries = toSeries(memoryData);
 
 	return (
-		<>
+		/* A `<section>` at 12px inside the page's 24px stack — see MetricsSummary. */
+		<section className="space-y-3">
 			{/*
 			 * The shared section rung. This was a hand-written `text-lg font-semibold`, which
 			 * computes to 18px — the h3 step — against 16px card titles below it and 14px stat
@@ -109,7 +110,7 @@ function SystemMetrics({
 					</>
 				)}
 			</div>
-		</>
+		</section>
 	);
 }
 

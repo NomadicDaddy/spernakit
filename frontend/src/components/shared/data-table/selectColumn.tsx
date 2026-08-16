@@ -1,6 +1,8 @@
-import type { ColumnDef } from '@tanstack/react-table';
+import type { ColumnDef, RowData } from '@tanstack/react-table';
 
 import { Checkbox } from '@/components/ui/checkbox';
+
+import type { DataTableFeatures } from './features';
 
 /**
  * Builds the row-selection column for DataTable.
@@ -15,13 +17,13 @@ import { Checkbox } from '@/components/ui/checkbox';
  *
  * @example
  * ```tsx
- * const columns: ColumnDef<User, unknown>[] = [
+ * const columns: ColumnDef<DataTableFeatures, User>[] = [
  *   ...(enableSelection ? [createSelectColumn<User>()] : []),
  *   { accessorKey: 'username', header: 'Username' },
  * ];
  * ```
  */
-function createSelectColumn<TData>(): ColumnDef<TData, unknown> {
+function createSelectColumn<TData extends RowData>(): ColumnDef<DataTableFeatures, TData> {
 	return {
 		cell: ({ row }) => (
 			<Checkbox

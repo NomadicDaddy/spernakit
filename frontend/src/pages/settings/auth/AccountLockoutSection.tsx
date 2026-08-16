@@ -1,4 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShieldAlert } from 'lucide-react';
+
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 
 import { SettingsNumberField } from '../SettingsNumberField';
 import { SettingsToggleRow } from '../SettingsToggleRow';
@@ -44,17 +53,53 @@ function AccountLockoutSection({
 				<CardDescription>
 					Lock user accounts after repeated failed login attempts.
 				</CardDescription>
+				{/*
+				 * The page's own risk glyph, on the card whose state carries the risk.
+				 *
+				 * Nothing on this surface distinguished a security-critical switch from a cosmetic
+				 * one: turning off brute-force protection looked exactly like turning off "Require
+				 * special character in passwords". The vocabulary already exists four cards down —
+				 * SecurityHealthSection puts `ShieldAlert size-5 text-warning` in this same
+				 * CardAction slot when accounts are non-compliant — so risk is now marked the same
+				 * way twice on one screen, in existing tokens, with no new colour or component.
+				 */}
+				{!enableAccountLocking && (
+					<CardAction>
+						<ShieldAlert
+							aria-label="Account lockout is off"
+							className="size-5 text-warning"
+						/>
+					</CardAction>
+				)}
 			</CardHeader>
-			<CardContent className="space-y-4">
+			{/*
+			 * `max-w-2xl` on the stack, not on the grid it used to sit on. The toggle and the fields
+			 * it gates are one column of content and now share one right edge; before this the fields
+			 * stopped at 672px and the toggle row above them ran the full 1422px card. See
+			 * SettingsToggleRow for why the cap belongs at this level rather than on the row.
+			 */}
+			<CardContent className="max-w-2xl space-y-4">
+				{/*
+				 * The gating switch carries a description like every other toggle on the surface.
+				 * It was the only one passed none, so it rendered as a lone 14px semibold line —
+				 * typographically identical to, and 25px above, the "Max Failed Login Attempts"
+				 * field label it governs. The master switch read as a peer of its own fields.
+				 * State-dependent copy, the way SelfRegistrationSection already varies its own.
+				 */}
 				<SettingsToggleRow
 					checked={enableAccountLocking}
+					description={
+						enableAccountLocking
+							? 'Accounts lock after repeated failed sign-ins.'
+							: 'Accounts never lock, however many sign-ins fail.'
+					}
 					id="enableAccountLocking"
 					label="Enable account lockout"
 					onCheckedChange={onEnableAccountLockingChange}
 				/>
 
 				{enableAccountLocking && (
-					<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+					<div className="grid gap-4 sm:grid-cols-2">
 						<SettingsNumberField
 							hint="Failed attempts before the account locks (1–100)."
 							id="maxLoginAttempts"

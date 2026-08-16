@@ -14,29 +14,16 @@ import { Label } from '@/components/ui/label';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useUsernameCheck } from '@/hooks/useProfile';
 import { useBeforeUnload } from '@/hooks/useUnsavedChanges';
-import { isValidEmail } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
 
+import { EmailChangeCard } from './EmailChangeCard';
+import { DESCRIPTION_MEASURE, FIELD_MEASURE } from './profileMeasures';
 import { UsernameHint } from './UsernameHint';
 
 interface ProfileFormProps {
 	onDirtyChange: (dirty: boolean) => void;
 	user: ProfileUser;
 }
-
-interface EmailChangeResponse {
-	pending: boolean;
-}
-
-/**
- * A reading measure for card descriptions on this surface.
- *
- * With the page's width cap gone the cards run the full canvas, and muted prose laid out at 718px
- * already wrapped into ~105-character lines — the widest run of text anywhere on the page and well
- * past the ~65 characters the baseline sets for body copy. The controls below are capped to their
- * content for the same reason; the card is wide, the words inside it are not.
- */
-const DESCRIPTION_MEASURE = 'max-w-prose';
 
 export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 	const queryClient = useQueryClient();
@@ -52,10 +39,6 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 	 * and navigating away raised the native beforeunload prompt over a form with no changes in it.
 	 */
 	const profileDirty = username !== user.username;
-
-	const [newEmail, setNewEmail] = useState('');
-	const [currentPassword, setCurrentPassword] = useState('');
-	const [emailError, setEmailError] = useState<string | undefined>(undefined);
 
 	useBeforeUnload(profileDirty);
 
@@ -85,23 +68,6 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 		},
 	});
 
-	const emailChangeMutation = useMutation({
-		mutationFn: (body: { currentPassword: string; newEmail: string }) =>
-			apiClient.post<DataResponse<EmailChangeResponse>>('/users/me/email-change', { body }),
-		onError: (err) =>
-			toast.error(
-				getSafeErrorMessage(err, 'Could not start email change. Please try again.'),
-			),
-		onSuccess: () => {
-			toast.success(
-				'Confirmation link sent to the new email address. The change will take effect once you confirm.',
-			);
-			setNewEmail('');
-			setCurrentPassword('');
-			setEmailError(undefined);
-		},
-	});
-
 	const canSubmitProfile =
 		profileDirty &&
 		!profileMutation.isPending &&
@@ -109,29 +75,10 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 		usernameStatus !== 'checking' &&
 		usernameStatus !== 'invalid';
 
-	const canSubmitEmailChange =
-		!emailChangeMutation.isPending &&
-		currentPassword.length > 0 &&
-		isValidEmail(newEmail) &&
-		newEmail.trim().toLowerCase() !== user.email.toLowerCase();
-
 	function handleProfileSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (username === user.username) return;
 		profileMutation.mutate({ username });
-	}
-
-	function handleEmailChangeSubmit(e: React.FormEvent) {
-		e.preventDefault();
-		if (!isValidEmail(newEmail)) {
-			setEmailError('Enter a valid email address');
-			return;
-		}
-		if (newEmail.trim().toLowerCase() === user.email.toLowerCase()) {
-			setEmailError('New email must differ from your current email');
-			return;
-		}
-		emailChangeMutation.mutate({ currentPassword, newEmail: newEmail.trim() });
 	}
 
 	return (
@@ -146,8 +93,13 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 					 * your username" described only the first of the card's three rows.
 					 */}
 					<CardTitle>Account</CardTitle>
+					{/*
+					 * "…and the one part of it you can change here" is gone. It was written when the
+					 * Email row was a dead end; the row now carries a Change control that reaches the
+					 * form, so the sentence would be contradicted by the card it introduces.
+					 */}
 					<CardDescription className={DESCRIPTION_MEASURE}>
-						Who you are signed in as, and the one part of it you can change here.
+						Who you are signed in as.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
@@ -157,19 +109,44 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 					 * "Current email" beside an inline muted "Role" — and both were `<label>`
 					 * elements bound to no control, so they announced as labels for nothing.
 					 */}
-					<dl className="space-y-2">
-						<div className="flex items-baseline gap-2">
-							<dt className="text-sm text-muted-foreground">Email</dt>
-							<dd className="text-sm font-medium">{user.email}</dd>
-						</div>
-						<div className="flex items-baseline gap-2">
-							<dt className="text-sm text-muted-foreground">Role</dt>
-							<dd className="text-sm font-medium">{roleLabel(user.role)}</dd>
-						</div>
+					{/*
+					 * A two-column grid, not two flex rows. As flex pairs each value started
+					 * wherever its own term happened to end — "sysop@example.com" at x=728 and
+					 * "System Operator" at x=722 — so the page's only key/value block had a 6px
+					 * ragged left edge directly above a column of perfectly aligned form labels.
+					 * `dt`/`dd` are direct children here because a grid on the `dl` can only lay
+					 * out what it owns; the wrapper divs it replaces were the reason the terms
+					 * could not share a track.
+					 */}
+					<dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-3 gap-y-2">
+						<dt className="text-sm text-muted-foreground">Email</dt>
+						<dd className="flex flex-wrap items-baseline gap-x-2 text-sm font-medium">
+							{user.email}
+							{/*
+							 * The link the row was missing. This card told the reader their email
+							 * was a fact about them, and an equal-weight card 334px further down
+							 * the page contradicted it with a form that changes it — nothing on
+							 * screen connected the two. A `link` button rather than a second
+							 * primary: the commit still lives on the form below, this only takes
+							 * you there, and focusing the field rather than scrolling to the card
+							 * lands the caret where the next keystroke belongs.
+							 */}
+							<Button
+								className="h-auto p-0 text-xs"
+								onClick={() => {
+									document.getElementById('new-email')?.focus();
+								}}
+								type="button"
+								variant="link">
+								Change
+							</Button>
+						</dd>
+						<dt className="text-sm text-muted-foreground">Role</dt>
+						<dd className="text-sm font-medium">{roleLabel(user.role)}</dd>
 					</dl>
 
 					<form className="space-y-4" noValidate onSubmit={handleProfileSubmit}>
-						<div className="max-w-xs space-y-2">
+						<div className={`${FIELD_MEASURE} space-y-2`}>
 							<Label htmlFor="username">Username</Label>
 							<Input
 								autoComplete="username"
@@ -192,64 +169,7 @@ export function ProfileForm({ onDirtyChange, user }: ProfileFormProps) {
 				</CardContent>
 			</Card>
 
-			<Card>
-				<CardHeader>
-					<CardTitle>Change email address</CardTitle>
-					<CardDescription className={DESCRIPTION_MEASURE}>
-						We&apos;ll send a confirmation link to the new address. Your account email
-						won&apos;t change until you click it.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form className="space-y-4" noValidate onSubmit={handleEmailChangeSubmit}>
-						<div className="max-w-sm space-y-2">
-							<Label htmlFor="new-email">New email address</Label>
-							<Input
-								aria-describedby={emailError ? 'new-email-error' : undefined}
-								autoComplete="email"
-								id="new-email"
-								onChange={(e) => {
-									setNewEmail(e.target.value);
-									if (emailError) setEmailError(undefined);
-								}}
-								spellCheck={false}
-								type="email"
-								value={newEmail}
-								{...(emailError ? { 'aria-invalid': true } : {})}
-							/>
-							<div aria-live="polite">
-								{emailError ? (
-									<p className="text-xs text-destructive" id="new-email-error">
-										{emailError}
-									</p>
-								) : null}
-							</div>
-						</div>
-						<div className="max-w-sm space-y-2">
-							<Label htmlFor="current-password-email">Current password</Label>
-							<Input
-								autoComplete="current-password"
-								id="current-password-email"
-								onChange={(e) => setCurrentPassword(e.target.value)}
-								type="password"
-								value={currentPassword}
-							/>
-						</div>
-						<div className="space-y-2">
-							<Button disabled={!canSubmitEmailChange} type="submit">
-								{emailChangeMutation.isPending
-									? 'Sending confirmation…'
-									: 'Send confirmation link'}
-							</Button>
-							{/* The third sentence of the old description — a consequence, not a
-							    premise, so it belongs next to the action that causes it. */}
-							<p className="text-xs text-muted-foreground">
-								A notice is also sent to your current address.
-							</p>
-						</div>
-					</form>
-				</CardContent>
-			</Card>
+			<EmailChangeCard currentEmail={user.email} />
 		</div>
 	);
 }

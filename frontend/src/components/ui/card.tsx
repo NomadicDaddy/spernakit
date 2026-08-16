@@ -45,11 +45,25 @@ function Card({ className, interactive = false, variant = 'default', ...props }:
 	);
 }
 
+/**
+ * Card header. Two columns from `sm` up — title/description on the left, `CardAction` pinned to the
+ * right — and a single stacked column below it.
+ *
+ * The stack is not cosmetic. `grid-cols-[1fr_auto]` gives the action track an `auto` width whose
+ * automatic minimum is the action's own min-content, and `1fr` is shorthand for `minmax(auto,1fr)`,
+ * so the title track carries the same floor. Neither yields, and a definite card width does not
+ * clamp either of them: at 360px the two tracks together exceeded the 334px card on
+ * /settings/notifications and /settings/runtime-config, and the title was squeezed to less than the
+ * width of its own text while the action still overhung the edge. Below `sm` there is not enough
+ * room for a right-hand action column at all, so the action goes under the title where it has the
+ * full width. `CardAction`'s grid placement is inert in the flex column and needs no gating.
+ */
 function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
 	return (
 		<div
 			className={cn(
-				'@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
+				'@container/card-header flex flex-col items-start gap-2 px-6 [.border-b]:pb-6',
+				'sm:grid sm:auto-rows-min sm:grid-rows-[auto_auto] sm:items-start sm:has-data-[slot=card-action]:grid-cols-[1fr_auto]',
 				className,
 			)}
 			data-slot="card-header"

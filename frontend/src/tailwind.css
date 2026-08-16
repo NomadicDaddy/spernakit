@@ -78,8 +78,15 @@
 	--chart-1: oklch(0.723 0.219 149);
 	--chart-2: oklch(0.795 0.184 86);
 	--chart-3: oklch(0.637 0.237 25);
+	/* Deliberately equal to --muted-foreground: this is the "unknown / no data" hue, and unknown
+	   is exactly the state that should read as absent. It is not a series colour — a live series
+	   drawn in it renders as placeholder grey. See --chart-6. */
 	--chart-4: oklch(0.556 0.015 260);
 	--chart-5: oklch(0.585 0.233 277);
+	/* Memory. Chromatic and status-free, at --chart-5's lightness so the two series in Historical
+	   Trends carry equal weight. Memory used to point at --chart-4 and painted 66.5% load in the
+	   app's body-text grey beside CPU in live blue. */
+	--chart-6: oklch(0.6 0.13 195);
 	--card-shadow: 0 1px 2px oklch(0.2 0.02 260 / 6%), 0 8px 24px -12px oklch(0.2 0.02 260 / 10%);
 	--card-shadow-hover:
 		0 1px 2px oklch(0.2 0.02 260 / 8%), 0 14px 36px -14px oklch(0.2 0.02 260 / 18%);
@@ -114,8 +121,10 @@
 	--chart-1: oklch(0.723 0.219 149);
 	--chart-2: oklch(0.795 0.184 86);
 	--chart-3: oklch(0.704 0.191 22);
+	/* See the light block: equal to --muted-foreground on purpose, for unknown / no data. */
 	--chart-4: oklch(0.708 0.015 260);
 	--chart-5: oklch(0.707 0.165 254);
+	--chart-6: oklch(0.72 0.13 195);
 	--card-shadow: 0 1px 2px oklch(0 0 0 / 40%), 0 8px 24px -12px oklch(0 0 0 / 50%);
 	--card-shadow-hover: 0 1px 2px oklch(0 0 0 / 50%), 0 14px 36px -14px oklch(0 0 0 / 60%);
 	--elevated-shadow: 0 4px 12px -4px oklch(0 0 0 / 50%), 0 20px 48px -16px oklch(0 0 0 / 65%);
@@ -348,7 +357,14 @@
 @layer components {
 	.text-display {
 		font-family: var(--font-display);
-		font-size: 2.25rem;
+		/*
+		 * The one step in this scale that carries a mobile value. At a flat 2.25rem the page h1
+		 * wrapped "Custom Dashboards" onto two lines and stood 79.2px tall on a 334px column —
+		 * about a fifth of a 390x844 viewport spent before any content. The upper bound is the
+		 * unchanged desktop value and the ramp reaches it at 768px, so every viewport the desktop
+		 * sweep measured renders exactly as it did.
+		 */
+		font-size: clamp(1.75rem, 1.35rem + 1.875vw, 2.25rem);
 		line-height: 1.1;
 		font-weight: 650;
 		letter-spacing: -0.02em;
@@ -408,7 +424,11 @@
 		touch-action: manipulation;
 	}
 
-	/* Glow box-shadow utilities */
+	/* Glow box-shadow utilities.
+	   Plain classes, not `@utility` definitions, so they take NO opacity modifier: `glow-primary/30`
+	   matches no rule at all and silently computes `box-shadow: none`. EmptyState carried exactly
+	   that for every empty panel in the app. The 15% below is the intended softness; if a second
+	   strength is ever wanted, add a companion class here rather than a modifier these cannot take. */
 	.glow-primary {
 		box-shadow: 0 0 20px oklch(from var(--primary) l c h / 15%);
 	}

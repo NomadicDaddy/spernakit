@@ -84,8 +84,18 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 					description="Choose your preferred navigation style."
 					label="Navigation"
 					labelId="pref-navigation">
+					{/*
+					 * Auto-fill for the same reason the Accent group below uses it: a fixed
+					 * `sm:grid-cols-2` divides the card rather than sizing the tiles, so at 2560
+					 * each of these two tiles ran 705px wide around 218px of content. 18rem is what
+					 * the widest of these needs — "Content sits in a fixed-width column." at 173px,
+					 * plus the icon, the gap and `p-3` either side. The `min(…,100%)` is not
+					 * decoration: a bare `minmax(18rem,1fr)` track does not shrink below its floor,
+					 * so on a 390px phone, where the card's content box is 277px, the tiles would
+					 * push a horizontal scrollbar onto the page.
+					 */}
 					<OptionCardGroup
-						className="grid gap-3 sm:grid-cols-2"
+						className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-3"
 						labelledBy="pref-navigation">
 						{navOptions.map((option) => (
 							<OptionCard
@@ -106,7 +116,7 @@ function LayoutPreferences({ handlers, settings }: LayoutPreferencesProps) {
 					label="Container width"
 					labelId="pref-container-width">
 					<OptionCardGroup
-						className="grid gap-3 sm:grid-cols-2"
+						className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-3"
 						labelledBy="pref-container-width">
 						{widthOptions.map((option) => (
 							<OptionCard

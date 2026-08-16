@@ -81,10 +81,10 @@ application. Their licenses apply to those components rather than the applicatio
 | py3-parsing            | 3.2.5-r0         | MIT                                                               |
 | py3-setuptools-pyc     | 80.9.0-r0        | MIT                                                               |
 | py3-setuptools         | 80.9.0-r0        | MIT                                                               |
-| pyc                    | 3.12.13-r0       | PSF-2.0                                                           |
-| python3-pycache-pyc0   | 3.12.13-r0       | PSF-2.0                                                           |
-| python3-pyc            | 3.12.13-r0       | PSF-2.0                                                           |
-| python3                | 3.12.13-r0       | PSF-2.0                                                           |
+| pyc                    | 3.12.14-r0       | PSF-2.0                                                           |
+| python3-pycache-pyc0   | 3.12.14-r0       | PSF-2.0                                                           |
+| python3-pyc            | 3.12.14-r0       | PSF-2.0                                                           |
+| python3                | 3.12.14-r0       | PSF-2.0                                                           |
 | readline               | 8.2.13-r1        | GPL-3.0-or-later                                                  |
 | scanelf                | 1.3.8-r1         | GPL-2.0-only                                                      |
 | sqlite-libs            | 3.49.2-r1        | blessing                                                          |

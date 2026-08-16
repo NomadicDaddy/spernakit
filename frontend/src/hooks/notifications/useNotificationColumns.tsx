@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Circle, CircleCheck, MailOpen, Trash2 } from 'lucide-react';
 
 import type { Notification } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { createSelectColumn } from '@/components/shared/data-table/selectColumn';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +34,7 @@ export function useNotificationColumns({
 }: NotificationColumnsProps) {
 	const { formatTimestamp } = useFormatters();
 
-	const columns: ColumnDef<Notification, unknown>[] = [
+	const columns: ColumnDef<DataTableFeatures, Notification, unknown>[] = [
 		...(enableSelection ? [createSelectColumn<Notification>()] : []),
 		{
 			accessorKey: 'readAt',
@@ -50,6 +51,13 @@ export function useNotificationColumns({
 			 * appeared as the raw field name `readAt` — a token printed nowhere else in the UI.
 			 */
 			enableHiding: false,
+			/*
+			 * Not sortable either, though the API would order by it. The header is a visually-hidden
+			 * name in a 40px column, so the shared sort control would render here as a bare arrow with
+			 * no label beside it — an affordance nobody can read. Read state is already a filter in
+			 * the toolbar, which answers the same question and says what it is answering.
+			 */
+			enableSorting: false,
 			header: () => <span className="sr-only">Read status</span>,
 			size: 40,
 		},
@@ -82,6 +90,10 @@ export function useNotificationColumns({
 			cell: ({ row }) => (
 				<span className="line-clamp-1 text-muted-foreground">{row.original.message}</span>
 			),
+			// The API deliberately refuses to order by this one — see NOTIFICATION_SORT_COLUMNS — so
+			// the header must not offer it. A control that sorts by the fallback column while its
+			// arrow claims Message is worse than no control.
+			enableSorting: false,
 			header: 'Message',
 		},
 		{

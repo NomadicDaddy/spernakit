@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { MoreHorizontal, Settings, SquarePen, Trash2, Users } from 'lucide-react';
 
 import type { Workspace } from '@/api/types';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ function useWorkspaceColumns({
 	onEditWorkspace,
 	onManageMembers,
 	onWorkspaceSettings,
-}: WorkspaceColumnsProps): ColumnDef<Workspace, unknown>[] {
+}: WorkspaceColumnsProps): ColumnDef<DataTableFeatures, Workspace, unknown>[] {
 	const { user } = useAuth();
 	const { can } = useAuthorization();
 
@@ -111,10 +112,10 @@ function useWorkspaceColumns({
 										Edit
 									</DropdownMenuItem>
 									<DropdownMenuItem
-										className="text-destructive"
 										onClick={() =>
 											onDeleteWorkspace(workspace.id, workspace.name)
-										}>
+										}
+										variant="destructive">
 										<Trash2 aria-hidden="true" className="size-4" />
 										Delete
 									</DropdownMenuItem>

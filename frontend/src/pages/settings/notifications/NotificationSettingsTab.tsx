@@ -166,8 +166,10 @@ function NotificationSettingsTab() {
 						</CardAction>
 					)}
 				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
+				{/* `max-w-2xl` on the stack, the cap the authentication sections apply at this same
+				    level. See SettingsToggleRow. */}
+				<CardContent className="max-w-2xl">
+					<div className="space-y-3">
 						{DELIVERY_TOGGLES.map((t) => (
 							<SettingsToggleRow
 								checked={resolve(t.key, t.fallback)}
@@ -190,11 +192,29 @@ function NotificationSettingsTab() {
 					<CardHeader>
 						<CardTitle>Notification Retention</CardTitle>
 						<CardDescription>
-							How long notifications are kept before automated cleanup. This reflects
-							the active server retention configuration and is read-only.
+							How long notifications are kept before automated cleanup.
 						</CardDescription>
+						{/*
+						 * "Read-only" on the title line, where this surface's other card-level
+						 * affordance already lives.
+						 *
+						 * This card's shell is identical to the two editable cards around it —
+						 * same border, shadow, title weight and right-aligned value slot — and its
+						 * "30 days" pill sits exactly where those cards put their switches, so it
+						 * read as an interactive chip. The only cue that it is not was the phrase
+						 * "and is read-only" at the tail of the second line of a muted
+						 * description. The Delivery card puts its Send Broadcast button in
+						 * CardAction, so the eye is already trained to look there for what a card
+						 * lets you do; `outline` because this is metadata about the card, not a
+						 * state of the thing it describes.
+						 */}
+						<CardAction>
+							<Badge variant="outline">Read-only</Badge>
+						</CardAction>
 					</CardHeader>
-					<CardContent>
+					{/* The same stack cap as the two toggle cards around it — this card's content is
+					    one column of the same kind, and the three now share a right edge. */}
+					<CardContent className="max-w-2xl">
 						{/*
 						 * Reported server config, rendered in the read-only idiom RuntimeConfigTab
 						 * uses for exactly this content: a `divide-y` field list with a muted label
@@ -203,16 +223,25 @@ function NotificationSettingsTab() {
 						 * control was the missing switch.
 						 */}
 						<dl className="divide-y divide-border/40">
-							<div className="flex items-start justify-between gap-6 py-2 first:pt-0 last:pb-0">
-								<div className="space-y-0.5">
-									<dt className="text-sm text-muted-foreground">
-										Deleted notifications
-									</dt>
-									<dd className="text-xs text-muted-foreground">
-										Soft-deleted notifications are permanently purged after this
-										window. Read notifications are not auto-purged.
-									</dd>
-								</div>
+							{/*
+							 * Term and value on one line, the explanation on the next. The row used to
+							 * be `justify-between` inside a full-width card, which put "Deleted
+							 * notifications" at the left edge and the "30 days" that answers it 746px
+							 * away at 2560 — one fact, split across the whole card. RuntimeConfigTab's
+							 * field list gets away with the same split because its cards sit in a
+							 * two-column grid and its rows are ~564px; the `max-w-2xl` on CardContent
+							 * now gives this one a comparable ceiling, and the wrap keeps the pair
+							 * together at any width below it.
+							 *
+							 * `w-full` on the explanation is what breaks the line: the group is a
+							 * `flex-wrap` row, so the description claims a row of its own beneath the
+							 * pair rather than competing with it. Kept as a flat `dt`/`dd`/`dd` group
+							 * because `dl > div` may only hold `dt` and `dd` children.
+							 */}
+							<div className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 first:pt-0 last:pb-0">
+								<dt className="text-sm text-muted-foreground">
+									Deleted notifications
+								</dt>
 								<dd className="shrink-0">
 									<Badge variant="outline">
 										{retentionLoading
@@ -225,6 +254,10 @@ function NotificationSettingsTab() {
 															: 'days'
 													}`}
 									</Badge>
+								</dd>
+								<dd className="w-full text-xs text-muted-foreground">
+									Soft-deleted notifications are permanently purged after this
+									window. Read notifications are not auto-purged.
 								</dd>
 							</div>
 						</dl>
@@ -240,8 +273,9 @@ function NotificationSettingsTab() {
 						override these in their profile settings.
 					</CardDescription>
 				</CardHeader>
-				<CardContent>
-					<div className="space-y-4">
+				{/* Same stack cap as the delivery card above. See SettingsToggleRow. */}
+				<CardContent className="max-w-2xl">
+					<div className="space-y-3">
 						{DEFAULT_PREF_TOGGLES.map((t) => (
 							<SettingsToggleRow
 								checked={resolve(t.key, t.fallback)}

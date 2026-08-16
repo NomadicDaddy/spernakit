@@ -41,6 +41,7 @@ import {
 	logCrawlConfig,
 	parseMode,
 	parsePage,
+	parseReadOnly,
 	parseScreenshotDir,
 	parseStartFrom,
 	parseTest404,
@@ -65,6 +66,7 @@ async function run(): Promise<void> {
 	const args = process.argv.slice(2);
 	const mode = parseMode(args);
 	const rawScreenshotDir = parseScreenshotDir(args);
+	const readOnly = parseReadOnly(args);
 	const singlePage = parsePage(args);
 	const startFrom = parseStartFrom(args);
 	const test404 = parseTest404(args);
@@ -171,6 +173,7 @@ async function run(): Promise<void> {
 		maxDepth,
 		mode,
 		pageSettleDelay,
+		readOnly,
 		screenshotDir,
 		singlePage,
 		startFrom,
@@ -185,6 +188,7 @@ async function run(): Promise<void> {
 		maxDepth,
 		page: singlePage,
 		pageSettleDelay,
+		readOnly,
 		screenshotDir,
 		seedRoutes,
 		startFrom,
@@ -195,7 +199,8 @@ async function run(): Promise<void> {
 
 	try {
 		await crawler.init();
-		flushRateLimits();
+		// Skipped entirely on a read-only crawl; see flushRateLimits for why it takes the flag.
+		flushRateLimits(readOnly);
 		await crawler.screenshotPreLoginPages();
 		await crawler.login(login.email, login.password);
 		await crawler.crawl();

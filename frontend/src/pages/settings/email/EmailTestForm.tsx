@@ -1,9 +1,10 @@
-import { Send } from 'lucide-react';
+import { Info, Send } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 
 import type { EmailStatus } from '@/api/smtp';
 
 import { RequiredMark } from '@/components/shared/RequiredMark';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
 	Card,
@@ -73,11 +74,21 @@ export function EmailTestForm({
 					 * Every control in this card is inert until SMTP is configured, and the only
 					 * statement of why used to sit ~740px higher on the page — never on screen with
 					 * the fields at 1280 or below.
+					 *
+					 * An `Alert`, not a bare `<p>`. As muted 14px body copy it sat directly under a
+					 * CardDescription in the identical colour and size, so the condition that
+					 * disables every control below it was typographically indistinguishable from the
+					 * decorative blurb above it. RuntimeConfigTab already states a surface-level
+					 * condition this way; the border and tint are what separate a blocker from a
+					 * caption.
 					 */}
 					{!status.configured && (
-						<p className="text-sm text-muted-foreground">
-							Save an SMTP configuration above to enable test sends.
-						</p>
+						<Alert>
+							<Info aria-hidden="true" className="size-4" />
+							<AlertDescription>
+								Save an SMTP configuration above to enable test sends.
+							</AlertDescription>
+						</Alert>
 					)}
 					{/*
 					 * Same two-column rhythm as the config form above: a single email address was

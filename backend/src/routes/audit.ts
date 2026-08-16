@@ -39,6 +39,8 @@ function handleListAuditLogs({
 		limit?: number;
 		page?: number;
 		search?: string;
+		sortBy?: string;
+		sortDir?: string;
 		userId?: number;
 	};
 	set: { status?: number | string };
@@ -71,6 +73,14 @@ function handleListAuditLogs({
 		...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
 		...(params.dateTo ? { dateTo: params.dateTo } : {}),
 		...(params.search ? { search: params.search } : {}),
+		/*
+		 * Passed through unvalidated on purpose: the service owns the allowlist, and validating
+		 * here as well would mean two lists of sortable columns that can disagree. An unknown key
+		 * is not an error — see `resolveSort` — so rejecting it at the edge would turn a stale
+		 * bookmark into a 400 the reader cannot act on.
+		 */
+		...(params.sortBy ? { sortBy: params.sortBy } : {}),
+		...(params.sortDir ? { sortDir: params.sortDir } : {}),
 		...(params.userId ? { userId: params.userId } : {}),
 		...(!userIsSysop && workspaceId ? { workspaceId } : {}),
 	});
@@ -92,7 +102,9 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 			description:
 				'Returns a paginated list of audit log entries. Supports filtering by action ' +
 				'type (e.g., user.login, workspace.create), userId, date range (dateFrom/dateTo ' +
-				'in ISO 8601), and free-text search. Date range is validated - dateTo must be ' +
+				'in ISO 8601), and free-text search. Sortable by createdAt, username, action, ' +
+				'resource or ipAddress via sortBy/sortDir; an unrecognised sortBy falls back to ' +
+				'createdAt descending. Date range is validated - dateTo must be ' +
 				'after dateFrom. Scoped to workspace via X-Workspace-Id header (SYSOP sees ' +
 				'all). Use the optional `fields` parameter to request only specific fields ' +
 				'(e.g. `fields=id,action,userId,createdAt`). ' +
@@ -168,6 +180,20 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 			),
 			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
 			search: t.Optional(t.String({ maxLength: 255 })),
+			sortBy: t.Optional(
+				t.String({
+					description:
+						'Column to sort by: createdAt, username, action, resource, ipAddress. ' +
+						'Anything else sorts by createdAt.',
+					maxLength: 32,
+				}),
+			),
+			sortDir: t.Optional(
+				t.String({
+					description: '`asc`, or descending for anything else.',
+					maxLength: 4,
+				}),
+			),
 			userId: t.Optional(t.Numeric({ minimum: 1 })),
 		}),
 	});
