@@ -16,7 +16,7 @@ import { DataTable } from '@/components/shared/data-table/DataTable';
 	data={users}
 	searchColumn="username"
 	filterPlaceholder="Search users…"
-	toolbarActions={<Button size="sm">Create User</Button>}
+	toolbarActions={<Button>Create User</Button>}
 />;
 ```
 
@@ -39,6 +39,11 @@ import { DataTable } from '@/components/shared/data-table/DataTable';
 The toolbar has two slots and the side matters: `toolbar` holds the controls that narrow what the
 table shows, `toolbarActions` holds what the user came to do. Putting a "Create X" button in a `div`
 above or below the table instead leaves the primary action in a different place on every page.
+
+Pass `toolbarActions` a **default-size** button. It shares one flex row with the search input, the
+consumer filters and the Columns trigger, all 36px; `size="sm"` is 32px and reads as a shorter pill
+at the end of an otherwise even row. This example used to say `size="sm"`, which is where the one
+call site that drifted got it.
 
 ### ErrorBoundary
 

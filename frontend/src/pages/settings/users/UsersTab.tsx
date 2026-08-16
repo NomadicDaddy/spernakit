@@ -166,7 +166,15 @@ function UsersTab() {
 					/>
 				}
 				toolbarActions={
-					<Button onClick={() => setDialog({ type: 'create' })} size="sm">
+					/*
+					 * Default size, not `sm`. This button shares one flex row with the search Input,
+					 * the role Select and the Columns trigger, all 36px; at `sm` it was 32px and read
+					 * as a shorter pill at the end of an otherwise even row. DataTableToolbar was
+					 * changed to default size for exactly this reason and its comment claims
+					 * "anything passed into `actions`" is already 36px — this call site was the one
+					 * that made that claim false. /settings/backup passes a default-size button.
+					 */
+					<Button onClick={() => setDialog({ type: 'create' })}>
 						<Plus aria-hidden="true" className="size-4" />
 						Create User
 					</Button>
