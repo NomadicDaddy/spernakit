@@ -129,14 +129,28 @@ function ColumnRow({
 			 * scale — while the `N cols` / `N rows` badges 24px to the left used the Badge default,
 			 * so two badge sizes sat side by side in one panel.
 			 */}
-			<div className="flex items-center gap-1.5">
+			<div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
 				{/* A column constraint is metadata, not a fault — neutral, like FK beside it. */}
 				{column.notnull && <Badge variant="outline">NOT NULL</Badge>}
 				{column.defaultValue !== null && (
 					<Badge variant="secondary">{column.defaultValue}</Badge>
 				)}
+				{/*
+				 * The one badge in this row whose text is unbounded: it names another table and
+				 * another column, so `FK → user_notification_preferences.user_id` runs ~40 characters
+				 * against a card that is about 300px wide inside a 360px viewport. Badge defaults to
+				 * `whitespace-nowrap shrink-0`, which is right for a chip holding one word and wrong
+				 * for this one — the row's `flex-wrap` above could only move the badge onto its own
+				 * line, never make it narrower, so the badge still set the card's min-content width
+				 * and the panel scrolled sideways. Wrapping inside the pill is the only give left.
+				 *
+				 * `break-words`, not `break-all`: it breaks a table name only when the line cannot
+				 * hold it, so the common short keys still read as one unbroken `table.column`.
+				 */}
 				{fk && (
-					<Badge variant="outline">
+					<Badge
+						className="min-w-0 shrink break-words whitespace-normal"
+						variant="outline">
 						FK → {fk.targetTable}.{fk.targetColumn}
 					</Badge>
 				)}

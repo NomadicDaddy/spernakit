@@ -8,6 +8,22 @@ import { listWorkspaces, updateWorkspace } from '@/api/workspaces';
 import { useAuthorization } from '@/hooks/useAuthorization';
 
 /**
+ * One tab's edit, where an explicit `null` means "clear this setting" and an absent key means
+ * "leave it alone".
+ *
+ * The wire type cannot express the difference, and `save` needs it. Settings are stored as one
+ * JSON object and `PUT /workspaces/:id` replaces that object whole, so `save` rebuilds it from the
+ * stored values before merging a tab's fields in — which makes an omitted key indistinguishable
+ * from an unchanged one. The dashboard tab offers "No default dashboard" and enables Save for it,
+ * but omission was the only way it could say so, and the rebuilt base put the old id straight back
+ * into the request. The setting could be changed and never removed; the select snapped back to the
+ * previous dashboard on the next fetch.
+ */
+type WorkspaceSettingsChanges = {
+	[K in keyof WorkspaceSettings]?: null | WorkspaceSettings[K];
+};
+
+/**
  * The workspace whose settings are being edited, plus a save that merges one tab's fields into
  * the whole settings object.
  *
@@ -45,7 +61,7 @@ function useWorkspaceSettings() {
 		},
 	});
 
-	function save(changes: WorkspaceSettings) {
+	function save(changes: WorkspaceSettingsChanges) {
 		const base: WorkspaceSettings = {
 			...(settings?.branding ? { branding: settings.branding } : {}),
 			...(settings?.currency ? { currency: settings.currency } : {}),
@@ -54,7 +70,12 @@ function useWorkspaceSettings() {
 				: {}),
 			...(settings?.timezone ? { timezone: settings.timezone } : {}),
 		};
-		updateMutation.mutate({ ...base, ...changes });
+		// The API takes the settings object whole, so a cleared field has to leave as an absent key
+		// rather than a null one; `null` is this hook's vocabulary, not the endpoint's.
+		const next = Object.fromEntries(
+			Object.entries({ ...base, ...changes }).filter(([, value]) => value !== null),
+		) as WorkspaceSettings;
+		updateMutation.mutate(next);
 	}
 
 	return {
