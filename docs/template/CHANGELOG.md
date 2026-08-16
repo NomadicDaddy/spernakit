@@ -3,6 +3,36 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.42.1] - 2026-08-16
+
+### Fixed
+
+- The default sort column on a server-sorted table no longer ignores clicks. TanStack cycles a
+  column through ascending, descending, and unsorted, and `useUrlSorting` expresses unsorted by
+  dropping `sortBy` and `sortDir` from the URL, from which it then re-derives the API's default. On
+  the default column that derived state is the state the click was trying to leave, so nothing
+  happened: the Timestamp header on `/settings/audit-logs` never responded, at any point, because
+  descending is also where the page opens. `useDataTableConfig` now sets `enableSortingRemoval` to
+  false whenever the caller owns the sort, which makes those headers a plain ascending/descending
+  toggle. Client-sorted tables keep removal, since their unsorted state is the real insertion order
+  of the rows they hold. `/notifications` had escaped this only because its Time column infers
+  descending-first and so reached ascending before the cleared state.
+- "No default dashboard" in a workspace's dashboard settings now clears the setting. Settings are
+  stored as one JSON object and `PUT /workspaces/:id` replaces that object whole, so
+  `useWorkspaceSettings` rebuilds it from the stored values before merging a tab's fields in.
+  Omission was the only way the tab could say "cleared", and the rebuilt base put the old id
+  straight back into the request. A tab now passes `null` to mean cleared, and `save` drops those
+  keys on the way out; the fields the other two tabs own are untouched.
+- Long foreign-key badges in the schema explorer wrap instead of widening the card. `Badge`
+  defaults to `whitespace-nowrap shrink-0`, which is right for a chip holding one word and wrong
+  for one naming another table and column, so `FK -> user_notification_preferences.notification_type`
+  set the card's minimum width and the panel scrolled sideways on a phone.
+- The edit dialog on the workspaces page stays open when the save fails. It closed as soon as Save
+  Changes was clicked rather than when the update landed, so a rejected name, a lost connection or
+  a 403 dismissed the form anyway and the error toast appeared over a page the user could no longer
+  correct from. The close now runs on success, the way the create dialog beside it already did, and
+  a failed save leaves the typed values in place.
+
 ## [3.42.0] - 2026-08-15
 
 ### Added

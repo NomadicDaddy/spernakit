@@ -87,9 +87,15 @@ function WorkspaceDashboardTab() {
 			</CardContent>
 			{/* The primary action in the footer slot — see the note in WorkspaceGeneralTab. */}
 			<CardFooter>
+				{/*
+				 * `save({ defaultDashboardId })` even when it is null. Passing `{}` for the null case
+				 * read as "this tab changed nothing", and `save` merges over the stored settings, so
+				 * "No default dashboard" saved the dashboard that was already there. `null` is how
+				 * `save` is told to drop the key; see WorkspaceSettingsChanges.
+				 */}
 				<Button
 					disabled={isPending || !isDirty}
-					onClick={() => save(defaultDashboardId !== null ? { defaultDashboardId } : {})}>
+					onClick={() => save({ defaultDashboardId })}>
 					{isPending ? (
 						<Spinner size={16} />
 					) : (
