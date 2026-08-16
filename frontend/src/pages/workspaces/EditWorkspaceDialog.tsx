@@ -81,10 +81,10 @@ export function EditWorkspaceDialog({
 						<Button variant="outline">Cancel</Button>
 					</DialogClose>
 					{/*
-					 * A plain Button where AlertDialogAction used to sit. Action closes the dialog
-					 * itself on click; here `onUpdate` already calls `closeDialog()` in
-					 * WorkspaceFormDialogs, so the close still happens and the save path is
-					 * unchanged.
+					 * A plain Button where AlertDialogAction used to sit, and the reason this dialog
+					 * wants one: Action closes on click, which is the wrong moment. `onUpdate` in
+					 * WorkspaceFormDialogs closes on the update's success instead, so a save that
+					 * fails leaves this form open with what the user typed still in it.
 					 */}
 					<Button disabled={isPending} onClick={handleUpdate}>
 						Save Changes

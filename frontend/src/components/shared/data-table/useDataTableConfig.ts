@@ -109,6 +109,24 @@ function useDataTableConfig<TData extends RowData>({
 		 * never covered by the guard.
 		 */
 		enableSorting: !isServerPagination || isServerSorting,
+		/*
+		 * Server-sorted tables toggle between ascending and descending and never pass through an
+		 * unsorted state, because they have no unsorted state to reach: the API orders the whole
+		 * record set on every request, and asking it for no order still returns one.
+		 *
+		 * With removal left on, the third click cleared the sort, and `useUrlSorting` expresses
+		 * "cleared" by dropping `sortBy`/`sortDir` from the URL — from which it then re-derives the
+		 * API's default. On any column that was not the default that reads as "return to the default
+		 * ordering", which is fine. On the default column itself the derived state is the state the
+		 * click was trying to leave, so the click did nothing: `/settings/audit-logs` opens sorted by
+		 * Timestamp descending, and its Timestamp header did not respond to a click, ever.
+		 * `/notifications` escaped only because its Time column infers descending-first and so
+		 * reached ascending before the cleared state.
+		 *
+		 * Client-sorted tables keep removal: their unsorted state is the real insertion order of the
+		 * rows they hold, which is a state worth being able to get back to.
+		 */
+		enableSortingRemoval: !isServerSorting,
 		features: dataTableFeatures,
 		getRowId: rowSelectionKey,
 		/*

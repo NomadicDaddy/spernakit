@@ -46,8 +46,15 @@ function WorkspaceFormDialogs({
 				onUpdate={withWorkspaceId(
 					selectedWorkspace,
 					(id, form: { description?: string; name?: string }) => {
-						updateWorkspace({ id, input: form });
-						closeDialog();
+						/*
+						 * `onSuccess`, the same as the create dialog above. Closing straight after
+						 * `updateWorkspace` closed on the click rather than on the save: a rejected
+						 * name, a dropped connection or a 403 all dismissed the dialog anyway, and
+						 * the error toast arrived over a form the user could no longer see or
+						 * correct. Leaving it open on failure keeps the typed values in place to
+						 * retry.
+						 */
+						updateWorkspace({ id, input: form }, { onSuccess: () => closeDialog() });
 					},
 				)}
 				workspace={workspaces.find((w) => w.id === selectedWorkspace)}
