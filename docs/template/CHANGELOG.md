@@ -99,11 +99,14 @@ this release.
 
 ### Fixed
 
-- A read-only crawl still wrote to the database. `crawltest.ts` called `flushRateLimits()` before
-  every crawl, and that helper runs `DELETE FROM rate_limit_entries` straight against SQLite, so it
-  never passed through the request interceptor the read-only guard installs. The run reported
-  `Writes: blocked` while it truncated a table. The flush now happens only when writes are allowed;
-  dev configurations ship `rateLimit.enabled: false`, so a read-only crawl loses nothing by it.
+- A read-only crawl still wrote to the database. `flushRateLimits()` runs
+  `DELETE FROM rate_limit_entries` straight against SQLite, so it never passes through the request
+  interceptor the read-only guard installs, and three paths called it: crawl startup, route
+  discovery, and browser recycling. The run reported `Writes: blocked` while it truncated a table.
+  The helper now takes the read-only flag as a required argument and returns early, so the
+  typechecker refuses a call that has not answered the question rather than leaving the next path to
+  be found by hand. Dev configurations ship `rateLimit.enabled: false`, so a read-only crawl loses
+  nothing by it.
 - Sorting a table with row selection kept the selection. `useUrlSorting` drops the `page` parameter
   when the sort changes, so the reader lands on page one of a different ordering while rows selected
   under the old ordering stay selected somewhere off screen, and the bulk bar offers to act on them.

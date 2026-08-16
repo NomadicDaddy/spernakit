@@ -198,7 +198,7 @@ export class WebCrawler {
 				this.opts,
 				this.seedRoutes,
 				this.maxDepth,
-				flushRateLimits,
+				() => flushRateLimits(this.readOnly),
 			);
 
 			if (this.startFromRoute) {

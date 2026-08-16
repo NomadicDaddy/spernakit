@@ -31,8 +31,21 @@ export interface CrawlSession {
 	reLoginFailed: boolean;
 }
 
-/** Flush rate limit entries so automated crawling isn't throttled by its own traffic. */
-export function flushRateLimits(): void {
+/**
+ * Flush rate limit entries so automated crawling isn't throttled by its own traffic.
+ *
+ * `readOnly` is required rather than defaulted because this write goes straight to SQLite and so
+ * is invisible to the request-interception guard: a call site that forgot it would delete rows
+ * while the run reports `Writes: blocked`, the one claim a read-only crawl has to keep. Three
+ * separate paths reach here — startup, route discovery, and browser recycling — and guarding them
+ * one at a time missed two of them. A required parameter makes the typechecker the regression
+ * test: a fourth path cannot be added without answering the question.
+ *
+ * Skipping the flush costs a read-only crawl nothing, because dev configs ship
+ * `rateLimit.enabled: false`.
+ */
+export function flushRateLimits(readOnly: boolean): void {
+	if (readOnly) return;
 	try {
 		const defaultsPath = path.join(ROOT_DIR, 'backend', 'src', 'config', 'defaults.json');
 		const defaults = JSON.parse(fs.readFileSync(defaultsPath, 'utf8')) as {
@@ -178,7 +191,7 @@ export async function recycleBrowser(
 	if (session.reLoginFailed) return false;
 
 	console.log('   ♻️  Recycling browser (CDP reset)...');
-	flushRateLimits();
+	flushRateLimits(opts.readOnly);
 	try {
 		if (session.browser) {
 			try {
