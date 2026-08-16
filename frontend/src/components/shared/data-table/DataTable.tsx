@@ -185,7 +185,9 @@ function DataTable<TData extends RowData>({
 	const { headerRowRef, widths } = useStickyColumnWidths(
 		visibleLeafColumns.map((column) => column.id).join(','),
 	);
-	const stickyColumns = resolveStickyColumns(visibleLeafColumns, widths);
+	// Empty while virtualized: VirtualTableBody deliberately ignores pinning, so resolving it
+	// anyway would pin the header cells against body cells that scroll freely underneath them.
+	const stickyColumns = resolveStickyColumns(isVirtual ? [] : visibleLeafColumns, widths);
 
 	// A server-filtered caller carries its own filter state, so its `isFiltered` is authoritative
 	// where TanStack's is silent; a client-filtered one never sets it and is read from the table.

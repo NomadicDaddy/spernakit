@@ -16,9 +16,13 @@ import { useSearchParams } from 'react-router';
  * lists would drift apart.
  *
  * @param defaultColumn - Column id the API sorts by when asked for nothing.
+ * @param onReset - Run after a sort lands. A table with row selection passes its clear here:
+ *   sorting returns the reader to page one of a different ordering, so a selection made before
+ *   the sort survives on rows that are no longer on screen, and a bulk action would then act on
+ *   rows the reader cannot see. The paging path already clears for exactly this reason.
  * @param defaultDescending - The API's default direction for that column.
  */
-function useUrlSorting(defaultColumn: string, defaultDescending = true) {
+function useUrlSorting(defaultColumn: string, onReset?: () => void, defaultDescending = true) {
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	const sortBy = searchParams.get('sortBy') ?? defaultColumn;
@@ -50,6 +54,7 @@ function useUrlSorting(defaultColumn: string, defaultDescending = true) {
 			},
 			{ replace: true },
 		);
+		onReset?.();
 	};
 
 	return { onSortingChange, sortBy, sortDir, sorting };

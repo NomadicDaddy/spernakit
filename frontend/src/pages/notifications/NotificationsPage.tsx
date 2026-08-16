@@ -151,7 +151,10 @@ function NotificationsPage() {
 	const [showBulkDelete, setShowBulkDelete] = useState(false);
 
 	// Newest first, matching what the API does when asked for nothing.
-	const { onSortingChange, sortBy, sortDir, sorting } = useUrlSorting('createdAt');
+	const { onSortingChange, sortBy, sortDir, sorting } = useUrlSorting(
+		'createdAt',
+		clearSelection,
+	);
 
 	const {
 		bulkDeleteMutation,

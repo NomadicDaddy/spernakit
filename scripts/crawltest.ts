@@ -199,7 +199,13 @@ async function run(): Promise<void> {
 
 	try {
 		await crawler.init();
-		flushRateLimits();
+		/*
+		 * The read-only guard intercepts browser requests, so it cannot see a direct DB write.
+		 * Flushing the rate-limit table here would delete rows while the run reports
+		 * `Writes: blocked`, which is the one claim a read-only crawl has to keep. Dev configs
+		 * ship `rateLimit.enabled: false`, so skipping the flush costs a read-only crawl nothing.
+		 */
+		if (!readOnly) flushRateLimits();
 		await crawler.screenshotPreLoginPages();
 		await crawler.login(login.email, login.password);
 		await crawler.crawl();

@@ -99,6 +99,21 @@ this release.
 
 ### Fixed
 
+- A read-only crawl still wrote to the database. `crawltest.ts` called `flushRateLimits()` before
+  every crawl, and that helper runs `DELETE FROM rate_limit_entries` straight against SQLite, so it
+  never passed through the request interceptor the read-only guard installs. The run reported
+  `Writes: blocked` while it truncated a table. The flush now happens only when writes are allowed;
+  dev configurations ship `rateLimit.enabled: false`, so a read-only crawl loses nothing by it.
+- Sorting a table with row selection kept the selection. `useUrlSorting` drops the `page` parameter
+  when the sort changes, so the reader lands on page one of a different ordering while rows selected
+  under the old ordering stay selected somewhere off screen, and the bulk bar offers to act on them.
+  The hook now takes an `onReset` callback and the notifications page passes its clear, matching
+  what the paging path already did.
+- Pinned columns half-applied to a virtualized table. `VirtualTableBody` deliberately does not honour
+  `meta.sticky`, because its rows sit in their own vertical scroller where `position: sticky` would
+  resolve against the wrong container, but `DataTable` still resolved sticky metadata for the header
+  cells. A table using both would have pinned its headers over body cells that scrolled out from
+  under them. Sticky resolution is now skipped while virtualization is active.
 - Every cell in every data table remounted on every render. `flexRender(columnDef.cell, ctx)` calls
   `createElement(fn, ctx)` when the cell is a function, which makes the arrow the element type. No
   column hook memoises its columns array, so each parent render built new arrows, each arrow was a
