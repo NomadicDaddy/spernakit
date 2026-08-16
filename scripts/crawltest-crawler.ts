@@ -29,6 +29,7 @@ import {
 } from './crawltest-session';
 import { BROWSER_RECYCLE_INTERVAL } from './crawltest-types';
 import { visitRoute } from './crawltest-visit';
+import { summarizeBlockedWrites } from './crawltest-writeguard';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +41,7 @@ export class WebCrawler {
 	private interactionDelay: number;
 	private maxDepth: number;
 	private pageSettleDelay: number;
+	private readOnly: boolean;
 	private results: TestResults;
 	private screenshotDir: null | string;
 	private seedRoutes: string[];
@@ -58,6 +60,7 @@ export class WebCrawler {
 		this.interactionDelay = options.interactionDelay ?? 400;
 		this.pageSettleDelay = options.pageSettleDelay ?? 500;
 		this.contentMinLength = options.contentMinLength ?? 50;
+		this.readOnly = options.readOnly ?? true;
 		this.screenshotDir = options.screenshotDir ?? null;
 		this.seedRoutes = options.seedRoutes ?? [];
 		this.singlePage = options.page ?? null;
@@ -73,6 +76,7 @@ export class WebCrawler {
 			reLoginFailed: false,
 		};
 		this.state = {
+			blockedWrites: [],
 			cleaningUp: false,
 			consecutiveScreenshotFailures: 0,
 			createdTestDashboardId: null,
@@ -94,7 +98,9 @@ export class WebCrawler {
 			interactionDelay: this.interactionDelay,
 			loginCredentials: this.session.loginCredentials,
 			pageSettleDelay: this.pageSettleDelay,
+			readOnly: this.readOnly,
 			screenshotDir: this.screenshotDir,
+			testBug: this.testBugFlag,
 			timeout: this.timeout,
 		};
 	}
@@ -114,7 +120,7 @@ export class WebCrawler {
 	};
 
 	private recycle = (): Promise<boolean> => {
-		return recycleBrowser(this.session, this.opts, this.attach);
+		return recycleBrowser(this.session, this.opts, this.attach, this.state);
 	};
 
 	// -----------------------------------------------------------------------
@@ -123,7 +129,7 @@ export class WebCrawler {
 
 	async init(): Promise<void> {
 		console.log('🚀 Launching browser...');
-		await launchSession(this.session, this.attach);
+		await launchSession(this.session, this.attach, this.state, this.opts);
 	}
 
 	async close(): Promise<void> {
@@ -150,10 +156,34 @@ export class WebCrawler {
 
 	async crawl(): Promise<void> {
 		if (!this.session.page) return;
+		// Cleanup used to sit at the end of the happy path only, so a crawl that threw part-way — and
+		// crawls do throw, which is why `run()` wraps this in a try — left its `__crawltest-dashboard`
+		// behind with nothing to remove it later. A finally is the only placement that actually holds.
+		try {
+			await this.crawlRoutes();
+		} finally {
+			if (this.session.page) await cleanupTestData(this.session.page, this.state);
+			this.reportBlockedWrites();
+		}
+	}
+
+	/** One line per endpoint the read-only guard refused, so a suppressed write is never silent. */
+	private reportBlockedWrites(): void {
+		const blocked = summarizeBlockedWrites(this.state);
+		if (blocked.length === 0) return;
+		console.log(
+			`\n🔒 Read-only guard blocked ${String(this.state.blockedWrites.length)} write(s):`,
+		);
+		for (const line of blocked) console.log(`   ${line}`);
+		console.log('   Re-run with --allow-writes to let these through.');
+	}
+
+	private async crawlRoutes(): Promise<void> {
+		if (!this.session.page) return;
 
 		// Phase 0: Ensure test data exists for parameterized routes (only when logged in)
 		if (this.session.isLoggedIn) {
-			await ensureTestDashboard(this.session.page, this.state);
+			await ensureTestDashboard(this.session.page, this.state, this.readOnly);
 		}
 
 		let routes: string[];
@@ -185,7 +215,6 @@ export class WebCrawler {
 						console.log(`   ${new URL(r).pathname}`);
 					}
 					this.results.routesDiscovered = routes.length;
-					if (this.session.page) await cleanupTestData(this.session.page, this.state);
 					return;
 				}
 
@@ -234,9 +263,6 @@ export class WebCrawler {
 
 		// Phase 3: Flush web vitals
 		await this.flushWebVitals();
-
-		// Phase 4: Cleanup test data
-		if (this.session.page) await cleanupTestData(this.session.page, this.state);
 	}
 
 	// -----------------------------------------------------------------------
