@@ -55,12 +55,21 @@ function handleConsoleMessage(ctx: CrawlEventContext, msg: ConsoleMessage): void
 				string,
 				unknown
 			>;
+			// Prefer the route the page reported over the crawler's current url. CLS and
+			// INP keep reporting after a client-side navigation, so a value produced by
+			// the login submit arrived while the crawler was already looking at the
+			// post-login landing route and got filed there. Every poor INP sample in the
+			// fleet was a login submit wearing a dashboard's name that way. Older builds
+			// do not send `url`; fall back for them.
+			const reportedRoute = typeof data.url === 'string' ? data.url : null;
 			ctx.results.addWebVital({
 				name: data.name as string,
 				navigationType: data.navigationType as string,
 				rating: data.rating as string,
 				timestamp: new Date().toISOString(),
-				url: ctx.page.url(),
+				url: reportedRoute
+					? new URL(reportedRoute, ctx.page.url()).toString()
+					: ctx.page.url(),
 				value: data.value as number,
 			});
 		} catch {

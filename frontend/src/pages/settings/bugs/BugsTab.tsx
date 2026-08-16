@@ -101,9 +101,10 @@ function BugsTab() {
 			// TableCell sets `whitespace-nowrap` on every cell in the app, and a clamp cannot clamp
 			// text forbidden to wrap, so the clamp was inert and the column was sized by the whole
 			// string: one 3,493-character report produced a 23,155px table inside a 332px mobile
-			// scroller, putting the Status control 22,823px off screen. `whitespace-normal` re-enables
-			// wrapping locally so the clamp can bind; the `ch` cap bounds the measure without
-			// reintroducing the fixed-px void described above.
+			// scroller, putting the Status control 22,823px off screen. The intake accepts 5,000
+			// characters, so a string that long is reachable through the app's own form rather than
+			// only by seeding. `whitespace-normal` re-enables wrapping locally so the clamp can bind;
+			// the `ch` cap bounds the measure without reintroducing the fixed-px void described above.
 			cell: ({ row }) => (
 				<span className="line-clamp-2 max-w-[60ch] break-words whitespace-normal">
 					{row.original.description}
