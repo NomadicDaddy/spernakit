@@ -51,7 +51,13 @@ export function EmailConfigForm({
 				{headerStatus && <CardAction>{headerStatus}</CardAction>}
 			</CardHeader>
 			<CardContent>
-				<form className="space-y-4" onInput={() => onDirtyChange?.(true)} onSubmit={onSave}>
+				{/* `max-w-2xl` on the form, the stack cap the authentication sections use: the three
+				    field grids and the SSL/TLS row between them share one right edge, and the row
+				    stops running to the full card width while the fields around it do not. */}
+				<form
+					className="max-w-2xl space-y-4"
+					onInput={() => onDirtyChange?.(true)}
+					onSubmit={onSave}>
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
 							<Label htmlFor="host">

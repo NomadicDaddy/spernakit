@@ -85,9 +85,15 @@ function FeatureFlagsSection({ features, onFeatureChange, pending }: FeatureFlag
 			 * earned — the row is a `<label>`, so all of it toggles the switch. What this grid fixes
 			 * is the width: two columns is what /profile/preferences uses for the same job, and it
 			 * halves both the label-to-switch distance and the card's height.
+			 *
+			 * `max-w-4xl`, not the `max-w-2xl` the one-column settings sections cap their stacks at.
+			 * The cap exists to bound the row, not the container, and two columns need twice the
+			 * measure to land a row at the same width — 4xl gives 442px rows against 2xl's 624px in a
+			 * single column, where 2xl here would give 330px and start wrapping the descriptions.
+			 * Uncapped the rows ran 705px at 2560, which is the number two columns were meant to fix.
 			 */}
 			<CardContent>
-				<div className="grid gap-3 sm:grid-cols-2">
+				<div className="grid max-w-4xl gap-3 sm:grid-cols-2">
 					{FEATURE_TOGGLES.map((toggle) => (
 						<SettingsToggleRow
 							checked={features[toggle.key] ?? true}

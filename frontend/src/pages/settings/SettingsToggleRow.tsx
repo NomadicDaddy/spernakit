@@ -19,9 +19,14 @@ interface SettingsToggleRowProps {
  * makes the whole row the hit target and the border makes that target visible, which is the part
  * the switch's own 24px `::before` expander could never do.
  *
- * `max-w-2xl` went with it. The cap existed only to shorten that unbound label-to-switch traverse;
- * the border does the same job at any width, which is why the exemplar runs its rows to the full
- * card width with no cap.
+ * The row itself carries no width cap, and callers should not add one. `max-w-2xl` belongs on the
+ * *stack* — the CardContent or form that holds the toggles and the field grids under them — which is
+ * where SqlSandboxPanel already had it and where every settings section now applies it. On the row
+ * it capped only the row: the toggles stopped at 672px while the field grids they gate kept their
+ * own separate `max-w-2xl`, so the two agreed by coincidence and disagreed the moment either moved.
+ * On the stack one declaration governs both, and the traverse lands near 390px at 2560 without the
+ * row knowing anything about width. Below 672px the cap never engages, so this is a desktop-only
+ * measure and the border is still what binds label to switch at phone widths.
  *
  * The text stack is spans, not a `<Label>` over a `<p>`. A `<label>` nested in a `<label>` is
  * invalid, and `<label>` takes phrasing content, so `block` spans carry the type styles the Label

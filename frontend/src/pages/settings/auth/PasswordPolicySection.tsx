@@ -59,20 +59,22 @@ function PasswordPolicySection({
 					Rules applied when a user sets or changes a password.
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-4">
+			{/*
+			 * `max-w-2xl` is the cap every settings section applies at this level — the stack, not
+			 * the individual grid or row inside it. Uncapped, the field grid ran 1422px at 2560 —
+			 * three numeric inputs for two-digit values stretched to 462px each — while the two cards
+			 * directly below it stopped at 672px, so scrolling the surface moved the right edge of
+			 * the fields in and out for no reason the user could see. See SettingsToggleRow for why
+			 * the toggle rows below now sit under the same cap.
+			 */}
+			<CardContent className="max-w-2xl space-y-4">
 				{/*
 				 * Three numeric fields across, not three rows of one 320px input. Each holds one or
 				 * two digits, and OAuthProvidersSection on this same surface already pairs its inputs
-				 * this way.
-				 *
-				 * `max-w-2xl` is the same cap AccountLockoutSection and AuthRateLimitSection put on
-				 * their field grids. Without it this grid ran 1422px at 2560 — three numeric inputs
-				 * for two-digit values stretched to 462px each — while the two cards directly below
-				 * it stopped at 672px, so scrolling the surface moved the right edge of the fields in
-				 * and out for no reason the user could see. Three columns inside the shared cap gives
-				 * 213px per field, which is still wider than any value they hold.
+				 * this way. Three columns inside the shared cap still gives each field more width
+				 * than any value it holds.
 				 */}
-				<div className="grid max-w-2xl gap-4 sm:grid-cols-3">
+				<div className="grid gap-4 sm:grid-cols-3">
 					<SettingsNumberField
 						hint={
 							passwordExpiryDayCount === 0

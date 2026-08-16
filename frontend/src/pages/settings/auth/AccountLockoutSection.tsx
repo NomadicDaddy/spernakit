@@ -72,7 +72,13 @@ function AccountLockoutSection({
 					</CardAction>
 				)}
 			</CardHeader>
-			<CardContent className="space-y-4">
+			{/*
+			 * `max-w-2xl` on the stack, not on the grid it used to sit on. The toggle and the fields
+			 * it gates are one column of content and now share one right edge; before this the fields
+			 * stopped at 672px and the toggle row above them ran the full 1422px card. See
+			 * SettingsToggleRow for why the cap belongs at this level rather than on the row.
+			 */}
+			<CardContent className="max-w-2xl space-y-4">
 				{/*
 				 * The gating switch carries a description like every other toggle on the surface.
 				 * It was the only one passed none, so it rendered as a lone 14px semibold line —
@@ -93,7 +99,7 @@ function AccountLockoutSection({
 				/>
 
 				{enableAccountLocking && (
-					<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+					<div className="grid gap-4 sm:grid-cols-2">
 						<SettingsNumberField
 							hint="Failed attempts before the account locks (1–100)."
 							id="maxLoginAttempts"

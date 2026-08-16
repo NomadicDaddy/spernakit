@@ -55,7 +55,9 @@ function AuthRateLimitSection({
 					</CardAction>
 				)}
 			</CardHeader>
-			<CardContent className="space-y-4">
+			{/* `max-w-2xl` on the stack rather than on the field grid, so the toggle and the fields it
+			    gates share one right edge. See SettingsToggleRow. */}
+			<CardContent className="max-w-2xl space-y-4">
 				{/* The gating switch gets the two-line rhythm its non-gating siblings have, so it
 				    stops reading as a peer of the fields it governs. */}
 				<SettingsToggleRow
@@ -72,7 +74,7 @@ function AuthRateLimitSection({
 
 				{authRateLimitEnabled && (
 					<>
-						<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+						<div className="grid gap-4 sm:grid-cols-2">
 							<SettingsNumberField
 								hint="Auth requests one IP may issue per window (1–1000)."
 								id="authRateLimitMaxRequests"

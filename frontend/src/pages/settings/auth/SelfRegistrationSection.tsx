@@ -48,7 +48,9 @@ function SelfRegistrationSection({
 					</CardAction>
 				)}
 			</CardHeader>
-			<CardContent>
+			{/* Same `max-w-2xl` stack cap as the other three authentication sections. See
+			    SettingsToggleRow. */}
+			<CardContent className="max-w-2xl">
 				<SettingsToggleRow
 					checked={selfRegistrationEnabled}
 					description={

@@ -166,7 +166,9 @@ function NotificationSettingsTab() {
 						</CardAction>
 					)}
 				</CardHeader>
-				<CardContent>
+				{/* `max-w-2xl` on the stack, the cap the authentication sections apply at this same
+				    level. See SettingsToggleRow. */}
+				<CardContent className="max-w-2xl">
 					<div className="space-y-3">
 						{DELIVERY_TOGGLES.map((t) => (
 							<SettingsToggleRow
@@ -210,7 +212,9 @@ function NotificationSettingsTab() {
 							<Badge variant="outline">Read-only</Badge>
 						</CardAction>
 					</CardHeader>
-					<CardContent>
+					{/* The same stack cap as the two toggle cards around it — this card's content is
+					    one column of the same kind, and the three now share a right edge. */}
+					<CardContent className="max-w-2xl">
 						{/*
 						 * Reported server config, rendered in the read-only idiom RuntimeConfigTab
 						 * uses for exactly this content: a `divide-y` field list with a muted label
@@ -225,8 +229,9 @@ function NotificationSettingsTab() {
 							 * notifications" at the left edge and the "30 days" that answers it 746px
 							 * away at 2560 — one fact, split across the whole card. RuntimeConfigTab's
 							 * field list gets away with the same split because its cards sit in a
-							 * two-column grid and its rows are ~564px; this one is alone in a
-							 * full-width card and has no such ceiling.
+							 * two-column grid and its rows are ~564px; the `max-w-2xl` on CardContent
+							 * now gives this one a comparable ceiling, and the wrap keeps the pair
+							 * together at any width below it.
 							 *
 							 * `w-full` on the explanation is what breaks the line: the group is a
 							 * `flex-wrap` row, so the description claims a row of its own beneath the
@@ -268,7 +273,8 @@ function NotificationSettingsTab() {
 						override these in their profile settings.
 					</CardDescription>
 				</CardHeader>
-				<CardContent>
+				{/* Same stack cap as the delivery card above. See SettingsToggleRow. */}
+				<CardContent className="max-w-2xl">
 					<div className="space-y-3">
 						{DEFAULT_PREF_TOGGLES.map((t) => (
 							<SettingsToggleRow
