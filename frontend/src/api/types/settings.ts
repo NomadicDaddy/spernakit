@@ -12,7 +12,13 @@ interface Setting {
 interface AuditLog {
 	action: string;
 	createdAt: string;
-	details: null | string;
+	/**
+	 * A JSON column, so this arrives already parsed — an object, not the string this was declared
+	 * as. `auditService.ts` types it `unknown` for the same reason. The old declaration survived
+	 * only because every reader wrapped it in `JSON.stringify`; the first one that rendered it
+	 * directly crashed the surface, because an object is not a valid React child.
+	 */
+	details: unknown;
 	id: number;
 	ipAddress: null | string;
 	resource: null | string;

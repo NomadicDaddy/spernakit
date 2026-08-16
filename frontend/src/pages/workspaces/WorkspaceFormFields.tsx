@@ -1,5 +1,6 @@
 import type { Ref } from 'react';
 
+import { RequiredMark } from '@/components/shared/RequiredMark';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,7 +29,15 @@ function WorkspaceFormFields({
 	return (
 		<>
 			<div className="space-y-2">
-				<Label htmlFor={`${idPrefix}-name`}>Name *</Label>
+				{/*
+				 * The shared marker, not a literal `*` in the label text. Written literally it
+				 * rendered in the label's own grey rather than destructive-red, and — having no
+				 * `aria-hidden` — it joined the field's accessible name, so both workspace dialogs
+				 * announced the field as "Name star".
+				 */}
+				<Label htmlFor={`${idPrefix}-name`}>
+					Name <RequiredMark />
+				</Label>
 				<Input
 					aria-describedby={nameError ? nameErrorId : undefined}
 					autoComplete="off"

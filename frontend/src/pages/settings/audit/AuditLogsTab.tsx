@@ -18,7 +18,10 @@ import {
 } from '@/components/ui/select';
 import { detailsId, useAuditColumns } from '@/hooks/settings/useAuditColumns';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { useUrlSorting } from '@/hooks/useUrlSorting';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
+
+import { AuditLogDetails } from './AuditLogDetails';
 
 /** Same window `useProfile` uses for its username check — one typing pause, app-wide. */
 const SEARCH_DEBOUNCE_MS = 400;
@@ -56,16 +59,22 @@ function AuditLogsTab() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [searchInput, search]);
 
+	// Newest first, which is what the API does when asked for nothing — so the Timestamp header
+	// arrives already marked descending rather than reading as unordered.
+	const { onSortingChange, sortBy, sortDir, sorting } = useUrlSorting('createdAt');
+
 	const { data, isLoading } = useQuery<PaginatedResponse<AuditLog>>({
 		enabled: activeWorkspaceId !== null,
 		queryFn: () =>
 			listAuditLogs({
 				limit: String(limit),
 				page: String(page),
+				sortBy,
+				sortDir,
 				...(method ? { action: `${method} ` } : {}),
 				...(search ? { search } : {}),
 			}),
-		queryKey: ['audit-logs', activeWorkspaceId, page, limit, search, method],
+		queryKey: ['audit-logs', activeWorkspaceId, page, limit, search, method, sortBy, sortDir],
 	});
 
 	const columns = useAuditColumns({ expandedRow, setExpandedRow });
@@ -105,22 +114,26 @@ function AuditLogsTab() {
 						limit,
 						onPageChange: setPage,
 						onPageSizeChange: setLimit,
+						onSortingChange,
 						page,
+						sorting,
 						total: data?.total ?? 0,
 					}}
 					renderExpandedRow={(log) =>
 						log.id === expandedRow && (
-							<div className="border-t bg-muted p-4" id={detailsId(log.id)}>
-								<p className="mb-2 text-sm font-medium">Details</p>
-								<pre
-									className="overflow-x-auto text-xs text-muted-foreground"
-									translate="no">
-									{JSON.stringify(log.details ?? 'No details available', null, 2)}
-								</pre>
-							</div>
+							<AuditLogDetails details={log.details} id={detailsId(log.id)} />
 						)
 					}
 					toolbar={
+						/*
+						 * `flex-1` is load-bearing on a wrapping wrapper. Chrome sizes a
+						 * `flex-wrap: wrap` container's max-content to its largest item rather than
+						 * the sum of them, so without the grow this wrapper measured 389px — the
+						 * width of the search box alone — and dropped the method Select onto a second
+						 * toolbar row at 2560. The search box inside is `flex: 1 1 0%`, so it has no
+						 * width of its own either and reaches its `max-w-sm` cap only through the
+						 * slack this grow hands it.
+						 */
 						<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
 							<div className="relative max-w-sm min-w-52 flex-1">
 								<Search

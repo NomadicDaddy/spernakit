@@ -56,10 +56,19 @@ function EmailTab() {
 	 */
 	const headerStatus = (
 		<div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+			{/*
+			 * `warning`, not `secondary`. Both halves of this expression sit in one status slot,
+			 * and the sibling test chips beside them are `success`/`destructive` — so a neutral
+			 * grey pill mixed an identity chip into a state vocabulary, and "Not configured" ended
+			 * up looking like the role and kind tags used elsewhere in Settings. badge.tsx assigns
+			 * `success`/`warning`/`destructive` to state and reserves `secondary`/`outline` for
+			 * identity and metadata. `warning` also matches what the state does: it is what
+			 * disables the entire card below it.
+			 */}
 			{status.configured ? (
 				<Badge variant="success">Configured</Badge>
 			) : (
-				<Badge variant="secondary">Not configured</Badge>
+				<Badge variant="warning">Not configured</Badge>
 			)}
 			{status.lastTestAt && (
 				<>

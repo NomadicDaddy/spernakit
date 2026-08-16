@@ -101,5 +101,19 @@ function getVisibleNavItems(
 	);
 }
 
-export { getVisibleNavItems, navEntries, navItems };
+/**
+ * Whether a nav destination is the active one for the current path.
+ *
+ * The separator guard is the whole point. A bare `pathname.startsWith(to)` matches
+ * on substrings, and this config declares both `/dashboard` and `/dashboards`, so
+ * `'/dashboards'.startsWith('/dashboard')` marked two rows active at once — with
+ * only one of them carrying `aria-current`, so the visual and assistive-technology
+ * answers disagreed. Matching the exact path or a whole trailing segment keeps the
+ * prefix behaviour `/settings` legitimately needs without that collision.
+ */
+function isNavItemActive(pathname: string, to: string): boolean {
+	return pathname === to || pathname.startsWith(`${to}/`);
+}
+
+export { getVisibleNavItems, isNavItemActive, navEntries, navItems };
 export type { NavEntry, NavItem, NavSeparator };

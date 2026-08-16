@@ -45,5 +45,17 @@ export function UsernameHint({ status }: UsernameHintProps) {
 			break;
 	}
 
-	return <div aria-live="polite">{content}</div>;
+	/*
+	 * `min-h-4` reserves the line box. The idle state renders nothing, so the hint row did not
+	 * exist until the field was touched — typing one character and letting the check settle
+	 * inserted 16px and moved Save Changes from y=479 to y=495 and the whole card below it from
+	 * y=701 to y=717. The button the user is reaching for shifted by half its own height at the
+	 * exact moment the field validated. 16px matches the `text-xs` line box all four states use,
+	 * so they now swap in place.
+	 */
+	return (
+		<div aria-live="polite" className="min-h-4">
+			{content}
+		</div>
+	);
 }

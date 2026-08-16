@@ -1,4 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShieldAlert } from 'lucide-react';
+
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 
 import { SettingsNumberField } from '../SettingsNumberField';
 import { SettingsToggleRow } from '../SettingsToggleRow';
@@ -35,10 +44,29 @@ function AuthRateLimitSection({
 					Throttle login, registration and password-reset requests by IP to slow
 					brute-force attempts.
 				</CardDescription>
+				{/* SecurityHealthSection's own risk marker, on the card whose off state is the
+				    risk. See AccountLockoutSection for the reasoning. */}
+				{!authRateLimitEnabled && (
+					<CardAction>
+						<ShieldAlert
+							aria-label="Auth rate limiting is off"
+							className="size-5 text-warning"
+						/>
+					</CardAction>
+				)}
 			</CardHeader>
-			<CardContent className="space-y-4">
+			{/* `max-w-2xl` on the stack rather than on the field grid, so the toggle and the fields it
+			    gates share one right edge. See SettingsToggleRow. */}
+			<CardContent className="max-w-2xl space-y-4">
+				{/* The gating switch gets the two-line rhythm its non-gating siblings have, so it
+				    stops reading as a peer of the fields it governs. */}
 				<SettingsToggleRow
 					checked={authRateLimitEnabled}
+					description={
+						authRateLimitEnabled
+							? 'Repeated auth requests from one IP are throttled.'
+							: 'Auth requests are unthrottled, however many one IP sends.'
+					}
 					id="authRateLimitEnabled"
 					label="Enable auth rate limiting"
 					onCheckedChange={onAuthRateLimitEnabledChange}
@@ -46,7 +74,7 @@ function AuthRateLimitSection({
 
 				{authRateLimitEnabled && (
 					<>
-						<div className="grid max-w-2xl gap-4 sm:grid-cols-2">
+						<div className="grid gap-4 sm:grid-cols-2">
 							<SettingsNumberField
 								hint="Auth requests one IP may issue per window (1–1000)."
 								id="authRateLimitMaxRequests"

@@ -36,7 +36,14 @@ function MetricsSummary({
 	const health = data?.systemHealth?.toLowerCase();
 
 	return (
-		<>
+		/*
+		 * A `<section>` at 12px, inside the page's 24px stack. As flat siblings of DashboardPage's
+		 * `space-y-6` the header and its grid sat exactly 24px apart — the same distance as the gap
+		 * to the section that ended above — so all seven boundaries on the page measured 24px and a
+		 * title was no more attached to the cards it labelled than to the previous section's. 12px
+		 * inside against 24px between is the rhythm /analytics already uses for the same shape.
+		 */
+		<section className="space-y-3">
 			<SectionHeader description="Users, activity and current load" title="Overview" />
 
 			{/*
@@ -45,8 +52,14 @@ function MetricsSummary({
 			 * card ~185px and wrapped five of the six titles onto two lines — which pushed their
 			 * values down and broke the shared baseline across the row. The column count now
 			 * tracks the canvas the cards actually get rather than the window width.
+			 *
+			 * Six-up above 1536px. Three-up held at every desktop width, which gave each of these
+			 * six cards 480px at 2560 to carry a 14px label and a one-to-three character number,
+			 * and wrapped the band onto two rows costing 300px of height before the first real
+			 * content. The narrower steps are unchanged — they are sized to the canvas, and the
+			 * canvas at 2560 is simply not the same problem.
 			 */}
-			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
 				{isLoading ? (
 					<>
 						<StatCardSkeleton />
@@ -131,7 +144,7 @@ function MetricsSummary({
 					</>
 				)}
 			</div>
-		</>
+		</section>
 	);
 }
 

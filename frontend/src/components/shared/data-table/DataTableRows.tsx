@@ -1,7 +1,12 @@
-import { flexRender, type Row } from '@tanstack/react-table';
+import { type Row, type RowData } from '@tanstack/react-table';
 import { Fragment, type ReactNode } from 'react';
 
 import { TableCell, TableRow } from '@/components/ui/table';
+
+import type { DataTableFeatures } from './features';
+import type { StickyColumn } from './stickyColumns';
+
+import { renderCell } from './renderCell';
 
 /**
  * The paginated table's rows.
@@ -11,14 +16,17 @@ import { TableCell, TableRow } from '@/components/ui/table';
  * inline was the one that pushed the file past the 300-line cap. Nothing here is table state — it
  * is given the rows and the expansion renderer and draws them.
  */
-function DataTableRows<TData>({
+function DataTableRows<TData extends RowData>({
 	colSpan,
 	renderExpandedRow,
 	rows,
+	stickyColumns,
 }: {
 	colSpan: number;
 	renderExpandedRow: ((row: TData) => ReactNode) | undefined;
-	rows: Row<TData>[];
+	rows: Row<DataTableFeatures, TData>[];
+	/** Pinned columns keyed by column id, resolved once by `DataTable`. Empty when none opt in. */
+	stickyColumns: Map<string, StickyColumn>;
 }) {
 	return (
 		<>
@@ -32,11 +40,17 @@ function DataTableRows<TData>({
 						 */}
 						<TableRow
 							data-state={row.getIsSelected() || expanded ? 'selected' : undefined}>
-							{row.getVisibleCells().map((cell) => (
-								<TableCell key={cell.id}>
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</TableCell>
-							))}
+							{row.getVisibleCells().map((cell) => {
+								const sticky = stickyColumns.get(cell.column.id);
+								return (
+									<TableCell
+										className={sticky?.cellClassName}
+										key={cell.id}
+										style={sticky?.style}>
+										{renderCell(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								);
+							})}
 						</TableRow>
 						{expanded && (
 							<TableRow>

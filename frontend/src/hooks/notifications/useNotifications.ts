@@ -45,6 +45,10 @@ interface UseNotificationsOptions {
 	limit: number;
 	page: number;
 	readFilter: ReadFilter;
+	/** Column id the API orders by; it owns the allowlist and falls back on anything else. */
+	sortBy: string;
+	/** `asc`, or descending for anything else. */
+	sortDir: string;
 	typeFilter: string;
 }
 
@@ -84,13 +88,22 @@ function buildOptimisticCallbacks<TVariable>(
 	};
 }
 
-export function useNotifications({ limit, page, readFilter, typeFilter }: UseNotificationsOptions) {
+export function useNotifications({
+	limit,
+	page,
+	readFilter,
+	sortBy,
+	sortDir,
+	typeFilter,
+}: UseNotificationsOptions) {
 	const queryClient = useQueryClient();
 	const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
 	const params = {
 		limit: String(limit),
 		page: String(page),
+		sortBy,
+		sortDir,
 		...(readFilter !== 'all' ? { readStatus: readFilter } : {}),
 		...(typeFilter !== 'all' ? { type: typeFilter } : {}),
 	};

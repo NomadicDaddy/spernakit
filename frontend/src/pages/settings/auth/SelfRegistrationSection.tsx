@@ -1,4 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { ShieldAlert } from 'lucide-react';
+
+import {
+	Card,
+	CardAction,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 
 import { SettingsToggleRow } from '../SettingsToggleRow';
 
@@ -25,8 +34,23 @@ function SelfRegistrationSection({
 				<CardDescription>
 					Whether visitors can create their own accounts from the registration page.
 				</CardDescription>
+				{/*
+				 * The one card here whose *on* state is the weaker one: self-registration open
+				 * means anybody who can reach the app can make an account. Same marker,
+				 * inverted condition. See AccountLockoutSection for the reasoning.
+				 */}
+				{selfRegistrationEnabled && (
+					<CardAction>
+						<ShieldAlert
+							aria-label="Self-registration is open to anyone"
+							className="size-5 text-warning"
+						/>
+					</CardAction>
+				)}
 			</CardHeader>
-			<CardContent>
+			{/* Same `max-w-2xl` stack cap as the other three authentication sections. See
+			    SettingsToggleRow. */}
+			<CardContent className="max-w-2xl">
 				<SettingsToggleRow
 					checked={selfRegistrationEnabled}
 					description={

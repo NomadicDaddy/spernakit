@@ -5,7 +5,14 @@ import { useState } from 'react';
 import { listDashboards } from '@/api/dashboards';
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import {
 	Select,
@@ -42,55 +49,55 @@ function WorkspaceDashboardTab() {
 
 	return (
 		<Card>
+			{/* A named card — see the note in WorkspaceGeneralTab. */}
+			<CardHeader>
+				<CardTitle>Default dashboard</CardTitle>
+				<CardDescription>The dashboard members land on in this workspace.</CardDescription>
+			</CardHeader>
 			<CardContent>
-				<div className="space-y-6">
-					{/*
-					 * The same two-column grid as the other two tabs even though this tab has one
-					 * field — a lone select that spans the whole card would make this tab look like
-					 * a different kind of form from its two siblings.
-					 */}
-					<div className="grid gap-6 sm:grid-cols-2">
-						<div className="space-y-2">
-							<Label htmlFor="ws-settings-dashboard">Default Dashboard</Label>
-							<Select
-								onValueChange={(val) =>
-									setDefaultDashboardId(val === '__none__' ? null : Number(val))
-								}
-								value={
-									defaultDashboardId !== null
-										? String(defaultDashboardId)
-										: '__none__'
-								}>
-								<SelectTrigger className="w-full" id="ws-settings-dashboard">
-									<SelectValue placeholder="Select default dashboard" />
-								</SelectTrigger>
-								<SelectContent>
-									<SelectItem value="__none__">None</SelectItem>
-									{dashboards.map((d) => (
-										<SelectItem key={d.id} value={String(d.id)}>
-											{d.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-							{/* The helper here restated the label; see WorkspaceGeneralTab. */}
-						</div>
+				{/*
+				 * The same two-column grid as the other two tabs even though this tab has one
+				 * field — a lone select that spans the whole card would make this tab look like
+				 * a different kind of form from its two siblings.
+				 */}
+				<div className="grid gap-6 sm:grid-cols-2">
+					<div className="space-y-2">
+						<Label htmlFor="ws-settings-dashboard">Default dashboard</Label>
+						{/* `''` when unset, not `'__none__'` — see WorkspaceGeneralTab. */}
+						<Select
+							onValueChange={(val) =>
+								setDefaultDashboardId(val === '__none__' ? null : Number(val))
+							}
+							value={defaultDashboardId !== null ? String(defaultDashboardId) : ''}>
+							<SelectTrigger className="w-full" id="ws-settings-dashboard">
+								<SelectValue placeholder="Select default dashboard" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="__none__">No default dashboard</SelectItem>
+								{dashboards.map((d) => (
+									<SelectItem key={d.id} value={String(d.id)}>
+										{d.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						{/* The helper here restated the label; see WorkspaceGeneralTab. */}
 					</div>
-
-					<Button
-						disabled={isPending || !isDirty}
-						onClick={() =>
-							save(defaultDashboardId !== null ? { defaultDashboardId } : {})
-						}>
-						{isPending ? (
-							<Spinner size={16} />
-						) : (
-							<Save aria-hidden="true" className="size-4" />
-						)}
-						Save changes
-					</Button>
 				</div>
 			</CardContent>
+			{/* The primary action in the footer slot — see the note in WorkspaceGeneralTab. */}
+			<CardFooter>
+				<Button
+					disabled={isPending || !isDirty}
+					onClick={() => save(defaultDashboardId !== null ? { defaultDashboardId } : {})}>
+					{isPending ? (
+						<Spinner size={16} />
+					) : (
+						<Save aria-hidden="true" className="size-4" />
+					)}
+					Save changes
+				</Button>
+			</CardFooter>
 		</Card>
 	);
 }

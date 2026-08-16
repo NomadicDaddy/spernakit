@@ -64,6 +64,7 @@ function useHealthDetails() {
 
 	const {
 		data: details,
+		isFetching: detailsFetching,
 		isLoading: detailsLoading,
 		refetch: refetchDetails,
 	} = useQuery({
@@ -79,7 +80,7 @@ function useHealthDetails() {
 		},
 	});
 
-	return { details, detailsLoading, refetchDetails, runCheckMutation };
+	return { details, detailsFetching, detailsLoading, refetchDetails, runCheckMutation };
 }
 
 function useHealthHistory() {

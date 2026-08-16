@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useMatches } from 'react-router';
 
 import { navItems } from '@/components/layout/navConfig';
 
@@ -27,6 +27,26 @@ function humanizeSegment(segment: string): string {
  */
 const OPAQUE_SEGMENT = /^[0-9a-f]{16,}$/i;
 
+/**
+ * A title the matched route states for itself, rather than one derived from the URL.
+ *
+ * Only the 404 route declares one today, and that is the case the whole mechanism exists for: the
+ * fallback below humanizes the last path segment of ANY pathname, so an unmatched path produced a
+ * confident title naming a page that does not exist. `/settings/scheduler` rendered
+ * "404 — Page not found" under "Scheduler · Spernakit v3", and `/settings/totally-made-up-page`
+ * under "Totally Made Up Page · Spernakit v3" — the tab, the bookmark, the history entry and the
+ * route announcement all reported that a real page had loaded while the body said the opposite.
+ */
+interface RouteTitleHandle {
+	pageTitle: string;
+}
+
+function handleTitle(handle: unknown): null | string {
+	if (typeof handle !== 'object' || handle === null) return null;
+	const { pageTitle } = handle as Partial<RouteTitleHandle>;
+	return typeof pageTitle === 'string' ? pageTitle : null;
+}
+
 /** Derive a page title from the current pathname via nav config, falling back to the last path segment. */
 function derivePageTitle(pathname: string): string {
 	const navMatch = navItems.find((item) => item.to === pathname);
@@ -47,14 +67,23 @@ function derivePageTitle(pathname: string): string {
  */
 function useRouteAnnouncement(): void {
 	const { pathname } = useLocation();
+	/*
+	 * Innermost first: a nested route's own name beats an ancestor's. Only the leaf declares one
+	 * today, but reading it this way means a future route can name itself without also having to
+	 * out-rank whatever its parents happen to say.
+	 */
+	const routeTitle = useMatches().reduceRight<null | string>(
+		(found, match) => found ?? handleTitle(match.handle),
+		null,
+	);
 
 	useEffect(() => {
-		document.title = `${derivePageTitle(pathname)} · ${__APP_NAME__}`;
+		document.title = `${routeTitle ?? derivePageTitle(pathname)} · ${__APP_NAME__}`;
 		if (lastAnnouncedPathname !== null && lastAnnouncedPathname !== pathname) {
 			document.getElementById('main-content')?.focus();
 		}
 		lastAnnouncedPathname = pathname;
-	}, [pathname]);
+	}, [pathname, routeTitle]);
 }
 
 export { useRouteAnnouncement };

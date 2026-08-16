@@ -88,8 +88,8 @@ export function DashboardCard({ canMutate, dashboard, onDelete, onExport }: Dash
 							</DropdownMenuItem>
 							{canMutate && (
 								<DropdownMenuItem
-									className="text-destructive"
-									onClick={() => onDelete(dashboard.id)}>
+									onClick={() => onDelete(dashboard.id)}
+									variant="destructive">
 									<Trash2 aria-hidden="true" className="size-4" />
 									Delete
 								</DropdownMenuItem>

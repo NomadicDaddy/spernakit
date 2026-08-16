@@ -8,6 +8,7 @@ import type { TestResults } from './crawltest-results';
 import type { CrawlerState } from './crawltest-types';
 
 import { IGNORED_WARNING_PATTERNS } from './crawltest-types';
+import { BLOCKED_HEADER } from './crawltest-writeguard';
 
 // ---------------------------------------------------------------------------
 // Event context — read fresh at event time via a getter callback
@@ -151,6 +152,8 @@ function handleResponse(ctx: CrawlEventContext, response: HTTPResponse): void {
 	}
 
 	if (response.status() >= 400) {
+		// This run's own read-only guard refusing a write, not the application refusing one.
+		if (response.headers()[BLOCKED_HEADER]) return;
 		if (!ctx.isLoggedIn && response.status() === 401) return;
 		if (response.status() === 401 && ctx.loginCredentials) return;
 		if (ctx.state.testing404 && response.status() === 404) return;

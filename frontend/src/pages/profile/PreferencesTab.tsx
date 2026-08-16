@@ -93,6 +93,20 @@ function PreferencesTab() {
 
 	return (
 		<div className="space-y-6">
+			{/*
+			 * The commit model, said out loud. This tab is four form cards with labels, selects and
+			 * toggles and no submit control anywhere — nothing on screen told the reader the
+			 * controls apply on interaction. The sibling tab one click away in the same rail wears
+			 * the identical Card idiom under the identical header and does end in "Save Changes",
+			 * so two adjacent surfaces carried opposite commit models in the same costume. Because
+			 * this page is the form-card exemplar, a surface copying it could not tell which of the
+			 * two conventions it was copying. One muted line in the treatment PageHeader's own lead
+			 * uses, above the first card, makes the divergence deliberate instead of invisible.
+			 */}
+			<p className="text-sm text-muted-foreground">
+				Changes on this tab apply as soon as you make them.
+			</p>
+
 			<ThemePreferences
 				appTheme={appTheme}
 				disabled={uiSettingsPending}

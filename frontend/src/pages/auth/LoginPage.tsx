@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useActionState, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router';
 import { toast } from 'sonner';
 
 import type { DataResponse } from '@/api/types';
@@ -15,6 +15,7 @@ import { AuthPageLayout } from '@/components/auth/AuthPageLayout';
 import { DemoAccountButtons } from '@/components/auth/DemoAccountButtons';
 import { type OAuthProvider, OAuthProviderButtons } from '@/components/auth/OAuthProviderButtons';
 import { Spinner } from '@/components/shared/Spinner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,16 @@ function LoginPage() {
 	const usernameRef = useRef<HTMLInputElement>(null);
 	const passwordRef = useRef<HTMLInputElement>(null);
 	const [demoSelected, setDemoSelected] = useState(false);
+	const [searchParams] = useSearchParams();
+
+	/*
+	 * `handleSessionExpired` (api/tokenRefresh.ts) sends a user here with `?expired=1` when their
+	 * token refresh failed while they held a session — as opposed to a cold anonymous 401, which
+	 * lands on a bare /login. The param exists solely so this page can say what happened; without
+	 * a reader for it the redirect is silent, and a user thrown out mid-task sees a sign-in screen
+	 * indistinguishable from one they navigated to deliberately.
+	 */
+	const sessionExpired = searchParams.get('expired') === '1';
 
 	const { data: oauthData } = useQuery({
 		queryFn: () =>
@@ -100,6 +111,15 @@ function LoginPage() {
 			description="Sign in to your account"
 			title={<span translate="no">{__APP_NAME__}</span>}>
 			<CardContent>
+				{sessionExpired && (
+					<Alert className="mb-4">
+						<AlertTitle>Your session expired</AlertTitle>
+						<AlertDescription>
+							You were signed out because your session could no longer be renewed.
+							Sign in again to continue where you left off.
+						</AlertDescription>
+					</Alert>
+				)}
 				<form action={submitAction} className="space-y-4" ref={formRef}>
 					<div className="space-y-2">
 						<Label htmlFor="username">Username</Label>

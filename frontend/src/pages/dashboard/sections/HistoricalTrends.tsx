@@ -31,7 +31,8 @@ function HistoricalTrends({
 	const rangeLabel = `over the last ${metricsHours} ${metricsHours === 1 ? 'hour' : 'hours'}`;
 
 	return (
-		<>
+		/* A `<section>` at 12px inside the page's 24px stack — see MetricsSummary. */
+		<section className="space-y-3">
 			{/* The shared section rung, with the range picker in its trailing slot. */}
 			<SectionHeader description="Resource usage over time" title="Historical Trends">
 				<TimeRangeSelector onChange={onMetricsHoursChange} value={metricsHours} />
@@ -70,7 +71,7 @@ function HistoricalTrends({
 					</Suspense>
 				)}
 			</div>
-		</>
+		</section>
 	);
 }
 

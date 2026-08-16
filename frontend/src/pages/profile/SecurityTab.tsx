@@ -92,9 +92,27 @@ function SecurityTab() {
 				<CardHeader>
 					<div className="flex flex-wrap items-center gap-2">
 						<CardTitle>Two-factor authentication</CardTitle>
+						{/*
+						 * `success`, not `default`. This chip is genuinely state — MFA is on or it
+						 * is not — and badge.tsx reserves `default`/`bg-primary` for things you
+						 * click, so a saturated primary fill here read as the surface's call to
+						 * action while the actual button sat below it. The role map does not apply:
+						 * it is keyed by UserRole and encodes identity, which is the opposite of
+						 * what this chip carries.
+						 *
+						 * The off state moved from `secondary` to `warning`, reversing an earlier
+						 * call here that neutral was right because "not enabled is not an error".
+						 * True, and beside the point: badge.tsx assigns `secondary` to identity and
+						 * metadata and states outright that those are not states, so a neutral chip
+						 * made the only status signal on the whole tab render exactly like a role
+						 * or a kind tag — a SYSOP account with no second factor looked
+						 * indistinguishable from a settled preference. `warning` is not
+						 * `destructive` and claims no error; it claims a gap, which is how
+						 * /settings/auth's SecurityHealthSection already flags this same fact.
+						 */}
 						<Badge
 							aria-label={`MFA status: ${enabled ? 'Enabled' : 'Disabled'}`}
-							variant={enabled ? 'default' : 'secondary'}>
+							variant={enabled ? 'success' : 'warning'}>
 							{enabled ? 'Enabled' : 'Disabled'}
 						</Badge>
 					</div>

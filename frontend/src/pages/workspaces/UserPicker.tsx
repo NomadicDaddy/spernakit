@@ -47,14 +47,23 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 	return (
 		<Popover modal onOpenChange={setOpen} open={open}>
 			<PopoverTrigger asChild>
+				{/*
+				 * `min-w-0` because `flex-1` alone does not let this shrink: a flex item keeps
+				 * `min-width: auto`, which resolves to min-content, and Button is `whitespace-nowrap`
+				 * — so the trigger held a hard 167px floor and, with a selection made, the floor grew
+				 * to the width of "username (email@address)". `truncate` on the label is what the
+				 * shrink then costs, and it costs nothing the popover does not show in full.
+				 */}
 				<Button
 					aria-expanded={open}
-					className="flex-1 justify-between"
+					className="min-w-0 flex-1 justify-between"
 					role="combobox"
 					variant="outline">
-					{selectedUser
-						? `${selectedUser.username} (${selectedUser.email})`
-						: 'Select a user…'}
+					<span className="truncate">
+						{selectedUser
+							? `${selectedUser.username} (${selectedUser.email})`
+							: 'Select a user…'}
+					</span>
 					{/* No `ml-2`: Button already sets `gap-2`, and this is the last of the
 					    doubled icon margins on the workspace surface. */}
 					<ChevronsUpDown aria-hidden="true" className="size-4 shrink-0 opacity-50" />

@@ -7,6 +7,7 @@ import type { DataResponse, Notification, NotificationStatistics } from '@/api/t
 import { trackEvent } from '@/api/businessMetrics';
 import { getNotificationStatistics, notificationKeys } from '@/api/notifications';
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
+import { BulkActionBar } from '@/components/shared/data-table/BulkActionBar';
 import { DataTable } from '@/components/shared/data-table/DataTable';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useNotificationColumns } from '@/hooks/notifications/useNotificationColumns';
 import { type ReadFilter, useNotifications } from '@/hooks/notifications/useNotifications';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
+import { useUrlSorting } from '@/hooks/useUrlSorting';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
@@ -25,15 +27,11 @@ const VALID_READ_FILTERS = new Set<string>(['all', 'read', 'unread']);
 function NotificationPageHeader({
 	markAllReadIsPending,
 	onMarkAllRead,
-	onShowBulkDelete,
-	selectedCount,
 	statsLoading,
 	unreadCount,
 }: {
 	markAllReadIsPending: boolean;
 	onMarkAllRead: () => void;
-	onShowBulkDelete: () => void;
-	selectedCount: number;
 	statsLoading: boolean;
 	unreadCount: number;
 }) {
@@ -62,12 +60,14 @@ function NotificationPageHeader({
 					Mark all read
 				</Button>
 			)}
-			{selectedCount > 0 && (
-				<Button onClick={onShowBulkDelete} size="sm" variant="destructive">
-					<Trash2 aria-hidden="true" className="size-4" />
-					Delete ({selectedCount})
-				</Button>
-			)}
+			{/*
+			 * Delete no longer lives here. In the header it sat two sections above the checkboxes it
+			 * acted on — off screen once the stats grid and the toolbar were between them — and it
+			 * reported a bare count, so a filter that hid every selected row left "Delete (1)" in the
+			 * page's most prominent action slot pointing at nothing visible. It is now in the shared
+			 * BulkActionBar under the table, beside its selection and beside the count of what the
+			 * filter is hiding, the same as /settings/users.
+			 */}
 		</PageHeader>
 	);
 }
@@ -150,6 +150,12 @@ function NotificationsPage() {
 	const [deleteTarget, setDeleteTarget] = useState<Notification | null>(null);
 	const [showBulkDelete, setShowBulkDelete] = useState(false);
 
+	// Newest first, matching what the API does when asked for nothing.
+	const { onSortingChange, sortBy, sortDir, sorting } = useUrlSorting(
+		'createdAt',
+		clearSelection,
+	);
+
 	const {
 		bulkDeleteMutation,
 		data,
@@ -157,7 +163,7 @@ function NotificationsPage() {
 		isLoading,
 		markAllReadMutation,
 		markReadMutation,
-	} = useNotifications({ limit, page, readFilter, typeFilter });
+	} = useNotifications({ limit, page, readFilter, sortBy, sortDir, typeFilter });
 
 	const { data: statsResponse, isLoading: statsLoading } = useQuery<
 		DataResponse<NotificationStatistics>
@@ -168,9 +174,24 @@ function NotificationsPage() {
 		staleTime: STALE_TIME_SHORT,
 	});
 
+	const notifications = data?.data ?? [];
+
+	// Both filters are server-side, so `notifications` is exactly what is on screen and a selected
+	// row missing from it is one the reader cannot see or untick. See UsersTab for the full note.
+	const visibleIds = new Set(notifications.map((n) => n.id));
+	const hiddenSelectedCount = selectedRows.filter((n) => !visibleIds.has(n.id)).length;
+
+	function clearFilters() {
+		setFilters((params) => {
+			params.delete('read');
+			params.delete('type');
+			params.delete('page');
+		});
+	}
+
 	// Selection is held here but rendered by the table, and the table unmounts while a
-	// new page loads. Clearing both together keeps the header's Delete button from
-	// offering rows the user can no longer see or uncheck.
+	// new page loads. Clearing both together keeps the bulk bar from offering rows the
+	// user can no longer see or uncheck.
 	function clearSelection() {
 		setSelectedRows([]);
 		setSelectionResetToken((token) => token + 1);
@@ -187,8 +208,6 @@ function NotificationsPage() {
 			<NotificationPageHeader
 				markAllReadIsPending={markAllReadMutation.isPending}
 				onMarkAllRead={() => markAllReadMutation.mutate()}
-				onShowBulkDelete={() => setShowBulkDelete(true)}
-				selectedCount={selectedRows.length}
 				statsLoading={statsLoading}
 				unreadCount={statsResponse?.data.unread ?? 0}
 			/>
@@ -200,20 +219,14 @@ function NotificationsPage() {
 			) : (
 				<DataTable
 					columns={columns}
-					data={data?.data ?? []}
+					data={notifications}
 					empty={{
 						description:
 							'Alerts about your workspace arrive here. There is nothing to catch up on.',
 						icon: BellOff,
 						// Both filters are server-side, so the table cannot read them itself.
 						isFiltered: readFilter !== 'all' || typeFilter !== 'all',
-						onClearFilters: () => {
-							setFilters((params) => {
-								params.delete('read');
-								params.delete('type');
-								params.delete('page');
-							});
-						},
+						onClearFilters: clearFilters,
 						title: 'You are all caught up',
 					}}
 					onRowSelectionChange={setSelectedRows}
@@ -224,7 +237,9 @@ function NotificationsPage() {
 							clearSelection();
 						},
 						onPageSizeChange: setLimit,
+						onSortingChange,
 						page,
+						sorting,
 						total: data?.total ?? 0,
 					}}
 					selectionResetToken={selectionResetToken}
@@ -252,6 +267,20 @@ function NotificationsPage() {
 						/>
 					}
 				/>
+			)}
+
+			{/* See UsersTab: the empty state owns Clear filters while it is showing, so the bar
+			 * offers its own only while rows are on screen. */}
+			{!isLoading && (
+				<BulkActionBar
+					hiddenCount={hiddenSelectedCount}
+					{...(notifications.length > 0 ? { onClearFilters: clearFilters } : {})}
+					selectedCount={selectedRows.length}>
+					<Button onClick={() => setShowBulkDelete(true)} size="sm" variant="destructive">
+						<Trash2 aria-hidden="true" className="size-4" />
+						Delete Selected
+					</Button>
+				</BulkActionBar>
 			)}
 
 			<NotificationDeleteDialogs

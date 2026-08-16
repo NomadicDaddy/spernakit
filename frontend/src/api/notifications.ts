@@ -16,7 +16,14 @@ export const RECENT_NOTIFICATIONS_LIMIT = 5;
 export const notificationKeys = {
 	list: (
 		workspaceId: null | number,
-		params?: { limit?: string; page?: string; readStatus?: string; type?: string },
+		params?: {
+			limit?: string;
+			page?: string;
+			readStatus?: string;
+			sortBy?: string;
+			sortDir?: string;
+			type?: string;
+		},
 	) =>
 		[
 			'notifications',
@@ -25,6 +32,11 @@ export const notificationKeys = {
 			params?.limit ?? '20',
 			params?.readStatus ?? 'all',
 			params?.type ?? 'all',
+			// Sort is part of the identity of a page: page 1 by title and page 1 by date are
+			// different twenty records. Left out of the key, the second request would be served the
+			// first one's rows from cache and the header would claim an order the rows are not in.
+			params?.sortBy ?? 'createdAt',
+			params?.sortDir ?? 'desc',
 		] as const,
 	recent: (workspaceId: null | number) => ['notifications', 'recent', workspaceId] as const,
 	statistics: (workspaceId: null | number) => ['notification-statistics', workspaceId] as const,
@@ -36,6 +48,10 @@ interface ListNotificationsParams {
 	limit?: string;
 	page?: string;
 	readStatus?: 'all' | 'read' | 'unread';
+	/** Column to sort by: createdAt, readAt, title, type. */
+	sortBy?: string;
+	/** `asc`, or descending for anything else. */
+	sortDir?: string;
 	type?: string;
 }
 

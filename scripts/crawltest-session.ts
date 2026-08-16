@@ -13,6 +13,7 @@ import type { CrawlerOpts, CrawlerState } from './crawltest-types';
 
 import { screenshotPage } from './crawltest-screenshots';
 import { waitForContent } from './crawltest-types';
+import { BUG_REPORT_WRITE, installWriteGuard } from './crawltest-writeguard';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -30,8 +31,21 @@ export interface CrawlSession {
 	reLoginFailed: boolean;
 }
 
-/** Flush rate limit entries so automated crawling isn't throttled by its own traffic. */
-export function flushRateLimits(): void {
+/**
+ * Flush rate limit entries so automated crawling isn't throttled by its own traffic.
+ *
+ * `readOnly` is required rather than defaulted because this write goes straight to SQLite and so
+ * is invisible to the request-interception guard: a call site that forgot it would delete rows
+ * while the run reports `Writes: blocked`, the one claim a read-only crawl has to keep. Three
+ * separate paths reach here — startup, route discovery, and browser recycling — and guarding them
+ * one at a time missed two of them. A required parameter makes the typechecker the regression
+ * test: a fourth path cannot be added without answering the question.
+ *
+ * Skipping the flush costs a read-only crawl nothing, because dev configs ship
+ * `rateLimit.enabled: false`.
+ */
+export function flushRateLimits(readOnly: boolean): void {
+	if (readOnly) return;
 	try {
 		const defaultsPath = path.join(ROOT_DIR, 'backend', 'src', 'config', 'defaults.json');
 		const defaults = JSON.parse(fs.readFileSync(defaultsPath, 'utf8')) as {
@@ -54,6 +68,8 @@ export function flushRateLimits(): void {
 export async function launchSession(
 	session: CrawlSession,
 	attach: (page: Page) => void,
+	state: CrawlerState,
+	opts: CrawlerOpts,
 ): Promise<void> {
 	session.browser = await puppeteer.launch({
 		args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
@@ -62,6 +78,12 @@ export async function launchSession(
 	});
 	session.page = await session.browser.newPage();
 	await session.page.setViewport({ height: 1080, width: 1920 });
+	// Before `attach`, and before anything navigates: request interception has to be in place from
+	// the page's first request, and this is the only place a page is made — including the replacement
+	// `recycleBrowser` builds mid-crawl, which is why the guard needs no second call site.
+	if (opts.readOnly) {
+		await installWriteGuard(session.page, state, opts.testBug ? [BUG_REPORT_WRITE] : []);
+	}
 	attach(session.page);
 }
 
@@ -164,11 +186,12 @@ export async function recycleBrowser(
 	session: CrawlSession,
 	opts: CrawlerOpts,
 	attach: (page: Page) => void,
+	state: CrawlerState,
 ): Promise<boolean> {
 	if (session.reLoginFailed) return false;
 
 	console.log('   ♻️  Recycling browser (CDP reset)...');
-	flushRateLimits();
+	flushRateLimits(opts.readOnly);
 	try {
 		if (session.browser) {
 			try {
@@ -192,7 +215,7 @@ export async function recycleBrowser(
 			session.page = null;
 		}
 
-		await launchSession(session, attach);
+		await launchSession(session, attach, state, opts);
 
 		if (session.loginCredentials && session.page) {
 			await session.page.goto(`${opts.baseUrl}/login`, {

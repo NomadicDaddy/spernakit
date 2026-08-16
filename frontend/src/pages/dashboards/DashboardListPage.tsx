@@ -59,10 +59,19 @@ function DashboardListPage() {
 							ref={fileInputRef}
 							type="file"
 						/>
+						{/*
+						 * `ghost` → `outline` → primary, the rising ramp DashboardHeaderFrame
+						 * already grades its cluster with (Rename, Share, then the primary). This
+						 * header read flat, flat, primary: Import rendered identically to From
+						 * Template, so the leading first-read slot went to a restore path at the
+						 * same weight as one of the two ways to create a dashboard — and the page's
+						 * own empty state names only "New Dashboard" and "From Template" as the
+						 * ways in.
+						 */}
 						<Button
 							onClick={() => fileInputRef.current?.click()}
 							size="sm"
-							variant="outline">
+							variant="ghost">
 							<Upload aria-hidden="true" className="size-4" />
 							Import
 						</Button>

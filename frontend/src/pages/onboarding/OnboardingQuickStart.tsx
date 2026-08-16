@@ -1,4 +1,4 @@
-import { LayoutDashboard, Shield, Users } from 'lucide-react';
+import { ArrowRight, LayoutDashboard, Shield, Users } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { SectionHeader } from '@/components/shared/SectionHeader';
@@ -41,6 +41,20 @@ function QuickStartCard({
 					</p>
 					<p className="text-sm text-muted-foreground">{description}</p>
 				</div>
+				{/*
+				 * The affordance that told these tiles apart from the Tips tiles below them. Both
+				 * grids render the identical Card shell — same background, border, radius, shadow,
+				 * padding and 14px/500 title over muted description — but these three navigate and
+				 * the Tips are inert. At rest the only difference on screen was icon hue, blue here
+				 * against grey there, and hue is not a navigation affordance anywhere else in the
+				 * app. Same glyph and meaning the checklist's own "Continue" button uses one section
+				 * up, so the two grids stay shaped alike while the navigable one is identifiable
+				 * without hovering it.
+				 */}
+				<ArrowRight
+					aria-hidden="true"
+					className="mt-0.5 ml-auto size-4 shrink-0 text-muted-foreground"
+				/>
 			</CardContent>
 		</Card>
 	);

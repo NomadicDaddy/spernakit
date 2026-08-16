@@ -15,6 +15,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 
+import { CHECK_ORDER } from './healthStatusUtils';
+
 interface HealthConfigSectionProps {
 	config: HealthCheckConfig | undefined;
 	configLoading: boolean;
@@ -60,12 +62,15 @@ const diskThresholdFields = [
 	},
 ] as const;
 
-const enabledChecks = [
-	{ key: 'database', label: 'Database' },
-	{ key: 'disk', label: 'Disk' },
-	{ key: 'memory', label: 'Memory' },
-	{ key: 'filesystem', label: 'Filesystem' },
-] as const;
+/**
+ * Derived from CHECK_ORDER, not a second hand-written list. This row and the check cards further up
+ * the page show the same four checks and used to disagree on their order; keeping the sequence in
+ * one place is what stops them drifting apart again.
+ */
+const enabledChecks = CHECK_ORDER.map((key) => ({
+	key,
+	label: key.charAt(0).toUpperCase() + key.slice(1),
+}));
 
 /**
  * Validate threshold cross-constraints, mirroring the backend rules so the

@@ -8,39 +8,11 @@ import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSk
 import { StatCardSkeleton } from '@/components/shared/skeletons/StatCardSkeleton';
 import { Card, CardContent } from '@/components/ui/card';
 
+import { RankedRow } from './RankedRow';
 import { getRangeLabel } from './timeRange';
 
 interface DashboardStatsSectionProps {
 	days: number;
-}
-
-/**
- * One ranked row of the Top Features list.
- *
- * The row used to be a bare `flex justify-between`, which put the feature name and its count at
- * opposite edges of a card up to 1400px wide with roughly 1000px of nothing between them, and no
- * separator, alignment or proportion to tie them together. The bar behind the row is what "top
- * features" is actually asking for — rank plus share, readable without reading the numbers — and it
- * gives the width something to do.
- */
-function RankedRow({ count, label, max }: { count: number; label: string; max: number }) {
-	const share = max > 0 ? Math.max((count / max) * 100, 2) : 0;
-
-	return (
-		<li className="relative overflow-hidden rounded-md">
-			<div
-				aria-hidden="true"
-				className="absolute inset-y-0 left-0 bg-primary/10"
-				style={{ width: `${String(share)}%` }}
-			/>
-			<div className="relative flex items-center justify-between gap-4 px-3 py-2">
-				<span className="min-w-0 truncate text-sm font-medium">{label}</span>
-				<span className="shrink-0 text-sm text-muted-foreground tabular-nums">
-					{count} events
-				</span>
-			</div>
-		</li>
-	);
 }
 
 export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
@@ -81,16 +53,23 @@ export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
 			 * The subtitles are not decoration either. Total Events and Conversions follow the range
 			 * selector; Daily and Monthly Active Users are fixed-window by definition and do not
 			 * move when the range changes. Four identical tiles under one selector said otherwise.
+			 *
+			 * `index` is what turns StatCard's `animate-fade-up` into the 40ms stagger /dashboard's
+			 * MetricsSummary already uses. Without it all four cards carried the animation with no
+			 * delay and entered as one slab, so the same component introduced itself two different
+			 * ways on the two surfaces the app most wants to feel alike.
 			 */}
 			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 				<StatCard
 					icon={<Users aria-hidden="true" className="size-5 text-muted-foreground" />}
+					index={0}
 					subtitle="Today"
 					title="Daily Active Users"
 					value={dashboardData?.dailyActiveUsers ?? 0}
 				/>
 				<StatCard
 					icon={<Users aria-hidden="true" className="size-5 text-muted-foreground" />}
+					index={1}
 					subtitle="Rolling 30 days"
 					title="Monthly Active Users"
 					value={dashboardData?.monthlyActiveUsers ?? 0}
@@ -99,12 +78,14 @@ export function DashboardStatsSection({ days }: DashboardStatsSectionProps) {
 					icon={
 						<TrendingUp aria-hidden="true" className="size-5 text-muted-foreground" />
 					}
+					index={2}
 					subtitle={rangeLabel}
 					title="Total Events"
 					value={dashboardData?.totalEvents ?? 0}
 				/>
 				<StatCard
 					icon={<BarChart3 aria-hidden="true" className="size-5 text-muted-foreground" />}
+					index={3}
 					subtitle={rangeLabel}
 					title="Conversions"
 					value={

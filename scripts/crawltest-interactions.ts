@@ -154,6 +154,11 @@ export async function testInteractiveElements(
 
 		try {
 			if (element.type === 'switch') {
+				// A switch has no observable effect other than the write it sends, so in read-only
+				// mode there is nothing left to test — the guard would refuse the request anyway, and
+				// toggling to watch the app handle a refusal only manufactures error noise. This is
+				// where `PUT /api/v1/health/config` and `PATCH /api/v1/tasks/token-cleanup` came from.
+				if (opts.readOnly) continue;
 				await testSwitch(page, results, opts, element, pageUrl);
 			} else if (element.type === 'select') {
 				await testSelect(page, results, element, pageUrl);

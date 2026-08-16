@@ -17,7 +17,18 @@ export { testBugReport } from './crawltest-bugreport';
 // Test data management
 // ---------------------------------------------------------------------------
 
-export async function ensureTestDashboard(page: Page, state: CrawlerState): Promise<void> {
+/**
+ * Make sure `/dashboard/:id` has a record to resolve against.
+ *
+ * Reading first is not just an optimisation: in read-only mode it is the whole strategy. An existing
+ * dashboard is used as-is, and when there is none the parameterized route simply goes uncovered —
+ * creating one to test with is exactly the kind of write this crawl is no longer allowed to make.
+ */
+export async function ensureTestDashboard(
+	page: Page,
+	state: CrawlerState,
+	readOnly: boolean,
+): Promise<void> {
 	// Check if any dashboards exist
 	const existingId = await page.evaluate(async () => {
 		try {
@@ -36,6 +47,14 @@ export async function ensureTestDashboard(page: Page, state: CrawlerState): Prom
 	});
 
 	if (existingId) return;
+
+	if (readOnly) {
+		console.log(
+			'   No dashboard exists and the read-only guard forbids creating one — ' +
+				'/dashboard/:id will be skipped. Re-run with --allow-writes to cover it.',
+		);
+		return;
+	}
 
 	// Create a test dashboard (CSRF token captured from login response by crawler)
 	const csrfToken = state.csrfToken;

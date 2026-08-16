@@ -37,11 +37,16 @@ function Sidebar() {
 				(item) => !item.featureFlag && (!item.minRole || hasMinRole(item.minRole)),
 			);
 
+	/*
+	 * The shell is a plain container, deliberately: not `<aside>`, not `role="navigation"`, and not
+	 * named. The `<nav>` below is the navigation landmark and carries the name. When this element
+	 * was also `role="navigation" aria-label="Main navigation"`, a screen reader's landmark list
+	 * held two identically-named navigations, one inside the other. `<aside>` on its own is no
+	 * better here — it would leave a `complementary` landmark wrapping the app's *primary*
+	 * navigation, which is the opposite of what complementary means.
+	 */
 	return (
-		<aside
-			aria-label="Main navigation"
-			className="flex h-full w-full flex-col overflow-hidden border-r bg-background"
-			role="navigation">
+		<div className="flex h-full w-full flex-col overflow-hidden border-r bg-background">
 			{/* Logo / App Name */}
 			<div className="flex h-14 items-center border-b px-4">
 				{brandingLogoFileId ? (
@@ -75,7 +80,7 @@ function Sidebar() {
 			</div>
 
 			{/* Navigation */}
-			<nav className="flex-1 space-y-1 overflow-y-auto p-2">
+			<nav aria-label="Main navigation" className="flex-1 space-y-1 overflow-y-auto p-2">
 				{visibleNavItems.map((item) => {
 					const link = (
 						<NavLink
@@ -140,7 +145,7 @@ function Sidebar() {
 					)}
 				</Button>
 			</div>
-		</aside>
+		</div>
 	);
 }
 

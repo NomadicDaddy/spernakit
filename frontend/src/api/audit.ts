@@ -11,6 +11,10 @@ interface ListAuditLogsParams {
 	limit?: string;
 	page?: string;
 	search?: string;
+	/** Column to sort by: createdAt, username, action, resource, ipAddress. */
+	sortBy?: string;
+	/** `asc`, or descending for anything else. */
+	sortDir?: string;
 	userId?: string;
 }
 

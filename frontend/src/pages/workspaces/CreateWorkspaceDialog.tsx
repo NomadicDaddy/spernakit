@@ -1,15 +1,15 @@
 import { useRef, useState } from 'react';
 
-import {
-	AlertDialog,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 
 import { WorkspaceFormFields } from './WorkspaceFormFields';
 
@@ -73,10 +73,19 @@ export function CreateWorkspaceDialog({
 	}
 
 	return (
-		<AlertDialog onOpenChange={handleOpenChange} open={isOpen}>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Create Workspace</AlertDialogTitle>
+		/*
+		 * `Dialog`, not `AlertDialog`. This is a form, and the exemplar /settings/users reserves
+		 * AlertDialog for confirmations (delete, bulk delete, impersonate) while every one of its
+		 * forms — create, edit, reset password, bulk role — is a Dialog. Two consequences were
+		 * visible here: alert-dialog.tsx renders no corner close control, so Cancel and Escape were
+		 * the only exits; and on open `document.activeElement` was the Cancel button, so a keyboard
+		 * user landed on the dismiss control of a form they had opened to fill in. DialogContent
+		 * renders its close after `children`, which puts first focus on the name field instead.
+		 */
+		<Dialog onOpenChange={handleOpenChange} open={isOpen}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Create Workspace</DialogTitle>
 					{/*
 					 * Visible, not `sr-only`. The three dialogs on this surface disagreed about
 					 * their header: the members dialog rendered its description while create and
@@ -84,9 +93,9 @@ export function CreateWorkspaceDialog({
 					 * at otherwise identical padding. CreateUserDialog is the reference and shows
 					 * its sentence.
 					 */}
-					<AlertDialogDescription>Set up a new workspace.</AlertDialogDescription>
-				</AlertDialogHeader>
-				{/* No `py-4`: AlertDialogContent's grid already supplies the 16px seam. */}
+					<DialogDescription>Set up a new workspace.</DialogDescription>
+				</DialogHeader>
+				{/* No `py-4`: DialogContent's grid already supplies the 16px seam. */}
 				<div className="space-y-4">
 					<WorkspaceFormFields
 						description={form.description}
@@ -98,16 +107,19 @@ export function CreateWorkspaceDialog({
 						{...(nameError ? { nameError } : {})}
 					/>
 				</div>
-				<AlertDialogFooter>
-					<AlertDialogCancel
-						onClick={() => setForm({ description: '', name: '', slug: '' })}>
-						Cancel
-					</AlertDialogCancel>
+				<DialogFooter>
+					<DialogClose asChild>
+						<Button
+							onClick={() => setForm({ description: '', name: '', slug: '' })}
+							variant="outline">
+							Cancel
+						</Button>
+					</DialogClose>
 					<Button disabled={isPending} onClick={handleCreate}>
 						{isPending ? 'Creating…' : 'Create'}
 					</Button>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }

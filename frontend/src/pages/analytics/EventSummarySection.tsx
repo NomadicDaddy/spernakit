@@ -36,14 +36,22 @@ export function EventSummarySection({ days }: EventSummarySectionProps) {
 							</p>
 						) : (
 							/*
-							 * Two columns with a rule under each row. One full-width column put the
-							 * event name at x=289 and its count at x=1385 with ~1000px of nothing in
-							 * between at 1440, and ~1150px at 2250 — the name and the number it
-							 * belonged to were the two furthest-apart things on the page. Halving the
-							 * measure and giving each row a hairline gets both back into one glance;
+							 * Columns sized to the row, with a rule under each one. One full-width
+							 * column put the event name at x=289 and its count at x=1385 with ~1000px
+							 * of nothing in between at 1440, and ~1150px at 2250 — the name and the
+							 * number it belonged to were the two furthest-apart things on the page.
 							 * `tabular-nums` is what makes the counts read as a column at all.
+							 *
+							 * `md:grid-cols-2` fixed the count at two, which only moved the problem up
+							 * a viewport: at 2560 the rows were still 695px wide and "login" sat 495px
+							 * from its own "154 events". A track floor lets the column count follow the
+							 * width instead — 20rem is what the longest row here needs before it
+							 * truncates ("settings_tab_change" plus its category badge plus the count
+							 * measure ~305px), and it yields four tracks at 2560, three at 1440, two
+							 * from `md` up. `min(…,100%)` collapses it to one full-width track on a
+							 * phone rather than pushing the page sideways.
 							 */
-							<ul className="grid gap-x-8 md:grid-cols-2">
+							<ul className="grid grid-cols-[repeat(auto-fill,minmax(min(20rem,100%),1fr))] gap-x-8">
 								{events.map((event) => (
 									/*
 									 * Uniform rule on every row: the grid fills row-major, so a

@@ -1,3 +1,4 @@
+import type { SortingState } from '@tanstack/react-table';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
@@ -47,7 +48,26 @@ interface DataTablePagination {
 	limit: number;
 	onPageChange: (page: number) => void;
 	onPageSizeChange: (size: number) => void;
+	/**
+	 * Sort state changed. Supply this together with `sorting` to declare that the API sorts, which
+	 * is what re-enables the header controls on a server-paginated table.
+	 *
+	 * Reset the page to 1 in here. Sorting page 5 of 9 and staying on page 5 shows the fifth page of
+	 * a different ordering — every row on screen changes and none of them is the row that was being
+	 * looked at, which reads as data loss rather than as a reorder.
+	 */
+	onSortingChange?: (sorting: SortingState) => void;
 	page: number;
+	/**
+	 * The sort the API applied, owned by the caller.
+	 *
+	 * Sorting is client-side by default — `createSortedRowModel` reorders the rows the table holds,
+	 * which on a server-paged table is one page of several hundred rows. A header offering that
+	 * would claim "sorted by User ascending" over 20 of 179 records with the other 159 untouched, so
+	 * a server-paginated table that does not supply this pair keeps its sort controls hidden. Supply
+	 * it and the headers come back, ordering the whole record set rather than the visible page.
+	 */
+	sorting?: SortingState;
 	total: number;
 }
 

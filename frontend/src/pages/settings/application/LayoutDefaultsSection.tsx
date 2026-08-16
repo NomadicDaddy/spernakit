@@ -49,9 +49,13 @@ function LayoutDefaultsSection({
 				{/*
 				 * Same option idiom as /profile/preferences — this sets the default for the very
 				 * control the user meets there, so the two must not look like different kinds of
-				 * choice.
+				 * choice. The track definition is the same string as the Navigation group in
+				 * LayoutPreferences, deliberately: these are the same two options, and the whole
+				 * point is that they render at the same size.
 				 */}
-				<OptionCardGroup className="grid gap-3 sm:grid-cols-2" label="Default layout">
+				<OptionCardGroup
+					className="grid grid-cols-[repeat(auto-fill,minmax(min(18rem,100%),1fr))] gap-3"
+					label="Default layout">
 					{layoutOptions.map((option) => (
 						<OptionCard
 							description={option.description}

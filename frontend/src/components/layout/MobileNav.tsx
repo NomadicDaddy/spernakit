@@ -1,6 +1,6 @@
 import { Menu, Monitor, Moon, Settings2, Sun, User } from 'lucide-react';
 import { startTransition, useState } from 'react';
-import { NavLink, useLocation } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
 
 import type { ThemeMode } from '@/stores/themeStore';
 
@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 import { preloadRoute } from '@/routes';
 import { useAuthStore } from '@/stores/authStore';
 
-import { getVisibleNavItems, navItems } from './navConfig';
+import { getVisibleNavItems, isNavItemActive, navItems } from './navConfig';
 
 const themeModes: { icon: React.ReactNode; label: string; value: ThemeMode }[] = [
 	{ icon: <Sun aria-hidden="true" className="size-4" />, label: 'Light', value: 'light' },
@@ -86,7 +86,7 @@ function MobileNav() {
 								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
 								'hover:bg-accent hover:text-accent-foreground',
 								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-								location.pathname.startsWith(item.to)
+								isNavItemActive(location.pathname, item.to)
 									? 'bg-accent text-accent-foreground'
 									: 'text-muted-foreground',
 							)}
@@ -103,33 +103,62 @@ function MobileNav() {
 
 				{/* User section */}
 				<div className="mt-auto border-t">
+					{/*
+					 * `Link` rather than `NavLink` for these two, and `aria-current` written by hand.
+					 *
+					 * Both rows point into the same tabbed section — `/profile/preferences` is one of
+					 * ProfileLayout's four tabs, alongside personal, security and api-keys — so the
+					 * row that should look current is not always the row whose `to` the URL equals.
+					 * NavLink does not allow that: it decides `aria-current` from its own match and
+					 * a passed `aria-current` only changes the value it uses when it has already
+					 * decided the link is active. The result was two rows answering "you are here"
+					 * differently — on /profile/preferences the highlight sat on Account while
+					 * `aria-current="page"` sat on Preferences, and on /profile/security the
+					 * highlight sat on Account with no row marked current at all.
+					 *
+					 * One predicate now drives both the styling and the announcement, so exactly one
+					 * row is current on every /profile route and it is the same row in both channels.
+					 * Preferences claims its own tab; Account holds the rest of the section, which is
+					 * the section-level `aria-current="page"` the main nav rows already use for
+					 * /settings and its children.
+					 */}
 					<div className="space-y-1 p-2">
-						<NavLink
-							className={cn(
-								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
-								'hover:bg-accent hover:text-accent-foreground',
-								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-								location.pathname.startsWith('/profile')
-									? 'bg-accent text-accent-foreground'
-									: 'text-muted-foreground',
-							)}
-							onClick={() => setOpen(false)}
-							to="/profile/personal">
-							<User aria-hidden="true" className="size-5" />
-							<span>Account</span>
-						</NavLink>
-						<NavLink
-							className={cn(
-								'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
-								'hover:bg-accent hover:text-accent-foreground',
-								'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-								'text-muted-foreground',
-							)}
-							onClick={() => setOpen(false)}
-							to="/profile/preferences">
-							<Settings2 aria-hidden="true" className="size-5" />
-							<span>Preferences</span>
-						</NavLink>
+						{[
+							{
+								icon: <User aria-hidden="true" className="size-5" />,
+								isCurrent:
+									isNavItemActive(location.pathname, '/profile') &&
+									!isNavItemActive(location.pathname, '/profile/preferences'),
+								label: 'Account',
+								to: '/profile/personal',
+							},
+							{
+								icon: <Settings2 aria-hidden="true" className="size-5" />,
+								isCurrent: isNavItemActive(
+									location.pathname,
+									'/profile/preferences',
+								),
+								label: 'Preferences',
+								to: '/profile/preferences',
+							},
+						].map((row) => (
+							<Link
+								aria-current={row.isCurrent ? 'page' : undefined}
+								className={cn(
+									'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors outline-none',
+									'hover:bg-accent hover:text-accent-foreground',
+									'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+									row.isCurrent
+										? 'bg-accent text-accent-foreground'
+										: 'text-muted-foreground',
+								)}
+								key={row.to}
+								onClick={() => setOpen(false)}
+								to={row.to}>
+								{row.icon}
+								<span>{row.label}</span>
+							</Link>
+						))}
 					</div>
 
 					<Separator />

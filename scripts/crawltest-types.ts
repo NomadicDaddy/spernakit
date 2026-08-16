@@ -14,6 +14,16 @@ import type { Page } from 'puppeteer';
  */
 export const BROWSER_RECYCLE_INTERVAL = 15;
 
+/**
+ * Labels the crawl refuses to click.
+ *
+ * This is a *courtesy* filter, not the safety mechanism: it keeps the crawl from wasting its time on
+ * controls whose whole purpose is to change something, and from tripping confirmation flows it would
+ * then have to answer. It cannot be relied on to protect data — it matches visible text, so an
+ * icon-only button with no accessible name slips past every entry here. Refusing writes is
+ * crawltest-writeguard.ts's job, at the network layer, where the HTTP method is a fact rather than
+ * a guess.
+ */
 export const SKIP_PATTERNS: RegExp[] = [
 	/^logout$/i,
 	/^sign.?out$/i,
@@ -185,6 +195,8 @@ export interface CrawlerOptions {
 	maxDepth?: number;
 	page?: null | string;
 	pageSettleDelay?: number;
+	/** Default true. When false the crawl may change data — see crawltest-writeguard.ts. */
+	readOnly?: boolean;
 	screenshotDir?: null | string;
 	seedRoutes?: string[];
 	startFrom?: null | string;
@@ -203,11 +215,22 @@ export interface CrawlerOpts {
 	interactionDelay: number;
 	loginCredentials: { email: string; password: string } | null;
 	pageSettleDelay: number;
+	readOnly: boolean;
 	screenshotDir: null | string;
+	/** `--bug`. The read-only guard lets the bug-report POST through when this is set. */
+	testBug: boolean;
 	timeout: number;
 }
 
+export interface BlockedWriteEntry {
+	method: string;
+	pathname: string;
+	timestamp: string;
+}
+
 export interface CrawlerState {
+	/** Writes the read-only guard refused, for the end-of-run summary. Empty with --allow-writes. */
+	blockedWrites: BlockedWriteEntry[];
 	cleaningUp: boolean;
 	consecutiveScreenshotFailures: number;
 	createdTestDashboardId: null | number;

@@ -42,9 +42,22 @@ function ApiKeysTab() {
 					 * separates the title from its description — they rendered welded together at
 					 * a 0px gap, with the title at the same 14px as the muted line beneath it.
 					 */}
+					{/*
+					 * Not "API Keys" over "Manage API keys for programmatic access". That title
+					 * repeated the active tab label 80px directly above it and the description
+					 * repeated the page lead, so the surface stacked four headings — "Account",
+					 * the API Keys tab, the API Keys card, "No API keys yet" — for a single
+					 * control. No sibling profile tab does that: Personal Info titles its cards
+					 * "Account" and "Change email address", Preferences "Display" and "Theme".
+					 * The description now carries the one fact a user needs before pressing
+					 * Generate and cannot get anywhere else on the surface.
+					 */}
 					<div className="space-y-1">
-						<CardTitle>API Keys</CardTitle>
-						<CardDescription>Manage API keys for programmatic access</CardDescription>
+						<CardTitle>Personal access keys</CardTitle>
+						<CardDescription>
+							Each key acts as you. The secret is shown once when you generate it and
+							cannot be recovered afterwards.
+						</CardDescription>
 					</div>
 					<Button onClick={() => setShowCreate(true)} size="sm">
 						<Plus aria-hidden="true" className="h-4 w-4" />

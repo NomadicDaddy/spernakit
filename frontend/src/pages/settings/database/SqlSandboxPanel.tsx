@@ -79,11 +79,30 @@ function SqlSandboxPanel() {
 	return (
 		<div className="space-y-4">
 			{/* Query input */}
-			<Card>
+			{/*
+			 * The card is capped, not just its contents. The mobile pass moved the reading measure up
+			 * to CardContent so the toggle, the field and the button row finally shared one right
+			 * edge — but the Card itself still ran the full 1472px at 2560, so the 53% of its interior
+			 * that no control reached was dead charcoal for the card's whole 392px height rather than
+			 * page gutter. `max-w-3xl` is 48px of slack around the `max-w-2xl` measure the content
+			 * already commits to. The results card below is deliberately left uncapped: it holds a
+			 * table, and a table wants every pixel it can get.
+			 */}
+			<Card className="max-w-3xl">
 				<CardHeader className="pb-3">
 					<CardTitle>SQL Query</CardTitle>
 				</CardHeader>
-				<CardContent className="space-y-3">
+				{/*
+				 * The measure belongs to the column, not to the textarea alone. It was on the
+				 * Textarea only, so at 2560 the query field stopped at x=1297 while the Safe Mode
+				 * switch sat at x=2104 and the button row's container ran the same 1422px — one card
+				 * with three different right edges and 807px of nothing between the toggle and the
+				 * field it governs. `max-w-2xl` is the cap the authentication field grids already
+				 * use; in the textarea's `font-mono text-sm` face it comes to about 87 columns,
+				 * near enough to the 80 the old `max-w-[80ch]` asked for and a house token rather
+				 * than a per-control one.
+				 */}
+				<CardContent className="max-w-2xl space-y-3">
 					{/*
 					 * The shared settings row rather than the same markup plus a border, which made
 					 * a card inside a card at the top of this one. The explanation it used to carry
@@ -102,14 +121,15 @@ function SqlSandboxPanel() {
 					{/*
 					 * `rows` never applied: the shared Textarea's `min-h-16` and `field-sizing:
 					 * content` overrode it, so a five-line request rendered 64px — two lines of the
-					 * monospace face. `max-w` caps the measure at a readable ~80 columns; at full
-					 * card width a query ran to about 170 characters per line.
+					 * monospace face. The readable-measure cap that used to live here moved up to
+					 * CardContent so the toggle above and the buttons below share this field's right
+					 * edge; at full card width a query ran to about 170 characters per line.
 					 */}
 					<Textarea
 						autoCapitalize="off"
 						autoComplete="off"
 						autoCorrect="off"
-						className="min-h-48 max-w-[80ch] font-mono text-sm"
+						className="min-h-48 font-mono text-sm"
 						id="sql-query"
 						maxLength={4096}
 						onChange={(e) => setSql(e.target.value)}

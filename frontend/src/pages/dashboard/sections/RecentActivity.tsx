@@ -91,13 +91,24 @@ function RecentActivity({
 									</span>
 									<div className="min-w-0 flex-1">
 										{/*
-										 * The same treatment /settings/audit-logs gives the same
-										 * field: verb in a Badge, path in muted mono, and the
-										 * username as the row's only bold anchor. This used to be
-										 * one undifferentiated run of text with two bold anchors
-										 * in it — "sysop POST /api/v1/... business-metrics" — so
-										 * identical records read as two different data models on
-										 * two surfaces.
+										 * Shared with /settings/audit-logs: the same split, the same
+										 * Badge variants (both come from `parseAuditAction`), and the
+										 * same 14px mono for the path. This used to be one
+										 * undifferentiated run of text with two bold anchors in it —
+										 * "sysop POST /api/v1/... business-metrics" — so identical
+										 * records read as two different data models on two surfaces.
+										 *
+										 * Deliberately NOT shared: which field carries the emphasis.
+										 * Here the username is the bold anchor and the path is muted;
+										 * useAuditColumns runs it the other way, muting the username
+										 * and leaving the path at full foreground. That is not drift.
+										 * On /settings/audit-logs every row reads `sysop` or
+										 * `System`, so the username discriminates nothing and the
+										 * path is the only column that tells rows apart. This card
+										 * takes `canUseGlobalScope` and can span users, so here the
+										 * username is what distinguishes one row from the next.
+										 * Emphasis follows the discriminating field, and the field
+										 * that discriminates is a property of the surface.
 										 */}
 										<div className="flex min-w-0 items-center gap-1.5 text-sm">
 											<span className="shrink-0 font-medium">
@@ -108,7 +119,17 @@ function RecentActivity({
 													{method}
 												</Badge>
 											)}
-											<span className="truncate font-mono text-xs text-muted-foreground">
+											{/*
+											 * 14px mono, matching the Action cell on
+											 * /settings/audit-logs. The path was 12px mono here and
+											 * 14px Inter there — one field in two type treatments,
+											 * with nothing about either surface to justify the
+											 * split. Mono is the half worth keeping: it marks the
+											 * value as a machine route rather than prose. The
+											 * muting is what carries this card's emphasis, and it
+											 * is deliberate — see the note above.
+											 */}
+											<span className="truncate font-mono text-sm text-muted-foreground">
 												{path}
 											</span>
 											{entry.resource && (

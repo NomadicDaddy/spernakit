@@ -2,6 +2,7 @@ import { type ColumnDef } from '@tanstack/react-table';
 import { Download, FileText, Trash2 } from 'lucide-react';
 
 import type { FileRecord } from '@/api/files';
+import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
@@ -22,10 +23,10 @@ function useFileColumns({
 	isActionDisabled,
 	onDelete,
 	onDownload,
-}: UseFileColumnsOptions): ColumnDef<FileRecord>[] {
+}: UseFileColumnsOptions): ColumnDef<DataTableFeatures, FileRecord>[] {
 	const { formatDate } = useFormatters();
 
-	const columns: ColumnDef<FileRecord>[] = [
+	const columns: ColumnDef<DataTableFeatures, FileRecord>[] = [
 		{
 			accessorKey: 'originalName',
 			cell: ({ row }) => (

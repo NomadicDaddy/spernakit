@@ -2,16 +2,16 @@ import { useState } from 'react';
 
 import type { Workspace } from '@/api/types';
 
+import { Button } from '@/components/ui/button';
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog';
 
 import { WorkspaceFormFields } from './WorkspaceFormFields';
 
@@ -57,16 +57,17 @@ export function EditWorkspaceDialog({
 	}
 
 	return (
-		<AlertDialog onOpenChange={onOpenChange} open={isOpen}>
-			<AlertDialogContent>
-				<AlertDialogHeader>
-					<AlertDialogTitle>Edit Workspace</AlertDialogTitle>
+		/* `Dialog`, not `AlertDialog` — see the note in CreateWorkspaceDialog. */
+		<Dialog onOpenChange={onOpenChange} open={isOpen}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Edit Workspace</DialogTitle>
 					{/* Visible, and without the `py-4` that doubled the content grid's seams — see
 					    the same two corrections in CreateWorkspaceDialog. */}
-					<AlertDialogDescription>
+					<DialogDescription>
 						Update this workspace&apos;s name and description.
-					</AlertDialogDescription>
-				</AlertDialogHeader>
+					</DialogDescription>
+				</DialogHeader>
 				<div className="space-y-4">
 					<WorkspaceFormFields
 						description={form.description ?? ''}
@@ -75,13 +76,21 @@ export function EditWorkspaceDialog({
 						onFieldChange={handleFieldChange}
 					/>
 				</div>
-				<AlertDialogFooter>
-					<AlertDialogCancel>Cancel</AlertDialogCancel>
-					<AlertDialogAction disabled={isPending} onClick={handleUpdate}>
+				<DialogFooter>
+					<DialogClose asChild>
+						<Button variant="outline">Cancel</Button>
+					</DialogClose>
+					{/*
+					 * A plain Button where AlertDialogAction used to sit. Action closes the dialog
+					 * itself on click; here `onUpdate` already calls `closeDialog()` in
+					 * WorkspaceFormDialogs, so the close still happens and the save path is
+					 * unchanged.
+					 */}
+					<Button disabled={isPending} onClick={handleUpdate}>
 						Save Changes
-					</AlertDialogAction>
-				</AlertDialogFooter>
-			</AlertDialogContent>
-		</AlertDialog>
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 }

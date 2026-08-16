@@ -81,27 +81,49 @@ function TableNode({
 				x={position.x}
 				y={position.y + NODE_HEADER_HEIGHT - 6}
 			/>
+			{/*
+			 * The header holds the name alone, and the counts moved down to the caption line.
+			 *
+			 * They used to share this 180px box — name anchored 8px from the left, row count anchored
+			 * 8px from the right, neither bounded — so a long name ran straight into its own count:
+			 * `scheduled_task_executions777` rendered as one unbroken string at every viewport, and
+			 * `user_notification_preferences` overran the node border entirely. Both read as a number
+			 * welded to a word, with no way to tell where the name ended.
+			 *
+			 * The counts also disagreed with the Schema tab one click away, which calls the same two
+			 * numbers `N cols` and `N rows`; here one was spelled `columns` and the other was a bare
+			 * unlabelled figure, so a reader arriving at the ERD first could not tell whether that
+			 * trailing number was rows, columns or foreign keys. One caption, the abbreviated
+			 * vocabulary the list already uses, and the collision is gone by construction.
+			 *
+			 * SVG text has no `text-overflow`, so the name is clipped to the node's inner width. The
+			 * `<title>` keeps the full name reachable on hover and to assistive tech, which the
+			 * overrun version never was either.
+			 */}
+			<clipPath id={`erd-node-${table.tableName}`}>
+				<rect
+					height={NODE_HEADER_HEIGHT}
+					width={position.width - 16}
+					x={position.x + 8}
+					y={position.y}
+				/>
+			</clipPath>
 			<text
 				className="fill-foreground text-[11px] font-semibold"
+				clipPath={`url(#erd-node-${table.tableName})`}
 				dominantBaseline="central"
 				x={position.x + 8}
 				y={position.y + NODE_HEADER_HEIGHT / 2}>
+				<title>{table.tableName}</title>
 				{table.tableName}
 			</text>
 			<text
-				className="fill-muted-foreground text-[9px]"
-				dominantBaseline="central"
-				textAnchor="end"
-				x={position.x + position.width - 8}
-				y={position.y + NODE_HEADER_HEIGHT / 2}>
-				{table.rowCount}
-			</text>
-			<text
-				className="fill-muted-foreground text-[10px]"
+				className="fill-muted-foreground text-[10px] tabular-nums"
 				dominantBaseline="central"
 				x={position.x + 8}
 				y={position.y + NODE_HEADER_HEIGHT + NODE_PADDING + 8}>
-				{table.columnCount} columns
+				{table.columnCount} cols · {table.rowCount} row
+				{table.rowCount === 1 ? '' : 's'}
 			</text>
 		</g>
 	);

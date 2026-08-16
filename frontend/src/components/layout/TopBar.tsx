@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { preloadRoute } from '@/routes';
 import { useLayoutStore } from '@/stores/layoutStore';
 
-import { getVisibleNavItems, navItems } from './navConfig';
+import { getVisibleNavItems, isNavItemActive, navItems } from './navConfig';
 import { TopBarOverflowMenu } from './TopBarOverflowMenu';
 
 /**
@@ -35,9 +35,7 @@ function TopBar() {
 	const overflowStart = Math.min(4, visibleNavItems.length);
 	const primaryNavItems = visibleNavItems.slice(0, overflowStart);
 	const overflowNavItems = visibleNavItems.slice(overflowStart);
-	const overflowIsActive = overflowNavItems.some(
-		(item) => pathname === item.to || pathname.startsWith(`${item.to}/`),
-	);
+	const overflowIsActive = overflowNavItems.some((item) => isNavItemActive(pathname, item.to));
 
 	return (
 		<header className="sticky top-0 z-40 border-b bg-background">
@@ -54,7 +52,9 @@ function TopBar() {
 						translate="no">
 						{__APP_NAME__}
 					</span>
-					<nav className="ml-4 hidden min-w-0 items-center gap-1 md:flex">
+					<nav
+						aria-label="Main navigation"
+						className="ml-4 hidden min-w-0 items-center gap-1 md:flex">
 						{primaryNavItems.map((item) => (
 							<NavLink
 								className={navLinkClassName}

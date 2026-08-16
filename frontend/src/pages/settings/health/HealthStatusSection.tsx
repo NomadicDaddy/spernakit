@@ -6,6 +6,7 @@ import { Card, CardAction, CardDescription, CardHeader, CardTitle } from '@/comp
 import { useFormatters } from '@/hooks/useFormatters';
 
 import { statusBadgeVariant } from './healthStatusUtils';
+import { StatusGlyph } from './StatusGlyph';
 
 interface HealthStatusSectionProps {
 	details: { status: string; timestamp: string } | undefined;
@@ -42,7 +43,15 @@ export function HealthStatusSection({ details, detailsLoading }: HealthStatusSec
 							Last checked {formatDateTime(details.timestamp)}
 						</CardDescription>
 						<CardAction>
+							{/*
+							 * The glyph its four subordinates already carry. This was the only one of
+							 * fifteen status badges on the surface — one here, four on CheckCard, ten
+							 * in the history table — rendering as bare text, so the page's single most
+							 * important status indicator was the only one whose meaning rested on
+							 * colour alone while every lesser one carried a non-colour mark too.
+							 */}
 							<Badge variant={statusBadgeVariant(details.status)}>
+								<StatusGlyph status={details.status} />
 								{details.status}
 							</Badge>
 						</CardAction>

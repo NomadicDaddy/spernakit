@@ -50,7 +50,7 @@ by license family, and it does not inventory the Alpine base system.
 | [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.21  | MIT        |
 | [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.16  | MIT        |
 | [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.101.4 | MIT        |
-| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 8.21.3  | MIT        |
+| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.1.2   | MIT        |
 | [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.9  | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
@@ -64,8 +64,8 @@ by license family, and it does not inventory the Alpine base system.
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
 | [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.8   | MIT        |
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
-| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.1.0   | Apache-2.0 |
-| [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.14  | MIT        |
+| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.1.1   | Apache-2.0 |
+| [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.15  | MIT        |
 
 ## Required notices by license family
 
@@ -156,8 +156,8 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **239**
-third-party package versions (220 unique names). It includes backend runtime
+closure follows everything they pull in transitively and covers **240**
+third-party package versions (222 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
 package-directory count in the Linux image, but it must never be smaller. Development-only
@@ -165,7 +165,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 204      |
+| MIT              | 205      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
