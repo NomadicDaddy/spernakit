@@ -1,10 +1,12 @@
-import { flexRender, type Row, type RowData } from '@tanstack/react-table';
+import { type Row, type RowData } from '@tanstack/react-table';
 import { Fragment, type ReactNode } from 'react';
 
 import { TableCell, TableRow } from '@/components/ui/table';
 
 import type { DataTableFeatures } from './features';
 import type { StickyColumn } from './stickyColumns';
+
+import { renderCell } from './renderCell';
 
 /**
  * The paginated table's rows.
@@ -45,7 +47,7 @@ function DataTableRows<TData extends RowData>({
 										className={sticky?.cellClassName}
 										key={cell.id}
 										style={sticky?.style}>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+										{renderCell(cell.column.columnDef.cell, cell.getContext())}
 									</TableCell>
 								);
 							})}

@@ -1,4 +1,4 @@
-import { flexRender, type Row, type RowData } from '@tanstack/react-table';
+import { type Row, type RowData } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 import { TableBody } from '@/components/ui/table';
@@ -7,6 +7,7 @@ import type { DataTableFeatures } from './features';
 import type { DataTableEmpty } from './types';
 
 import { DataTableEmptyRow } from './DataTableEmptyRow';
+import { renderCell } from './renderCell';
 
 /**
  * Virtualized table body that renders only visible rows.
@@ -103,7 +104,7 @@ function VirtualTableBody<TData extends RowData>({
 													textOverflow: 'ellipsis',
 													whiteSpace: 'nowrap',
 												}}>
-												{flexRender(
+												{renderCell(
 													cell.column.columnDef.cell,
 													cell.getContext(),
 												)}
