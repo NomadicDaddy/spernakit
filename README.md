@@ -1,14 +1,14 @@
-# Spernakit v3.41.0
+# Spernakit v3.42.0
 
 Self-hosted admin application template built from scratch with Bun-native tooling.
 
-Spernakit v3.41.0 is the current template baseline. Changes must follow the architecture rules in the
+Spernakit v3.42.0 is the current template baseline. Changes must follow the architecture rules in the
 template docs, stay wired end to end, and pass the quality gates before they are treated as
 complete.
 
 ## Overview
 
-Spernakit v3.41.0 is a full-stack self-hosted admin application template for building
+Spernakit v3.42.0 is a full-stack self-hosted admin application template for building
 Spernakit-derived apps. It provides authentication, RBAC, multi-tenancy via workspaces,
 audit logging, real-time notifications, file uploads, scheduled tasks, health monitoring,
 and an admin UI covering all of it.

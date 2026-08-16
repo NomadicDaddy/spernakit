@@ -3,7 +3,34 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
-## [Unreleased]
+## [3.42.0] - 2026-08-15
+
+### Added
+
+- Sortable columns in the shared data table. Headers carry `aria-sort` and a direction glyph, and
+  a column opts out through `enableSorting`. Server-paged tables sort only when the caller supplies
+  `sorting`, `onSortingChange`, and `manualSorting`, so a header never claims an order the API
+  cannot deliver across records the page never loaded.
+- Server-side sorting for the audit log and notification endpoints, which are server-paginated and
+  could previously only reorder the rows already on screen. `backend/src/utils/sorting.ts` resolves
+  a requested sort key against a per-endpoint allowlist and maps it to a column reference, so no key
+  reaches the query builder as interpolated text and an unrecognised key falls back to the default
+  order instead of erroring. Sorting resets to page 1, so a new order cannot strand the user on a
+  page that no longer exists.
+- Sticky identity and action columns in the shared data table, with a right-edge scroll cue that
+  appears only when the table actually overflows. Both are opt-in per table, so a mobile table
+  signposts its hidden columns rather than dropping them.
+- A write guard for the crawler, `scripts/crawltest-writeguard.ts`. It installs a request
+  interceptor in `launchSession`, the one place a page is created, and refuses every non-GET
+  `/api/` request with a synthetic 403 in the API's own error envelope. It responds rather than
+  aborts, because an aborted fetch reads as a network failure and noticing network failures is what
+  the crawl is for. Only `/auth/login`, `/auth/logout`, and `/auth/refresh` pass, plus `/bugs` under
+  `--bug`. `--allow-writes` restores the previous behaviour, and every suppressed write is listed at
+  the end of the run. Previously the crawl ran against the live development database with a list of
+  regexes matched against visible control text as its only protection, which left `PUT`, `PATCH`,
+  and `POST` requests behind it.
+- `frontend/src/lib/focusReturn.ts`, `roleBadge.ts`, and `scrollIntoViewWithin.ts`, shared helpers
+  for dialog focus restoration, role badge variants, and scoped scrolling.
 
 ### Changed
 
@@ -28,6 +55,108 @@ this release.
   `useDataTableConfig` drop their unused `TValue` parameter; it was `unknown` at every call site
   and v9 makes that value (`CellData`) the default.
 - Frontend and development dependencies updated.
+- `SettingsToggleRow` is a bordered, whole-row label. The switch track already carried a 24px hit
+  expander and met WCAG 2.5.8 AA at its rendered size, but the hit area was invisible, so the
+  interactive region rises from 27.7% of the row to all of it. The `max-w-2xl` cap now sits on the
+  stack that holds the toggles and the field grids beneath them, the `CardContent` or the form,
+  rather than on the row. One declaration governs both, so a toggle and the fields it gates share a
+  right edge. `FeatureFlagsSection` takes `max-w-4xl` because its toggles are two columns wide.
+- Design sweep remediation across the settings surfaces. Authentication terminates on a
+  `CardFooter` and pins its save to the viewport below `md` while the form is dirty. System health
+  opens on its observations, with status, checks, and alerts ahead of the configuration and cleanup
+  forms. Runtime config renders its pairs as a description list and caps the value badge itself,
+  since a `Badge` is atomic and never received the container's wrap rule. Audit renders expanded
+  rows as a labelled key/value grid instead of a raw JSON dump. Database counts are tabular and
+  pluralised, and tapping a table gives a persistent selected state. Badge vocabulary is consistent
+  across roles, email, notifications, backup, and scheduler: state colours for state, outline and
+  secondary for identity.
+- Design sweep remediation across the reporting and activity surfaces. Analytics gives long lists
+  the halved measure of the card above them and names the scope of a row-scoped stat tile.
+  Dashboard section headers own the gap to their own content, and trend deltas are signed rather
+  than carrying direction in an arrow and a colour alone. Onboarding has one primary action per
+  screen and uses the shared `Progress` component instead of two hand-rolled divs. The notification
+  stats band takes the same wide breakpoint step as every other KPI row.
+- Design sweep remediation on the profile and workspace surfaces. Profile fields share one width
+  across the rail, the username hint reserves its line box so validation no longer shifts the submit
+  button out from under the cursor, and the MFA pill uses the state vocabulary rather than a neutral
+  chip. The workspace create, edit, and manage-members overlays move from `AlertDialog` to `Dialog`:
+  `AlertDialog` is for confirmations, renders no close control, and focuses the dismiss button, so a
+  form built on it left Escape and Cancel as the only exits and put the keyboard on the control that
+  discards the work.
+- The upload drop zone names the tap below `md` rather than leading with a drag instruction a touch
+  device cannot follow. Detection is by viewport rather than touch capability, so a touch laptop
+  keeps drag and drop. The drop zone and the upload button now carry one visual identity instead of
+  two competing targets.
+- Shared primitives corrected across the board. `AlertDescription` caps at 65ch without shortening
+  the alert shell, `TableCell` keeps `whitespace-nowrap` with consumers re-enabling wrapping
+  locally, `CardHeader` stacks below `sm` so `CardAction` stops competing with the title,
+  `EmptyState` ties its title type step to `headingLevel`, and `RequiredMark` owns the asterisk
+  spacing once instead of at each call site. Dropdown and alert-dialog surfaces use the app's
+  elevated shadow token rather than Tailwind's stock shadow.
+- Client-side tables open at a page size of 20, matching the server-side default. The pagination
+  band's left slot always states the range and total, and the row wraps with truncating status text
+  so the Next control is no longer clipped by the card's `overflow-hidden` at 360px.
+
+### Fixed
+
+- Every cell in every data table remounted on every render. `flexRender(columnDef.cell, ctx)` calls
+  `createElement(fn, ctx)` when the cell is a function, which makes the arrow the element type. No
+  column hook memoises its columns array, so each parent render built new arrows, each arrow was a
+  new type, and React unmounted and remounted every cell's subtree. Typing one character into the
+  search box on `/settings/users` left the row's action button with `isConnected === false` while
+  its `<tr>` and `<td>` stayed in place. `renderCell` calls the renderer rather than mounting it, so
+  what comes back is ordinary JSX with stable types and React reconciles in place. This restores
+  keyboard focus inside every table (WCAG 2.4.3) and preserves in-progress cell edits.
+- Dialogs and alert dialogs return focus to the control that opened them. Radix cancels the default
+  restore and focuses its own `Trigger`, which almost nothing in this template renders, so focus was
+  landing on `<body>`. `lib/focusReturn.ts` keeps a short `focusin` history, because a dialog opened
+  from a dropdown item has already lost `activeElement` to the detaching menu.
+- Checkbox renders a distinct indeterminate glyph and styles `data-[state=indeterminate]`. A mixed
+  selection painted an identical check and read as fully selected.
+- Destructive dropdown items use the `variant` rather than a `text-destructive` class name, which
+  silently lost its colour under hover and focus.
+- Declared column widths had no effect. The test was `columnDef.size === undefined`, but the
+  column-sizing feature supplies its own default of 150, so it never fired and every column rendered
+  at the same width. The comparison is against a sentinel, so a column that declares a size gets it
+  and one that omits it stays fluid.
+- Row selection is keyed by row identity rather than index. Filtering after selecting left the same
+  key set pointing at different records, so the row that was ticked and the row a bulk action would
+  have acted on were not the same row. `BulkActionBar` now discloses selected rows that a filter has
+  hidden instead of silently dropping them.
+- Active-route matching used a bare `startsWith`, so `/dashboards` lit up while on `/dashboard`. One
+  shared predicate, exact match or prefix followed by a slash, is consumed by `MobileNav`, `TopBar`,
+  and `Sidebar`, so exactly one row is active and it is the one carrying `aria-current`.
+- `TabLayout` wrote its mount-time scroll directly to the rail's `scrollLeft` instead of calling
+  `scrollIntoView`, which could not be scoped and scrolled every scrolling ancestor, landing a cold
+  mobile load below its own heading. The rail's chevrons move to the trailing end as a pager pair
+  with a reserved footprint, hidden below `md`, and the rail gains an accessible name.
+- Document titles derive from the resolved route rather than the raw pathname, so an unmatched path
+  titles as "Page not found" instead of inventing a plausible page name for a URL that does not
+  exist.
+- The login page reads the `?expired=1` parameter that `handleSessionExpired` already sends and says
+  what happened, through `Alert` rather than muted body copy.
+- A chart series resolved to the same value as `--muted-foreground`, so one of two series read as
+  inert next to its peer with colour the only thing distinguishing them. Single-series charts draw
+  from the documented single-series token, and a dedicated hue is added in both theme blocks where
+  two series share one chart. The hues reserved for health status stay reserved.
+- Recharts axis ticks take their colour from the `tick` prop's `fill` rather than a class name, so
+  `fill-muted-foreground` was inert and ticks rendered at the library default of 3.13:1 against the
+  card. The fill is set in the shared tick style and axis constants.
+- `MetricChart` severs its contribution to its ancestors' min-content size, which was driving a
+  width feedback loop that ratcheted the layout wider on every resize. The mechanism is documented
+  on `useContainerWidth`, which has produced this bug three times.
+- `StatCard` gives its icon slot a constant box across variants, so a variant's own padding no
+  longer makes one card taller than its row-mates.
+- The bug report list uses `keepPreviousData`, which is why typing in the search box was re-entering
+  the first-load branch and losing focus mid-word.
+- The sidebar shell no longer duplicates the navigation landmark. It was an `<aside>` with
+  `role="navigation"` and `aria-label="Main navigation"` wrapping a `<nav>` with the same name, so a
+  screen reader's landmark list held two identically named navigations, one inside the other. The
+  shell is a plain `<div>` and the `<nav>` is the sole named landmark.
+- The Create User toolbar button takes the toolbar's own 36px control height. `size="sm"` made it
+  32px in a row of 36px controls, and it inherited that from the example in
+  `frontend/src/components/shared/README.md`, which is corrected here too.
+- The display type step has a mobile value via `clamp`, preserving the desktop value exactly.
 
 ## [3.41.0] - 2026-08-12
 
