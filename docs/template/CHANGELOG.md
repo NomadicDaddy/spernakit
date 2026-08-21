@@ -3,6 +3,39 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.43.0] - 2026-08-20
+
+### Added
+
+- Audit attribution for impersonated sessions. `audit_logs` gains a nullable, indexed
+  `impersonated_by` column (FK to users, ON DELETE SET NULL); the audit plugin and every explicit
+  `auditService.log()` caller (via the new `actorFields()` helper) record the operator behind a SYSOP
+  impersonation session alongside the impersonated `userId`. `GET /api/v1/audit` returns
+  `impersonatedBy` and `impersonatorUsername`, and `/settings/audit-logs` and the dashboard Recent
+  activity card render them as a "via operator" suffix. A SQLite migration is included.
+- `security.impersonationEnabled` (default `true`): a config kill-switch for
+  `POST /users/:id/impersonate`. When `false` the route answers 403 for every caller, SYSOP included;
+  `/users/impersonate/stop` stays available so an in-flight session can still be ended.
+- Split-secrets file loader. `backend/src/config/configSecretsFile.ts` loads the optional, gitignored
+  `config/{slug}.secrets.json` into a sealed namespace kept apart from the main config, with
+  `getSecret` / `requireSecret` / `resolveSecretRef` accessors and a startup check that every
+  non-empty `*Ref` config field points at a declared secret. `oauth.<provider>.clientSecretRef` is the
+  first first-party consumer (a non-empty ref wins over the inline `clientSecret`). The template now
+  tracks `config/spernakit.secrets.json.example`, so `check:secrets-shape` has a subject, and
+  `test:secrets-file` covers the loader. STACK.md's "documented pattern, not a shipped implementation"
+  caveat is gone.
+
+### Changed
+
+- Retention windows accept `0`, meaning never purge. Every `retention.*Days` key now has a schema
+  minimum of 0 (was 1); `createRetentionCleanupTask` and the notifications, system-metrics, and
+  soft-deleted-files cleanup tasks skip deletion and log `skipped: retention disabled (0 days)` for
+  a zero window. The orphaned file-blob sweep still runs. Two keys are documented as narrower than
+  their names: `healthCheckLogsDays` is not read by cleanup (health-check log retention comes from
+  the Health settings, minimum 1 day) and web-vital rows keep a fixed 7-day window regardless of
+  `systemMetricsDays`. `test:retention-zero` pins the keep-forever behaviour against a real database,
+  and `test:impersonation-audit` pins impersonated attribution and the kill-switch.
+
 ## [3.42.1] - 2026-08-16
 
 ### Fixed

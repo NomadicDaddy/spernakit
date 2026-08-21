@@ -1,6 +1,7 @@
 import type { OAuthProviderConfig } from './oauthTypes.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
+import { resolveSecretRef } from '../../config/configSecretsFile.ts';
 import { decrypt } from '../../utils/encryption.ts';
 import { logger } from '../../utils/logger.ts';
 import {
@@ -59,18 +60,19 @@ function resolveFileProviderConfig(
 	fileConfig: ReturnType<typeof getConfig>['oauth'][OAuthProviderName],
 	tenantId: string | undefined,
 ): null | OAuthProviderConfig {
-	if (
-		!fileConfig?.enabled ||
-		!fileConfig.clientId ||
-		!fileConfig.clientSecret ||
-		!fileConfig.callbackUrl
-	) {
+	if (!fileConfig?.enabled || !fileConfig.clientId || !fileConfig.callbackUrl) {
 		return null;
 	}
 
+	// Split-secrets pattern: a non-empty `clientSecretRef` points into config/{slug}.secrets.json and
+	// wins over the inline value. Startup already verified the ref resolves, so the secret is fetched
+	// here — at the use site — and never travels inside the config object.
+	const clientSecret = resolveSecretRef(fileConfig.clientSecretRef) ?? fileConfig.clientSecret;
+	if (!clientSecret) return null;
+
 	return buildLiveProviderConfig(
 		fileConfig.clientId,
-		fileConfig.clientSecret,
+		clientSecret,
 		fileConfig.callbackUrl,
 		tenantId,
 	);

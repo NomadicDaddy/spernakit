@@ -114,6 +114,14 @@ function RecentActivity({
 											<span className="shrink-0 font-medium">
 												{entry.username ?? 'System'}
 											</span>
+											{/* Same suffix as the audit table: an impersonated row names the operator. */}
+											{entry.impersonatedBy !== null && (
+												<span className="shrink-0 text-xs text-muted-foreground">
+													via{' '}
+													{entry.impersonatorUsername ??
+														`#${String(entry.impersonatedBy)}`}
+												</span>
+											)}
 											{method && (
 												<Badge className="shrink-0" variant={variant}>
 													{method}

@@ -11,7 +11,12 @@ import { auditLogs } from '../../db/schema/auditLogs.ts';
 import { businessEvents } from '../../db/schema/businessEvents.ts';
 import { systemMetrics } from '../../db/schema/systemMetrics.ts';
 import { logScheduler } from '../../utils/logger.ts';
-import { createRetentionCleanupTask, daysAgo, MAX_CLEANUP_BATCHES } from './cleanupUtils.ts';
+import {
+	createRetentionCleanupTask,
+	daysAgo,
+	isRetentionDisabled,
+	MAX_CLEANUP_BATCHES,
+} from './cleanupUtils.ts';
 
 function auditLogCleanupTask(): {
 	batches: number;
@@ -37,6 +42,10 @@ function systemMetricsCleanupTask(): {
 	const cleanupMetricType = (metricType: 'system' | 'web-vital', retentionDays: number): void => {
 		const taskName =
 			metricType === 'system' ? 'System metrics cleanup task' : 'Web vitals cleanup task';
+		if (isRetentionDisabled(retentionDays)) {
+			logScheduler('info', `${taskName} skipped: retention disabled (0 days)`);
+			return;
+		}
 		const cutoff = daysAgo(retentionDays);
 
 		let batchCleaned: number;

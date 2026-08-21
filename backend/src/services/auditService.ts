@@ -1,4 +1,5 @@
 import { and, count, eq, gte, isNull, lte, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 
 import { getDb } from '../db/index.ts';
 import { auditLogs } from '../db/schema/auditLogs.ts';
@@ -21,11 +22,20 @@ const AUDIT_SORT_COLUMNS = {
 	username: users.username,
 };
 
+/**
+ * Second handle on `users` so one query can name both the session the request ran as (`userId`) and
+ * the operator behind an impersonated session (`impersonatedBy`). The join is LEFT on both sides:
+ * the column is NULL on every row that was not impersonated.
+ */
+const impersonators = alias(users, 'impersonators');
+
 interface AuditEntry {
 	action: string;
 	createdAt: string;
 	details: unknown;
 	id: number;
+	impersonatedBy: null | number;
+	impersonatorUsername: null | string;
 	ipAddress: null | string;
 	resource: null | string;
 	resourceId: null | string;
@@ -38,6 +48,8 @@ interface LogInput {
 	details?: unknown;
 	entityId?: string;
 	entityType?: string;
+	/** The real operator when the request ran under an impersonation token; omit otherwise. */
+	impersonatedBy?: number;
 	ipAddress?: string;
 	userId?: number;
 	workspaceId?: number;
@@ -59,6 +71,27 @@ interface QueryParams {
 }
 
 /**
+ * Attribution fields for an explicit audit row written on behalf of an authenticated request. Use
+ * `...actorFields(authUser)` instead of `userId: authUser.id` so a row written while the operator is
+ * impersonating someone carries `impersonatedBy` too — the same attribution `auditPlugin` records on
+ * the request-level row.
+ *
+ * @param user - The authenticated principal (`AuthPayload`-shaped: `id`, optional `impersonatedBy`)
+ * @param user.id - Account the request ran as
+ * @param user.impersonatedBy - Operator behind an impersonation session, if any
+ * @returns `userId`, plus `impersonatedBy` only when the session is impersonated
+ */
+function actorFields(user: { id: number; impersonatedBy?: number | undefined }): {
+	impersonatedBy?: number;
+	userId: number;
+} {
+	return {
+		userId: user.id,
+		...(user.impersonatedBy !== undefined ? { impersonatedBy: user.impersonatedBy } : {}),
+	};
+}
+
+/**
  * Log an audit event.
  *
  * @param input - Audit event data
@@ -71,6 +104,7 @@ function log(input: LogInput): void {
 			...(input.details !== undefined ? { details: input.details } : {}),
 			...(input.entityId !== undefined ? { entityId: input.entityId } : {}),
 			...(input.entityType !== undefined ? { entityType: input.entityType } : {}),
+			...(input.impersonatedBy !== undefined ? { impersonatedBy: input.impersonatedBy } : {}),
 			...(input.ipAddress !== undefined ? { ipAddress: input.ipAddress } : {}),
 			...(input.userId !== undefined ? { userId: input.userId } : {}),
 			...(input.workspaceId !== undefined ? { workspaceId: input.workspaceId } : {}),
@@ -135,12 +169,15 @@ function query(params: QueryParams): {
 					entityId: auditLogs.entityId,
 					entityType: auditLogs.entityType,
 					id: auditLogs.id,
+					impersonatedBy: auditLogs.impersonatedBy,
+					impersonatorUsername: impersonators.username,
 					ipAddress: auditLogs.ipAddress,
 					userId: auditLogs.userId,
 					username: users.username,
 				})
 				.from(auditLogs)
 				.leftJoin(users, eq(auditLogs.userId, users.id))
+				.leftJoin(impersonators, eq(auditLogs.impersonatedBy, impersonators.id))
 				.where(whereClause)
 				/*
 				 * `id` as the tiebreaker, always — `resolveSort` returns it with the sort. Pagination
@@ -168,6 +205,8 @@ function query(params: QueryParams): {
 				createdAt: row.createdAt.toISOString(),
 				details: row.details,
 				id: row.id,
+				impersonatedBy: row.impersonatedBy,
+				impersonatorUsername: row.impersonatorUsername,
 				ipAddress: row.ipAddress,
 				resource: row.entityType,
 				resourceId: row.entityId,
@@ -198,4 +237,4 @@ function getTotalCount(workspaceId?: null | number): number {
 	return result?.count ?? 0;
 }
 
-export { getTotalCount, log, query };
+export { actorFields, getTotalCount, log, query };

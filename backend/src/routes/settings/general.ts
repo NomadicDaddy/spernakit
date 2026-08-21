@@ -12,7 +12,7 @@ import {
 } from '../../constants/responseExamples.ts';
 import { assertUser, isSysop, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { getAll, getByKey, update } from '../../services/settingsService.ts';
 import { broadcastCrudToAdmins } from '../../services/websocketService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
@@ -172,7 +172,7 @@ const settingsGeneralRoutes = new Elysia({
 				details: { key: params.key, value: body.value },
 				entityId: params.key,
 				entityType: 'settings',
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 			broadcastCrudToAdmins(WS_CRUD_EVENTS.SETTING_UPDATED, { key: params.key });
 			return dataResponse(setting);

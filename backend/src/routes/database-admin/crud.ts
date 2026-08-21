@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import {
 	getSafeMode,
 	PostgreSqlNotSupportedError,
@@ -190,7 +190,7 @@ const databaseAdminRoutes = new Elysia({
 			logAudit({
 				action: 'database-admin.safe-mode',
 				details: { enabled: body.enabled },
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 
 			set.status = HTTP_STATUS.OK;

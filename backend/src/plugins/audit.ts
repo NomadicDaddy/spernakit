@@ -48,18 +48,30 @@ const REDACTED_KEYS = new Set(
 	}),
 );
 
-function resolveUserIdFromRequest(request: Request): number | undefined {
+interface AuditActor {
+	/** The real operator when the session is an impersonation session (`POST /users/:id/impersonate`). */
+	impersonatedBy?: number | undefined;
+	userId?: number | undefined;
+}
+
+/**
+ * Who to attribute the request to. `userId` is the session the request ran as — under impersonation
+ * that is the impersonated account, which is what authorization saw — and `impersonatedBy` names the
+ * operator behind it, so an impersonated action is never indistinguishable from the user's own.
+ */
+function resolveActorFromRequest(request: Request): AuditActor {
 	try {
 		// API-key requests carry no auth cookie — attribute them to the key
 		// owner via the request-scoped cache populated by authPlugin's derive
 		// (re-validating here would fail: HMAC nonces are single-use).
 		if (request.headers.get('x-api-key')) {
-			return getResolvedApiKeyUser(request)?.id;
+			return { userId: getResolvedApiKeyUser(request)?.id };
 		}
-		return resolveUserFromCookie(request)?.id;
+		const payload = resolveUserFromCookie(request);
+		return { impersonatedBy: payload?.impersonatedBy, userId: payload?.id };
 	} catch (err) {
 		logger.debug({ err }, 'Failed to resolve user for audit log');
-		return undefined;
+		return {};
 	}
 }
 
@@ -120,7 +132,7 @@ const auditPlugin = new Elysia({ name: 'audit' })
 
 		const status = typeof set.status === 'number' ? set.status : 200;
 
-		const userId = resolveUserIdFromRequest(request);
+		const { impersonatedBy, userId } = resolveActorFromRequest(request);
 		// getClientIp() transparently reads the WeakMap populated by
 		// clientIpPlugin's onRequest hook — by this lifecycle stage,
 		// server.requestIP(request) returns null and would otherwise fall
@@ -153,6 +165,7 @@ const auditPlugin = new Elysia({ name: 'audit' })
 			...(Object.keys(details).length > 0 ? { details } : {}),
 			...(entityId !== undefined ? { entityId } : {}),
 			...(entityType !== undefined ? { entityType } : {}),
+			...(impersonatedBy !== undefined ? { impersonatedBy } : {}),
 			...(ipAddress !== undefined ? { ipAddress } : {}),
 			...(userId !== undefined ? { userId } : {}),
 			...(workspaceId !== undefined ? { workspaceId } : {}),

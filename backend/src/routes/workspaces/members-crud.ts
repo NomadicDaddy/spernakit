@@ -5,7 +5,7 @@ import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser, requireAuth } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { type AuthPayload, authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { broadcastCrudToWorkspace } from '../../services/websocketService.ts';
 import {
 	addMember,
@@ -59,7 +59,7 @@ function handleUpdateMemberRole({
 		details: { memberUserId: userId, role: body.role },
 		entityId: String(userId),
 		entityType: 'workspace-member',
-		userId: ctx.authUser.id,
+		...actorFields(ctx.authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_UPDATED, {
@@ -111,7 +111,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 				details: { memberUserId: body.userId, role: body.role },
 				entityId: String(body.userId),
 				entityType: 'workspace-member',
-				userId: ctx.authUser.id,
+				...actorFields(ctx.authUser),
 				workspaceId: id,
 			});
 			broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_CREATED, {
@@ -157,7 +157,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 				details: { memberUserId: userId },
 				entityId: String(userId),
 				entityType: 'workspace-member',
-				userId: ctx.authUser.id,
+				...actorFields(ctx.authUser),
 				workspaceId: id,
 			});
 			broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_DELETED, { userId });
