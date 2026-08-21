@@ -8,7 +8,7 @@ import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constant
 import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
 	broadcastCrudToAdmins,
@@ -96,7 +96,7 @@ function handleUpdateWorkspace({ body, params, set, user }: UpdateWorkspaceConte
 		details: auditDetails,
 		entityId: String(id),
 		entityType: 'workspace',
-		userId: ctx.authUser.id,
+		...actorFields(ctx.authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_UPDATED, { id });
@@ -118,7 +118,7 @@ function handleDeleteWorkspace({ params, set, user }: DeleteWorkspaceContext) {
 		action: 'WORKSPACE_DELETE',
 		entityId: String(id),
 		entityType: 'workspace',
-		userId: ctx.authUser.id,
+		...actorFields(ctx.authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_DELETED, { id });
@@ -148,7 +148,7 @@ function handleCreateWorkspace({ body, set, user }: CreateWorkspaceContext) {
 			details: { name: body.name, slug: body.slug },
 			entityId: String(workspace.id),
 			entityType: 'workspace',
-			userId: authUser.id,
+			...actorFields(authUser),
 			workspaceId: workspace.id,
 		});
 		broadcastCrudToAdmins(WS_CRUD_EVENTS.WORKSPACE_CREATED, { id: workspace.id });

@@ -171,6 +171,10 @@
 					"description": "Split-secrets loader resolves dot-paths and fails fast on dangling *Ref fields"
 				},
 				{
+					"command": "bun run test:impersonation-audit",
+					"description": "Impersonated mutations persist userId + impersonatedBy; kill-switch blocks start but not stop"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},

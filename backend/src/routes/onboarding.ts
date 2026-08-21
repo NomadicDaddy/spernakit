@@ -4,7 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../constants/responseExamples.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
-import { log as logAudit } from '../services/auditService.ts';
+import { actorFields, log as logAudit } from '../services/auditService.ts';
 import {
 	completeOnboarding,
 	getOnboardingStatus,
@@ -70,7 +70,7 @@ const onboardingRoutes = new Elysia({
 			logAudit({
 				action: 'ONBOARDING_COMPLETE',
 				entityType: 'onboarding',
-				userId: authedUser.id,
+				...actorFields(authedUser),
 			});
 			set.status = HTTP_STATUS.OK;
 			return dataResponse(result);
@@ -111,7 +111,7 @@ const onboardingRoutes = new Elysia({
 			logAudit({
 				action: 'ONBOARDING_RESET',
 				entityType: 'onboarding',
-				userId: authedUser.id,
+				...actorFields(authedUser),
 			});
 			set.status = HTTP_STATUS.OK;
 			return dataResponse(result);

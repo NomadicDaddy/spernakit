@@ -220,6 +220,7 @@ bun run generate-keys
 		"cookieMaxAge": 900000,
 		"cookieSecret": "your-32-character-cookie-secret",
 		"encryptionKey": "your-64-character-hex-encryption-key",
+		"impersonationEnabled": true,
 		"jwtExpiresIn": "15m",
 		"jwtPrivateKey": "-----BEGIN PRIVATE KEY-----\n...",
 		"jwtPublicKey": "-----BEGIN PUBLIC KEY-----\n...",

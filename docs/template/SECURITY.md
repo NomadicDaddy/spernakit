@@ -311,7 +311,8 @@ The audit logging system tracks all security-relevant operations:
 - `action` - Action performed (e.g., LOGIN, LOGOUT, USER_CREATED, ACCOUNT_LOCKED)
 - `resource` - Resource type affected (e.g., user, role, setting)
 - `resourceId` - ID of affected resource
-- `userId` - User who performed the action
+- `userId` - User the request ran as (under impersonation: the impersonated account — what authorization saw)
+- `impersonatedBy` - The real operator when the request ran under a SYSOP impersonation session (`POST /users/:id/impersonate`); NULL otherwise. Written by the audit plugin and by every explicit `auditService.log()` caller via `actorFields()`, and surfaced as `impersonatorUsername` ("via …") in the audit viewer and dashboard, so an impersonated action is never indistinguishable from the user's own
 - `ipAddress` - IP address of request
 - `details` - JSON object with additional context (old values, new values, metadata)
 - `timestamp` - When the action occurred
@@ -399,6 +400,7 @@ See `config/example.json` for the complete configuration structure.
 - **No external dependencies**: SMTP must be configured in JSON config at deployment time
 - **Fail-fast**: Application refuses to start with missing/weak keys in config
 - **Database admin panel off by default**: `databaseAdmin.enabled` (default `false`) gates the SYSOP database-admin panel (raw table read/write and SQL sandbox); deployments must opt in explicitly, recommended for development environments only
+- **Impersonation kill-switch**: `security.impersonationEnabled` (default `true`) gates `POST /users/:id/impersonate`; when `false` the route answers 403 for every caller, SYSOP included, while `/users/impersonate/stop` stays available so an in-flight session can still be ended. Audit rows written under impersonation carry `impersonatedBy` regardless of the flag
 - **Never commit secrets**: Use secret management or secure JSON config files; operator-provided third-party credentials belong in the gitignored `config/{appname}.secrets.json`, referenced from config by `*Ref` dot-paths
 
 ---

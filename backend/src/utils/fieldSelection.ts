@@ -83,6 +83,8 @@ const AUDIT_LIST_FIELDS = new Set([
 	'createdAt',
 	'details',
 	'id',
+	'impersonatedBy',
+	'impersonatorUsername',
 	'ipAddress',
 	'resource',
 	'resourceId',

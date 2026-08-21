@@ -185,6 +185,7 @@
 		"emailChangeTokenExpiryMs": 3600000,
 		"emailVerificationTokenExpiryMs": 86400000,
 		"encryptionKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_64_HEX_CHARS_FOR_AES_256_GCM_KEY",
+		"impersonationEnabled": true,
 		"jwtExpiresIn": "15m",
 		"jwtPrivateKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",
 		"jwtPublicKey": "PRODUCTION_CHANGE_REQUIRED-GENERATE_EC_P256_KEY_PAIR",

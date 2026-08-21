@@ -8,7 +8,7 @@ import { DEFAULT_REFRESH_TTL_MS, parseDurationMs } from '../../constants/auth.ts
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, canModifyRole } from '../../guards/role.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { getAuthSettings } from '../../services/authService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
@@ -121,7 +121,7 @@ async function handleCreateUser({
 			details: { email: created.email, role: targetRole, username: created.username },
 			entityId: String(created.id),
 			entityType: 'user',
-			userId: authUser.id,
+			...actorFields(authUser),
 		});
 		broadcastCrudToAdmins(WS_CRUD_EVENTS.USER_CREATED, { id: created.id });
 		set.status = HTTP_STATUS.CREATED;
@@ -203,7 +203,7 @@ function handleUpdateUser({
 			},
 			entityId: String(params.id),
 			entityType: 'user',
-			userId: authUser.id,
+			...actorFields(authUser),
 		});
 		broadcastCrudToAdmins(WS_CRUD_EVENTS.USER_UPDATED, { id: updated.id });
 		return dataResponse(updated);
@@ -262,7 +262,7 @@ function handleDeleteUser({
 		},
 		entityId: String(targetId),
 		entityType: 'user',
-		userId: authUser.id,
+		...actorFields(authUser),
 	});
 	broadcastCrudToAdmins(WS_CRUD_EVENTS.USER_DELETED, { id: targetId });
 	return successResponse();

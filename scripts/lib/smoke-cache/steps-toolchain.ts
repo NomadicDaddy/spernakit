@@ -93,6 +93,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
 	},
+	// Runs in-process against a temp SQLite file, so its world is the backend source plus the
+	// migrations it applies; a change anywhere in backend/src re-runs it.
+	'test:impersonation-audit': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
+	},
 	'test:mutation-denylist': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

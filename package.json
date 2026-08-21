@@ -176,6 +176,7 @@
 		"test:fleet-manifest-sync": "bun scripts/test-fleet-manifest-sync.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
 		"test:gate-conventions": "bun scripts/test-gate-conventions.ts",
+		"test:impersonation-audit": "bun scripts/test-impersonation-audit.ts",
 		"test:lockout-refresh": "bun scripts/test-lockout-refresh.ts",
 		"test:lost-lines": "bun scripts/test-lost-lines.ts",
 		"test:mutation-denylist": "bun scripts/test-mutation-denylist.ts",
