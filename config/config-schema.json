@@ -640,35 +640,43 @@
 			"default": {},
 			"properties": {
 				"auditLogsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"businessEventsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"healthCheckAlertsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"healthCheckLogsDays": {
-					"minimum": 1,
+					"description": "Reserved; not read by the cleanup tasks. Health-check log retention is set from the Health settings page (`logRetentionDays`, stored in the database, minimum 1 day), so 0 here does not keep health-check logs forever.",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"notificationsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"scheduledTaskExecutionsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"softDeletedFilesDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"systemMetricsDays": {
-					"minimum": 1,
+					"description": "Days to retain `system` metric snapshots; 0 disables purging (keep forever). Web-vital rows are not covered: they keep a fixed 7-day window regardless of this value.",
+					"minimum": 0,
 					"type": "integer"
 				}
 			},

@@ -401,6 +401,7 @@ See `config/example.json` for the complete configuration structure.
 - **Fail-fast**: Application refuses to start with missing/weak keys in config
 - **Database admin panel off by default**: `databaseAdmin.enabled` (default `false`) gates the SYSOP database-admin panel (raw table read/write and SQL sandbox); deployments must opt in explicitly, recommended for development environments only
 - **Impersonation kill-switch**: `security.impersonationEnabled` (default `true`) gates `POST /users/:id/impersonate`; when `false` the route answers 403 for every caller, SYSOP included, while `/users/impersonate/stop` stays available so an in-flight session can still be ended. Audit rows written under impersonation carry `impersonatedBy` regardless of the flag
+- **Retention `0` keeps forever**: any `retention.*Days` key read by a cleanup task set to `0` disables that purge instead of deleting everything (minimum was previously 1). Two exceptions are documented in CONFIGURATION.md: `healthCheckLogsDays` is not read by cleanup (health-check log retention lives in the Health settings, minimum 1 day) and web-vital rows keep a fixed 7-day window regardless of `systemMetricsDays`
 - **Never commit secrets**: Use secret management or secure JSON config files; operator-provided third-party credentials belong in the gitignored `config/{appname}.secrets.json`, referenced from config by `*Ref` dot-paths
 
 ---

@@ -728,7 +728,18 @@ Controls how health-check alerts are delivered.
 
 ### Data Retention (`retention`)
 
-Per-table retention windows, in days (minimum 1), applied by the scheduled cleanup tasks.
+Per-table retention windows, in days, applied by the scheduled cleanup tasks. `0` disables purging
+for that key (rows are kept forever; the cleanup task logs `skipped: retention disabled` and exits
+without deleting). Soft-deleted files still have their orphaned blobs swept when `softDeletedFilesDays`
+is `0`; only the database rows are kept.
+
+Two keys are narrower than their names suggest:
+
+- `healthCheckLogsDays` is **not read by any cleanup task**. Health-check log retention (and the
+  stale-alert auto-resolve window) comes from the Health settings page (`logRetentionDays`, stored in
+  the database, minimum 1 day), so `0` here does not keep health-check logs forever.
+- `systemMetricsDays` governs `system` metric snapshots only. Web-vital rows (`web-vital-*`) keep a
+  fixed 7-day window (`WEB_VITALS_RETENTION_DAYS`) regardless of this value.
 
 ```json
 {
@@ -736,11 +747,11 @@ Per-table retention windows, in days (minimum 1), applied by the scheduled clean
 		"auditLogsDays": 90, // Audit log entries
 		"businessEventsDays": 365, // Business metrics events
 		"healthCheckAlertsDays": 30, // Health check alerts
-		"healthCheckLogsDays": 30, // Health check logs
+		"healthCheckLogsDays": 30, // Reserved — not read by cleanup (see note above)
 		"notificationsDays": 30, // User notifications
 		"scheduledTaskExecutionsDays": 30, // Scheduled task execution history
 		"softDeletedFilesDays": 30, // Soft-deleted uploaded files
-		"systemMetricsDays": 30 // System metrics samples
+		"systemMetricsDays": 30 // `system` metric snapshots (web vitals: fixed 7 days)
 	}
 }
 ```

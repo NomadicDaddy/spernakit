@@ -171,7 +171,7 @@ Note: `canModifyRole()` is the role-comparison rule only. Route-level access to 
 
 - Audit log reads require `requireRoleFresh('ADMIN')` - ADMIN and SYSOP only
 - Scoped to the active workspace via the `X-Workspace-Id` header; SYSOP sees all workspaces
-- History is bounded only by the retention policy (`retention.auditLogsDays`, default 90 days) - there is no per-role time cap
+- History is bounded only by the retention policy (`retention.auditLogsDays`, default 90 days; `0` keeps audit rows forever) - there is no per-role time cap
 - Rows written under SYSOP impersonation carry `impersonatedBy` (the operator) alongside `userId` (the impersonated account) and render as "username via operator" in the viewer
 
 ### Planned / Not Yet Implemented
