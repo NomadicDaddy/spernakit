@@ -100,6 +100,20 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 				 */
 				<span className="text-sm text-muted-foreground">
 					{row.original.username ?? <span className="italic">System</span>}
+					{/*
+					 * An impersonated row names the operator behind it. `username` stays the account
+					 * the request ran as — that is what authorization saw — so the impersonator is a
+					 * suffix rather than a replacement: the row must never read as the user's own act.
+					 */}
+					{row.original.impersonatedBy !== null && (
+						<span
+							className="ml-1 text-xs"
+							title={`Impersonated by user #${String(row.original.impersonatedBy)}`}>
+							via{' '}
+							{row.original.impersonatorUsername ??
+								`#${String(row.original.impersonatedBy)}`}
+						</span>
+					)}
 				</span>
 			),
 			header: 'User',

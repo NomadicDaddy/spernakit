@@ -14,7 +14,7 @@ import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts'
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationTypeSchema, UserRoleSchema } from '../../schemas/domain.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { escapeHtml } from '../../services/emailService.ts';
 import { broadcast, markAllAsRead, markAsRead } from '../../services/notificationService.ts';
 import { dataResponse, successResponse } from '../../utils/apiResponse.ts';
@@ -84,7 +84,7 @@ const notificationBroadcastRoutes = new Elysia({
 					type: body.type ?? 'info',
 				},
 				entityType: 'notification',
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 			return dataResponse({ count });
 		},

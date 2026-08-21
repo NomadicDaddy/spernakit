@@ -507,12 +507,23 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled"
+					],
 					"type": "object"
 				},
 				"google": {
@@ -530,12 +541,23 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled"
+					],
 					"type": "object"
 				},
 				"microsoft": {
@@ -553,6 +575,11 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
@@ -562,7 +589,14 @@
 							"type": "string"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled", "tenantId"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled",
+						"tenantId"
+					],
 					"type": "object"
 				}
 			},
@@ -606,35 +640,43 @@
 			"default": {},
 			"properties": {
 				"auditLogsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"businessEventsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"healthCheckAlertsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"healthCheckLogsDays": {
-					"minimum": 1,
+					"description": "Reserved; not read by the cleanup tasks. Health-check log retention is set from the Health settings page (`logRetentionDays`, stored in the database, minimum 1 day), so 0 here does not keep health-check logs forever.",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"notificationsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"scheduledTaskExecutionsDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"softDeletedFilesDays": {
-					"minimum": 1,
+					"description": "Days to retain rows before hard delete; 0 disables purging (keep forever).",
+					"minimum": 0,
 					"type": "integer"
 				},
 				"systemMetricsDays": {
-					"minimum": 1,
+					"description": "Days to retain `system` metric snapshots; 0 disables purging (keep forever). Web-vital rows are not covered: they keep a fixed 7-day window regardless of this value.",
+					"minimum": 0,
 					"type": "integer"
 				}
 			},
@@ -798,6 +840,11 @@
 					"minLength": 64,
 					"type": "string"
 				},
+				"impersonationEnabled": {
+					"default": true,
+					"description": "Kill-switch for `POST /users/:id/impersonate`. When false the route answers 403 for every caller, SYSOP included; `/users/impersonate/stop` stays available so a session that was already impersonating can still return. Audit rows written under impersonation carry `impersonatedBy` regardless of this flag.",
+					"type": "boolean"
+				},
 				"jwtExpiresIn": {
 					"default": "15m",
 					"type": "string"
@@ -882,6 +929,7 @@
 				"emailChangeTokenExpiryMs",
 				"emailVerificationTokenExpiryMs",
 				"encryptionKey",
+				"impersonationEnabled",
 				"jwtExpiresIn",
 				"jwtPrivateKey",
 				"jwtPublicKey",

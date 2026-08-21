@@ -1,0 +1,2 @@
+ALTER TABLE `audit_logs` ADD `impersonated_by` integer REFERENCES users(id) ON DELETE SET NULL;--> statement-breakpoint
+CREATE INDEX `idx_audit_logs_impersonated_by` ON `audit_logs` (`impersonated_by`);

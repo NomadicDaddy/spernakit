@@ -14,7 +14,9 @@ import {
 	cutoffDate,
 	daysAgo,
 	type DbClient,
+	isRetentionDisabled,
 	MAX_CLEANUP_BATCHES,
+	retentionDisabledResult,
 } from './cleanupUtils.ts';
 
 function batchTokenUpdate(
@@ -126,6 +128,9 @@ function notificationsCleanupTask(): {
 	cleaned: number;
 } {
 	const config = getConfig();
+	if (isRetentionDisabled(config.retention.notificationsDays)) {
+		return retentionDisabledResult('Notifications cleanup task');
+	}
 	return createBatchCleanupTask({
 		deleteBatch: (db, now) => {
 			const cutoff = cutoffDate(now, config.retention.notificationsDays);

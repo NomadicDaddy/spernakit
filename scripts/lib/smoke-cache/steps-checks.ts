@@ -206,6 +206,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'check:secrets-shape': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
+			'backend/src/config/configSecretsFile.ts',
 			'backend/src/config/configUtils.ts',
 			...CONFIG_JSON_GLOBS,
 			'scripts/check-secrets-shape.ts',

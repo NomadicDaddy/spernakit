@@ -2,7 +2,7 @@ import type { assertUser } from '../../guards/role.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import {
 	deleteRow,
 	executeReadOnlyQuery,
@@ -131,7 +131,7 @@ function handleInsertRow({
 		details: { newValues: redactRow(result.newValues), tableName: params.tableName },
 		entityId: String(result.rowId),
 		entityType: params.tableName,
-		userId: user.id,
+		...actorFields(user),
 	});
 
 	return dataResponse(result.newValues);
@@ -167,7 +167,7 @@ function handleUpdateRow({
 		},
 		entityId: String(params.rowId),
 		entityType: params.tableName,
-		userId: user.id,
+		...actorFields(user),
 	});
 
 	return dataResponse(result.newValues);
@@ -197,7 +197,7 @@ function handleDeleteRow({
 		details: { deletedValues: redactRow(result.deletedValues), tableName: params.tableName },
 		entityId: String(params.rowId),
 		entityType: params.tableName,
-		userId: user.id,
+		...actorFields(user),
 	});
 
 	return successResponse();
@@ -224,7 +224,7 @@ function handleExecuteQuery({
 		action: 'database-admin.query',
 		details: { rowCount: result.data.rows.length, sql: body.sql },
 		entityType: 'database',
-		userId: user.id,
+		...actorFields(user),
 	});
 
 	return dataResponse(result.data);

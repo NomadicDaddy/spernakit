@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { configLogger } from './configLogger.ts';
 import { type AppConfig, appConfigSchema } from './configSchema.ts';
 import { replaceSecretsWithEnvVars } from './configSecrets.ts';
+import { assertSecretRefsResolve, loadSecretsFile } from './configSecretsFile.ts';
 import {
 	deepMerge,
 	ensureFrontendOrigin,
@@ -84,16 +85,21 @@ function parseConfigSchema(raw: Record<string, unknown>): AppConfig {
  * Initialize the application configuration.
  *
  * 1. Load defaults.json
- * 2. Deep-merge with config/{slug}.json (or create from defaults)
- * 3. Validate with the TypeBox schema
- * 4. Run security checks
- * 5. Store in module-level singleton
+ * 2. Load the optional split-secrets file config/{slug}.secrets.json into its own namespace
+ * 3. Deep-merge with config/{slug}.json (or create from defaults)
+ * 4. Validate with the TypeBox schema
+ * 5. Run security checks, including that every `*Ref` field resolves to a loaded secret
+ * 6. Store in module-level singleton
  */
 function initializeConfig(): AppConfig {
 	const defaults = loadDefaults();
 	const slug = getAppSlug(defaults);
 	const configDir = join(projectRoot, 'config');
 	const configPath = join(configDir, `${slug}.json`);
+
+	// Loaded first and kept apart from `config`: the secrets namespace is read at use sites via
+	// getSecret()/resolveSecretRef(), never merged into the object getConfig() hands out.
+	loadSecretsFile(slug, configDir);
 
 	const userConfig = loadOrCreateUserConfig(configPath, configDir, defaults);
 	const merged = deepMerge(defaults, userConfig);
@@ -102,6 +108,7 @@ function initializeConfig(): AppConfig {
 
 	const validated = parseConfigSchema(withEnvVars);
 	validateSecurityRequirements(validated);
+	assertSecretRefsResolve(validated as unknown as Record<string, unknown>);
 
 	config = validated;
 	return config;

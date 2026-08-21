@@ -32,6 +32,14 @@ function handleStartImpersonate({
 	const targetId = Number(params.id);
 	const config = getConfig();
 
+	// Kill-switch: an operator who wants no impersonation surface at all sets
+	// security.impersonationEnabled=false. Checked in the handler rather than at registration
+	// because routes are composed at import time, before the config singleton exists.
+	if (!config.security.impersonationEnabled) {
+		set.status = HTTP_STATUS.FORBIDDEN;
+		return forbiddenError('Impersonation is disabled (security.impersonationEnabled)');
+	}
+
 	// Self-impersonation guard — check BEFORE any cookie mutation
 	if (targetId === authUser.id) {
 		set.status = HTTP_STATUS.BAD_REQUEST;

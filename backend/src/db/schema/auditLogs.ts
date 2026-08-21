@@ -21,6 +21,9 @@ import { workspaces } from './workspaces.ts';
  * - userId: onDelete 'set null' - Audit logs must persist for compliance even when users
  *   are deleted. The userId is nullified but the audit record remains for forensic analysis.
  * - workspaceId: onDelete 'set null' - Logs persist after workspace deletion for audit trail.
+ * - impersonatedBy: onDelete 'set null' - Same reasoning as userId. When a SYSOP acts through
+ *   `POST /users/:id/impersonate`, `userId` is the impersonated account (the session the request
+ *   ran as) and `impersonatedBy` is the real operator. NULL on every row that was not impersonated.
  */
 const auditLogs = sqliteTable(
 	'audit_logs',
@@ -33,6 +36,7 @@ const auditLogs = sqliteTable(
 		entityId: text('entity_id'),
 		entityType: text('entity_type'),
 		id: integer('id').primaryKey({ autoIncrement: true }),
+		impersonatedBy: integer('impersonated_by'),
 		ipAddress: text('ip_address'),
 		userId: integer('user_id'),
 		workspaceId: integer('workspace_id'),
@@ -47,11 +51,17 @@ const auditLogs = sqliteTable(
 			name: 'fk_audit_logs_user_id_users',
 		}).onDelete('set null'),
 		foreignKey({
+			columns: [table.impersonatedBy],
+			foreignColumns: [users.id],
+			name: 'fk_audit_logs_impersonated_by_users',
+		}).onDelete('set null'),
+		foreignKey({
 			columns: [table.workspaceId],
 			foreignColumns: [workspaces.id],
 			name: 'fk_audit_logs_workspace_id_workspaces',
 		}).onDelete('set null'),
 		index('idx_audit_logs_user_id').on(table.userId),
+		index('idx_audit_logs_impersonated_by').on(table.impersonatedBy),
 		index('idx_audit_logs_action').on(table.action),
 		index('idx_audit_logs_entity').on(table.entityType, table.entityId),
 		index('idx_audit_logs_created_at').on(table.createdAt),

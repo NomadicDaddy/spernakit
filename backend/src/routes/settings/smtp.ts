@@ -17,7 +17,7 @@ import {
 import { EMAIL_MAX_LENGTH } from '../../constants/validation.ts';
 import { assertUser, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { escapeHtml, sendEmail } from '../../services/emailService.ts';
 import {
 	getEmailStatus,
@@ -134,7 +134,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				entityId: 'smtp',
 				entityType: 'settings',
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 			return dataResponse(config);
 		},

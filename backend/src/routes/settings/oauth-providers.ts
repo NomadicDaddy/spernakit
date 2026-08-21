@@ -4,7 +4,7 @@ import { OAUTH_PROVIDERS } from 'spernakit-shared';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import {
 	getOAuthProviderSettingsAsync,
 	type OAuthProviderName,
@@ -96,7 +96,7 @@ const settingsOAuthProvidersRoutes = new Elysia({
 				},
 				entityId: provider,
 				entityType: 'oauth-provider',
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 
 			return successResponse();

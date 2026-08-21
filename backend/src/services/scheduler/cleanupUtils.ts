@@ -16,6 +16,28 @@ function cutoffDate(now: Date, retentionDays: number): Date {
 	return new Date(now.getTime() - retentionDays * MS_PER_DAY);
 }
 
+/**
+ * `retention.*Days` of `0` means "never purge". Callers that compute their own cutoff must check this
+ * first: `cutoffDate(now, 0)` is *now*, and a delete below it would empty the table.
+ *
+ * @param retentionDays - The configured `retention.*Days` window
+ * @returns true when the window is 0 (or otherwise not a positive number), i.e. purging is disabled
+ */
+function isRetentionDisabled(retentionDays: number): boolean {
+	return !(retentionDays > 0);
+}
+
+/**
+ * The no-op result a cleanup task returns when its retention is disabled, with the log line to match.
+ *
+ * @param taskName - Human-readable task name for the skip log line
+ * @returns Zero batches, zero rows cleaned
+ */
+function retentionDisabledResult(taskName: string): { batches: number; cleaned: number } {
+	logScheduler('info', `${taskName} skipped: retention disabled (0 days)`);
+	return { batches: 0, cleaned: 0 };
+}
+
 function createBatchCleanupTask(options: {
 	deleteBatch: (db: DbClient, now: Date) => number;
 	taskName: string;
@@ -60,7 +82,7 @@ function createRetentionCleanupTask(options: {
 	};
 	taskName: string;
 }): () => { batches: number; cleaned: number } {
-	return createBatchCleanupTask({
+	const run = createBatchCleanupTask({
 		deleteBatch: (db, now) => {
 			const cutoff = cutoffDate(now, options.getRetentionDays());
 			const condition = options.extraCondition
@@ -87,6 +109,10 @@ function createRetentionCleanupTask(options: {
 		},
 		taskName: options.taskName,
 	});
+	return () =>
+		isRetentionDisabled(options.getRetentionDays())
+			? retentionDisabledResult(options.taskName)
+			: run();
 }
 
 export {
@@ -94,6 +120,8 @@ export {
 	createRetentionCleanupTask,
 	cutoffDate,
 	daysAgo,
+	isRetentionDisabled,
 	MAX_CLEANUP_BATCHES,
+	retentionDisabledResult,
 };
 export type { DbClient };

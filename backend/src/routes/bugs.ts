@@ -11,7 +11,7 @@ import {
 import { MAX_PROPERTIES_DEFAULT } from '../constants/validation.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
-import { log as logAudit } from '../services/auditService.ts';
+import { actorFields, log as logAudit } from '../services/auditService.ts';
 import { list, submit, updateStatus } from '../services/bugReportService.ts';
 import { dataResponse, paginatedResponse } from '../utils/apiResponse.ts';
 import { notFoundError } from '../utils/errorResponse.ts';
@@ -165,7 +165,7 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				},
 				entityId: String(params.id),
 				entityType: 'bug-report',
-				userId: authedUser.id,
+				...actorFields(authedUser),
 			});
 
 			return dataResponse(result.report);

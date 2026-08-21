@@ -11,7 +11,7 @@ import {
 } from '../../constants/responseExamples.ts';
 import { assertUser, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { getAuthSettings, updateAuthSettings } from '../../services/authService.ts';
 import { reEncryptAllBackups } from '../../services/backupService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
@@ -46,7 +46,7 @@ async function handleRotateBackupKey({
 		details: { failed: result.failed, processed: result.processed },
 		entityId: 'backup-encryption-key',
 		entityType: 'security',
-		userId: authUser.id,
+		...actorFields(authUser),
 	});
 
 	return dataResponse(result);
@@ -105,7 +105,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 				details: { changes: body, section: 'auth-security' },
 				entityId: 'auth-security',
 				entityType: 'settings',
-				userId: authUser.id,
+				...actorFields(authUser),
 			});
 			return dataResponse(settings);
 		},

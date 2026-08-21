@@ -25,6 +25,14 @@ export const securitySchema = Type.Object({
 		minimum: MS_PER_HOUR,
 	}),
 	encryptionKey: Type.String({ minLength: 64 }),
+	impersonationEnabled: Type.Boolean({
+		default: true,
+		description:
+			'Kill-switch for `POST /users/:id/impersonate`. When false the route answers 403 for every ' +
+			'caller, SYSOP included; `/users/impersonate/stop` stays available so a session that was ' +
+			'already impersonating can still return. Audit rows written under impersonation carry ' +
+			'`impersonatedBy` regardless of this flag.',
+	}),
 	jwtExpiresIn: Type.String({ default: '15m' }),
 	jwtPrivateKey: Type.String({ minLength: 16 }),
 	jwtPrivateKeyPrevious: Type.Optional(Type.String()),

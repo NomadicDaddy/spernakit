@@ -167,6 +167,18 @@
 					"description": "Production config preflight rejects placeholder secrets without disclosing values"
 				},
 				{
+					"command": "bun run test:secrets-file",
+					"description": "Split-secrets loader resolves dot-paths and fails fast on dangling *Ref fields"
+				},
+				{
+					"command": "bun run test:retention-zero",
+					"description": "retention.*Days = 0 keeps rows forever against a real database; positive windows still purge"
+				},
+				{
+					"command": "bun run test:impersonation-audit",
+					"description": "Impersonated mutations persist userId + impersonatedBy; kill-switch blocks start but not stop"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},

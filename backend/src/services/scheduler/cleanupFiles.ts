@@ -12,7 +12,7 @@ import { UPLOAD_DIR } from '../../storage/localAdapter.ts';
 import { mapWithConcurrency } from '../../utils/async.ts';
 import { logScheduler } from '../../utils/logger.ts';
 import { log as logAudit } from '../auditService.ts';
-import { cutoffDate, MAX_CLEANUP_BATCHES } from './cleanupUtils.ts';
+import { cutoffDate, isRetentionDisabled, MAX_CLEANUP_BATCHES } from './cleanupUtils.ts';
 
 /** Minimum age before an on-disk file with no matching DB row is treated as orphaned. */
 const ORPHAN_MIN_AGE_MS = MS_PER_DAY;
@@ -22,11 +22,16 @@ async function softDeletedFilesCleanupTask(): Promise<{ batches: number; cleaned
 	const db = getDb();
 	const storage = getStorageAdapter();
 	const cutoff = cutoffDate(new Date(), config.retention.softDeletedFilesDays);
+	// 0 keeps soft-deleted rows forever; the orphan sweep below is unrelated to retention and still runs.
+	const purgeDisabled = isRetentionDisabled(config.retention.softDeletedFilesDays);
+	if (purgeDisabled) {
+		logScheduler('info', 'Soft-deleted files cleanup skipped: retention disabled (0 days)');
+	}
 
 	let totalCleaned = 0;
 	let batches = 0;
 
-	while (batches < MAX_CLEANUP_BATCHES) {
+	while (!purgeDisabled && batches < MAX_CLEANUP_BATCHES) {
 		const files = db
 			.select({
 				id: fileUploads.id,

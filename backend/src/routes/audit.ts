@@ -107,7 +107,9 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 				'createdAt descending. Date range is validated - dateTo must be ' +
 				'after dateFrom. Scoped to workspace via X-Workspace-Id header (SYSOP sees ' +
 				'all). Use the optional `fields` parameter to request only specific fields ' +
-				'(e.g. `fields=id,action,userId,createdAt`). ' +
+				'(e.g. `fields=id,action,userId,createdAt`). Rows written during a SYSOP impersonation ' +
+				'session carry `impersonatedBy`/`impersonatorUsername` naming the real operator; `userId` ' +
+				'is the account the request ran as. ' +
 				'Returns { data: [...], page, limit, total }. Requires ADMIN role or higher.',
 			responses: {
 				'200': {
@@ -122,6 +124,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											createdAt: '2026-01-15T14:30:00Z',
 											details: null,
 											id: 150,
+											impersonatedBy: null,
+											impersonatorUsername: null,
 											ip: '192.168.1.10',
 											userId: 1,
 											username: 'admin',
@@ -132,6 +136,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											createdAt: '2026-01-15T12:00:00Z',
 											details: '{"name":"Production"}',
 											id: 149,
+											impersonatedBy: null,
+											impersonatorUsername: null,
 											ip: '192.168.1.10',
 											userId: 1,
 											username: 'admin',
@@ -142,6 +148,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											createdAt: '2026-01-15T10:15:00Z',
 											details: '{"key":"app.name"}',
 											id: 148,
+											impersonatedBy: 1,
+											impersonatorUsername: 'admin',
 											ip: '192.168.1.25',
 											userId: 2,
 											username: 'operator1',

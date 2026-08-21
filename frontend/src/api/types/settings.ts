@@ -20,6 +20,9 @@ interface AuditLog {
 	 */
 	details: unknown;
 	id: number;
+	/** The real operator when the row was written during a SYSOP impersonation session; null otherwise. */
+	impersonatedBy: null | number;
+	impersonatorUsername: null | string;
 	ipAddress: null | string;
 	resource: null | string;
 	resourceId: null | number;

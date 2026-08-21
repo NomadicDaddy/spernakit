@@ -4,7 +4,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { DEFAULT_REFRESH_TTL_MS, parseDurationMs } from '../../constants/auth.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser, canModifyRole } from '../../guards/role.ts';
-import { log as logAudit } from '../../services/auditService.ts';
+import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { adminResetUserPassword, getUserById, unlockUser } from '../../services/userService.ts';
 import { successResponse } from '../../utils/apiResponse.ts';
 import { clearCsrfToken, clearRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
@@ -49,7 +49,7 @@ function handleUnlockUser({
 		details: { username: targetUser.username },
 		entityId: String(targetId),
 		entityType: 'user',
-		userId: authUser.id,
+		...actorFields(authUser),
 	});
 	return successResponse();
 }
@@ -110,7 +110,7 @@ async function handleAdminResetPassword({
 		details: { mode: body.mode, targetUserId: targetId },
 		entityId: String(targetId),
 		entityType: 'user',
-		userId: authUser.id,
+		...actorFields(authUser),
 	});
 
 	return successResponse();

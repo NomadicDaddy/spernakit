@@ -46,8 +46,10 @@ Configuration files are stored in the `config/` directory:
 
 ```
 config/
-├── {appname}.json          # Your application config
-└── {appname}.json.backup.* # Automatic backups
+├── {appname}.json                  # Your application config
+├── {appname}.json.backup.*         # Automatic backups
+├── {appname}.secrets.json          # Optional split-secrets file (gitignored) — see "Secrets File (split pattern)"
+└── {appname}.secrets.json.example  # Tracked companion declaring the secrets file's key shape
 ```
 
 ### Quick Start
@@ -161,18 +163,21 @@ bun run generate-keys
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false
 		},
 		"google": {
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false
 		},
 		"microsoft": {
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false,
 			"tenantId": "common"
 		}
@@ -215,6 +220,7 @@ bun run generate-keys
 		"cookieMaxAge": 900000,
 		"cookieSecret": "your-32-character-cookie-secret",
 		"encryptionKey": "your-64-character-hex-encryption-key",
+		"impersonationEnabled": true,
 		"jwtExpiresIn": "15m",
 		"jwtPrivateKey": "-----BEGIN PRIVATE KEY-----\n...",
 		"jwtPublicKey": "-----BEGIN PUBLIC KEY-----\n...",
@@ -373,6 +379,55 @@ Scope the rotation with `--only` when the reason for rotating covers one key gro
 already in flight fail, because the state and PKCE binding derived from the old secret no longer
 verifies.
 
+## Secrets File (split pattern)
+
+The keys above are the app's **own** cryptographic material and live inline in `config/{appname}.json`.
+**Operator-provided third-party credentials** — external API keys, provider tokens, integration
+secrets — can instead live in an optional sibling file, `config/{appname}.secrets.json`, loaded by
+`backend/src/config/configSecretsFile.ts`:
+
+- The file is freeform nested JSON (string leaves are secrets) and is gitignored by `/config/*.json`;
+  the tracked `config/{appname}.secrets.json.example` declares its key shape with placeholders, and
+  `bun run check:secrets-shape` fails when the two files declare different keys.
+- `initializeConfig()` loads it into a **sealed namespace separate from the main config**. Values are
+  read at the use site with `getSecret('dot.path')` / `requireSecret('dot.path')`; they never appear
+  in `getConfig()`, admin UIs, runtime snapshots, or audit details.
+- Config fields ending in `Ref` (e.g. `oauth.github.clientSecretRef`) are **dot-path pointers** into
+  the namespace. A non-empty `*Ref` takes precedence over its inline sibling and must resolve: startup
+  fails with the full list of dangling refs (`assertSecretRefsResolve`), so a typo in a ref is a boot
+  error rather than a runtime 500. An empty `*Ref` means "inline value, as before".
+- A missing secrets file is normal (empty namespace). A file that exists but is not a JSON object, or
+  is not valid JSON, aborts startup.
+
+```json
+// config/{appname}.secrets.json
+{
+	"integrations": {
+		"exampleProvider": { "apiKey": "..." }
+	},
+	"oauth": {
+		"github": { "clientSecret": "gho_..." }
+	}
+}
+```
+
+```json
+// config/{appname}.json — point at the secret instead of inlining it
+{
+	"oauth": {
+		"github": {
+			"clientId": "...",
+			"clientSecretRef": "oauth.github.clientSecret",
+			"enabled": true
+		}
+	}
+}
+```
+
+Choose the split file when a secret is third-party (external lifecycle), operator-owned (differs per
+deployment), optional (feature is off when the key is absent), or growing (new providers without
+schema changes). See `docs/template/STACK.md` "Secrets file pattern" for the inline-vs-split rule.
+
 ---
 
 ## Configuration Schema
@@ -516,25 +571,32 @@ authentication, proxy, and production configuration described in
 		"github": {
 			"callbackUrl": "", // GitHub OAuth callback URL
 			"clientId": "", // GitHub OAuth client ID
-			"clientSecret": "", // GitHub OAuth client secret
+			"clientSecret": "", // GitHub OAuth client secret (inline)
+			"clientSecretRef": "", // Or a dot-path into config/{appname}.secrets.json, e.g. "oauth.github.clientSecret"
 			"enabled": false // Enable GitHub OAuth
 		},
 		"google": {
 			"callbackUrl": "", // Google OAuth callback URL
 			"clientId": "", // Google OAuth client ID
-			"clientSecret": "", // Google OAuth client secret
+			"clientSecret": "", // Google OAuth client secret (inline)
+			"clientSecretRef": "", // Or a dot-path into the secrets file
 			"enabled": false // Enable Google OAuth
 		},
 		"microsoft": {
 			"callbackUrl": "", // Microsoft OAuth callback URL
 			"clientId": "", // Microsoft OAuth client ID
-			"clientSecret": "", // Microsoft OAuth client secret
+			"clientSecret": "", // Microsoft OAuth client secret (inline)
+			"clientSecretRef": "", // Or a dot-path into the secrets file
 			"enabled": false, // Enable Microsoft OAuth
 			"tenantId": "common" // Azure AD tenant ID
 		}
 	}
 }
 ```
+
+A non-empty `clientSecretRef` wins over `clientSecret` and must resolve at startup (see "Secrets
+File (split pattern)"). DB-stored provider settings from the admin UI still take precedence over
+either file-based value.
 
 ### Roles Configuration (`roles`)
 
@@ -666,7 +728,18 @@ Controls how health-check alerts are delivered.
 
 ### Data Retention (`retention`)
 
-Per-table retention windows, in days (minimum 1), applied by the scheduled cleanup tasks.
+Per-table retention windows, in days, applied by the scheduled cleanup tasks. `0` disables purging
+for that key (rows are kept forever; the cleanup task logs `skipped: retention disabled` and exits
+without deleting). Soft-deleted files still have their orphaned blobs swept when `softDeletedFilesDays`
+is `0`; only the database rows are kept.
+
+Two keys are narrower than their names suggest:
+
+- `healthCheckLogsDays` is **not read by any cleanup task**. Health-check log retention (and the
+  stale-alert auto-resolve window) comes from the Health settings page (`logRetentionDays`, stored in
+  the database, minimum 1 day), so `0` here does not keep health-check logs forever.
+- `systemMetricsDays` governs `system` metric snapshots only. Web-vital rows (`web-vital-*`) keep a
+  fixed 7-day window (`WEB_VITALS_RETENTION_DAYS`) regardless of this value.
 
 ```json
 {
@@ -674,11 +747,11 @@ Per-table retention windows, in days (minimum 1), applied by the scheduled clean
 		"auditLogsDays": 90, // Audit log entries
 		"businessEventsDays": 365, // Business metrics events
 		"healthCheckAlertsDays": 30, // Health check alerts
-		"healthCheckLogsDays": 30, // Health check logs
+		"healthCheckLogsDays": 30, // Reserved — not read by cleanup (see note above)
 		"notificationsDays": 30, // User notifications
 		"scheduledTaskExecutionsDays": 30, // Scheduled task execution history
 		"softDeletedFilesDays": 30, // Soft-deleted uploaded files
-		"systemMetricsDays": 30 // System metrics samples
+		"systemMetricsDays": 30 // `system` metric snapshots (web vitals: fixed 7 days)
 	}
 }
 ```
