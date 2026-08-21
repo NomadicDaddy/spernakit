@@ -167,6 +167,10 @@
 					"description": "Production config preflight rejects placeholder secrets without disclosing values"
 				},
 				{
+					"command": "bun run test:secrets-file",
+					"description": "Split-secrets loader resolves dot-paths and fails fast on dangling *Ref fields"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},

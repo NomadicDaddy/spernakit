@@ -352,9 +352,10 @@ The audit logging system tracks all security-relevant operations:
 Spernakit uses a **JSON-first configuration approach**:
 
 1. **Primary Source**: `config/{appname}.json` - All configuration settings
-2. **Runtime Environment**: `process.env` - Populated from JSON by `load-json-config.ts` for scripts
-3. **No `.env` Files**: Bun config has `env = false` in `bunfig.toml`, so `.env` files are NOT auto-loaded
-4. **Type Validation**: TypeBox schemas in `configSchemas/` enforce configuration structure
+2. **Split Secrets (optional)**: `config/{appname}.secrets.json` - Operator-provided third-party credentials, loaded by `configSecretsFile.ts` into a sealed namespace that is never merged into the main config; config fields ending in `Ref` point into it by dot-path and are resolved at the use site (see `CONFIGURATION.md` "Secrets File (split pattern)")
+3. **Runtime Environment**: `process.env` - Populated from JSON by `load-json-config.ts` for scripts
+4. **No `.env` Files**: Bun config has `env = false` in `bunfig.toml`, so `.env` files are NOT auto-loaded
+5. **Type Validation**: TypeBox schemas in `configSchemas/` enforce configuration structure
 
 This approach provides:
 
@@ -398,7 +399,7 @@ See `config/example.json` for the complete configuration structure.
 - **No external dependencies**: SMTP must be configured in JSON config at deployment time
 - **Fail-fast**: Application refuses to start with missing/weak keys in config
 - **Database admin panel off by default**: `databaseAdmin.enabled` (default `false`) gates the SYSOP database-admin panel (raw table read/write and SQL sandbox); deployments must opt in explicitly, recommended for development environments only
-- **Never commit secrets**: Use secret management or secure JSON config files
+- **Never commit secrets**: Use secret management or secure JSON config files; operator-provided third-party credentials belong in the gitignored `config/{appname}.secrets.json`, referenced from config by `*Ref` dot-paths
 
 ---
 

@@ -169,107 +169,109 @@ Steps (in order):
     - Config schema validation (defaults + example + instance).
 11. `bun run test:config-preflight`
     - Production config preflight rejects placeholder secrets without disclosing values.
-12. `bun run test:wait-for-http`
+12. `bun run test:secrets-file`
+    - Split-secrets loader resolves dot-paths and fails fast on dangling *Ref fields.
+13. `bun run test:wait-for-http`
     - Docker readiness failures print bounded container log diagnostics.
-13. `bun run check:db-location`
+14. `bun run check:db-location`
     - Database location guard (ASSERT-010: DB files only under data/).
-14. `bun run check:no-inline-references`
+15. `bun run check:no-inline-references`
     - Inline .references() ban (ASSERT-012).
-15. `bun run check:secrets-shape`
+16. `bun run check:secrets-shape`
     - Secrets file shape parity.
-16. `bun run check:leak-guard`
+17. `bun run check:leak-guard`
     - Leak-guard hook self-test (synthetic fixtures).
-17. `bun run check:licenses`
+18. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
-18. `bun run test:shared-core-write`
+19. `bun run test:shared-core-write`
     - Shared-core write path regression self-test (synthetic fleet).
-19. `bun run check:shared-core`
+20. `bun run check:shared-core`
     - Shared-core files in sibling repositories match their owning repository (when present).
-20. `bun run test:fleet-manifest`
+21. `bun run test:fleet-manifest`
     - Fleet manifest validator regression self-test.
-21. `bun run test:fleet-manifest-sync`
+22. `bun run test:fleet-manifest-sync`
     - Fleet manifest writer regression self-test.
-22. `bun run check:fleet-manifest`
+23. `bun run check:fleet-manifest`
     - Fleet manifest matches packages and runtime configs.
-23. `bun run check:image-publication`
+24. `bun run check:image-publication`
     - Template image publication guard.
-24. `bun run check:process-env`
+25. `bun run check:process-env`
     - Process environment access check.
-25. `bun run check:env-spread`
+26. `bun run check:env-spread`
     - Child processes receive only the environment they need.
-26. `bun run check:git-window-hide`
+27. `bun run check:git-window-hide`
     - Direct Git subprocesses hide their Windows console window.
-27. `bun run check:audit-artifact-hygiene`
+28. `bun run check:audit-artifact-hygiene`
     - No audit report claims a date that has not happened yet.
-28. `bun run check:max-lines`
+29. `bun run check:max-lines`
     - 300-line max-lines gate.
-29. `bun run check:script-targets`
+30. `bun run check:script-targets`
     - Every package.json script resolves to a real file and task.
-30. `bun run test:gate-conventions`
+31. `bun run test:gate-conventions`
     - Gate conventions meta-gate regression self-test.
-31. `bun run check:gate-conventions`
+32. `bun run check:gate-conventions`
     - Every gate follows docs/reference/gate-conventions.md.
-32. `bun run check-application`
+33. `bun run check-application`
     - Application check.
-33. `bun run test:destructive-comments`
+34. `bun run test:destructive-comments`
     - Destructive-confirmation reads code not prose (comment stripping and waiver honouring).
-34. `bun run test:destructive-evidence`
+35. `bun run test:destructive-evidence`
     - Destructive-confirmation evidence resolver assertion (window and one-level handler hop).
-35. `bun run check:destructive-confirmation`
+36. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-36. `bun run test:mutation-denylist`
+37. `bun run test:mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-37. `bun run check:docs`
+38. `bun run check:docs`
     - Documentation consistency check.
-38. `bun run check:version-refs`
+39. `bun run check:version-refs`
     - Current-state version claims in docs match package.json.
-39. `bun run check:smoke-docs`
+40. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-40. `bun run typecheck`
+41. `bun run typecheck`
     - Typecheck.
-41. `bun run lint`
+42. `bun run lint`
     - Lint.
-42. `bun run build`
+43. `bun run build`
     - Build.
-43. `bun run verify-minification`
+44. `bun run verify-minification`
     - Verify bundle minification and total size budget.
-44. `bun run check:critical-path`
+45. `bun run check:critical-path`
     - Verify critical-path size, React runtime placement, and no preload waterfall.
-45. `bun run check:api-types`
+46. `bun run check:api-types`
     - API type contract validation.
-46. `bun run check:feature-integration`
+47. `bun run check:feature-integration`
     - Feature integration check.
-47. `bun run test:feature-integration`
+48. `bun run test:feature-integration`
     - Feature integration rejects unmounted flat route modules.
-48. `bun run check:schema-parity`
+49. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-49. `bun run test:backup-compression`
+50. `bun run test:backup-compression`
     - Backup decompression guard rejects high-ratio archives and cleans up.
-50. `bun run test:bundle-budget`
+51. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-51. `bun run test:crawl-credentials`
+52. `bun run test:crawl-credentials`
     - Crawl login resolves from the seed account and never from a tracked config file.
-52. `bun run test:critical-path-budget`
+53. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-53. `bun run test:lost-lines`
+54. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-54. `bun run test:override-deltas`
+55. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-55. `bun run test:reset-packages`
+56. `bun run test:reset-packages`
     - Package reset preserves dependencies when the frozen-install preflight fails.
-56. `bun run test:scaffolded-hooks`
+57. `bun run test:scaffolded-hooks`
     - Scaffolded pre-push hook replays refs through both release guards.
-57. `bun run test:template-drift`
+58. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-58. `bun run format:check`
+59. `bun run format:check`
     - Format check.
-59. `bun run test:aidd-format`
+60. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-60. `bun run check:aidd-format`
+61. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-61. `bun run check-deps`
+62. `bun run check-deps`
     - Check dependency versions.
-62. `bun run check:dead-code`
+63. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

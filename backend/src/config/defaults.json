@@ -113,18 +113,21 @@
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false
 		},
 		"google": {
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false
 		},
 		"microsoft": {
 			"callbackUrl": "",
 			"clientId": "",
 			"clientSecret": "",
+			"clientSecretRef": "",
 			"enabled": false,
 			"tenantId": "common"
 		}

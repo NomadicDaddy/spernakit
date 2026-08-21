@@ -507,12 +507,23 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled"
+					],
 					"type": "object"
 				},
 				"google": {
@@ -530,12 +541,23 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled"
+					],
 					"type": "object"
 				},
 				"microsoft": {
@@ -553,6 +575,11 @@
 							"default": "",
 							"type": "string"
 						},
+						"clientSecretRef": {
+							"default": "",
+							"description": "Optional dot-path into `config/{slug}.secrets.json` (split-secrets file) holding the client secret, e.g. `oauth.github.clientSecret`. When set it takes precedence over the inline `clientSecret` and must resolve at startup; leave empty to keep the secret inline.",
+							"type": "string"
+						},
 						"enabled": {
 							"default": false,
 							"type": "boolean"
@@ -562,7 +589,14 @@
 							"type": "string"
 						}
 					},
-					"required": ["callbackUrl", "clientId", "clientSecret", "enabled", "tenantId"],
+					"required": [
+						"callbackUrl",
+						"clientId",
+						"clientSecret",
+						"clientSecretRef",
+						"enabled",
+						"tenantId"
+					],
 					"type": "object"
 				}
 			},
