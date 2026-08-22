@@ -3,6 +3,51 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.43.1] - 2026-08-22
+
+Patch release. A pilot upgrade of a one-day-old derived app measured 3.43.0 against a real target
+and found one new script that cannot work outside the template, plus a set of long-standing gaps in
+what the initializer brands. Nothing here changes template behavior; it changes what a derived app
+receives.
+
+### Fixed
+
+- `scripts/test-secrets-file.ts` resolved `config/spernakit.secrets.json.example` by name. The file
+  is classified `pure`, so every derived app would have taken the hardcode verbatim: one without a
+  `spernakit`-named example exits 1, and one that still carries the template's copy passes while
+  validating the wrong file. It now resolves the slug through `getAppSlug(loadDefaults())`, the same
+  way `configSecretsFile.ts` and `scripts/check-secrets-shape.ts` already did.
+- `bun run setup` left a new application's README titled `# <slug>.43.0`. The title, baseline, and
+  overview patterns matched a literal `Spernakit v3`, but `check-version-refs.ts` stamps the current
+  release into all three sites, so each substitution consumed the prefix and left the digits behind.
+  The patterns now match the stamped version and keep working across bumps.
+- `backend/README.md` and `frontend/README.md` were never branded. Both are in the branded manifest
+  and both shipped to every derived app still titled "Spernakit v3".
+- The SEO `<meta name="description">` in `frontend/index.html` kept its `Spernakit v3 - ` prefix. The
+  bare description string is a substring of the prefixed one and sorts first under the lint rule that
+  orders these keys, so it consumed the tail and left the prefixed pattern nothing to match. Every
+  description pattern is now anchored to its attribute or JSON key, which makes the pass
+  order-independent rather than order-lucky.
+- `docker-compose.test.yml` kept a service key of `spernakit` in derived applications. The overlay is
+  applied as `-f docker-compose.yml -f docker-compose.test.yml`, so the mismatched key declared a
+  second service instead of overlaying the application's volumes, and `smoke:docker-local` wrote to
+  the development `data/` directory it exists to protect. It is now rebranded with the same
+  substitution the base and production compose files use.
+- `setup` renames `config/spernakit.secrets.json.example` to `config/<slug>.secrets.json.example`.
+  Every consumer resolves the example by the application's slug, so the template-named copy was a
+  file no gate reads sitting beside a name every gate looks for and does not find.
+- The `.templateoverrides` seed claimed `KEEP` for branding the initializer never performed, and
+  omitted the deletions it does perform. It now states only what init did.
+
+### Changed
+
+- `bunfig.toml`'s `minimumReleaseAge` comment states the constraint it actually imposes. The gate
+  refuses a pin younger than seven days even when that version is already recorded in `bun.lock`, so
+  a fresh dependency bump is uninstallable and `bun install --frozen-lockfile` fails until it clears
+  the window. The previous wording described only the long-published case.
+- The blueprint's runtime floor reads Bun 1.4.0. `.aidd/features/project-scaffolding/feature.json`
+  and `.aidd/project-structure.md` still said 1.3.14 after the 3.43.0 runtime bump.
+
 ## [3.43.0] - 2026-08-22
 
 ### Added

@@ -122,6 +122,7 @@ const TEMPLATE_OVERRIDES = [
 	'KEEP  frontend/index.html            # init branding',
 	'KEEP  licenses/CONTAINER-DISTRIBUTION.md  # init distribution guidance',
 	'KEEP  package.json                   # init version reset + app release scripts',
+	'DELETED  config/spernakit.secrets.json.example  # init renames it to <slug>.secrets.json.example',
 	'DELETED  licenses/SOURCE-OFFER.template.md  # init creates app-owned SOURCE-OFFER.md',
 ];
 
