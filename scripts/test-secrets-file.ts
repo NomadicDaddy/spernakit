@@ -6,8 +6,8 @@
  * repository's own `config/`: a missing file yields an empty namespace, a present file is addressable
  * by dot-path through `getSecret`/`requireSecret`/`resolveSecretRef`, malformed files fail loudly,
  * the namespace is frozen, and `assertSecretRefsResolve` rejects a config whose `*Ref` fields point
- * at keys the file does not declare. Also pins the template's own `.example` companion to the shape
- * the OAuth `clientSecretRef` fields are documented against.
+ * at keys the file does not declare. Also pins the configured application's `.example` companion to
+ * the shape the OAuth `clientSecretRef` fields are documented against.
  */
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -25,7 +25,7 @@ import {
 	requireSecret,
 	resolveSecretRef,
 } from '../backend/src/config/configSecretsFile.ts';
-import { projectRoot } from '../backend/src/config/configUtils.ts';
+import { getAppSlug, loadDefaults, projectRoot } from '../backend/src/config/configUtils.ts';
 
 let checks = 0;
 
@@ -167,11 +167,12 @@ function testMalformedFiles(): void {
 }
 
 function testExampleCompanion(): void {
-	const examplePath = join(projectRoot, 'config', 'spernakit.secrets.json.example');
+	const slug = getAppSlug(loadDefaults());
+	const examplePath = join(projectRoot, 'config', `${slug}.secrets.json.example`);
 	const example = JSON.parse(readFileSync(examplePath, 'utf8')) as Record<string, unknown>;
 	withTempConfigDir((dir) => {
-		writeFileSync(join(dir, 'spernakit.secrets.json'), JSON.stringify(example));
-		loadSecretsFile('spernakit', dir);
+		writeFileSync(join(dir, `${slug}.secrets.json`), JSON.stringify(example));
+		loadSecretsFile(slug, dir);
 		for (const provider of ['github', 'google', 'microsoft']) {
 			assert(
 				hasSecret(`oauth.${provider}.clientSecret`),
