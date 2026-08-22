@@ -168,6 +168,19 @@ function htmlEscape(value: string): string {
 		.replaceAll('"', '&quot;');
 }
 
+/**
+ * Encode a configured value as a JSON string literal safe to embed in the JSON-LD script element.
+ *
+ * `JSON.stringify` alone is not enough. The block is a raw-text element, so the HTML parser looks
+ * for `</script>` before any JSON parser sees the document — a description containing that
+ * sequence would close the element early and leave the rest of the value as markup in the page.
+ * Escaping `<` as `\u003C` keeps the literal parsing to exactly the same string while making the
+ * sequence unrepresentable.
+ */
+function jsonLdString(value: string): string {
+	return JSON.stringify(value).replaceAll('<', '\\u003C');
+}
+
 export function updateFrontendFiles(s: SetupSettings): void {
 	// storageKeys, correlationId, Sidebar, and MobileNav use Vite define
 	// (__APP_SLUG__, __APP_NAME__) injected from defaults.json at build time.
@@ -192,8 +205,8 @@ export function updateFrontendFiles(s: SetupSettings): void {
 	// entity, or the structured data stops parsing.
 	updateFile('frontend/index.html', {
 		// JSON-LD structured data
-		'"description": "Self-Hosted Multi-User Application Template"': `"description": ${JSON.stringify(s.appDescription)}`,
-		'"name": "Spernakit v3"': `"name": ${JSON.stringify(s.appName)}`,
+		'"description": "Self-Hosted Multi-User Application Template"': `"description": ${jsonLdString(s.appDescription)}`,
+		'"name": "Spernakit v3"': `"name": ${jsonLdString(s.appName)}`,
 
 		// Meta tags with author/app name
 		'"Spernakit v3" name="apple-mobile-web-app-title"': `"${name}" name="apple-mobile-web-app-title"`,
