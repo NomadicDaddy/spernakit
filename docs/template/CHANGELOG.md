@@ -3,6 +3,21 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.43.2] - 2026-08-22
+
+Patch release. One comment in the 3.43.1 payload is wrong, in the function that exists to
+explain why it would be.
+
+### Fixed
+
+- The comment above the `SOURCE-OFFER.md` project-name fill in
+  `scripts/lib/setup/license-materials.ts` named the line of code beneath it instead of naming
+  `$&`. The edit that authored 3.43.1 passed that comment text to `String.replace` as a
+  string, so the `$&` inside it addressed the match and pasted the commented-on line into its
+  own explanation — the exact defect the comment describes, and the exact reason the code beneath
+  it uses a replacer function. Comment text only; the substitution itself was already correct and
+  is unchanged.
+
 ## [3.43.1] - 2026-08-22
 
 Patch release. A pilot upgrade of a one-day-old derived app measured 3.43.0 against a real target
