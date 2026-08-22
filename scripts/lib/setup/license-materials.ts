@@ -54,7 +54,10 @@ export function updateLicenseFiles(s: SetupSettings): void {
 		close === -1
 			? template
 			: template.slice(0, open) + template.slice(close + '-->'.length).replace(/^\n+/, '');
-	const offer = body.replaceAll('<PROJECT NAME>', s.appName);
+	// The replacement is a function for the same reason updateFile's is: a string replacement
+	// honours `	const offer = body.replaceAll('<PROJECT NAME>', s.appName);` and friends, so a project name carrying one would rewrite the legal document
+	// around it instead of appearing in it.
+	const offer = body.replaceAll('<PROJECT NAME>', () => s.appName);
 	writeFileSync('licenses/SOURCE-OFFER.md', offer);
 	rmSync('licenses/SOURCE-OFFER.template.md', { force: true });
 }

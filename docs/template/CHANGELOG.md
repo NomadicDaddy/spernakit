@@ -44,8 +44,8 @@ receives.
   instead of appearing in the output. HTML contexts are entity-escaped, the JSON-LD values are
   encoded as JSON string literals with `<` written as `\u003C` — the block is a raw-text element,
   so a value containing `</script>` would close it before any JSON parser saw the document — and
-  `updateFile` inserts every replacement through a replacer function so no configured value can
-  carry a substitution pattern.
+  `updateFile` and the `SOURCE-OFFER.md` project-name substitution both insert through a replacer
+  function so no configured value can carry a substitution pattern.
 
 ### Changed
 
