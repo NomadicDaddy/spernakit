@@ -457,8 +457,8 @@ bun run docker:image:build
 
 ### **Refreshing the Bun Base Image Digest**
 
-The root `Dockerfile` pins `oven/bun:1.3.14-alpine` with an OCI index digest in both
-the `base-builder` and `production` stages. When the Bun version changes, refresh the
+The root `Dockerfile` pins `oven/bun:1.4.0-alpine` with an OCI index digest in the
+`base-builder`, `prod-deps`, and `production` stages. When the Bun version changes, refresh the
 digest in the same commit:
 
 ```bash
@@ -466,7 +466,7 @@ docker buildx imagetools inspect oven/bun:<new-version>-alpine
 ```
 
 Use the top-level `Digest:` value from that output, not a platform-specific manifest
-digest, so the Dockerfile remains multi-architecture. Update both `FROM` lines to the
+digest, so the Dockerfile remains multi-architecture. Update all three `FROM` lines to the
 same `oven/bun:<new-version>-alpine@sha256:<digest>` value, then run:
 
 ```bash

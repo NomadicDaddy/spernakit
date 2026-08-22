@@ -3,7 +3,7 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
-## [3.43.0] - 2026-08-20
+## [3.43.0] - 2026-08-22
 
 ### Added
 
@@ -35,6 +35,12 @@ this release.
   the Health settings, minimum 1 day) and web-vital rows keep a fixed 7-day window regardless of
   `systemMetricsDays`. `test:retention-zero` pins the keep-forever behaviour against a real database,
   and `test:impersonation-audit` pins impersonated attribution and the kill-switch.
+
+- Bun 1.4.0 across every runtime pin: the Docker base image and its digest, the `packageManager`
+  field in the root, backend and frontend manifests, `bunfig.toml`, the generated attribution
+  files, and the documentation that names a version. `scripts/test-reset-packages.ts` takes a new
+  stale-lockfile trigger: Bun 1.4.0 downgrades a workspace the lockfile names but that is missing
+  from disk to a note, so the fixture adds an unlocked dependency instead of removing a workspace.
 
 ## [3.42.1] - 2026-08-16
 

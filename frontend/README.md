@@ -187,7 +187,7 @@ frontend/src/
 
 ### Prerequisites
 
-- Bun 1.3.14+ installed
+- Bun 1.4.0+ installed
 - Root dependencies installed (`bun install` from project root)
 - Backend running (for API calls)
 

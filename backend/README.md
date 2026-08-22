@@ -19,7 +19,7 @@ This backend provides:
 
 | Category       | Technology                           |
 | -------------- | ------------------------------------ |
-| Runtime        | Bun 1.3.14+                          |
+| Runtime        | Bun 1.4.0+                           |
 | Framework      | Elysia (Bun-native HTTP)             |
 | Database       | SQLite via bun:sqlite + Drizzle ORM  |
 | Authentication | JWT with HTTP-only cookies           |
@@ -90,7 +90,7 @@ backend/src/
 
 ### Prerequisites
 
-- Bun 1.3.14+ installed
+- Bun 1.4.0+ installed
 - Root dependencies installed (`bun install` from project root)
 
 ### Running Locally
