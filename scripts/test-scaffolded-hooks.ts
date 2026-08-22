@@ -24,6 +24,7 @@ import {
 	commandLines,
 	equalBytes,
 	referencedGuards,
+	resolveBash,
 	run,
 	type RunResult,
 	write,
@@ -38,6 +39,7 @@ mkdirSync(fixtureParent, { recursive: true });
 const fixtureRoot = mkdtempSync(join(fixtureParent, 'scaffolded-hooks-'));
 const templateDir = join(fixtureRoot, 'template');
 const appDir = join(fixtureRoot, 'app');
+const bash = resolveBash();
 
 function git(...args: string[]): RunResult {
 	return run(
@@ -239,7 +241,7 @@ try {
 	const appGit = run(['git', 'init', '-b', 'main'], appDir);
 	assert(appGit.exitCode === 0, `Fixture app git init failed:\n${appGit.output}`);
 
-	assertCommitChain(appDir);
+	assertCommitChain(appDir, bash);
 
 	const screenshotPath = `screenshots/v${TEMPLATE_VERSION}/unreviewed.png`;
 	write(appDir, screenshotPath, 'fixture');
@@ -247,7 +249,7 @@ try {
 	assert(staged.exitCode === 0, `Fixture screenshot staging failed:\n${staged.output}`);
 	const refLine =
 		`refs/tags/v${TEMPLATE_VERSION} ${LOCAL_SHA} ` + `refs/tags/v${TEMPLATE_VERSION} ${ZERO}\n`;
-	const hook = run(['bash', '.githooks/pre-push', 'origin', 'fixture'], appDir, refLine);
+	const hook = run([bash, '.githooks/pre-push', 'origin', 'fixture'], appDir, refLine);
 	assert(
 		hook.exitCode !== 0,
 		`An incomplete screenshot capture must block push:\n${hook.output}`,

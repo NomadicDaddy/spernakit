@@ -17,7 +17,7 @@ This guide gets a Spernakit app running on your machine.
 
 You'll need:
 
-- **Bun 1.3.14+** ([Install Bun](https://bun.sh)) - the runtime and required package manager
+- **Bun 1.4.0+** ([Install Bun](https://bun.sh)) - the runtime and required package manager
 - **Git**
 - **A code editor** (VS Code recommended)
 
@@ -26,7 +26,7 @@ Node.js is **not required** - Spernakit runs on Bun, and no Node version is pinn
 ### Verify Your Environment
 
 ```bash
-# Check Bun version (should be 1.3.14+)
+# Check Bun version (should be 1.4.0+)
 bun --version
 
 # Check Git

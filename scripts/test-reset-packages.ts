@@ -2,9 +2,9 @@
 /**
  * Regression coverage for reset-packages preserving dependencies when bun.lock is stale.
  *
- * The fixture first proves the successful preflight-cleanup-reinstall path. It then removes a
- * workspace named by the generated lockfile and verifies the failing preflight leaves the existing
- * dependency tree untouched.
+ * The fixture first proves the successful preflight-cleanup-reinstall path. It then adds a
+ * dependency without updating the generated lockfile and verifies the failing preflight leaves the
+ * existing dependency tree untouched.
  */
 import {
 	copyFileSync,
@@ -59,7 +59,6 @@ const repoRoot = join(import.meta.dir, '..');
 const fixtureParent = join(repoRoot, 'tmp');
 mkdirSync(fixtureParent, { recursive: true });
 const fixtureRoot = mkdtempSync(join(fixtureParent, 'reset-packages-'));
-const workspaceRoot = join(fixtureRoot, 'packages', 'fixture-workspace');
 const dependencySentinel = join(fixtureRoot, 'node_modules', 'preserved.txt');
 const cleanupSentinel = join(fixtureRoot, 'dist', 'preserved.txt');
 
@@ -129,7 +128,19 @@ try {
 		`smoke:reset must retain its current sequence around reset-packages:\n${JSON.stringify(resetCommands)}`,
 	);
 
-	rmSync(workspaceRoot, { force: true, recursive: true });
+	write(
+		'package.json',
+		`${JSON.stringify(
+			{
+				dependencies: { 'is-number': '7.0.0' },
+				name: 'reset-packages-fixture',
+				private: true,
+				workspaces: ['packages/*'],
+			},
+			null,
+			'\t',
+		)}\n`,
+	);
 	write('node_modules/preserved.txt', 'dependency sentinel\n');
 	write('dist/preserved.txt', 'cleanup sentinel\n');
 	const failure = run(['bun', 'scripts/reset-packages.ts']);

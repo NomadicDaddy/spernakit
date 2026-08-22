@@ -35,7 +35,7 @@ bun run --cwd backend db:studio
 ### Environment Verification
 
 ```bash
-# Check Bun version (should be 1.3.14+)
+# Check Bun version (should be 1.4.0+)
 bun --version
 
 # Verify JSON config exists
@@ -99,7 +99,7 @@ bun run lint
 **Solutions:**
 
 ```bash
-# Check current version (should be 1.3.14+)
+# Check current version (should be 1.4.0+)
 bun --version
 
 # Update Bun to the latest release
