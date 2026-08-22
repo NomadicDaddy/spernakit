@@ -194,8 +194,7 @@ Root `package.json`:
 ```json
 {
 	"engines": {
-		"bun": ">=1.4.0",
-		"node": ">=24.0.0 <25.0.0"
+		"bun": ">=1.4.0"
 	},
 	"name": "spernakit",
 	"packageManager": "bun@1.4.0",
