@@ -18,14 +18,14 @@ application. Their licenses apply to those components rather than the applicatio
 
 - `alpine-baselayout-data@3.7.0-r0` (GPL-2.0-only)
 - `alpine-baselayout@3.7.0-r0` (GPL-2.0-only)
-- `apk-tools@2.14.9-r3` (GPL-2.0-only)
+- `apk-tools@2.14.10-r0` (GPL-2.0-only)
 - `busybox-binsh@1.37.0-r20` (GPL-2.0-only)
 - `busybox@1.37.0-r20` (GPL-2.0-only)
 - `gdbm@1.24-r0` (GPL-3.0-or-later)
 - `gettext-envsubst@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
 - `gettext-libs@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
 - `gettext@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
-- `libapk2@2.14.9-r3` (GPL-2.0-only)
+- `libapk2@2.14.10-r0` (GPL-2.0-only)
 - `libgcc@14.2.0-r6` (GPL-2.0-or-later AND LGPL-2.1-or-later)
 - `libgomp@14.2.0-r6` (GPL-2.0-or-later AND LGPL-2.1-or-later)
 - `libintl@0.24.1-r0` (LGPL-2.1-or-later)
@@ -44,17 +44,17 @@ application. Their licenses apply to those components rather than the applicatio
 | alpine-baselayout-data | 3.7.0-r0         | GPL-2.0-only                                                      |
 | alpine-baselayout      | 3.7.0-r0         | GPL-2.0-only                                                      |
 | alpine-keys            | 2.5-r0           | MIT                                                               |
-| alpine-release         | 3.22.4-r0        | MIT                                                               |
-| apk-tools              | 2.14.9-r3        | GPL-2.0-only                                                      |
+| alpine-release         | 3.22.5-r0        | MIT                                                               |
+| apk-tools              | 2.14.10-r0       | GPL-2.0-only                                                      |
 | brotli-libs            | 1.1.0-r2         | MIT                                                               |
 | busybox-binsh          | 1.37.0-r20       | GPL-2.0-only                                                      |
 | busybox                | 1.37.0-r20       | GPL-2.0-only                                                      |
-| ca-certificates-bundle | 20260413-r0      | MPL-2.0 AND MIT                                                   |
+| ca-certificates-bundle | 20260611-r0      | MPL-2.0 AND MIT                                                   |
 | gdbm                   | 1.24-r0          | GPL-3.0-or-later                                                  |
 | gettext-envsubst       | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
 | gettext-libs           | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
 | gettext                | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
-| libapk2                | 2.14.9-r3        | GPL-2.0-only                                                      |
+| libapk2                | 2.14.10-r0       | GPL-2.0-only                                                      |
 | libbz2                 | 1.0.8-r6         | bzip2-1.0.6                                                       |
 | libcrypto3             | 3.5.7-r0         | Apache-2.0                                                        |
 | libexpat               | 2.8.3-r0         | MIT                                                               |
