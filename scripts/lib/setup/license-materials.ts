@@ -44,9 +44,17 @@ export function updateLicenseFiles(s: SetupSettings): void {
 	// and the remaining placeholders (<LEGAL ENTITY>, <CONTACT ADDRESS>) are decisions its owner
 	// has to make. Both gates refuse to ship an image while any of them survive.
 	const template = readFileSync('licenses/SOURCE-OFFER.template.md', 'utf8');
-	const offer = template
-		.replace(/<!--[\s\S]*?-->\n\n/, '') // the template-only preamble
-		.replaceAll('<PROJECT NAME>', s.appName);
+	// The template carries one comment block addressed to whoever is reading the TEMPLATE, which has
+	// no place in a project's actual offer. It is cut by locating that block's delimiters rather than
+	// by pattern-replacing HTML: this removes one known section from a file the repository ships, and
+	// writing it as a replace invites reading it as sanitization of untrusted markup, which it is not.
+	const open = template.indexOf('<!--');
+	const close = open === -1 ? -1 : template.indexOf('-->', open);
+	const body =
+		close === -1
+			? template
+			: template.slice(0, open) + template.slice(close + '-->'.length).replace(/^\n+/, '');
+	const offer = body.replaceAll('<PROJECT NAME>', s.appName);
 	writeFileSync('licenses/SOURCE-OFFER.md', offer);
 	rmSync('licenses/SOURCE-OFFER.template.md', { force: true });
 }
