@@ -19,7 +19,6 @@ import {
 	updateBackendFiles,
 	updateDockerFiles,
 	updateFrontendFiles,
-	updateLicenseFiles,
 	updateMiscFiles,
 	updatePackageJsonFiles,
 } from './lib/setup/file-updates.ts';
@@ -29,6 +28,7 @@ import {
 	readStringFromObject,
 } from './lib/setup/json-files.ts';
 import { generateKeys } from './lib/setup/keys.ts';
+import { updateLicenseFiles } from './lib/setup/license-materials.ts';
 
 interface Config {
 	backendPort?: string;

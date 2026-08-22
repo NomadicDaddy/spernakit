@@ -38,6 +38,12 @@ receives.
   file no gate reads sitting beside a name every gate looks for and does not find.
 - The `.templateoverrides` seed claimed `KEEP` for branding the initializer never performed, and
   omitted the deletions it does perform. It now states only what init did.
+- Configured branding values are encoded for the context they land in. `appName` and
+  `appDescription` are operator input and were interpolated raw into `frontend/index.html`, so a
+  value containing `"` produced malformed metadata and one containing `$&` addressed the regex match
+  instead of appearing in the output. HTML contexts are entity-escaped, the JSON-LD values are
+  encoded as JSON string literals, and `updateFile` inserts every replacement through a replacer
+  function so no configured value can carry a substitution pattern.
 
 ### Changed
 
@@ -47,6 +53,8 @@ receives.
   the window. The previous wording described only the long-published case.
 - The blueprint's runtime floor reads Bun 1.4.0. `.aidd/features/project-scaffolding/feature.json`
   and `.aidd/project-structure.md` still said 1.3.14 after the 3.43.0 runtime bump.
+- `updateLicenseFiles` moved to `scripts/lib/setup/license-materials.ts`. It writes compliance
+  artifacts, not branding, and `file-updates.ts` had reached the 300-line ceiling.
 
 ## [3.43.0] - 2026-08-22
 

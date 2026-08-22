@@ -46,7 +46,10 @@ export function updateFile(filePath: string, replacements: Record<string, string
 	let content = fs.readFileSync(filePath, 'utf8');
 
 	for (const [search, replace] of Object.entries(replacements)) {
-		content = content.replace(new RegExp(search, 'g'), replace);
+		// The replacer is a function so the value is inserted literally. Passing it as a string
+		// would let `$&`, `$1`, and `` $` `` inside a configured app name or description address
+		// the match instead of appearing in the output.
+		content = content.replace(new RegExp(search, 'g'), () => replace);
 	}
 
 	fs.writeFileSync(filePath, content);

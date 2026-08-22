@@ -4,7 +4,7 @@
  *
  * Extracted from scripts/setup.ts.
  */
-import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, renameSync, rmSync } from 'node:fs';
 
 import type { SetupSettings } from './config-writer.ts';
 
@@ -107,46 +107,6 @@ export function updatePackageJsonFiles(s: SetupSettings): void {
 	});
 }
 
-/**
- * License materials a derived project needs before it can publish an image.
- *
- * The template ships guidance and no offer, because it distributes nothing. A derived project
- * that publishes DOES distribute, so it needs its own offer — and shipping the template's
- * guidance verbatim would be worse than shipping nothing: it names Spernakit and NomadicDaddy,
- * and an owner could reasonably read it as covering them. So setup rewrites the guidance for
- * this project and drops in the offer template, with placeholders that the publication guard and
- * `docker:image:push` both refuse to ship.
- */
-export function updateLicenseFiles(s: SetupSettings): void {
-	updateFile('licenses/CONTAINER-DISTRIBUTION.md', {
-		"Derived-project owners should obtain legal advice for their own distribution model. Spernakit's\nlocal build and image checks prove buildability and inventory coverage; they do not grant a\nderived project permission to publish an image or fulfill that project's source obligations.": `If you publish an image, complete \`licenses/SOURCE-OFFER.md\` first: \`check:image-publication\`\nand \`docker:image:push\` both refuse to ship an image while it is missing or still contains\nplaceholders. If you never publish, delete that file and the publication scripts instead —\nnothing obliges you to make an offer for software you do not distribute. Obtain legal advice for\nyour own distribution model; the build and image checks prove buildability and inventory\ncoverage, not compliance.`,
-		'Spernakit builds container images only as local verification artifacts. The template project\ndoes not publish, supply, or offer those images to downstream users. This document is guidance,\nnot a corresponding-source offer by NomadicDaddy.': `${s.appName} builds container images with \`bun run docker:image:build\`. Whether it publishes\nthem is this project's decision. This document is guidance, not a corresponding-source offer by\nthe Spernakit template or its author.`,
-	});
-
-	// Consuming the template is a one-way step, so this pass has to survive being re-run. `reset`
-	// re-invokes setup on an already-initialized project, where the template is long gone and the
-	// offer may carry the owner's real legal entity and contact address. Regenerating from a
-	// missing template would throw; regenerating from a present one would silently discard those
-	// answers. Once the offer exists, it is the owner's file and setup leaves it alone.
-	if (!existsSync('licenses/SOURCE-OFFER.template.md')) {
-		if (existsSync('licenses/SOURCE-OFFER.md')) return;
-		throw new Error(
-			'licenses/SOURCE-OFFER.md and licenses/SOURCE-OFFER.template.md are both missing; ' +
-				'restore one from the template before running setup.',
-		);
-	}
-
-	// The offer arrives unfilled on purpose: it only binds a project that actually distributes,
-	// and the remaining placeholders (<LEGAL ENTITY>, <CONTACT ADDRESS>) are decisions its owner
-	// has to make. Both gates refuse to ship an image while any of them survive.
-	const template = readFileSync('licenses/SOURCE-OFFER.template.md', 'utf8');
-	const offer = template
-		.replace(/<!--[\s\S]*?-->\n\n/, '') // the template-only preamble
-		.replaceAll('<PROJECT NAME>', s.appName);
-	writeFileSync('licenses/SOURCE-OFFER.md', offer);
-	rmSync('licenses/SOURCE-OFFER.template.md', { force: true });
-}
-
 export function updateDockerFiles(s: SetupSettings): void {
 	updateFile('Dockerfile', {
 		'# Spernakit v3 - Multi-stage Docker Build': `# ${s.appName} - Multi-stage Docker Build`,
@@ -192,6 +152,22 @@ export function updateBackendFiles(s: SetupSettings): void {
 	updateFile('backend/README.md', { 'Spernakit v3': s.appName });
 }
 
+/**
+ * Escape a configured value for an HTML attribute or text node.
+ *
+ * `appName` and `appDescription` are operator input — an app whose description contains an
+ * apostrophe-free `"` would otherwise close the attribute early and turn the rest of the value into
+ * malformed markup. The head of index.html is metadata that search engines and link unfurlers parse,
+ * so a broken attribute there is not cosmetic.
+ */
+function htmlEscape(value: string): string {
+	return value
+		.replaceAll('&', '&amp;')
+		.replaceAll('<', '&lt;')
+		.replaceAll('>', '&gt;')
+		.replaceAll('"', '&quot;');
+}
+
 export function updateFrontendFiles(s: SetupSettings): void {
 	// storageKeys, correlationId, Sidebar, and MobileNav use Vite define
 	// (__APP_SLUG__, __APP_NAME__) injected from defaults.json at build time.
@@ -200,6 +176,9 @@ export function updateFrontendFiles(s: SetupSettings): void {
 	// the same literal, so one key rebrands the file whatever order the replacements run in.
 	updateFile('frontend/README.md', { 'Spernakit v3': s.appName });
 
+	const name = htmlEscape(s.appName);
+	const description = htmlEscape(s.appDescription);
+
 	// Note: Patterns must handle multi-line formatting in the template
 	// Note: Object keys must be sorted alphabetically for linting
 	//
@@ -207,27 +186,31 @@ export function updateFrontendFiles(s: SetupSettings): void {
 	// Anchoring is what makes them order-independent: the bare description string is a prefix-free
 	// substring of the SEO description, so whichever ran first would consume the other's match.
 	// Lint sorts these keys, so relying on declaration order is not an option.
+	//
+	// The JSON-LD block is script content, not markup, so its two values are encoded as JSON string
+	// literals rather than HTML-escaped — a `"` there has to be backslashed, not turned into an
+	// entity, or the structured data stops parsing.
 	updateFile('frontend/index.html', {
 		// JSON-LD structured data
-		'"description": "Self-Hosted Multi-User Application Template"': `"description": "${s.appDescription}"`,
-		'"name": "Spernakit v3"': `"name": "${s.appName}"`,
+		'"description": "Self-Hosted Multi-User Application Template"': `"description": ${JSON.stringify(s.appDescription)}`,
+		'"name": "Spernakit v3"': `"name": ${JSON.stringify(s.appName)}`,
 
 		// Meta tags with author/app name
-		'"Spernakit v3" name="apple-mobile-web-app-title"': `"${s.appName}" name="apple-mobile-web-app-title"`,
-		'"Spernakit v3" name="application-name"': `"${s.appName}" name="application-name"`,
-		'"Spernakit v3" name="author"': `"${s.appName}" name="author"`,
-		'"Spernakit v3" name="twitter:title"': `"${s.appName}" name="twitter:title"`,
-		'"Spernakit v3" property="og:site_name"': `"${s.appName}" property="og:site_name"`,
-		'"Spernakit v3" property="og:title"': `"${s.appName}" property="og:title"`,
+		'"Spernakit v3" name="apple-mobile-web-app-title"': `"${name}" name="apple-mobile-web-app-title"`,
+		'"Spernakit v3" name="application-name"': `"${name}" name="application-name"`,
+		'"Spernakit v3" name="author"': `"${name}" name="author"`,
+		'"Spernakit v3" name="twitter:title"': `"${name}" name="twitter:title"`,
+		'"Spernakit v3" property="og:site_name"': `"${name}" property="og:site_name"`,
+		'"Spernakit v3" property="og:title"': `"${name}" property="og:title"`,
 
 		// Page title
-		'>Spernakit v3</title>': `>${s.appName}</title>`,
+		'>Spernakit v3</title>': `>${name}</title>`,
 
 		// og:description and twitter:description
-		'content="Self-Hosted Multi-User Application Template"': `content="${s.appDescription}"`,
+		'content="Self-Hosted Multi-User Application Template"': `content="${description}"`,
 
 		// SEO meta description (with prefix)
-		'content="Spernakit v3 - Self-Hosted Multi-User Application Template"': `content="${s.appName} - ${s.appDescription}"`,
+		'content="Spernakit v3 - Self-Hosted Multi-User Application Template"': `content="${name} - ${description}"`,
 	});
 }
 
