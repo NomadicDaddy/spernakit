@@ -7,7 +7,7 @@ Docker-based deployment with nginx reverse proxy and supervisord process managem
 ```mermaid
 graph LR
     subgraph "Multi-Stage Build"
-        base["base-builder<br/>Bun 1.3.14 Alpine<br/>Install deps"]
+        base["base-builder<br/>Bun 1.4.0 Alpine<br/>Install deps"]
         backend["backend-builder<br/>TypeScript compile"]
         frontend["frontend-builder<br/>Vite production build"]
         prod["production<br/>Alpine runtime<br/>nginx + supervisord"]

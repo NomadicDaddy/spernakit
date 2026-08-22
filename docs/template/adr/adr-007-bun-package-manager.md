@@ -194,11 +194,11 @@ Root `package.json`:
 ```json
 {
 	"engines": {
-		"bun": ">=1.3.14",
+		"bun": ">=1.4.0",
 		"node": ">=24.0.0 <25.0.0"
 	},
 	"name": "spernakit",
-	"packageManager": "bun@1.3.14",
+	"packageManager": "bun@1.4.0",
 	"scripts": {
 		"build": "bun run build",
 		"dev": "bun run dev",
@@ -263,7 +263,7 @@ pnpm-lock.yaml
 ````markdown
 ## Prerequisites
 
-- **Bun 1.3.14+** (Required package manager and runtime)
+- **Bun 1.4.0+** (Required package manager and runtime)
 
 [Install Bun](https://bun.sh)
 
@@ -371,7 +371,7 @@ If project previously used npm:
 
 ## Risk Mitigation
 
-1. **Version Pinning**: Use `bun: ">=1.3.14"` in engines to prevent incompatible versions
+1. **Version Pinning**: Use `bun: ">=1.4.0"` in engines to prevent incompatible versions
 2. **Bun Compat Check**: Use `bunx` to run packages that don't work with bun yet
 3. **Fallback to Node**: If critical Bun bug, temporarily use Node (but use Bun for package management)
 4. **Lockfile Commit**: Commit `bun.lock` (text format) for reproducible builds

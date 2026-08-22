@@ -8,7 +8,7 @@ This file is the canonical tech stack and architecture reference for the Spernak
 
 ## Prerequisites
 
-- **Bun 1.3.14+** - Required runtime and package manager ([Install Bun](https://bun.sh))
+- **Bun 1.4.0+** - Required runtime and package manager ([Install Bun](https://bun.sh))
 - **Node.js** - Optional; only for npm-based tooling compatibility (no version pinned)
 
 ## Core Development Commands

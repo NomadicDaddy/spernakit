@@ -2,8 +2,10 @@
  * Fixture primitives shared by the scaffolded-hook cases: subprocess capture, byte comparison,
  * a counting assert, and the two hook-text readers the reference checks depend on.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { env, platform } from 'node:process';
 
 export interface RunResult {
 	exitCode: number;
@@ -25,6 +27,36 @@ export function assert(condition: boolean, message: string): void {
 
 export function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
 	return left.length === right.length && left.every((byte, index) => byte === right[index]);
+}
+
+/** Resolves Git Bash explicitly on Windows, where PATH commonly finds the WSL launcher first. */
+export function resolveBash(): string {
+	if (platform !== 'win32') return 'bash';
+
+	const located = spawnSync('git', ['--exec-path'], { encoding: 'utf8', windowsHide: true });
+	if (located.status === 0) {
+		let directory = resolve(located.stdout.trim());
+		for (let hop = 0; hop < 4; hop += 1) {
+			directory = dirname(directory);
+			const candidate = join(directory, 'bin', 'bash.exe');
+			if (existsSync(candidate)) return candidate;
+		}
+	}
+
+	const localPrograms = env['LOCALAPPDATA'];
+	const roots = [
+		env['ProgramFiles'],
+		env['ProgramW6432'],
+		env['ProgramFiles(x86)'],
+		localPrograms === undefined ? undefined : join(localPrograms, 'Programs'),
+	];
+	const installed = roots
+		.filter((root): root is string => root !== undefined)
+		.map((root) => join(root, 'Git', 'bin', 'bash.exe'))
+		.find((candidate) => existsSync(candidate));
+	if (installed !== undefined) return installed;
+
+	throw new Error('Scaffolded hook test requires Git Bash on Windows.');
 }
 
 export function write(root: string, relativePath: string, content: string | Uint8Array): void {
