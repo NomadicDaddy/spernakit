@@ -28,12 +28,14 @@ export function updateLicenseFiles(s: SetupSettings): void {
 	});
 
 	// Consuming the template is a one-way step, so this pass has to survive being re-run. `reset`
-	// re-invokes setup on an already-initialized project, where the template is long gone and the
-	// offer may carry the owner's real legal entity and contact address. Regenerating from a
-	// missing template would throw; regenerating from a present one would silently discard those
-	// answers. Once the offer exists, it is the owner's file and setup leaves it alone.
+	// re-invokes setup on an already-initialized project, where the offer may carry the owner's real
+	// legal entity and contact address. Once it exists it is the owner's file and setup leaves it
+	// alone — tested BEFORE the template, because the two can coexist: an interrupted run that wrote
+	// the offer but had not yet deleted the template leaves both on disk, as does a template upgrade
+	// that re-adds the template file to a project whose offer is long since filled in. Deciding by
+	// the template's presence would discard the owner's answers in exactly those cases.
+	if (existsSync('licenses/SOURCE-OFFER.md')) return;
 	if (!existsSync('licenses/SOURCE-OFFER.template.md')) {
-		if (existsSync('licenses/SOURCE-OFFER.md')) return;
 		throw new Error(
 			'licenses/SOURCE-OFFER.md and licenses/SOURCE-OFFER.template.md are both missing; ' +
 				'restore one from the template before running setup.',

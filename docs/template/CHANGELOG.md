@@ -38,6 +38,11 @@ receives.
   file no gate reads sitting beside a name every gate looks for and does not find.
 - The `.templateoverrides` seed claimed `KEEP` for branding the initializer never performed, and
   omitted the deletions it does perform. It now states only what init did.
+- `setup` no longer regenerates `licenses/SOURCE-OFFER.md` when the offer and its template are
+  both present. It decided by the template's absence, so any state where the two coexist — a run
+  interrupted between writing the offer and deleting the template, or a template upgrade that
+  re-adds the template file to a project whose offer is filled in — overwrote the owner's legal
+  entity and contact address on the next `reset`. An existing offer is now checked first.
 - Configured branding values are encoded for the context they land in. `appName` and
   `appDescription` are operator input and were interpolated raw into `frontend/index.html`, so a
   value containing `"` produced malformed metadata and one containing `$&` addressed the regex match
