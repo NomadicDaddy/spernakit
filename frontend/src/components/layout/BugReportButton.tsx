@@ -1,8 +1,9 @@
 import { Bug, MessageSquarePlus } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import type { BugReport, BugReportKind } from '@/lib/bugReport';
 
+import { ApiError } from '@/api/apiError';
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,13 +72,16 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 	const [kind, setKind] = useState<BugReportKind>('bug');
 	const [description, setDescription] = useState('');
 	const [email, setEmail] = useState('');
+	const [emailError, setEmailError] = useState<null | string>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const emailRef = useRef<HTMLInputElement>(null);
 
 	const copy = COPY[kind];
 
 	const resetForm = () => {
 		setDescription('');
 		setEmail('');
+		setEmailError(null);
 		setKind('bug');
 	};
 
@@ -98,6 +102,20 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 			});
 			return;
 		}
+
+		/*
+		 * The dialog's fields are not wrapped in a <form> and the submit button is an onClick
+		 * handler, so the Email input's `type="email"` never runs native constraint validation on
+		 * its own — the browser only enforces it on a form submission. Ask the input for its own
+		 * verdict instead. Without this a mistyped address reaches the API, comes back as a 400
+		 * that names no field, and the catch below reports it as something worth retrying.
+		 */
+		if (email.trim() && emailRef.current && !emailRef.current.checkValidity()) {
+			setEmailError('Enter a valid email address, or leave the field empty.');
+			emailRef.current.focus();
+			return;
+		}
+		setEmailError(null);
 
 		setIsSubmitting(true);
 
@@ -120,10 +138,25 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 
 			resetForm();
 			setOpen(false);
-		} catch {
-			lazyToast.error('Submission failed', {
-				description: 'Could not submit. Please try again later.',
-			});
+		} catch (err) {
+			/*
+			 * A 400 is the server refusing this particular body, so "try again later" is the one
+			 * thing that cannot help — the same request fails the same way forever. Show what the
+			 * server said instead, and put the message on the email field when that is what it
+			 * rejected, since the email is the only value here a user can get wrong by typing.
+			 */
+			if (err instanceof ApiError && err.status === 400) {
+				const message = err.message || 'Check the details and try again.';
+				if (/email/i.test(message)) {
+					setEmailError('Enter a valid email address, or leave the field empty.');
+					emailRef.current?.focus();
+				}
+				lazyToast.error('Submission rejected', { description: message });
+			} else {
+				lazyToast.error('Submission failed', {
+					description: 'Could not submit. Please try again later.',
+				});
+			}
 		} finally {
 			setIsSubmitting(false);
 		}
@@ -183,18 +216,33 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					<div className="space-y-2">
 						<Label htmlFor="bug-email">Email (optional)</Label>
 						<Input
+							aria-describedby={emailError ? 'bug-email-error' : undefined}
 							autoComplete="email"
 							id="bug-email"
-							onChange={(e) => setEmail(e.target.value)}
+							onChange={(e) => {
+								setEmail(e.target.value);
+								if (emailError) setEmailError(null);
+							}}
 							placeholder="your@email.com"
+							ref={emailRef}
 							spellCheck={false}
 							type="email"
 							value={email}
+							{...(emailError ? { 'aria-invalid': true } : {})}
 						/>
-						<p className="text-xs text-muted-foreground">
-							Provide email if you’d like follow-up on this{' '}
-							{kind === 'bug' ? 'issue' : 'request'}
-						</p>
+						{emailError ? (
+							<p
+								aria-live="polite"
+								className="text-sm text-destructive"
+								id="bug-email-error">
+								{emailError}
+							</p>
+						) : (
+							<p className="text-xs text-muted-foreground">
+								Provide email if you’d like follow-up on this{' '}
+								{kind === 'bug' ? 'issue' : 'request'}
+							</p>
+						)}
 					</div>
 					<div className="rounded-md bg-muted/50 p-3">
 						<p className="text-xs text-muted-foreground">
