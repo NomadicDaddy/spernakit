@@ -3,15 +3,18 @@ import type { WidgetType } from 'spernakit-shared';
 /**
  * Widget size bounds and their validators.
  *
- * These mirror `widgetSchema` in `backend/src/routes/dashboards/schemas.ts`, which declares
- * `width: t.Integer({ maximum: 12, minimum: 1 })` and `height: t.Integer({ minimum: 1 })`.
- * The dialog's Add button is an onClick handler rather than a form submit, so the inputs'
- * `min`/`max` attributes are never enforced by the browser and an out-of-range value reaches
- * the API, where it comes back as a rejection that names no field.
+ * These mirror `widgetSchema` in `backend/src/routes/dashboards/schemas.ts`, which bounds width at
+ * 12 columns and height at 24 rows. The dialog's Add button is an onClick handler rather than a
+ * form submit, so the inputs' `min`/`max` attributes are never enforced by the browser and an
+ * out-of-range value reaches the API, where it comes back as a rejection that names no field.
+ * Every bound here therefore has to be checked in JavaScript to produce a message at all.
  *
- * Height deliberately has no maximum here. The server does not impose one, and a client-only
- * ceiling would refuse a widget the API would have accepted.
+ * The height ceiling is the grid's, not a client preference: 24 rows of 80px is 1920px, taller
+ * than any viewport the dashboard is laid out for. It has to stay equal to the server's, because
+ * a client ceiling below it refuses a widget the API would accept and one above it lets a value
+ * through to a rejection with no field name.
  */
+const WIDGET_HEIGHT_MAX = 24;
 const WIDGET_WIDTH_MAX = 12;
 const WIDGET_WIDTH_MIN = 1;
 
@@ -74,10 +77,13 @@ function getWidgetWidthError(width: number): null | string {
 function getWidgetHeightError(height: number, widgetType: WidgetType): null | string {
 	const min = getWidgetMinRows(widgetType);
 	if (!Number.isInteger(height)) {
-		return `Height must be a whole number of ${String(min)} or more`;
+		return `Height must be a whole number between ${String(min)} and ${String(WIDGET_HEIGHT_MAX)}`;
 	}
 	if (height < min) {
 		return `Height must be ${String(min)} or more for this widget type`;
+	}
+	if (height > WIDGET_HEIGHT_MAX) {
+		return `Height must be ${String(WIDGET_HEIGHT_MAX)} or less`;
 	}
 	return null;
 }
@@ -86,6 +92,7 @@ export {
 	getWidgetHeightError,
 	getWidgetMinRows,
 	getWidgetWidthError,
+	WIDGET_HEIGHT_MAX,
 	WIDGET_WIDTH_MAX,
 	WIDGET_WIDTH_MIN,
 };
