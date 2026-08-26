@@ -129,6 +129,8 @@ const RESOURCE_ERROR_CODES = {
 	RESOURCE_ALREADY_EXISTS: 'RESOURCE_ALREADY_EXISTS',
 	/** Requested resource does not exist */
 	RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+	/** Resource exists but is protected from this operation */
+	RESOURCE_PROTECTED: 'RESOURCE_PROTECTED',
 	/** Resource storage has reached maximum capacity */
 	RESOURCE_STORAGE_FULL: 'RESOURCE_STORAGE_FULL',
 } as const;

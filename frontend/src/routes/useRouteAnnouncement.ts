@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useLocation, useMatches } from 'react-router';
 
 import { navItems } from '@/components/layout/navConfig';
+import { profileTabs } from '@/pages/profile/profileTabs';
+import { settingsTabs } from '@/pages/settings/settingsTabs';
 
 /**
  * Last pathname announced. Module-level because LazyPage instances unmount and
@@ -47,10 +49,24 @@ function handleTitle(handle: unknown): null | string {
 	return typeof pageTitle === 'string' ? pageTitle : null;
 }
 
-/** Derive a page title from the current pathname via nav config, falling back to the last path segment. */
+/**
+ * Every path the app already has a written name for.
+ *
+ * `navItems` covers the top-level destinations only, so before this map existed every sub-tab
+ * fell through to `humanizeSegment` on its last path segment: /profile/api-keys announced and
+ * titled itself "Api Keys", and /settings/bugs said "Bugs" while the tab the user had just
+ * clicked read "Bug Reports". The tab strips are where those names are written, so they are what
+ * this reads — restating the labels here, or as a `handle` on each of the seventeen route
+ * objects, would drift the moment a tab is renamed.
+ */
+const TITLE_BY_PATH = new Map<string, string>(
+	[...navItems, ...profileTabs, ...settingsTabs].map((item) => [item.to, item.label]),
+);
+
+/** Derive a page title from the current pathname via the known-route titles, falling back to the last path segment. */
 function derivePageTitle(pathname: string): string {
-	const navMatch = navItems.find((item) => item.to === pathname);
-	if (navMatch) return navMatch.label;
+	const known = TITLE_BY_PATH.get(pathname);
+	if (known) return known;
 	const segments = pathname
 		.split('/')
 		.filter((s) => s.length > 0 && !/^\d+$/.test(s) && !OPAQUE_SEGMENT.test(s));

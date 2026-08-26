@@ -78,18 +78,17 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 
 	const copy = COPY[kind];
 
+	/*
+	 * Called on a successful submit and nowhere else. Closing the dialog deliberately keeps the
+	 * draft: a click aimed at a Submit button that has scrolled below the fold lands on the
+	 * overlay instead, and resetting there threw away reports of a thousand characters and more
+	 * with no way to get them back. Reopening restores whatever was typed.
+	 */
 	const resetForm = () => {
 		setDescription('');
 		setEmail('');
 		setEmailError(null);
 		setKind('bug');
-	};
-
-	const handleOpenChange = (next: boolean) => {
-		setOpen(next);
-		if (!next) {
-			resetForm();
-		}
 	};
 
 	const handleSubmit = async () => {
@@ -170,7 +169,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 	};
 
 	return (
-		<Dialog onOpenChange={handleOpenChange} open={open}>
+		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger asChild>
 				<Button
 					aria-label={copy.triggerLabel}
@@ -181,7 +180,15 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					<Bug className="size-5" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-md">
+			{/*
+			  A viewport-capped height with the field block as the only scrolling row, so
+			  the footer stays on screen however long the description grows. Without the cap
+			  the dialog simply grew past the bottom of the window, 1,192px tall in a 566px
+			  viewport, and because <body> is overflow:hidden while a dialog is open nothing
+			  scrolled and Submit could not be reached at all. The row template names
+			  DialogContent's four children: header, tabs, fields, footer.
+			*/}
+			<DialogContent className="max-h-[calc(100dvh-2rem)] grid-rows-[auto_auto_minmax(0,1fr)_auto] sm:max-w-md">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						{kind === 'bug' ? (
@@ -199,7 +206,7 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 						<TabsTrigger value="feature">Feature Request</TabsTrigger>
 					</TabsList>
 				</Tabs>
-				<div className="space-y-4 py-2">
+				<div className="min-h-0 space-y-4 overflow-y-auto py-2">
 					<div className="space-y-2">
 						<Label htmlFor="bug-description">{copy.descriptionLabel}</Label>
 						<Textarea
@@ -252,10 +259,17 @@ function BugReportButton({ onSubmit }: BugReportButtonProps) {
 					</div>
 				</div>
 				<DialogFooter>
-					<Button onClick={() => handleOpenChange(false)} variant="outline">
+					<Button onClick={() => setOpen(false)} variant="outline">
 						Cancel
 					</Button>
-					<Button disabled={isSubmitting} onClick={() => void handleSubmit()}>
+					{/*
+					  Disabled while the required description is empty or whitespace, matching the
+					  other required-field dialogs in the app. handleSubmit keeps its own check
+					  because Ctrl+Enter reaches it without the button.
+					*/}
+					<Button
+						disabled={isSubmitting || description.trim().length === 0}
+						onClick={() => void handleSubmit()}>
 						{isSubmitting ? (
 							<>
 								<Spinner size={16} />

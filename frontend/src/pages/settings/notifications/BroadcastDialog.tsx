@@ -55,7 +55,10 @@ export function BroadcastDialog({ isOpen, onOpenChange }: BroadcastDialogProps) 
 			void queryClient.invalidateQueries({ queryKey: ['notifications'] });
 			void queryClient.invalidateQueries({ queryKey: ['notification-statistics'] });
 			void queryClient.invalidateQueries({ queryKey: ['unread-count'] });
-			toast.success(`Broadcast sent to ${response.data.count} users`);
+			// A workspace with one other member reported "Broadcast sent to 1 users".
+			toast.success(
+				`Broadcast sent to ${response.data.count} ${response.data.count === 1 ? 'user' : 'users'}`,
+			);
 			setTitle('');
 			setMessage('');
 			setType('info');

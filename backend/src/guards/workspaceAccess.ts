@@ -44,6 +44,10 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 		return { ok: false, response: unauthorizedError() };
 	}
 
+	/*
+	 * Only ever absent, never malformed: `workspacePlugin` answers a header it cannot read
+	 * before any handler runs, so a null here means the caller sent no header at all.
+	 */
 	if (!ctx.workspaceId) {
 		ctx.set.status = HTTP_STATUS.BAD_REQUEST;
 		return { ok: false, response: badRequestError('Missing X-Workspace-ID header') };
@@ -100,6 +104,10 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
 	}
 
 	const userIsSysop = ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP;
+	/*
+	 * As above, a null id means no header was sent, which is the cross-workspace request this
+	 * guard exists to allow a SYSOP to make. A header that could not be read never reaches here.
+	 */
 	if (!ctx.workspaceId) {
 		if (userIsSysop) return undefined;
 

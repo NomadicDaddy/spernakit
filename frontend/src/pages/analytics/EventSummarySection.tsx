@@ -68,7 +68,8 @@ export function EventSummarySection({ days }: EventSummarySectionProps) {
 											<Badge variant="outline">{event.eventCategory}</Badge>
 										</span>
 										<span className="shrink-0 text-sm text-muted-foreground tabular-nums">
-											{event.count} events
+											{/* A row with one event read "1 events". */}
+											{event.count} {event.count === 1 ? 'event' : 'events'}
 										</span>
 									</li>
 								))}

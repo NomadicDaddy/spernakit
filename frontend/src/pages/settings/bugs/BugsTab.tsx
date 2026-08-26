@@ -2,6 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bug } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
@@ -12,7 +13,6 @@ import { listBugs, updateBugStatus } from '@/api/bugs';
 import { DataTable } from '@/components/shared/data-table/DataTable';
 import { SectionHeader } from '@/components/shared/SectionHeader';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import {
 	Select,
 	SelectContent,
@@ -23,20 +23,22 @@ import {
 import { useFormatters } from '@/hooks/useFormatters';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
+import { BugDetailDialog } from './BugDetailDialog';
 import {
 	isBugKind,
 	isBugStatus,
 	KIND_LABEL,
 	KIND_VARIANT,
-	KINDS,
 	STATUS_LABEL,
 	STATUS_VARIANT,
 } from './bugMeta';
+import { BugTableFilters } from './BugTableFilters';
 
 function BugsTab() {
 	const { formatDate } = useFormatters();
-	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const queryClient = useQueryClient();
+	const [selectedBug, setSelectedBug] = useState<BugReport | null>(null);
 
 	const statusFilter = getFilter('status');
 	const kindFilter = getFilter('kind');
@@ -105,10 +107,19 @@ function BugsTab() {
 			// characters, so a string that long is reachable through the app's own form rather than
 			// only by seeding. `whitespace-normal` re-enables wrapping locally so the clamp can bind;
 			// the `ch` cap bounds the measure without reintroducing the fixed-px void described above.
+			//
+			// The clamped text still has to be readable somewhere, hence the button: before it a report
+			// was truncated in the only place it was ever shown — no tooltip, no expander, no detail
+			// view — so the triage queue could not be triaged from what it displayed.
 			cell: ({ row }) => (
-				<span className="line-clamp-2 max-w-[60ch] break-words whitespace-normal">
+				<button
+					className="line-clamp-2 max-w-[60ch] cursor-pointer text-left break-words whitespace-normal hover:underline"
+					onClick={() => {
+						setSelectedBug(row.original);
+					}}
+					type="button">
 					{row.original.description}
-				</span>
+				</button>
 			),
 			header: 'Description',
 		},
@@ -237,61 +248,27 @@ function BugsTab() {
 					total,
 				}}
 				toolbar={
-					/*
-					 * All three filters go to the server, so the pagination total counts the
-					 * filtered set. The description search used to be `searchColumn`, which is a
-					 * client-side TanStack filter: against a server-paginated list it hid rows from
-					 * the current page of twenty while the footer went on reporting the server's
-					 * unfiltered total, so the table read "No results." above "Showing 1-2 of 2".
-					 * Same geometry as `UserTableFilters`.
-					 */
-					<div className="flex flex-wrap items-center gap-2">
-						<Input
-							aria-label="Search submissions"
-							autoComplete="off"
-							className="max-w-sm"
-							onChange={(e) => {
-								setFilter('search', e.target.value);
-							}}
-							placeholder="Search submissions…"
-							value={search}
-						/>
-						<Select
-							onValueChange={(value) => {
-								setFilter('status', value === 'all' ? '' : value);
-							}}
-							value={status ?? 'all'}>
-							<SelectTrigger aria-label="Filter by status" className="w-[140px]">
-								<SelectValue placeholder="All statuses" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All statuses</SelectItem>
-								{BUG_REPORT_STATUSES.map((value) => (
-									<SelectItem key={value} value={value}>
-										{STATUS_LABEL[value]}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<Select
-							onValueChange={(value) => {
-								setFilter('kind', value === 'all' ? '' : value);
-							}}
-							value={kind ?? 'all'}>
-							<SelectTrigger aria-label="Filter by kind" className="w-[140px]">
-								<SelectValue placeholder="All kinds" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="all">All kinds</SelectItem>
-								{KINDS.map((value) => (
-									<SelectItem key={value} value={value}>
-										{KIND_LABEL[value]}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<BugTableFilters
+						kind={kind ?? 'all'}
+						onKindChange={(value) => {
+							setFilter('kind', value === 'all' ? '' : value);
+						}}
+						onSearchChange={(value) => {
+							setFilter('search', value);
+						}}
+						onStatusChange={(value) => {
+							setFilter('status', value === 'all' ? '' : value);
+						}}
+						search={search}
+						status={status ?? 'all'}
+					/>
 				}
+			/>
+			<BugDetailDialog
+				bug={selectedBug}
+				onOpenChange={(open) => {
+					if (!open) setSelectedBug(null);
+				}}
 			/>
 		</div>
 	);

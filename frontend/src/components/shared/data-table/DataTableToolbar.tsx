@@ -71,7 +71,7 @@ export function DataTableToolbar<TData extends RowData>({
 					value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''}
 				/>
 			)}
-			<div className="ml-auto flex min-w-0 items-center gap-2">
+			<div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2 sm:flex-nowrap">
 				{/*
 				 * The table's size, in the gap the row already had. On /settings/audit-logs at 2560
 				 * the span between the search box and the Columns button measured 829px of nothing,
@@ -88,9 +88,17 @@ export function DataTableToolbar<TData extends RowData>({
 				 *
 				 * `min-w-0 truncate` so the count is what abbreviates when the row runs out of width —
 				 * everything else in this group is a control.
+				 *
+				 * Abbreviating stops being useful once there is nothing left to abbreviate to. At 390px
+				 * the span had 73px to render 112px of text and showed "Showing…", which is not a
+				 * shorter version of the count so much as the absence of one, and a phone has no hover
+				 * to recover it with. So below `sm` the group wraps and the count takes a line of its
+				 * own beneath the controls, where it has the full width and does not truncate at all.
+				 * From `sm` up the row is `flex-nowrap` again and the truncate above is what happens,
+				 * unchanged.
 				 */}
 				{rowSummary && (
-					<span className="min-w-0 truncate text-sm text-muted-foreground">
+					<span className="order-last w-full min-w-0 truncate text-right text-sm text-muted-foreground sm:order-none sm:w-auto sm:text-left">
 						{rowSummary}
 					</span>
 				)}

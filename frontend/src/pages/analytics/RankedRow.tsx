@@ -25,7 +25,8 @@ function RankedRow({ count, label, max }: { count: number; label: string; max: n
 			<div className="relative flex items-center justify-between gap-4 px-3 py-2">
 				<span className="min-w-0 truncate text-sm font-medium">{label}</span>
 				<span className="shrink-0 text-sm text-muted-foreground tabular-nums">
-					{count} events
+					{/* A rank with one event read "1 events". */}
+					{count} {count === 1 ? 'event' : 'events'}
 				</span>
 			</div>
 		</li>
