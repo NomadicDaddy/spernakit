@@ -13,10 +13,9 @@ repository's `scripts/gate-conventions-allowlist.json` with a reason. `check:gat
 enforces the statically decidable half; the rest is enforced at review time, using the six-part
 shape at the end of this document as the checklist.
 
-The canonical copy of this file is `spernakit/docs/reference/gate-conventions.md`, which is where
-the gate it describes is owned. The shared-core sync carries the document and the gate together
-under its `gate-conventions` group, so an edit made to any other copy is silently overwritten the
-next time that group is written.
+This tracked copy is complete. The shared-core sync carries the document and gate together under
+its `gate-conventions` group. Edit through the group's declared owner so the next write does not
+overwrite a carrier-local change.
 
 ## Why the conventions are worth the migration
 

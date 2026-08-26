@@ -11,7 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { DashboardWidgetRenderer } from './dashboard-widgets/DashboardWidgetRenderer';
 import { DashboardCardSkeleton } from './DashboardCardSkeleton';
-import { getWidgetMinRows } from './widgetSize';
+import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from './widgetSize';
 
 /**
  * The chrome the public page has instead of the app shell.
@@ -173,10 +173,12 @@ function SharedDashboardPage() {
 							key={widget.id}
 							style={{
 								gridColumn: `span ${widget.width}`,
-								// Same row floor the editable grid enforces via `minH`. Without it a
-								// widget saved at one row renders its value below its own card here
-								// too, on the one surface no signed-in user is around to notice.
-								minHeight: `${String(Math.max(widget.height, getWidgetMinRows(widget.widgetType)) * 80)}px`,
+								// Same row floor and ceiling the editable grid enforces via `minH` and
+								// `maxH`. Without the floor a widget saved at one row renders its
+								// value below its own card here too, on the one surface no signed-in
+								// user is around to notice; without the ceiling a height stored
+								// before the ceiling existed makes a share link nobody can scroll.
+								minHeight: `${String(Math.min(Math.max(widget.height, getWidgetMinRows(widget.widgetType)), WIDGET_HEIGHT_MAX) * 80)}px`,
 							}}>
 							<DashboardWidgetRenderer allowPrivateData={false} widget={widget} />
 						</section>

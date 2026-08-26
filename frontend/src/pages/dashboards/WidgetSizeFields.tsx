@@ -4,7 +4,12 @@ import type { WidgetType } from 'spernakit-shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
-import { getWidgetMinRows, WIDGET_WIDTH_MAX, WIDGET_WIDTH_MIN } from './widgetSize';
+import {
+	getWidgetMinRows,
+	WIDGET_HEIGHT_MAX,
+	WIDGET_WIDTH_MAX,
+	WIDGET_WIDTH_MIN,
+} from './widgetSize';
 
 interface WidgetSizeFieldsProps {
 	height: number;
@@ -70,6 +75,7 @@ export function WidgetSizeFields({
 					autoComplete="off"
 					id="widget-height"
 					inputMode="numeric"
+					max={WIDGET_HEIGHT_MAX}
 					min={getWidgetMinRows(widgetType)}
 					onChange={(e) => onHeightChange(Number(e.target.value))}
 					ref={heightRef}

@@ -4,11 +4,10 @@
  * `docs/reference/gate-conventions.md` sanctions exactly two waiver forms, and this gate uses the
  * first: a comment on or above the offending line, naming the rule and carrying a reason. That is
  * the right form here because the exception belongs to one line and the reader of that line is
- * the person who needs to know about it. `licenses/SOURCE-OFFER.md` is the worked example — it
- * links to `SOURCE-MANIFEST.md`, which `scripts/package-release.ts` generates into each release
- * archive and which is deliberately absent from the source tree. The link is correct where the
- * file ships. Excluding the directory instead would be wrong, because that file's other links
- * (`./base-image-packages.md`, `../LICENSE`) are real and must stay checked.
+ * the person who needs to know about it. The current uses cover application routes in the
+ * panel's Markdown content: those links are valid at runtime but intentionally have no matching
+ * file in the source tree. Excluding the content directory would be wrong because its file links
+ * still need to be checked.
  *
  * Markdown carries the marker as an HTML comment so it does not render.
  *

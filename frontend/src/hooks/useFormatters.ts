@@ -137,15 +137,26 @@ function useFormatters(): Formatters {
 		const date = new Date(ts);
 		const now = new Date();
 		const diffMs = now.getTime() - date.getTime();
-		const diffMins = Math.floor(diffMs / 60_000);
-		const diffHours = Math.floor(diffMs / 3_600_000);
-		const diffDays = Math.floor(diffMs / 86_400_000);
+		/*
+		 * Split the sign off the magnitude before bucketing. `diffMs` runs negative for an instant
+		 * that has not happened yet, and the buckets below are written as ascending thresholds, so
+		 * a future date used to floor to a negative `diffMins`, satisfy the `< 1` branch, and
+		 * render `relFmt.format(0, 'second')` — the share dialog read "This link stops working on
+		 * now" for an expiry a month out. Formatting the magnitude and handing the direction to
+		 * `Intl.RelativeTimeFormat` gives "in 3 days" the same way it gives "3 days ago", and keeps
+		 * the seven-day fallthrough to an absolute date in both directions.
+		 */
+		const direction = diffMs < 0 ? 1 : -1;
+		const absMs = Math.abs(diffMs);
+		const diffMins = Math.floor(absMs / 60_000);
+		const diffHours = Math.floor(absMs / 3_600_000);
+		const diffDays = Math.floor(absMs / 86_400_000);
 
 		const relFmt = getRelativeFormatter(locale);
 		if (diffMins < 1) return relFmt.format(0, 'second');
-		if (diffMins < 60) return relFmt.format(-diffMins, 'minute');
-		if (diffHours < 24) return relFmt.format(-diffHours, 'hour');
-		if (diffDays < 7) return relFmt.format(-diffDays, 'day');
+		if (diffMins < 60) return relFmt.format(direction * diffMins, 'minute');
+		if (diffHours < 24) return relFmt.format(direction * diffHours, 'hour');
+		if (diffDays < 7) return relFmt.format(direction * diffDays, 'day');
 		/*
 		 * The fallback keeps the time. Every branch above this one is precise to the minute or the
 		 * hour, and then at exactly seven days — the point where relative phrasing stops being

@@ -22,9 +22,28 @@ const widgetTypeLiterals = WIDGET_TYPES.map((v) => t.Literal(v)) as [
 	...ReturnType<typeof t.Literal<WidgetType>>[],
 ];
 
+/**
+ * Grid geometry bounds. The dashboard grid is `DASHBOARD_COLS.lg` = 12 columns wide with 80px
+ * rows (`frontend/src/hooks/dashboards/useDashboardLayout.ts`), so every one of these is a real
+ * limit of the surface the widget is drawn on rather than an arbitrary number:
+ *
+ * - `WIDGET_COL_MAX` is the last column a widget can start in and still be inside the grid.
+ * - `WIDGET_HEIGHT_MAX` is 1920px, taller than any viewport the grid is laid out for.
+ * - `WIDGET_ROW_MAX` bounds how far down a dashboard can be seeded. The grid compacts vertically,
+ *   so a row past the widgets that exist collapses anyway; this only stops a stored value that
+ *   would place a widget outside any reachable scroll position.
+ *
+ * Without a ceiling a height of 9999 saved cleanly and rendered a 799,920px dashboard the user
+ * could not scroll back out of. `frontend/src/pages/dashboards/widgetSize.ts` mirrors these.
+ */
+const WIDGET_COL_MAX = 11;
+const WIDGET_HEIGHT_MAX = 24;
+const WIDGET_ROW_MAX = 100;
+const WIDGET_WIDTH_MAX = 12;
+
 const widgetSchema = t.Object({
-	col: t.Integer({ minimum: 0 }),
-	height: t.Integer({ minimum: 1 }),
+	col: t.Integer({ maximum: WIDGET_COL_MAX, minimum: 0 }),
+	height: t.Integer({ maximum: WIDGET_HEIGHT_MAX, minimum: 1 }),
 	metricType: t.Union(metricTypeLiterals),
 	options: t.Optional(
 		t.Record(
@@ -34,11 +53,11 @@ const widgetSchema = t.Object({
 		),
 	),
 	refreshInterval: t.Optional(t.Integer({ minimum: 5 })),
-	row: t.Integer({ minimum: 0 }),
+	row: t.Integer({ maximum: WIDGET_ROW_MAX, minimum: 0 }),
 	timeRange: t.Optional(t.String({ maxLength: FIELD_LENGTH_SHORT })),
 	title: t.String({ maxLength: FIELD_LENGTH_MEDIUM, minLength: 1 }),
 	widgetType: t.Union(widgetTypeLiterals),
-	width: t.Integer({ maximum: 12, minimum: 1 }),
+	width: t.Integer({ maximum: WIDGET_WIDTH_MAX, minimum: 1 }),
 });
 
 /**

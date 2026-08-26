@@ -84,8 +84,8 @@ const settingsSmtpRoutes = new Elysia({
 	.get(
 		'/smtp/config',
 		async ({ set }) => {
-			// SMTP config rarely changes - use long cache (1 hr)
-			setCacheHeaders(set, 'LONG');
+			// Mutable settings: a save has to be visible on the next read, so never cache.
+			setCacheHeaders(set, 'NO_CACHE');
 			return dataResponse(await getSmtpConfigMasked());
 		},
 		{
@@ -213,8 +213,8 @@ const settingsSmtpRoutes = new Elysia({
 	.get(
 		'/email/status',
 		async ({ set }) => {
-			// SMTP config rarely changes - use long cache (1 hr)
-			setCacheHeaders(set, 'LONG');
+			// Mutable settings: a save has to be visible on the next read, so never cache.
+			setCacheHeaders(set, 'NO_CACHE');
 			return dataResponse(await getEmailStatus());
 		},
 		{
@@ -222,8 +222,8 @@ const settingsSmtpRoutes = new Elysia({
 			detail: {
 				description:
 					'Returns email configuration status including whether SMTP is configured, ' +
-					'can send emails, and last test result. Cached for 1 hour. Requires ADMIN ' +
-					'role or higher.',
+					'can send emails, and last test result. Not cached, so a configuration ' +
+					'save is reflected immediately. Requires ADMIN role or higher.',
 				responses: {
 					'200': {
 						content: {

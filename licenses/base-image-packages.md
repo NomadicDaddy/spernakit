@@ -56,7 +56,7 @@ application. Their licenses apply to those components rather than the applicatio
 | gettext                | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
 | libapk2                | 2.14.10-r0       | GPL-2.0-only                                                      |
 | libbz2                 | 1.0.8-r6         | bzip2-1.0.6                                                       |
-| libcrypto3             | 3.5.7-r0         | Apache-2.0                                                        |
+| libcrypto3             | 3.5.8-r0         | Apache-2.0                                                        |
 | libexpat               | 2.8.3-r0         | MIT                                                               |
 | libffi                 | 3.4.8-r0         | MIT                                                               |
 | libgcc                 | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
@@ -64,7 +64,7 @@ application. Their licenses apply to those components rather than the applicatio
 | libintl                | 0.24.1-r0        | LGPL-2.1-or-later                                                 |
 | libncursesw            | 6.5_p20250503-r0 | X11                                                               |
 | libpanelw              | 6.5_p20250503-r0 | X11                                                               |
-| libssl3                | 3.5.7-r0         | Apache-2.0                                                        |
+| libssl3                | 3.5.8-r0         | Apache-2.0                                                        |
 | libstdc++              | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
 | libunistring           | 1.3-r0           | GPL-2.0-or-later OR LGPL-3.0-or-later                             |
 | libxml2                | 2.13.9-r1        | MIT                                                               |

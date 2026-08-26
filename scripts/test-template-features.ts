@@ -10,7 +10,8 @@
  *
  * One fixture carries every row of the classification table at once, because a rule that passes in
  * isolation can still be unreachable in a real corpus. The classification and milestone-ladder
- * expectations live in `lib/template-features/expectations.ts`; this file is the sequence.
+ * expectations live in `lib/template-features/expectations.ts` and the resident tier's in
+ * `lib/template-features/resident-expectations.ts`; this file is the sequence.
  */
 
 import { join } from 'node:path';
@@ -23,7 +24,6 @@ import {
 	assertionCount,
 	expectGuardedWrite,
 	expectInitialPlan,
-	expectResidentTier,
 	parsePlan,
 } from './lib/template-features/expectations.ts';
 import {
@@ -36,6 +36,7 @@ import {
 	TEMPLATE_VERSION,
 	writeJson,
 } from './lib/template-features/fixture.ts';
+import { expectResidentTier } from './lib/template-features/resident-expectations.ts';
 
 const fixture = createFeatureFixture();
 const { appRoot, templateRoot } = fixture;

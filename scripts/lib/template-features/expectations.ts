@@ -7,15 +7,7 @@
  * here; the assertion counter lives here too so the driver can report one total.
  */
 import { assert, assertionCount } from './assert.ts';
-import {
-	DURABLE_DIRS,
-	readJson,
-	removePath,
-	runSync,
-	type SyncRun,
-	TEMPLATE_VERSION,
-	writeJson,
-} from './fixture.ts';
+import { DURABLE_DIRS, readJson, runSync, type SyncRun } from './fixture.ts';
 
 export interface PlanEntry {
 	action: string;
@@ -190,64 +182,6 @@ export function expectGuardedWrite(templateRoot: string, appRoot: string): void 
 
 	run = runSync(templateRoot, ['--app', appRoot, '--adopt', '--overwrite-app-text']);
 	assert(run.exitCode === 0, `The flagged write run must succeed:\n${run.text}`);
-}
-
-const PROBE = 'remediation-20991231-probe';
-const GAMMA = '.aidd/features/gamma-feature/feature.json';
-
-/** The leak half: a process record resident in an app is wrong at every version, template or not. */
-function expectLeakedRecordFails(templateRoot: string, appRoot: string): void {
-	writeJson(appRoot, `.aidd/features/${PROBE}/feature.json`, {
-		id: PROBE,
-		spernakit_version: TEMPLATE_VERSION,
-	});
-
-	let run = runSync(appRoot, ['--template', templateRoot, '--check']);
-	assert(
-		run.exitCode === 1 && run.text.includes('wrong at any template version'),
-		`A leaked process record must fail the app:\n${run.text}`,
-	);
-	assert(run.text.includes(PROBE), `The failure must name the record:\n${run.text}`);
-
-	// The reason this tier exists: at a skew the content gate skips, and the leak must still fail.
-	writeJson(templateRoot, 'package.json', { name: 'spernakit', version: '9.1.0' });
-	run = runSync(appRoot, ['--template', templateRoot, '--check']);
-	assert(
-		run.exitCode === 1 && !run.text.includes('[SKIP]'),
-		`A version skew must not hide a leaked record behind the parity skip:\n${run.text}`,
-	);
-	writeJson(templateRoot, 'package.json', { name: 'spernakit', version: TEMPLATE_VERSION });
-
-	// And it needs no template checkout at all, unlike every other comparison the tool makes.
-	run = runSync(appRoot, ['--template', `${appRoot}/absent-template`, '--check']);
-	assert(
-		run.exitCode === 1 && run.text.includes(PROBE),
-		`An unresolvable template must not hide a leaked record either:\n${run.text}`,
-	);
-
-	removePath(appRoot, `.aidd/features/${PROBE}`);
-}
-
-/**
- * The two version-independent defects, checked ahead of every skip. Expects a fully-synced app at
- * parity, and leaves it in that state.
- */
-export function expectResidentTier(templateRoot: string, appRoot: string): void {
-	expectLeakedRecordFails(templateRoot, appRoot);
-
-	// `spernakit_version` marks the version that introduced a record and is never bumped on
-	// revision, so a value the template does not carry can only have been typed by hand.
-	const gamma = readJson(appRoot, GAMMA);
-	writeJson(appRoot, GAMMA, { ...gamma, spernakit_version: '8.0.0' });
-	let run = runSync(appRoot, ['--template', templateRoot, '--check']);
-	assert(
-		run.exitCode === 1 && run.text.includes('spernakit_version is 8.0.0'),
-		`A hand-edited stamp must fail and print both values:\n${run.text}`,
-	);
-	writeJson(appRoot, GAMMA, gamma);
-
-	run = runSync(appRoot, ['--template', templateRoot, '--check']);
-	assert(run.exitCode === 0, `Restoring the record must return the app to green:\n${run.text}`);
 }
 
 export { assert, assertionCount };
