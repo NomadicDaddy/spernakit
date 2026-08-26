@@ -46,8 +46,12 @@ condemning findings an application wrote itself.
 
 - `scripts/sync-shared-core.ts` and its `scripts/lib/shared-core/` helpers were split to fit the
   300-line cap. Behavior is unchanged.
+- The shared-core sync no longer documents itself by pointing at a design note in a sibling
+  repository. `scripts/sync-shared-core.ts`, `scripts/lib/shared-core/`, and
+  `docs/reference/gate-conventions.md` now carry the ownership and safety contract in their own
+  text, so a repository that carries these files can be read on its own.
 - Doc comments in `scripts/lib/docs/waivers.ts` now describe the waiver forms that gate actually
-  carries, and the `scripts/lib/shared-core/` comments follow the design document's rename.
+  carries.
 
 ## [3.43.2] - 2026-08-22
 
