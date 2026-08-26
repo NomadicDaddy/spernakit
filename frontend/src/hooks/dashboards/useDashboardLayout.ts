@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 
 import type { DashboardWidget, DashboardWithWidgets } from '@/api/dashboards';
 
-import { getWidgetMinRows } from '@/pages/dashboards/widgetSize';
+import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from '@/pages/dashboards/widgetSize';
 
 export const DASHBOARD_ROW_HEIGHT = 80;
 export const DASHBOARD_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
@@ -16,7 +16,12 @@ export const DASHBOARD_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
  * any height already stored below it — a dashboard saved before the floor existed still renders
  * its widgets tall enough to show their own values.
  *
- * Both are read-time repairs and neither is written back. Save reads geometry out of `layoutMap`,
+ * `maxH` is the other half of the same job, against the server's ceiling rather than the type's
+ * floor: a resize gesture writes its result straight back, so without it the handle is a way to
+ * store a height the API now rejects. `Math.min` clamps what is drawn for a dashboard saved before
+ * the ceiling existed, which would otherwise render past the bottom of the page.
+ *
+ * All three are read-time repairs and none is written back. Save reads geometry out of `layoutMap`,
  * which carries only the widgets a gesture actually moved, so a widget nobody touched keeps the
  * height the server holds for it however tall it had to be drawn.
  */
@@ -24,8 +29,9 @@ function widgetsToLayout(widgets: DashboardWidget[]) {
 	return widgets.map((w) => {
 		const minH = getWidgetMinRows(w.widgetType);
 		return {
-			h: Math.max(w.height, minH),
+			h: Math.min(Math.max(w.height, minH), WIDGET_HEIGHT_MAX),
 			i: String(w.id),
+			maxH: WIDGET_HEIGHT_MAX,
 			minH,
 			w: w.width,
 			x: w.col,

@@ -9,10 +9,29 @@
  *
  * Both checks below hold regardless of skew, so they run before the parity skip and fail hard:
  *
- *   1. A resident record whose directory matches `EPHEMERAL`. Process records are never synced to
- *      any app at any version, so a copy in an app is always a leak — from a hand-run copy pass, or
- *      from a template that shipped one before this filter existed. Two such records sat in four
- *      apps for months. This needs no template checkout at all.
+ *   1. A resident record that is a COPY of a template process record. Process records are never
+ *      synced to any app at any version, so a copy in an app is always a leak — from a hand-run
+ *      copy pass, or from a template that shipped one before this filter existed. Two such records
+ *      sat in four apps for months.
+ *
+ *      What identifies the copy is provenance, not the name. `EPHEMERAL` answers a different
+ *      question — "may the sync propagate this template record downstream" — and an application is
+ *      entitled to author its own `remediation-<date>-…` finding: aidd's pipelines mint that name,
+ *      and its `status-policy` exempts the name from approval parking precisely so they can.
+ *      Condemning the name cost real work — `ui-redesign-planner` stopped filing UI findings on
+ *      derived apps at all rather than disguise one under a slug that lied about what it was.
+ *
+ *      Two signals answer provenance and either is sufficient. The template corpus carrying the
+ *      same directory is proof outright, and catches a leak that predates stamping. Failing that,
+ *      the app copy's own `spernakit_version`: `check-template-feature-versions.ts` requires one on
+ *      every record in the template and states that app-owned records legitimately carry none, so a
+ *      stamp on an app's process record means it arrived from upstream. That second signal is what
+ *      keeps this check working with no template checkout at all, as it must.
+ *
+ *      `plan.ts` warns against reading a missing stamp as app ownership. That warning is about
+ *      OWNERSHIP of durable records, where a wrong answer destroys template content. Here a stamp
+ *      only ever escalates to a failure and never grants ownership, and the corpus branch covers
+ *      the unstamped case whenever a checkout exists. Do not restore the name-only test.
  *   2. A record whose `spernakit_version` differs from the value the template's copy carries.
  *      `spernakit_version` records the version that *introduced* a record and is never bumped on
  *      revision, so it is identical across template versions for the same directory. A difference is
@@ -50,8 +69,14 @@ export function auditResidentRecords(
 
 	for (const dirName of app.dirs) {
 		if (!isEphemeralDir(dirName)) continue;
+		const inTemplate = template !== null && template.dirs.includes(dirName);
+		const marked = stampOf(app, dirName) !== undefined;
+		// Neither signal fires: the application authored this finding itself, which it may.
+		if (!inTemplate && !marked) continue;
 		defects.push({
-			detail: 'a template process record; these are never synced to an application',
+			detail: inTemplate
+				? 'a copy of a template process record; these are never synced to an application'
+				: 'carries spernakit_version, so it came from the template; process records never sync',
 			dirName,
 			kind: 'leaked-process-record',
 		});
@@ -89,13 +114,14 @@ export function printResidentDefects(appLabel: string, defects: ResidentDefect[]
 
 	if (defects.some((defect) => defect.kind === 'leaked-process-record')) {
 		console.error(
-			'   Process records (`remediation-<date>-…`, `audit-<slug>-<digits>-…`) belong to the',
+			"   These are copies of the template's own process records and belong upstream. Read",
 		);
 		console.error(
-			"   template's own development. Read the record, confirm its content already lives in a",
+			'   each one, confirm its content already lives in a durable feature, then delete the',
 		);
+		console.error('   directory and its `.aidd/roadmap.json` entry.');
 		console.error(
-			'   durable feature, then delete the directory and its `.aidd/roadmap.json` entry.',
+			'   A finding this application authored itself is not reported here, whatever it is named.',
 		);
 	}
 	if (defects.some((defect) => defect.kind === 'stamp-mismatch')) {
