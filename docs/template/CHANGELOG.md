@@ -3,6 +3,52 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.43.3] - 2026-08-26
+
+Patch release. A fleet dance swept ten derived applications and routed four template defects
+here rather than into per-app remediation. Alongside them, the resident-record guard stopped
+condemning findings an application wrote itself.
+
+### Fixed
+
+- `check:template-features` failed on any resident feature directory named
+  `remediation-<date>-<slug>` or `audit-<slug>-<digits>-<slug>`, at every template version and
+  with no exemption for application ownership. The name is not evidence of origin: an application
+  is entitled to author its own process record under it, and aidd's pipelines mint exactly that
+  name. The guard now judges provenance instead. A record is a leak when the template corpus
+  carries the same directory, or when the application's copy carries `spernakit_version`, which
+  only an upstream record has. Either signal is sufficient, so the check still works with no
+  template checkout resolvable. The cost of the old rule was measurable: the UI planner stopped
+  filing findings on derived applications altogether rather than disguise one under a slug that
+  misdescribed it, and a record written under the condemned name surfaced two phases later as a
+  whole-application sync failure with that application's real drift hidden underneath it.
+- `GET /settings/email/status` and `GET /settings/smtp/config` served `private, max-age=3600`
+  with nothing busting the cache on write. After a successful save the badge kept reading
+  "Not configured" and the Send Test Email card stayed disabled for up to an hour, while the
+  values themselves had saved correctly. Mutable settings reads are now `NO_CACHE`.
+- `widgetSchema` bounded dashboard widget width at 12 columns but left height, column and row
+  open-ended, and `widgetSize.ts` documented the missing height ceiling as deliberate. A height
+  of 9999 saved cleanly and rendered a 799,920px dashboard with no way back. All three now carry
+  the grid's own bounds, and the client mirrors them in the Add Widget dialog, on the resize
+  handles through `maxH`, and on the shared read-only surface.
+- `formatTimestamp` subtracted in one direction only, so a future instant produced a negative
+  `diffMins`, satisfied the `< 1` branch and rendered "now". The share dialog read "This link
+  stops working on now." It now formats the magnitude and hands the direction to `Intl`, giving
+  "in 3 days" alongside "3 days ago" and keeping the seven-day fallthrough to an absolute date
+  in both directions.
+- The bug report dialog's fields are not inside a `<form>` and Submit is an `onClick`, so
+  `type="email"` never ran native validation. A mistyped address reached the API, came back as a
+  400 naming no field, and the catch reported it as worth retrying. The dialog now asks the input
+  for its own verdict before submitting, and a 400 reports what the server said instead of
+  suggesting a retry that cannot succeed.
+
+### Changed
+
+- `scripts/sync-shared-core.ts` and its `scripts/lib/shared-core/` helpers were split to fit the
+  300-line cap. Behavior is unchanged.
+- Doc comments in `scripts/lib/docs/waivers.ts` now describe the waiver forms that gate actually
+  carries, and the `scripts/lib/shared-core/` comments follow the design document's rename.
+
 ## [3.43.2] - 2026-08-22
 
 Patch release. One comment in the 3.43.1 payload is wrong, in the function that exists to
