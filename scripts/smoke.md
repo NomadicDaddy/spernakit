@@ -263,19 +263,21 @@ Steps (in order):
     - Override report names the template content each .templateoverrides entry withholds.
 58. `bun run test:reset-packages`
     - Package reset preserves dependencies when the frozen-install preflight fails.
-59. `bun run test:scaffolded-hooks`
+59. `bun run test:clear-logs`
+    - Clearing logs removes this repository's own runtime and runbook output and nothing else.
+60. `bun run test:scaffolded-hooks`
     - Scaffolded pre-push hook replays refs through both release guards.
-60. `bun run test:template-drift`
+61. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-61. `bun run format:check`
+62. `bun run format:check`
     - Format check.
-62. `bun run test:aidd-format`
+63. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-63. `bun run check:aidd-format`
+64. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-64. `bun run check-deps`
+65. `bun run check-deps`
     - Check dependency versions.
-65. `bun run check:dead-code`
+66. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

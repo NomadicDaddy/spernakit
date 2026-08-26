@@ -166,6 +166,7 @@
 		"test:auth-reset-ui-preview": "bun scripts/test-auth-reset-ui.ts --mode preview",
 		"test:backup-compression": "bun scripts/test-backup-compression.ts",
 		"test:bundle-budget": "bun scripts/test-bundle-budget.ts",
+		"test:clear-logs": "bun scripts/test-clear-logs.ts",
 		"test:config-preflight": "bun scripts/test-config-preflight.ts",
 		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",

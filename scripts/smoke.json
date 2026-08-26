@@ -365,6 +365,10 @@
 					"description": "Package reset preserves dependencies when the frozen-install preflight fails"
 				},
 				{
+					"command": "bun run test:clear-logs",
+					"description": "Clearing logs removes this repository's own runtime and runbook output and nothing else"
+				},
+				{
 					"command": "bun run test:scaffolded-hooks",
 					"description": "Scaffolded pre-push hook replays refs through both release guards",
 					"templateOnly": true

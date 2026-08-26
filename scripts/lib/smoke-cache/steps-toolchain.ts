@@ -68,6 +68,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: LINT_GLOBS,
 	},
+	// The fixture is self-contained: it copies clear-logs.ts into a temp tree and writes its own
+	// runbook there, so the real scripts/smoke.json is not part of this step's world.
+	'test:clear-logs': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['scripts/clear-logs.ts', 'scripts/test-clear-logs.ts'],
+	},
 	'test:config-preflight': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
