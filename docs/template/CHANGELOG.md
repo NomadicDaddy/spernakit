@@ -52,6 +52,8 @@ condemning findings an application wrote itself.
   text, so a repository that carries these files can be read on its own.
 - Doc comments in `scripts/lib/docs/waivers.ts` now describe the waiver forms that gate actually
   carries.
+- `licenses/base-image-packages.md` was regenerated against a fresh build. Alpine moved
+  `libcrypto3` and `libssl3` to 3.5.8-r0, so the runtime image now ships those versions.
 
 ## [3.43.2] - 2026-08-22
 
