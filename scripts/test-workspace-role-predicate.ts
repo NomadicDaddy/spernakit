@@ -199,15 +199,10 @@ function checkPredicateIsSideEffectFree(): void {
 	const usersBefore = JSON.stringify(db.select().from(users).all());
 	const membersBefore = JSON.stringify(db.select().from(workspaceMembers).all());
 
-	// A context object of the shape the guard mutates. The predicate is given no such thing, which
-	// is the point: its signature has no context for a future side effect to reach.
-	const probe: { status?: number | string } = {};
 	for (const testCase of CASES) hasWorkspaceRole(testCase.userId, WORKSPACE_ID, MINIMUM);
 
-	assert(
-		probe.status === undefined,
-		`A capability query must not reach a guard context, got status ${String(probe.status)}`,
-	);
+	// The predicate is handed no guard context at all, which is the point: its signature gives a
+	// future side effect nothing to reach. A fourth parameter would be the first sign of one.
 	assert(
 		hasWorkspaceRole.length === 3,
 		`hasWorkspaceRole must take only userId, workspaceId and minimumRole, got ${String(hasWorkspaceRole.length)} parameters`,
