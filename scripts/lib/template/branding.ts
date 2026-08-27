@@ -51,14 +51,6 @@ export function normalizeBranding(
 		return normalizeReadme(content, values, isTemplate);
 	}
 
-	// Handle health test (slug assertion)
-	if (filePath === 'backend/src/test/health.test.ts') {
-		return normalizeLineEndings(content).replace(
-			new RegExp(`\\.toBe\\('${escapeRegex(values.slug)}'\\)`, 'g'),
-			".toBe('{{SLUG}}')",
-		);
-	}
-
 	// Handle settings-smtp.ts
 	if (filePath === 'backend/src/routes/settings-smtp.ts') {
 		return normalizeSettingsSmtp(content, values, isTemplate);
