@@ -1,12 +1,13 @@
 import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, isSysop, requireAuth } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationReadStatusSchema, NotificationTypeSchema } from '../../schemas/domain.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import {
 	bulkDelete,
 	create,
@@ -66,10 +67,8 @@ const notificationCrudRoutes = new Elysia({
 						maxLength: 255,
 					}),
 				),
-				limit: t.Optional(
-					t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-				),
-				page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+				limit: limitParam(),
+				page: pageParam(),
 				readStatus: t.Optional(NotificationReadStatusSchema),
 				sortBy: t.Optional(
 					t.String({

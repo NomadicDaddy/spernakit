@@ -11,6 +11,7 @@ import {
 import { MAX_PROPERTIES_DEFAULT } from '../constants/validation.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
+import { limitParam, pageParam } from '../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../services/auditService.ts';
 import { list, submit, updateStatus } from '../services/bugReportService.ts';
 import { dataResponse, paginatedResponse } from '../utils/apiResponse.ts';
@@ -139,8 +140,8 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			},
 			query: t.Object({
 				kind: t.Optional(t.Union([t.Literal('bug'), t.Literal('feature')])),
-				limit: t.Optional(t.Numeric({ default: 50, maximum: 200, minimum: 1 })),
-				page: t.Optional(t.Numeric({ default: 1, minimum: 1 })),
+				limit: limitParam({ default: 50 }),
+				page: pageParam(),
 				search: t.Optional(t.String({ maxLength: 200 })),
 				status: t.Optional(statusSchema),
 			}),

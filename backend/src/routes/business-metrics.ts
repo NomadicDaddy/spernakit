@@ -13,6 +13,7 @@ import {
 } from '../constants/validation.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
+import { limitParam } from '../schemas/pagination.ts';
 import {
 	getDashboardStats,
 	getEventSummary,
@@ -129,13 +130,7 @@ const businessMetricsRoutes = new Elysia({
 						minimum: 1,
 					}),
 				),
-				limit: t.Optional(
-					t.Numeric({
-						default: 20,
-						maximum: 100,
-						minimum: 1,
-					}),
-				),
+				limit: limitParam(),
 			}),
 		},
 	)

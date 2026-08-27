@@ -4,10 +4,11 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
@@ -201,8 +202,8 @@ const workspaceCrudRoutes = new Elysia({
 			beforeHandle: requireAuth,
 			detail: listWorkspacesDocs,
 			query: t.Object({
-				limit: t.Optional(t.Number({ maximum: MAX_PAGE_LIMIT, minimum: 1 })),
-				page: t.Optional(t.Number({ minimum: 1 })),
+				limit: limitParam(),
+				page: pageParam(),
 			}),
 		},
 	)

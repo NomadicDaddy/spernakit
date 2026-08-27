@@ -11,6 +11,7 @@ import {
 import { requireAuth } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import {
 	handleDeleteFile,
 	handleDownloadFile,
@@ -166,8 +167,8 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			summary: 'List files with pagination',
 		},
 		query: t.Object({
-			limit: t.Optional(t.Numeric({ maximum: 100, minimum: 1 })),
-			page: t.Optional(t.Numeric({ default: 1, minimum: 1 })),
+			limit: limitParam(),
+			page: pageParam(),
 		}),
 	})
 	.delete('/:id', handleDeleteFile, {

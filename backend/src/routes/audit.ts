@@ -3,7 +3,7 @@ import { Elysia, t } from 'elysia';
 import type { AuthPayload } from '../plugins/auth.ts';
 
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../constants/pagination.ts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../constants/pagination.ts';
 import {
 	badRequestExample,
 	FORBIDDEN_EXAMPLE,
@@ -14,6 +14,7 @@ import { assertUser, isSysop, requireRoleFresh } from '../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../guards/workspaceAccess.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { workspacePlugin } from '../plugins/workspace.ts';
+import { limitParam, pageParam } from '../schemas/pagination.ts';
 import { query } from '../services/auditService.ts';
 import { paginatedResponse } from '../utils/apiResponse.ts';
 import { badRequestError } from '../utils/errorResponse.ts';
@@ -183,10 +184,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 					maxLength: 255,
 				}),
 			),
-			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-			),
-			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+			limit: limitParam(),
+			page: pageParam(),
 			search: t.Optional(t.String({ maxLength: 255 })),
 			sortBy: t.Optional(
 				t.String({

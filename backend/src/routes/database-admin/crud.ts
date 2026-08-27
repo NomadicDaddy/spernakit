@@ -2,9 +2,9 @@ import { Elysia, t } from 'elysia';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import {
 	getSafeMode,
@@ -91,10 +91,8 @@ const databaseAdminRoutes = new Elysia({
 		}),
 		query: t.Object({
 			includeDeleted: t.Optional(t.BooleanString()),
-			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-			),
-			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+			limit: limitParam(),
+			page: pageParam(),
 		}),
 	})
 	.post(

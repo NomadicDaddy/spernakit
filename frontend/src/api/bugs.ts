@@ -18,10 +18,13 @@ interface ListBugsFilters {
  * The filters go to the server rather than being applied to the returned page: the list is
  * paginated, so filtering client-side would narrow one page of twenty and leave the total
  * counting the whole inbox.
+ *
+ * The default limit is the server's ceiling. Asking for more used to be accepted and then silently
+ * clamped to this same number, so a caller that trusted the request got a short page and no signal.
  */
 function listBugs(
 	page = 1,
-	limit = 200,
+	limit = 100,
 	filters: ListBugsFilters = {},
 ): Promise<PaginatedResponse<BugReport>> {
 	const params = new URLSearchParams({ limit: String(limit), page: String(page) });

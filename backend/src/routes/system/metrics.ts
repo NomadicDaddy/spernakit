@@ -14,6 +14,7 @@ import {
 } from '../../constants/responseExamples.ts';
 import { assertUser, requireAuth, requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam } from '../../schemas/pagination.ts';
 import {
 	collectSnapshot,
 	getLatestMetrics,
@@ -122,9 +123,7 @@ const systemMetricsRoutes = new Elysia({
 						minimum: 1,
 					}),
 				),
-				limit: t.Optional(
-					t.Numeric({ default: MAX_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-				),
+				limit: limitParam({ default: MAX_PAGE_LIMIT }),
 			}),
 		},
 	)

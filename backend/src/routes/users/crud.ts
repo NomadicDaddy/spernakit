@@ -1,6 +1,5 @@
 import { Elysia, t } from 'elysia';
 
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
 import {
 	EMAIL_MAX_LENGTH,
 	PASSWORD_MAX_LENGTH,
@@ -12,6 +11,7 @@ import {
 import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { UserRoleSchema } from '../../schemas/domain.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import {
 	adminResetPasswordDocs,
 	createUserDocs,
@@ -49,10 +49,8 @@ const usersCrudRoutes = new Elysia({
 					maxLength: 500,
 				}),
 			),
-			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-			),
-			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+			limit: limitParam(),
+			page: pageParam(),
 			role: t.Optional(UserRoleSchema),
 			search: t.Optional(t.String({ maxLength: 200 })),
 		}),

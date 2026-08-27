@@ -3,6 +3,7 @@ import { Elysia, t } from 'elysia';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam } from '../../schemas/pagination.ts';
 import {
 	cleanupOldLogs,
 	getActiveAlerts,
@@ -50,7 +51,7 @@ const healthChecksRoutes = new Elysia({
 			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: healthHistoryDocs,
 			query: t.Object({
-				limit: t.Optional(t.Numeric({ default: 100, maximum: 1000, minimum: 1 })),
+				limit: limitParam({ default: 100, maximum: 1000 }),
 			}),
 		},
 	)
