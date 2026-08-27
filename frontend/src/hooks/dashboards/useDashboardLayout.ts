@@ -72,9 +72,9 @@ export function useDashboardLayout(dashboard: DashboardWithWidgets | undefined) 
 	 * writes geometry for.
 	 *
 	 * What is on screen is not the same thing as what the user arranged. `<Responsive>` reflows the
-	 * stored layout into whatever column count the container is wide enough for, and reports the
-	 * result through `onLayoutChange` like any other change; `widgetsToLayout` raises heights stored
-	 * below their type's floor. Both used to reach the server, because every mutation read its
+	 * stored layout into whatever column count the container is wide enough for, and renders that
+	 * reflow rather than what was stored; `widgetsToLayout` raises heights stored below their
+	 * type's floor. Both used to reach the server, because every mutation read its
 	 * geometry back out of the whole layout: opening a dashboard at 1024px and renaming it rewrote
 	 * every widget's position to the six-column reflow, and any widget stored at height 1 came back
 	 * at its floor. Persisting only what a gesture touched leaves the rest exactly as it was stored.
@@ -110,11 +110,6 @@ export function useDashboardLayout(dashboard: DashboardWithWidgets | undefined) 
 		currentLayout.filter((item) => dirtyIds.has(item.i)).map((item) => [item.i, item]),
 	);
 
-	/** Keeps the rendered layout in step with the grid. Display only — this marks nothing dirty. */
-	const handleLayoutChange = (newLayout: Layout) => {
-		setCurrentLayout([...newLayout]);
-	};
-
 	/** Records the pre-gesture layout. Wired to the grid's drag and resize start callbacks. */
 	const handleGestureStart = (layout: Layout) => {
 		gestureStart.current = layout;
@@ -126,21 +121,38 @@ export function useDashboardLayout(dashboard: DashboardWithWidgets | undefined) 
 	 * The comparison is against the layout the gesture started from rather than against the stored
 	 * one, so a widget displaced by the drag counts as edited — the user watched it move — while a
 	 * widget that only sits where a narrow breakpoint put it does not.
+	 *
+	 * The items it changed are merged into `currentLayout` one at a time rather than replacing it
+	 * wholesale, because `newLayout` is whatever the grid is currently showing, and at any
+	 * breakpoint below `lg` that is the reflow: every widget clamped to the column count the
+	 * container was wide enough for. Writing it back in full destroyed the arrangement it was
+	 * derived from. `currentLayout` is the layout handed to `<Responsive>` under all five
+	 * breakpoint keys, so once it held the six-column reflow, widening the window again
+	 * re-rendered from the clamped widths and the dashboard stayed collapsed until a reload
+	 * refetched the stored rows. It is also what a save reads through `layoutMap`, so one drag
+	 * after that round trip would have persisted a clamped width and made the loss permanent.
 	 */
 	const commitLayoutEdit = (newLayout: Layout) => {
 		const before = new Map(
 			(gestureStart.current ?? currentLayout).map((item) => [item.i, item]),
 		);
 		gestureStart.current = null;
-		setDirtyIds((previous) => {
-			const next = new Set(previous);
-			for (const item of newLayout) {
-				const prior = before.get(item.i);
-				if (!prior || !sameGeometry(prior, item)) next.add(item.i);
-			}
-			return next;
-		});
-		setCurrentLayout([...newLayout]);
+		const changed = new Map(
+			newLayout
+				.filter((item) => {
+					const prior = before.get(item.i);
+					return !prior || !sameGeometry(prior, item);
+				})
+				.map((item) => [item.i, item]),
+		);
+		if (changed.size === 0) return;
+		setDirtyIds((previous) => new Set([...previous, ...changed.keys()]));
+		setCurrentLayout((previous) =>
+			previous.map((item) => {
+				const next = changed.get(item.i);
+				return next ? { ...item, h: next.h, w: next.w, x: next.x, y: next.y } : item;
+			}),
+		);
 	};
 
 	/** Drops unsaved edits and returns to the stored arrangement. Cancel, not Save. */
@@ -165,7 +177,6 @@ export function useDashboardLayout(dashboard: DashboardWithWidgets | undefined) 
 		commitLayoutEdit,
 		currentLayout,
 		handleGestureStart,
-		handleLayoutChange,
 		layoutMap,
 		resetLayout,
 		ROW_HEIGHT: DASHBOARD_ROW_HEIGHT,

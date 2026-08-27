@@ -5,6 +5,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { SUCCESS_EXAMPLE } from '../../constants/responseExamples.ts';
 import { authPlugin, parseCookies, signTokenPair, verifyRefreshToken } from '../../plugins/auth.ts';
+import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserRefreshInfo } from '../../services/userService.ts';
 import { successResponse } from '../../utils/apiResponse.ts';
@@ -121,6 +122,10 @@ async function handleTokenRefresh({ request, set }: RefreshContext) {
 	}
 
 	setAuthCookies(set, config.security, tokens, request);
+
+	// Publish the identity for the audit plugin: the auth cookie goes out on the
+	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
+	publishResolvedUser(request, payload);
 
 	const csrfToken = await generateAndStoreCsrfToken(payload.id);
 	set.headers['X-CSRF-Token'] = csrfToken;

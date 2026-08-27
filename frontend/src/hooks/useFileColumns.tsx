@@ -7,7 +7,7 @@ import type { DataTableFeatures } from '@/components/shared/data-table/features'
 import { Spinner } from '@/components/shared/Spinner';
 import { Button } from '@/components/ui/button';
 import { useFormatters } from '@/hooks/useFormatters';
-import { formatBytes } from '@/lib/formatters';
+import { formatBytes, formatMimeType } from '@/lib/formatters';
 
 interface UseFileColumnsOptions {
 	canDelete: boolean;
@@ -46,7 +46,7 @@ function useFileColumns({
 		},
 		{
 			accessorKey: 'mimeType',
-			cell: ({ row }) => row.original.mimeType.split('/')[1] ?? 'file',
+			cell: ({ row }) => formatMimeType(row.original.mimeType),
 			header: 'Type',
 		},
 		{

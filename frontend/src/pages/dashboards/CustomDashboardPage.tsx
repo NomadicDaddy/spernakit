@@ -49,7 +49,6 @@ function CustomDashboardPage() {
 		commitLayoutEdit,
 		currentLayout,
 		handleGestureStart,
-		handleLayoutChange,
 		layoutMap,
 		resetLayout,
 	} = useDashboardLayout(dashboard);
@@ -177,7 +176,6 @@ function CustomDashboardPage() {
 						setDialog({ kind: 'addWidget' });
 					},
 					onGestureStart: handleGestureStart,
-					onLayoutChange: handleLayoutChange,
 					onLayoutEdit: commitLayoutEdit,
 					onRemoveWidget: handleRemoveWidget,
 				}}

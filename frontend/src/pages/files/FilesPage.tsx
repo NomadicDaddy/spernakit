@@ -5,6 +5,8 @@ import { toast } from 'sonner';
 
 import type { FileUploadHandle } from '@/components/shared/FileUpload';
 
+import { ApiError } from '@/api/apiError';
+import { showErrorToast } from '@/api/errorHandling';
 import { deleteFile, downloadFile, type FileRecord, listFiles, uploadFile } from '@/api/files';
 import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { DataTable } from '@/components/shared/data-table/DataTable';
@@ -18,14 +20,47 @@ import { useAuthorization } from '@/hooks/useAuthorization';
 import { useFileColumns } from '@/hooks/useFileColumns';
 import { usePagination } from '@/hooks/usePagination';
 import { downloadBlob } from '@/lib/download';
+import { useLayoutStore } from '@/stores/layoutStore';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
 /** The server's own per-file ceiling, stated once so the header trigger and the drop zone agree. */
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
+/*
+ * The types the server accepts, restated for the file picker the way MAX_UPLOAD_BYTES restates
+ * the size ceiling. The authority is `storage.allowedMimeTypes` in the app's config file, which
+ * is only readable through the SYSOP-only runtime-config endpoint, so an OPERATOR uploading a
+ * file cannot be told the list by the server. `FileUpload` defaults `accept` to `*`, and this
+ * page never overrode it: the picker offered every file on the machine against a server that
+ * takes eight types, so choosing anything else looked like a working upload right until nothing
+ * happened.
+ *
+ * Drift between this list and the config is not silent — a refused upload now says why, below —
+ * so the picker narrows the common case and the message covers the rest.
+ */
+const ACCEPTED_UPLOAD_TYPES = [
+	'application/json',
+	'application/pdf',
+	'image/gif',
+	'image/jpeg',
+	'image/png',
+	'image/webp',
+	'text/csv',
+	'text/plain',
+].join(',');
+
+/** The one status `showErrorToast` leaves to the caller. */
+const HTTP_BAD_REQUEST = 400;
+
 function FilesPage() {
 	const queryClient = useQueryClient();
-	const { limit, page, setLimit, setPage } = usePagination(20, true);
+	/*
+	 * This page reaches `usePagination` directly rather than through `useUrlFilters`, so it
+	 * has to read the rows-per-page preference itself; hardcoding 20 here would leave /files
+	 * as the one paginated surface that ignored the setting.
+	 */
+	const itemsPerPage = useLayoutStore((s) => s.itemsPerPage);
+	const { limit, page, setLimit, setPage } = usePagination(itemsPerPage, true);
 	const uploadRef = useRef<FileUploadHandle>(null);
 	const [downloadingId, setDownloadingId] = useState<null | number>(null);
 	const [deleteTarget, setDeleteTarget] = useState<FileRecord | null>(null);
@@ -41,6 +76,30 @@ function FilesPage() {
 
 	const uploadMutation = useMutation({
 		mutationFn: (file: File) => uploadFile(file),
+		/*
+		 * Upload rejections come back as 400, and 400 is the one status the app-wide handler
+		 * deliberately leaves alone: `showErrorToast` skips it so a generic message cannot bury a
+		 * field-specific one, on the understanding that the mutation supplies its own. This one
+		 * never did, so a refused upload rendered nothing at all — and `FileUpload` clears the
+		 * staged file the moment it hands it over, so the file went too. A rejection was
+		 * indistinguishable from a click that did nothing.
+		 *
+		 * The server's message is the useful part of a rejection ("MIME type 'video/mp4' is not
+		 * allowed", "File exceeds maximum size of 10MB"). It is written by the upload's own
+		 * validation and names nothing internal, so it is shown as written.
+		 *
+		 * Every other status is handed back to `showErrorToast`. Declaring `onError` at all opts
+		 * this mutation out of the MutationCache's global toast, so without this line an expired
+		 * session or a 500 during an upload would lose its app-wide wording to a local guess.
+		 */
+		onError: (error) => {
+			if (!(error instanceof ApiError)) {
+				toast.error('Upload failed. Please try again.');
+				return;
+			}
+			if (error.status === HTTP_BAD_REQUEST) toast.error(error.message);
+			else showErrorToast(error.status, error.code, error.details);
+		},
 		onSuccess: () => {
 			toast.success('File uploaded successfully');
 			void queryClient.invalidateQueries({ queryKey: ['files', activeWorkspaceId] });
@@ -120,6 +179,7 @@ function FilesPage() {
 
 			{canManageFiles('OPERATOR') && (isLoading || files.length > 0) && (
 				<FileUpload
+					accept={ACCEPTED_UPLOAD_TYPES}
 					isPending={uploadMutation.isPending}
 					maxSizeBytes={MAX_UPLOAD_BYTES}
 					onFileSelect={(file) => uploadMutation.mutate(file)}
@@ -148,6 +208,7 @@ function FilesPage() {
 					action={
 						<div className="mx-auto w-full max-w-3xl">
 							<FileUpload
+								accept={ACCEPTED_UPLOAD_TYPES}
 								isPending={uploadMutation.isPending}
 								maxSizeBytes={MAX_UPLOAD_BYTES}
 								onFileSelect={(file) => uploadMutation.mutate(file)}

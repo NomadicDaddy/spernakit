@@ -7,6 +7,7 @@
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { type AuthPayload, signTokenPair } from '../../plugins/auth.ts';
+import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserById } from '../../services/userService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
@@ -32,6 +33,10 @@ async function issueAuthTokensForUser(
 
 	const csrfToken = await generateAndStoreCsrfToken(userId);
 	setAuthCookies(set, config.security, tokens, request);
+
+	// Publish the identity for the audit plugin: the auth cookie goes out on the
+	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
+	publishResolvedUser(request, payload);
 
 	if (csrfToken) {
 		set.headers['X-CSRF-Token'] = csrfToken;

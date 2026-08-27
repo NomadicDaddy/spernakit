@@ -103,6 +103,22 @@ function getById(id: number): null | WorkspaceRecord {
 	return row ? toRecord(row.workspace, row.ownerUsername) : null;
 }
 
+function isDefaultWorkspace(id: number): boolean {
+	return (
+		getDb()
+			.select({ id: workspaces.id })
+			.from(workspaces)
+			.where(
+				and(
+					eq(workspaces.id, id),
+					eq(workspaces.isDefault, true),
+					eq(workspaces.isDeleted, false),
+				),
+			)
+			.get() !== undefined
+	);
+}
+
 function findActive(id: number): { id: number } | undefined {
 	return getDb()
 		.select({ id: workspaces.id })
@@ -129,5 +145,5 @@ function toRecord(
 	};
 }
 
-export { findActive, getById, list, toRecord };
+export { findActive, getById, isDefaultWorkspace, list, toRecord };
 export type { WorkspaceBranding, WorkspaceRecord, WorkspaceSettings };

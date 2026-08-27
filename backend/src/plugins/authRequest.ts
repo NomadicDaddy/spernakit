@@ -29,6 +29,25 @@ function getResolvedApiKeyUser(request: Request): AuthPayload | null {
 	return apiKeyUserByRequest.get(request) ?? null;
 }
 
+/**
+ * Request-scoped cache of identities established *during* the handler rather
+ * than carried in on the request. Sign-in style routes authenticate a caller and
+ * set the auth cookie on the RESPONSE, so at onAfterResponse there is nothing on
+ * the Request to resolve and the audit row lands with no actor. Those handlers
+ * publish the identity here instead. Mirrors apiKeyUserByRequest above.
+ */
+const handlerUserByRequest = new WeakMap<Request, AuthPayload>();
+
+/** Record the identity a handler established for this request. */
+function publishResolvedUser(request: Request, payload: AuthPayload): void {
+	handlerUserByRequest.set(request, payload);
+}
+
+/** Return the identity a handler established for this request, if any. */
+function getHandlerResolvedUser(request: Request): AuthPayload | null {
+	return handlerUserByRequest.get(request) ?? null;
+}
+
 function resolveUserFromRequest(request: Request): AuthPayload | null {
 	const config = getConfig();
 	const cookieHeader = request.headers.get('cookie');
@@ -104,4 +123,10 @@ async function resolveApiKeyUser(
 	return user;
 }
 
-export { getResolvedApiKeyUser, resolveApiKeyUser, resolveUserFromRequest };
+export {
+	getHandlerResolvedUser,
+	getResolvedApiKeyUser,
+	publishResolvedUser,
+	resolveApiKeyUser,
+	resolveUserFromRequest,
+};

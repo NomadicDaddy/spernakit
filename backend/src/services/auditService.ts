@@ -1,4 +1,4 @@
-import { and, count, eq, gte, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 
 import { getDb } from '../db/index.ts';
@@ -147,11 +147,29 @@ function query(params: QueryParams): {
 	}
 	if (params.search) {
 		const searchPattern = `%${escapeLikePattern(params.search)}%`;
-		// Search also covers the JSON `details` column so audit-log search matches
-		// entity names (e.g., backup target name) captured by the audit plugin from
-		// request bodies, not just action strings and entity types.
+		// Search covers the JSON `details` column so audit-log search matches entity
+		// names (e.g., backup target name) captured by the audit plugin from request
+		// bodies, not just action strings and entity types.
+		//
+		// The actor is matched through a subquery rather than the leftJoin the row
+		// select uses, because the companion count query in paginatedQuery selects
+		// from auditLogs alone and would not resolve a joined column. Without this,
+		// searching a username returned only the rows that happened to carry it
+		// inside `details` (the audit plugin copies a submitted `username` field
+		// there) while excluding every row genuinely attributed to that account.
+		const actorMatches = db
+			.select({ id: users.id })
+			.from(users)
+			.where(likeEscaped(users.username, searchPattern));
 		conditions.push(
-			sql`(${auditLogs.action} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityType} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.entityId} LIKE ${searchPattern} ESCAPE '\\' OR ${auditLogs.details} LIKE ${searchPattern} ESCAPE '\\')`,
+			or(
+				likeEscaped(auditLogs.action, searchPattern),
+				likeEscaped(auditLogs.entityType, searchPattern),
+				likeEscaped(auditLogs.entityId, searchPattern),
+				likeEscaped(auditLogs.details, searchPattern),
+				inArray(auditLogs.userId, actorMatches),
+				inArray(auditLogs.impersonatedBy, actorMatches),
+			)!,
 		);
 	}
 

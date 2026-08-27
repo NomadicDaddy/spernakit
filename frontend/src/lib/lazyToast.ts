@@ -19,6 +19,8 @@
 /** Options accepted by toast calls that support a description. */
 interface ToastOptions {
 	description?: string;
+	/** Stable identity. Sonner replaces a toast that is already showing under the same id. */
+	id?: number | string;
 }
 
 /** Shape of the toast function returned by sonner — only the methods used here. */

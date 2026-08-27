@@ -6,7 +6,7 @@ import { getClientIp } from '../utils/clientIp.ts';
 import { logger, REDACT_PATHS } from '../utils/logger.ts';
 import { parseWorkspaceId } from '../utils/validation.ts';
 import { resolveUserFromCookie } from './auth.ts';
-import { getResolvedApiKeyUser } from './authRequest.ts';
+import { getHandlerResolvedUser, getResolvedApiKeyUser } from './authRequest.ts';
 import { requestIdPlugin } from './requestId.ts';
 
 const MUTATING_METHODS = new Set(['DELETE', 'PATCH', 'POST', 'PUT']);
@@ -67,7 +67,10 @@ function resolveActorFromRequest(request: Request): AuditActor {
 		if (request.headers.get('x-api-key')) {
 			return { userId: getResolvedApiKeyUser(request)?.id };
 		}
-		const payload = resolveUserFromCookie(request);
+		// A sign-in route sets the auth cookie on the RESPONSE, so by this hook
+		// there is no cookie on the REQUEST to resolve. Those handlers publish
+		// the identity they established into a request-scoped cache instead.
+		const payload = resolveUserFromCookie(request) ?? getHandlerResolvedUser(request);
 		return { impersonatedBy: payload?.impersonatedBy, userId: payload?.id };
 	} catch (err) {
 		logger.debug({ err }, 'Failed to resolve user for audit log');

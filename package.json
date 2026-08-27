@@ -1,6 +1,6 @@
 {
 	"name": "spernakit",
-	"version": "3.43.3",
+	"version": "3.44.0",
 	"private": true,
 	"author": "NomadicDaddy",
 	"license": "MIT",
@@ -166,6 +166,7 @@
 		"test:auth-reset-ui-preview": "bun scripts/test-auth-reset-ui.ts --mode preview",
 		"test:backup-compression": "bun scripts/test-backup-compression.ts",
 		"test:bundle-budget": "bun scripts/test-bundle-budget.ts",
+		"test:clear-logs": "bun scripts/test-clear-logs.ts",
 		"test:config-preflight": "bun scripts/test-config-preflight.ts",
 		"test:crawl-credentials": "bun scripts/test-crawl-credentials.ts",
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
@@ -190,6 +191,7 @@
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
+		"test:workspace-role-predicate": "bun scripts/test-workspace-role-predicate.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-compression": "bun scripts/verify-compression.ts",
 		"verify-minification": "bun scripts/verify-minification.ts",

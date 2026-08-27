@@ -1,6 +1,7 @@
 import { useSearchParams } from 'react-router';
 
 import { usePagination } from '@/hooks/usePagination';
+import { useLayoutStore } from '@/stores/layoutStore';
 
 /**
  * Combines URL-synced pagination with URL search parameter filters.
@@ -8,10 +9,13 @@ import { usePagination } from '@/hooks/usePagination';
  * Provides a `setFilter` callback that updates a URL param and resets
  * pagination to page 1 (so stale page offsets don't persist after filtering).
  *
- * @param pageSize  Default page size passed to `usePagination`.
+ * @param pageSize  Default page size passed to `usePagination`. Omit it to honour the signed-in
+ *   user's rows-per-page preference; pass a number only where the page needs a fixed size
+ *   regardless of that preference.
  */
-function useUrlFilters(pageSize = 20) {
-	const pagination = usePagination(pageSize, true);
+function useUrlFilters(pageSize?: number) {
+	const itemsPerPage = useLayoutStore((s) => s.itemsPerPage);
+	const pagination = usePagination(pageSize ?? itemsPerPage, true);
 	const [searchParams, setSearchParams] = useSearchParams();
 
 	/** Read a filter value from URL, falling back to `defaultValue`. */
