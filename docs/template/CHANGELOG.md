@@ -3,6 +3,36 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.44.1] - 2026-08-27
+
+Patch release. Two fixes carried back from the fleet dance, where they were found in a derived
+application and traced to files the template owns. A rejected request no longer writes the payload it
+refused into the debug log, and a freshly generated application now gets its own ports throughout the
+production compose file instead of inheriting the template's.
+
+### Fixed
+
+- A generated application's `docker-compose.production.yml` carries its own ports in every
+  position. Three port references were left at the template's values: the `FRONTEND_PORT` and
+  `BACKEND_PORT` defaults written inside the interpolated `${VAR:-NNNN}` syntax, and the two
+  header comments that document what each variable falls back to. A new application therefore
+  inherited 3330 and 3331 as its production compose defaults. Six of the ten applications in the
+  fleet still advertise the template's ports in that header and four had them corrected by hand.
+- `check:drift` reports a stale port in those header comments instead of reading agreement where
+  there was none. The branding normalizer had no pattern for a port written as prose rather than
+  after a separator, so an application that never updated the header normalized to the same literal
+  the template does and compared equal. Both sides now normalize to a placeholder, and a header left
+  at the template's ports is reported as drift.
+
+### Security
+
+- The debug log of a validation failure no longer contains the payload the caller submitted. v3.44.0
+  stopped the rejection response from echoing it, but the same Elysia-built message was still written
+  to the debug log, so a rejected `/auth/login` recorded the plaintext password it had just refused.
+  Both sinks now share one description that names the failing property and what the schema wanted,
+  and nothing that was sent. pino's `redact` cannot cover this on its own: it matches object paths,
+  and the password was inside a message string.
+
 ## [3.44.0] - 2026-08-26
 
 Minor release. Part B of the fleet dance tested all ten derived applications and clustered what

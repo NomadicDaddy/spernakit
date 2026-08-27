@@ -131,6 +131,26 @@ export function normalizeBranding(
 		new RegExp(`falls back to ${escapeRegex(values.frontendPort)}`, 'g'),
 		'falls back to {{FRONTEND_PORT}}',
 	);
+	// Port in the docker-compose header comment documenting each env var's default:
+	// "FRONTEND_PORT   - Nginx listen port, e.g. NNNN (default: NNNN)". The FRONTEND_PORT[=:-]
+	// pattern above cannot reach it, because the port sits after prose rather than after the
+	// separator. Without this, an app whose header still advertises the template's ports
+	// normalizes to the same literal the template does and compares equal, so a stale header is
+	// invisible to drift instead of being reported.
+	result = result.replace(
+		new RegExp(
+			`e\\.g\\. ${escapeRegex(values.frontendPort)} \\(default: ${escapeRegex(values.frontendPort)}\\)`,
+			'g',
+		),
+		'e.g. {{FRONTEND_PORT}} (default: {{FRONTEND_PORT}})',
+	);
+	result = result.replace(
+		new RegExp(
+			`e\\.g\\. ${escapeRegex(values.backendPort)} \\(default: ${escapeRegex(values.backendPort)}\\)`,
+			'g',
+		),
+		'e.g. {{BACKEND_PORT}} (default: {{BACKEND_PORT}})',
+	);
 
 	return result;
 }
