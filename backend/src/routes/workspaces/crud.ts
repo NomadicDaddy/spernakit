@@ -14,12 +14,20 @@ import {
 	broadcastCrudToAdmins,
 	broadcastCrudToWorkspace,
 } from '../../services/websocketService.ts';
-import { create, getById, list, softDelete, update } from '../../services/workspaceService.ts';
+import {
+	create,
+	getById,
+	isDefaultWorkspace,
+	list,
+	softDelete,
+	update,
+} from '../../services/workspaceService.ts';
 import { dataResponse, paginatedResponse, successResponse } from '../../utils/apiResponse.ts';
 import {
 	conflictError,
 	isUniqueConstraintError,
 	notFoundError,
+	RESOURCE_ERROR_CODES,
 } from '../../utils/errorResponse.ts';
 import {
 	createWorkspaceDocs,
@@ -107,6 +115,14 @@ function handleDeleteWorkspace({ params, set, user }: DeleteWorkspaceContext) {
 	const ctx = requireWorkspaceAdmin(user, params.id, set);
 	if (!ctx.ok) return ctx.error;
 	const id = params.id;
+
+	if (isDefaultWorkspace(id)) {
+		set.status = HTTP_STATUS.CONFLICT;
+		return conflictError(
+			'The default workspace cannot be deleted. New accounts are joined to it when they register.',
+			RESOURCE_ERROR_CODES.RESOURCE_PROTECTED,
+		);
+	}
 
 	const deleted = softDelete(id, ctx.authUser.id);
 	if (!deleted) {

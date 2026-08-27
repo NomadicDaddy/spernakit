@@ -92,7 +92,7 @@ const DASHBOARD_TEMPLATES: Record<string, DashboardExport> = {
 				row: 0,
 				title: 'Request Count',
 			}),
-			createWidget('health_status', { col: 9, row: 0, title: 'System Health' }),
+			createWidget('health_status', { col: 9, row: 0, title: 'System Health', width: 3 }),
 			createWidget('line_chart', {
 				col: 0,
 				metricType: 'cpu_usage',

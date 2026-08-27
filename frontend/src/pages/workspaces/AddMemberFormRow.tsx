@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
 import type { User } from '@/api/types';
 
@@ -25,6 +25,7 @@ function AddMemberFormRow({
 	onUpdateForm,
 }: AddMemberFormRowProps) {
 	const [pickerUser, setPickerUser] = useState<null | User>(null);
+	const userLabelId = useId();
 
 	// Derive the effective selection from the form state so external resets
 	// (e.g. parent clearing form.userId after a successful add) clear the picker.
@@ -37,7 +38,14 @@ function AddMemberFormRow({
 
 	return (
 		<>
-			<Label className="sr-only" htmlFor="addMemberUser">
+			{/*
+			 * Named through `aria-labelledby` on the picker rather than `htmlFor`. This pointed
+			 * at "addMemberUser", an id nothing on the page carried: `UserPicker` renders a Radix
+			 * trigger with no id of its own, so the association resolved to nothing and the only
+			 * label on the field was inert. `RoleSelector` beside it takes an `aria-label` for the
+			 * same reason.
+			 */}
+			<Label className="sr-only" id={userLabelId}>
 				User
 			</Label>
 			{/*
@@ -54,6 +62,7 @@ function AddMemberFormRow({
 			<div className="flex flex-col gap-2 px-3 sm:flex-row sm:gap-3">
 				<UserPicker
 					existingMemberIds={existingMemberIds}
+					labelledBy={userLabelId}
 					onSelect={handleSelect}
 					selectedUser={selectedUser}
 				/>

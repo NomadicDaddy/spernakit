@@ -29,6 +29,7 @@ function PreferencesTab() {
 	const containerWidth = useLayoutStore((s) => s.containerWidth);
 	const setContainerWidth = useLayoutStore((s) => s.setContainerWidth);
 	const setDensity = useLayoutStore((s) => s.setDensity);
+	const setItemsPerPage = useLayoutStore((s) => s.setItemsPerPage);
 
 	const { data: prefsData, isLoading: prefsLoading } = useQuery({
 		queryFn: getNotificationPreferences,
@@ -52,6 +53,7 @@ function PreferencesTab() {
 		setAppTheme,
 		setContainerWidth,
 		setDensity,
+		setItemsPerPage,
 		setLayoutMode,
 		setSidebarCollapsed,
 		setThemeMode,

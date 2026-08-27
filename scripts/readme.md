@@ -171,8 +171,13 @@ If you run scripts in a derived application repo, ensure:
 ### `clear-logs.ts`
 
 - **Purpose**
-    - Removes all `.log` and `.pid` files from the `logs/` directory.
-    - Used by smoke:dev to ensure a clean slate before starting services.
+    - Removes the `logs/` files this repository writes: the backend and frontend `.log`,
+      `.error.log` and `.pid` files with their rotated forms, plus every `logs/` target named by a
+      `logFile` in `scripts/smoke.json`.
+    - Used by smoke:dev, smoke:reset and smoke:screenshots to give the services they start a clean
+      slate.
+    - Leaves anything else in `logs/` alone and names what it kept, so a gate transcript redirected
+      there survives the run.
 - **Run**
     - `bun scripts/clear-logs.ts`
 

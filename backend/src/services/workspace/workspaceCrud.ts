@@ -7,6 +7,7 @@ import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorRe
 import {
 	findActive,
 	getById,
+	isDefaultWorkspace,
 	toRecord,
 	type WorkspaceRecord,
 	type WorkspaceSettings,
@@ -109,12 +110,20 @@ function update(id: number, input: UpdateInput): null | WorkspaceRecord {
 /**
  * Soft-delete a workspace.
  *
+ * Refuses to delete the default workspace. New accounts are joined to it by
+ * `getDefaultWorkspaceId()` during self-registration and OAuth sign-up, and
+ * deleting it used to be unrecoverable: soft-deleted rows keep their slug in
+ * the unique index, so the slug "default" can never be taken again and nothing
+ * outside the seed ever writes `isDefault`. Every subsequent registration then
+ * silently produced a user with no workspace membership at all.
+ *
  * @param id - Workspace ID
  * @param deletedBy - User performing deletion
- * @returns True if deleted
+ * @returns True if deleted, false if not found or the workspace is the default
  */
 function softDelete(id: number, deletedBy: number): boolean {
 	if (!findActive(id)) return false;
+	if (isDefaultWorkspace(id)) return false;
 
 	const db = getDb();
 	db.update(workspaces)

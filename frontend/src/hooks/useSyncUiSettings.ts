@@ -15,6 +15,7 @@ interface UiSettingsSetters {
 	setAppTheme: (theme: AppTheme) => void;
 	setContainerWidth: (width: ContainerWidth) => void;
 	setDensity: (density: Density) => void;
+	setItemsPerPage: (count: number) => void;
 	setLayoutMode: (mode: LayoutMode) => void;
 	setSidebarCollapsed: (collapsed: boolean) => void;
 	setThemeMode: (mode: ThemeMode) => void;
@@ -35,6 +36,7 @@ function syncUiSettingsToStores(settings: UserUiSettings, setters: UiSettingsSet
 	if (settings.layoutMode !== undefined) setters.setLayoutMode(settings.layoutMode);
 	if (settings.containerWidth !== undefined) setters.setContainerWidth(settings.containerWidth);
 	if (settings.density !== undefined) setters.setDensity(settings.density);
+	if (settings.itemsPerPage !== undefined) setters.setItemsPerPage(settings.itemsPerPage);
 	if (settings.sidebarCollapsed !== undefined)
 		setters.setSidebarCollapsed(settings.sidebarCollapsed);
 }
@@ -52,6 +54,7 @@ function useSyncUiSettings() {
 	const setLayoutMode = useLayoutStore((s) => s.setLayoutModeFromSync);
 	const setContainerWidth = useLayoutStore((s) => s.setContainerWidth);
 	const setDensity = useLayoutStore((s) => s.setDensity);
+	const setItemsPerPage = useLayoutStore((s) => s.setItemsPerPage);
 
 	const {
 		data: uiSettings,
@@ -71,6 +74,7 @@ function useSyncUiSettings() {
 				setAppTheme,
 				setContainerWidth,
 				setDensity,
+				setItemsPerPage,
 				setLayoutMode,
 				setSidebarCollapsed,
 				setThemeMode,

@@ -26,8 +26,8 @@ const settingsUserRoutes = new Elysia({
 				description:
 					'Returns UI settings for the authenticated user. Settings include theme, ' +
 					'appTheme, layoutMode, containerWidth, density, sidebarCollapsed, timezone, ' +
-					'dateFormat, timeFormat, and language. Merges user settings with defaults ' +
-					'if not set. Requires authentication.',
+					'dateFormat, timeFormat, itemsPerPage, and language. Merges user settings ' +
+					'with defaults if not set. Requires authentication.',
 				responses: {
 					'200': {
 						content: {
@@ -38,6 +38,7 @@ const settingsUserRoutes = new Elysia({
 										containerWidth: 'centered',
 										dateFormat: 'MM/DD/YYYY',
 										density: 'comfortable',
+										itemsPerPage: 25,
 										language: 'en',
 										layoutMode: 'sidebar',
 										sidebarCollapsed: false,
@@ -74,6 +75,13 @@ const settingsUserRoutes = new Elysia({
 				density: t.Optional(
 					t.Union([t.Literal('compact'), t.Literal('comfortable'), t.Literal('relaxed')]),
 				),
+				/*
+				 * Elysia strips any body field the schema does not declare, so an omission here is
+				 * silent: the client PUTs itemsPerPage, the request succeeds, and the value never
+				 * reaches updateUserUiSettings. The bound matches the choices the Preferences page
+				 * offers.
+				 */
+				itemsPerPage: t.Optional(t.Integer({ maximum: 100, minimum: 1 })),
 				language: t.Optional(t.String({ maxLength: 10 })),
 				layoutMode: t.Optional(t.Union([t.Literal('sidebar'), t.Literal('topbar')])),
 				sidebarCollapsed: t.Optional(t.Boolean()),
@@ -98,6 +106,7 @@ const settingsUserRoutes = new Elysia({
 										containerWidth: 'full-width',
 										dateFormat: 'DD/MM/YYYY',
 										density: 'compact',
+										itemsPerPage: 50,
 										language: 'en',
 										layoutMode: 'topbar',
 										sidebarCollapsed: true,

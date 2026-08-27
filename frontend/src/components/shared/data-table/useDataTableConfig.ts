@@ -9,6 +9,8 @@ import {
 } from '@tanstack/react-table';
 import { useEffect, useRef, useState } from 'react';
 
+import { useLayoutStore } from '@/stores/layoutStore';
+
 import type { DataTablePagination, DataTableVirtualize } from './types';
 
 import { dataTableFeatures, type DataTableFeatures, UNSIZED_COLUMN } from './features';
@@ -49,6 +51,7 @@ function useDataTableConfig<TData extends RowData>({
 	selectionResetToken,
 	virtualize,
 }: UseDataTableConfigOptions<TData>) {
+	const itemsPerPage = useLayoutStore((s) => s.itemsPerPage);
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
@@ -130,14 +133,18 @@ function useDataTableConfig<TData extends RowData>({
 		features: dataTableFeatures,
 		getRowId: rowSelectionKey,
 		/*
-		 * 20, not TanStack's default of 10. Nothing here ever set a page size, so every
-		 * client-paged table in the app used the library default while the app's own
-		 * server-paged convention (`pageSize = 20` in hooks/useUrlFilters.ts) said 20 —
+		 * The signed-in user's rows-per-page preference, not TanStack's default of 10. Nothing
+		 * here ever set a page size, so every client-paged table used the library default —
 		 * /settings/scheduled-tasks held 13 rows, showed 10, and pushed three behind a Next
-		 * click with ~450px of empty canvas below the table. Ignored under server pagination,
-		 * where `state.pagination` below supplies the size.
+		 * click with ~450px of empty canvas below the table. Server-paged tables read the same
+		 * preference through hooks/useUrlFilters.ts, so the two halves of the app agree.
+		 *
+		 * `initialState` is read once per mount, which is enough: the store is persisted, so it
+		 * holds the right value at first paint, and a table is never mounted while the user is
+		 * on the Preferences page changing it. Ignored under server pagination, where
+		 * `state.pagination` below supplies the size.
 		 */
-		initialState: { pagination: { pageIndex: 0, pageSize: 20 } },
+		initialState: { pagination: { pageIndex: 0, pageSize: itemsPerPage } },
 		manualPagination: isServerPagination || isVirtual,
 		manualSorting: isServerSorting,
 		onColumnFiltersChange: setColumnFilters,

@@ -2,6 +2,7 @@ import type { OAuthProvider } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { signTokenPair } from '../../plugins/auth.ts';
+import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { isRateLimitBypassed } from '../../plugins/rateLimit/index.ts';
 import {
 	getMfaStatus,
@@ -81,6 +82,10 @@ async function processOAuthCallbackResult(
 		id: result.user.id,
 		role: validateUserRole(result.user.role),
 	});
+	// Publish the identity for the audit plugin: the auth cookie goes out on the
+	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
+	publishResolvedUser(request, { id: result.user.id, role: validateUserRole(result.user.role) });
+
 	const loginIp = getClientIp(request);
 	recordSuccessfulLogin(result.user.id, loginIp);
 

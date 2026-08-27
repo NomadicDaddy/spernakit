@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useDeferredValue, useState } from 'react';
+import { useDeferredValue, useId, useState } from 'react';
 
 import type { User } from '@/api/types';
 
@@ -22,12 +22,26 @@ const USER_PICKER_LIMIT = 20;
 
 interface UserPickerProps {
 	existingMemberIds: Set<number>;
+	/**
+	 * Id of the element that names this picker — usually the field's visible `Label`.
+	 *
+	 * `<Label htmlFor>` cannot do the job alone. The trigger is a `<button>`, so a label
+	 * pointed at it replaces its text as the accessible name — and that text is where the
+	 * current selection lives, so the control would announce "User" and never say who is
+	 * selected. Naming it from the label AND its own caption gives
+	 * "User username (email@address)", the shape `FileUpload` already uses for its drop
+	 * zone. The call site that prompted this pointed `htmlFor` at an id nothing rendered,
+	 * so the label named nothing at all and the picker was left with whatever its caption
+	 * happened to say.
+	 */
+	labelledBy?: string;
 	onSelect: (user: null | User) => void;
 	selectedUser: null | User;
 }
 
-function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerProps) {
+function UserPicker({ existingMemberIds, labelledBy, onSelect, selectedUser }: UserPickerProps) {
 	const [open, setOpen] = useState(false);
+	const captionId = useId();
 	const [search, setSearch] = useState('');
 	const deferredSearch = useDeferredValue(search);
 
@@ -56,10 +70,11 @@ function UserPicker({ existingMemberIds, onSelect, selectedUser }: UserPickerPro
 				 */}
 				<Button
 					aria-expanded={open}
+					aria-labelledby={labelledBy ? `${labelledBy} ${captionId}` : undefined}
 					className="min-w-0 flex-1 justify-between"
 					role="combobox"
 					variant="outline">
-					<span className="truncate">
+					<span className="truncate" id={captionId}>
 						{selectedUser
 							? `${selectedUser.username} (${selectedUser.email})`
 							: 'Select a user…'}

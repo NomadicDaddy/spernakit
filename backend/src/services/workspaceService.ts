@@ -14,4 +14,4 @@ export {
 	removeMember,
 	updateMemberRole,
 } from './workspace/workspaceMemberService.ts';
-export { getById, list } from './workspace/workspaceQueries.ts';
+export { getById, isDefaultWorkspace, list } from './workspace/workspaceQueries.ts';

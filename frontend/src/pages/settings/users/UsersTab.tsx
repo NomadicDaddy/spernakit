@@ -35,7 +35,7 @@ type DialogState =
 	| null;
 
 function UsersTab() {
-	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const search = getFilter('search');
 	const roleFilter = getFilter('role');
 	const [selectedRows, setSelectedRows] = useState<User[]>([]);

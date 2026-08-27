@@ -34,7 +34,7 @@ const SEARCH_DEBOUNCE_MS = 400;
 const METHOD_FILTERS = ['DELETE', 'PATCH', 'POST', 'PUT'];
 
 function AuditLogsTab() {
-	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const search = getFilter('search');
 	const method = getFilter('method');
 	const [searchInput, setSearchInput] = useState(search);

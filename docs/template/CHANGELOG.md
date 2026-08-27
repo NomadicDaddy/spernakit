@@ -3,6 +3,81 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.44.0] - 2026-08-26
+
+Minor release. Part B of the fleet dance tested all ten derived applications and clustered what
+the testers found; eighteen of those clusters traced to files the template owns and every
+application carries byte-identical, so they are fixed once here. Alongside them, the log cleaner
+stopped deleting files it does not write, and the workspace guard gained a way to be asked a
+question rather than made to answer one.
+
+### Added
+
+- `hasWorkspaceRole(userId, workspaceId, minimumRole)` in
+  `backend/src/guards/workspaceAccess.ts` answers whether a user holds at least a workspace role,
+  and is now the one place that decides what holding the role means. It takes no guard context,
+  writes no status, and constructs no response body. `requireWorkspaceRole` is expressed in terms
+  of it and contributes only the rejection, so a capability check and a rejection cannot answer
+  the same question differently. Callers that reported a capability had been invoking the guard
+  against a throwaway `{ set: {} }` context and testing the result for undefined, which built and
+  discarded an ErrorResponse on every read and would have become a real side effect the moment the
+  guard gained logging, auditing, lockout or throwing behaviour. `test:workspace-role-predicate`
+  holds the decision matrix, guard and predicate agreement on every case, the absence of a side
+  effect, and the absence of any remaining guard-as-predicate call site under `backend/src`.
+
+### Fixed
+
+- `/auth/login` no longer returns the caller's plaintext password. Elysia puts the whole
+  submitted payload in the validation error message and the development-mode handler returned it
+  verbatim, so a rejected login answered with the password it had just refused. The message now
+  names the failing property and what the schema wanted, and nothing that was sent.
+- A successful login writes an audit row with the user on it. The row was written before the
+  request had resolved a user, so every login was recorded with no actor.
+- Audit search matches the actor again, through a subquery rather than a join, because the
+  companion count query selects from `auditLogs` alone. Searching for a person had returned
+  nothing with that person's rows on screen.
+- The default workspace can no longer be deleted. Deleting it left the application with no
+  workspace to fall back to, no way to make another default, and every new user assigned to a
+  workspace that no longer existed. The refusal carries a new `RESOURCE_PROTECTED` code.
+- An `X-Workspace-ID` header that cannot be read is answered as invalid rather than missing. Null
+  meant "no workspace selected", so a SYSOP sending a malformed id silently got the
+  cross-workspace view and `abc` was answered with "Missing X-Workspace-ID header".
+- `PUT /users/settings` accepts `itemsPerPage`, and the paginated tables read it. The preference
+  was stored, synced and editable with no consumer: the update schema stripped it on the way in
+  and every paginated surface hardcoded 20.
+- The seeded system overview widget stays inside its grid cell. It shipped with no width and
+  overflowed the grid on first load.
+- The bug report dialog keeps its submit button on screen at common viewport heights and keeps its
+  draft between opens.
+- Bug triage descriptions are readable without selecting the text, through a detail dialog rather
+  than a single clipped cell.
+- A route above the visitor's role explains itself instead of redirecting to the dashboard with no
+  explanation.
+- Dashboard resize clamping works in both directions. Narrowing the window wrote
+  react-grid-layout's display clamp back into the dashboard's own state, so widening re-rendered
+  the collapsed layout.
+- A rejected file upload says why. The server 400 is the one status `showErrorToast` leaves to the
+  caller, and that mutation had no `onError`, so the upload failed silently.
+- The workspace member picker has a label. Its `Label` pointed at an id nothing rendered, leaving
+  the control unnamed.
+- The data table row summary wraps onto its own line at phone width rather than truncating. At
+  390px it had 73px for 112px of text and rendered "Showing...".
+- Sub-route titles come from the tab strips rather than the URL segment, so `/profile/api-keys`
+  announces itself as "API Keys" and `/settings/bugs` as "Bug Reports". The strips moved to
+  data-only `settingsTabs.ts` and `profileTabs.ts`, read by `useRouteAnnouncement.ts`.
+- Analytics counts pluralise. Three places rendered "1 events" and "Broadcast sent to 1 users".
+- The files list shows a file type rather than a MIME subtype, so `text/plain` no longer reads
+  "plain".
+- `clear-logs.ts` removes only the logs this repository writes. It had removed every `*.log` and
+  `*.pid` under `logs/`, and both `smoke:reset` and `smoke:screenshots` run it as an early step,
+  so an operator who redirected a gate transcript into `logs/` lost it mid-run: on Windows the
+  writer keeps its handle on the unlinked file, so the redirect goes on succeeding while the
+  transcript becomes unrecoverable. It now removes the backend and frontend `.log`, `.error.log`
+  and `.pid` files with their rotated and generation-suffixed forms, plus every `logs/` target
+  named by a `logFile` in `scripts/smoke.json`, and names what it kept on the way out. An
+  unparseable runbook clears the runtime files and keeps the rest. `test:clear-logs` fails against
+  the previous version.
+
 ## [3.43.3] - 2026-08-26
 
 Patch release. A fleet dance swept ten derived applications and routed four template defects

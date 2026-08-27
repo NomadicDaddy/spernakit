@@ -133,7 +133,7 @@ function NotificationDeleteDialogs({
 }
 
 function NotificationsPage() {
-	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters(20);
+	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
 
 	const readParam = getFilter('read', 'all');

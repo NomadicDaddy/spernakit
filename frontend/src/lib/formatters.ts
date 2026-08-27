@@ -58,4 +58,43 @@ function formatScheduleExpression(value: string): string {
 	return `${amount}${unit}`;
 }
 
-export { formatBytes, formatScheduleExpression, formatTime };
+/**
+ * Human labels for the file types the server accepts (`storage.allowedMimeTypes`).
+ *
+ * Every other entry is covered by the fallback in `formatMimeType`; these are the ones a
+ * mechanical reading of the MIME type gets wrong or ugly.
+ */
+const MIME_TYPE_LABELS: Record<string, string> = {
+	'application/json': 'JSON',
+	'application/pdf': 'PDF',
+	'image/gif': 'GIF',
+	'image/jpeg': 'JPEG',
+	'image/png': 'PNG',
+	'image/webp': 'WebP',
+	'text/csv': 'CSV',
+	'text/plain': 'Text',
+};
+
+/**
+ * Turn a MIME type into something a table cell can show.
+ *
+ * The files table used to print `mimeType.split('/')[1]` raw, so text/plain read "plain" and
+ * anything vendor-prefixed filled the column with its whole subtype —
+ * "vnd.openxmlformats-officedocument.wordprocessingml.document" in a cell sized for a word.
+ * Unmapped types fall back to the last dotted segment of the subtype, without any `+suffix`,
+ * upper-cased: still mechanical, but short and recognisable.
+ *
+ * @param mimeType - Full MIME type, e.g. `image/png`
+ * @returns Display label, e.g. `PNG`
+ */
+function formatMimeType(mimeType: string): string {
+	const mapped = MIME_TYPE_LABELS[mimeType];
+	if (mapped) return mapped;
+
+	const subtype = mimeType.split('/')[1];
+	if (!subtype) return 'File';
+	const withoutSuffix = subtype.split('+')[0] ?? subtype;
+	return (withoutSuffix.split('.').at(-1) ?? withoutSuffix).toUpperCase();
+}
+
+export { formatBytes, formatMimeType, formatScheduleExpression, formatTime };

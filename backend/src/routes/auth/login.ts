@@ -7,6 +7,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { PASSWORD_MAX_LENGTH } from '../../constants/validation.ts';
 import { authPlugin, parseCookies, signTokenPair, verifyAccessToken } from '../../plugins/auth.ts';
+import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { csrfPlugin, generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import {
 	getMfaStatus,
@@ -106,6 +107,10 @@ async function handleLogin({ body, request, set }: LoginContext) {
 	const csrfToken = await generateAndStoreCsrfToken(result.payload.id);
 
 	setAuthCookies(set, config.security, tokens, request);
+
+	// Publish the identity for the audit plugin: the auth cookie goes out on the
+	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
+	publishResolvedUser(request, result.payload);
 
 	if (csrfToken) {
 		set.headers['X-CSRF-Token'] = csrfToken;

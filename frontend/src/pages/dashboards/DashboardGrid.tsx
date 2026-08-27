@@ -37,7 +37,6 @@ interface DashboardGridData {
 interface DashboardGridHandlers {
 	onAddWidgetClick: () => void;
 	onGestureStart: (layout: Layout) => void;
-	onLayoutChange: (layout: Layout) => void;
 	onLayoutEdit: (layout: Layout) => void;
 	onRemoveWidget: (widgetId: number) => void;
 }
@@ -77,8 +76,7 @@ function getColumnCount(width: number) {
 
 export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 	const { canMutate, dashboard, editMode } = data;
-	const { onAddWidgetClick, onGestureStart, onLayoutChange, onLayoutEdit, onRemoveWidget } =
-		handlers;
+	const { onAddWidgetClick, onGestureStart, onLayoutEdit, onRemoveWidget } = handlers;
 	const { containerRef, currentLayout, width } = layout;
 	const [removeWidgetId, setRemoveWidgetId] = useState<null | number>(null);
 	const columnCount = getColumnCount(width);
@@ -91,9 +89,11 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 	 * every key keeps what is on screen the thing the user is arranging.
 	 *
 	 * What that reflow produces is still not a saveable arrangement — six columns cannot express a
-	 * twelve-column layout — so it arrives through `onLayoutChange`, which only redraws. Only the
-	 * drag, resize and nudge callbacks below reach `onLayoutEdit`, and only what they touch is
-	 * persisted.
+	 * twelve-column layout — and it is deliberately not reported back: `onLayoutChange` is left
+	 * unwired. It used to be wired, and the clamped layout it handed back overwrote the stored one
+	 * above, so widening the window again re-rendered from six-column widths instead of the
+	 * arrangement the user had made. Only the drag, resize and nudge callbacks below reach
+	 * `onLayoutEdit`, and only what they touch is persisted.
 	 */
 	const layouts = {
 		lg: currentLayout,
@@ -186,7 +186,6 @@ export function DashboardGrid({ data, handlers, layout }: DashboardGridProps) {
 							layouts={layouts}
 							onDragStart={onGestureStart}
 							onDragStop={onLayoutEdit}
-							onLayoutChange={onLayoutChange}
 							onResizeStart={onGestureStart}
 							onResizeStop={onLayoutEdit}
 							resizeConfig={{ enabled: editMode }}

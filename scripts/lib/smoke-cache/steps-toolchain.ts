@@ -68,6 +68,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: LINT_GLOBS,
 	},
+	// The fixture is self-contained: it copies clear-logs.ts into a temp tree and writes its own
+	// runbook there, so the real scripts/smoke.json is not part of this step's world.
+	'test:clear-logs': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['scripts/clear-logs.ts', 'scripts/test-clear-logs.ts'],
+	},
 	'test:config-preflight': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -138,6 +144,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:shared-core-write': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/shared-core/**/*.ts', 'scripts/test-shared-core-write.ts'],
+	},
+	// Same in-process temp-DB shape as `test:impersonation-audit`: it applies the migrations and
+	// exercises the guard module, so its world is the backend source plus the gate script itself.
+	'test:workspace-role-predicate': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-workspace-role-predicate.ts'],
 	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,
