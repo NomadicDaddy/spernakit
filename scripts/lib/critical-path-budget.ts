@@ -17,8 +17,13 @@
  * built on top of the template, so the template's number says nothing about a derived app and
  * enforcing it would be a verdict from the wrong bundle. The critical path is dominated by the
  * shared framework runtime every derived app inherits unchanged, so the template's number is a
- * meaningful starting ceiling: an app that has not regenerated is still measured against a limit
- * that means something, and enforcing it is the point rather than a false signal.
+ * usable starting ceiling for an app that has never regenerated.
+ *
+ * A starting ceiling is not a permanent one, and for a long time nothing told the two apart. The
+ * template's own recorded gzip limit sits about a kilobyte above the template's own measurement,
+ * so a derived app that inherited it was graded against a line leaving it almost no room to add
+ * code. scripts/init.ts now regenerates the budget from the new app's first build, so an app is
+ * measured against its own number from its first commit onward.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -46,10 +51,16 @@ export interface CriticalPathInput {
 }
 
 /**
- * Headroom applied to BOTH limits when writing a new budget, so hash and chunk churn between two
+ * Slack added to BOTH limits when writing a new budget, so hash and chunk churn between two
  * builds of the same source does not flap the gate.
+ *
+ * This is a flat byte pad rather than a percentage because churn is a byte-count phenomenon: two
+ * builds of one unchanged tree differ by tens of bytes as content hashes reshuffle inside the
+ * import graph. A percentage instead scales with the shared framework runtime, which is the part
+ * that does not churn. Ten percent of a 170 KB critical path granted about 17 KB of slack for a
+ * job that needs a few hundred bytes, and a ceiling carrying that much room stops ratcheting.
  */
-export const BUDGET_HEADROOM = 1.1;
+export const BUDGET_PAD_BYTES = 2048;
 
 const BUDGET_LABEL = 'scripts/critical-path-budget.json';
 const REGENERATE_COMMAND = 'bun scripts/check-critical-path.ts --update-budget';
@@ -67,17 +78,16 @@ export function kb(bytes: number): string {
  */
 export function writeCriticalPathBudget(input: CriticalPathInput): BudgetResult {
 	const budget: CriticalPathBudget = {
-		maxCriticalPathBrotliBytes: Math.ceil(input.totalBrotliBytes * BUDGET_HEADROOM),
-		maxCriticalPathGzipJsBytes: Math.ceil(input.totalGzipJsBytes * BUDGET_HEADROOM),
+		maxCriticalPathBrotliBytes: input.totalBrotliBytes + BUDGET_PAD_BYTES,
+		maxCriticalPathGzipJsBytes: input.totalGzipJsBytes + BUDGET_PAD_BYTES,
 	};
 	writeFileSync(input.budgetPath, `${JSON.stringify(budget, null, '\t')}\n`, 'utf-8');
-	const headroomPercent = Math.round((BUDGET_HEADROOM - 1) * 100);
 	return {
 		lines: [
 			{
 				color: 'cyan',
 				text:
-					`\nBudget written to ${BUDGET_LABEL} with +${headroomPercent}% headroom: ` +
+					`\nBudget written to ${BUDGET_LABEL} with a ${kb(BUDGET_PAD_BYTES)} churn pad: ` +
 					`${kb(budget.maxCriticalPathBrotliBytes)} brotli critical path ` +
 					`(measured ${kb(input.totalBrotliBytes)}), ` +
 					`${kb(budget.maxCriticalPathGzipJsBytes)} gzip JS ` +

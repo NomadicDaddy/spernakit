@@ -216,6 +216,14 @@ async function main(): Promise<void> {
 		// so the index holds the text the gate grades and the commit records exactly that.
 		run(['git', 'init'], target);
 		run(['git', 'config', 'core.hooksPath', '.githooks'], target);
+		// The new app records its own critical-path budget before any gate grades it. The budget
+		// file is app-owned generated state, so a fresh app copies the template's numbers and, until
+		// now, never replaced them. The template's recorded gzip ceiling sits about a kilobyte above
+		// the template's own measurement, which left every derived app roughly a kilobyte of room to
+		// grow before a gate it never set went red. Building here costs one frontend build on top of
+		// the one smoke:qc runs below, and buys a ceiling measured from this app.
+		run(['bun', 'run', 'build:frontend'], target);
+		run(['bun', 'scripts/check-critical-path.ts', '--update-budget'], target);
 		run(['bun', 'run', 'format'], target);
 		run(['git', 'add', '-A'], target);
 		chmodHooks(target);

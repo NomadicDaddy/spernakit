@@ -128,8 +128,8 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
 - The first load fetches 13 blocking assets rather than 6. This is a win under HTTP/2 multiplexing
   and better for cache granularity, but nginx listens on plain HTTP (TLS terminates at an external
   reverse proxy), so it assumes the operator's edge speaks HTTP/2 or better.
-- The budget carries 10% headroom to avoid hash-churn flapping, so it will not catch slow creep. The
-  structural checks have no such tolerance.
+- The budget carries a churn allowance so two builds of one unchanged tree do not flap the gate, so
+  it will not catch creep below that allowance. The structural checks have no such tolerance.
 - Critical-path JS fell from 194.3 KB to 169 KB gzip, meeting the 170 KB target from
   `frontend-bundle-optimization`. The gap was closed not by chunk tuning but by lazy-loading
   the consumers that forced sonner, cmdk, and page-only Radix primitives onto the critical
@@ -140,7 +140,15 @@ Constraints worth knowing when editing `frontend/vite.config.ts`:
 - After the refreshed Radix graph raised the result back above the target, the feature-gated
   bug-report form and mobile-only navigation drawer were deferred too. Radix Dialog now stays in
   its own lazy chunk, and the current critical path is 167.62 KiB gzip JavaScript. The gate measures
-  that value separately from the combined Brotli/CSS budget and enforces the fixed 170 KiB ceiling.
+  that value separately from the combined Brotli/CSS budget and enforces its own ceiling.
+
+> **2026-08-27 update (v3.44.2):** the churn allowance was 10% of the measurement and is now a flat
+> 2 KB. Two builds of one unchanged tree measured four bytes apart, so a percentage was granting
+> about 17 KB of slack for a job needing a few hundred bytes, and a ceiling with that much room in it
+> stops ratcheting. The gzip ceiling is also no longer the hand-set 170 KiB figure named above; both
+> limits are now generated from a measurement plus the pad. Separately, `scripts/init.ts` regenerates
+> the budget from a new application's own first build, so a derived application is graded against its
+> own number rather than the template's from its first commit onward.
 
 ## Related ADRs
 
