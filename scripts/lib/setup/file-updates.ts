@@ -134,10 +134,18 @@ export function updateDockerFiles(s: SetupSettings): void {
 
 	// start.sh reads the slug from defaults.json.
 
+	// The two header comments document each env var's default and are the file's only port
+	// references that are prose rather than syntax, so they need their own keys. Every derived app
+	// through v3.44.0 shipped them still reading 3330/3331 and six of them were corrected by hand.
 	updateFile('docker-compose.production.yml', {
 		'- BACKEND_PORT=3331': `- BACKEND_PORT=${s.backendPort}`,
 		'- FRONTEND_PORT=3330': `- FRONTEND_PORT=${s.frontendPort}`,
 		'APP_SLUG:-spernakit': `APP_SLUG:-${s.appSlug}`,
+		// Not covered by the '- BACKEND_PORT=3331' key above: in the file the port sits inside
+		// the interpolated default, which that key cannot match.
+		'BACKEND_PORT:-3331': `BACKEND_PORT:-${s.backendPort}`,
+		'e\\.g\\. 3330 \\(default: 3330\\)': `e.g. ${s.frontendPort} (default: ${s.frontendPort})`,
+		'e\\.g\\. 3331 \\(default: 3331\\)': `e.g. ${s.backendPort} (default: ${s.backendPort})`,
 		'FRONTEND_PORT:-3330': `FRONTEND_PORT:-${s.frontendPort}`,
 		'http://127\\.0\\.0\\.1:3330/api/v1/health': `http://127.0.0.1:${s.frontendPort}/api/v1/health`,
 		'services:\\r?\\n    spernakit:': `services:\n    ${s.appSlug}:`,
