@@ -3,6 +3,19 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.44.3] - 2026-08-27
+
+Patch release. Removes a branch of the drift normalizer that could no longer be reached. No
+behavior changes for a generated application.
+
+### Removed
+
+- `normalizeBranding` no longer special-cases `backend/src/test/health.test.ts`. The branch masked
+  the application slug in a `.toBe()` assertion so drift detection would not report it, but v3.28.2
+  deleted the file. The path is absent from `scripts/template-manifest.json`, so drift never asks
+  about it, nothing else under `scripts/` references it, and no application in the fleet still
+  carries the file.
+
 ## [3.44.2] - 2026-08-27
 
 Patch release. A generated application now records its own critical-path budget instead of
