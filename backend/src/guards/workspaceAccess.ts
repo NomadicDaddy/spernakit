@@ -118,8 +118,55 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
 }
 
 /**
+ * Answer whether a user holds at least `minimumRole` in a workspace.
+ *
+ * This is the read-only half of the workspace-role question, and the one place that decides what
+ * holding the role means. A route that reports a capability calls this; a route that rejects a
+ * request calls {@link requireWorkspaceRole}, which is built on it and adds only the rejection.
+ *
+ * It takes no guard context, writes no status, and constructs no response body. The alternative
+ * callers reached for before it existed was invoking the guard against a throwaway context and
+ * testing the result for undefined, which built and discarded an ErrorResponse on every
+ * capability read and would become a real side effect the moment the guard gained logging,
+ * auditing, lockout or throwing behaviour.
+ *
+ * The decision applies every rule the guard applies to it: the role is read fresh from the
+ * database rather than from JWT claims, a missing or deleted account is denied, a global SYSOP is
+ * granted without workspace membership, and a non-member is denied.
+ *
+ * @param userId - The user whose access is in question
+ * @param workspaceId - The workspace being asked about
+ * @param minimumRole - Minimum workspace role required (e.g. 'ADMIN', 'MANAGER')
+ * @returns True when the user holds at least the minimum workspace role
+ */
+function hasWorkspaceRole(
+	userId: number,
+	workspaceId: number,
+	minimumRole: WorkspaceMemberRole,
+): boolean {
+	// Verify role from DB to prevent stale JWT claims from granting workspace access after
+	// demotion. SYSOP bypasses workspace-level checks.
+	const freshStatus = getUserAuthStatus(userId);
+	if (!freshStatus || freshStatus.isDeleted) return false;
+	if (ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP) return true;
+
+	const memberRole = getMembershipRole(workspaceId, userId);
+	if (!memberRole) return false;
+
+	// validateWorkspaceRole throws on a role the hierarchy does not know. That is a data-integrity
+	// assertion about the row, not a decision about the request, and it is deliberately shared with
+	// the guard so a capability check and a rejection cannot disagree about a corrupt membership.
+	const userLevel = WORKSPACE_ROLE_HIERARCHY[validateWorkspaceRole(memberRole)] ?? 0;
+	return userLevel >= WORKSPACE_ROLE_HIERARCHY[minimumRole];
+}
+
+/**
  * Guard that checks the authenticated user has a minimum workspace-level role.
  * Global ADMIN/SYSOP users bypass the workspace role check.
+ *
+ * Expressed in terms of {@link hasWorkspaceRole}: the predicate decides whether the role is held,
+ * and this function adds the status write and the response body. Use it when a request must be
+ * rejected, and the predicate when a caller only needs the answer.
  *
  * @param minimumRole - Minimum workspace role required (e.g. 'ADMIN', 'MANAGER')
  * @returns Guard result with error or undefined if access is granted
@@ -132,22 +179,14 @@ function requireWorkspaceRole(
 	if (!result.ok) return result.response;
 	if (result.bypassRoleCheck) return undefined;
 
-	const memberRole = getMembershipRole(result.workspaceId, result.authUser.id);
+	if (hasWorkspaceRole(result.authUser.id, result.workspaceId, minimumRole)) return undefined;
 
-	if (!memberRole) {
-		ctx.set.status = HTTP_STATUS.FORBIDDEN;
-		return forbiddenError();
-	}
-
-	const userLevel = WORKSPACE_ROLE_HIERARCHY[validateWorkspaceRole(memberRole)] ?? 0;
-	const requiredLevel = WORKSPACE_ROLE_HIERARCHY[minimumRole];
-
-	if (userLevel < requiredLevel) {
-		ctx.set.status = HTTP_STATUS.FORBIDDEN;
-		return forbiddenError('Insufficient workspace permissions');
-	}
-
-	return undefined;
+	// The predicate has already denied; the remaining lookup only chooses how to say so. It costs
+	// one membership read on the rejection path and keeps a single owner for the grant decision.
+	ctx.set.status = HTTP_STATUS.FORBIDDEN;
+	return getMembershipRole(result.workspaceId, result.authUser.id)
+		? forbiddenError('Insufficient workspace permissions')
+		: forbiddenError();
 }
 
 /**
@@ -185,6 +224,7 @@ function canModifyWorkspaceRole(
 export {
 	canModifyWorkspaceRole,
 	getWorkspaceMemberRole,
+	hasWorkspaceRole,
 	requireSelectedWorkspaceAccess,
 	requireWorkspaceAccess,
 	requireWorkspaceRole,

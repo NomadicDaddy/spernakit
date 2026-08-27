@@ -139,6 +139,12 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/shared-core/**/*.ts', 'scripts/test-shared-core-write.ts'],
 	},
+	// Same in-process temp-DB shape as `test:impersonation-audit`: it applies the migrations and
+	// exercises the guard module, so its world is the backend source plus the gate script itself.
+	'test:workspace-role-predicate': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-workspace-role-predicate.ts'],
+	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,
 		globs: [

@@ -190,6 +190,7 @@
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
+		"test:workspace-role-predicate": "bun scripts/test-workspace-role-predicate.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
 		"verify-compression": "bun scripts/verify-compression.ts",
 		"verify-minification": "bun scripts/verify-minification.ts",
