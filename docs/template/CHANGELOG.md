@@ -3,6 +3,40 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.44.2] - 2026-08-27
+
+Patch release. A generated application now records its own critical-path budget instead of
+inheriting the template's, and the slack a regenerated budget writes is a fixed byte allowance
+rather than a share of the measurement.
+
+### Changed
+
+- `scripts/init.ts` builds the frontend and regenerates `scripts/critical-path-budget.json` from
+  that build before the initial commit. The budget file is application-owned generated state, so a
+  new application copied the template's numbers and then never replaced them. The template's
+  recorded gzip ceiling sat about a kilobyte above the template's own measurement, which left every
+  derived application roughly a kilobyte of room to grow before a gate it never set for itself went
+  red. Initialization now costs one extra frontend build and buys a ceiling measured from the
+  application it grades.
+- A regenerated critical-path budget adds a flat 2 KB churn pad to each limit instead of ten
+  percent. The pad exists so hash and chunk churn between two builds of the same source does not
+  flap the gate, and churn is a byte-count phenomenon: two builds of one unchanged tree measured
+  four bytes apart as content hashes reshuffled inside the import graph. A percentage instead scales
+  with the shared framework runtime, which is the part that does not churn, so ten percent of a
+  170 KB critical path granted about 17 KB of slack for a job that needs a few hundred bytes. A
+  ceiling carrying that much room stops ratcheting. The separate total-bundle budget keeps its
+  percentage, because total build size does scale with the application.
+- The template's own critical-path budget is regenerated under the new rule. The brotli ceiling
+  drops from 183620 to 169721 bytes. The JavaScript gzip ceiling moves the other way, from 174080 to
+  174948, because the old number was a hand-set 170 KiB ratchet rather than something measured.
+
+### Upgrade notes
+
+- An application upgrading to this release keeps whatever budget numbers it already has; nothing
+  rewrites them. To adopt a measured ceiling, run `bun scripts/check-critical-path.ts --update-budget`
+  after taking this version. Running it before the upgrade applies the old ten percent and writes a
+  ceiling roughly 17 KB looser than the new rule intends.
+
 ## [3.44.1] - 2026-08-27
 
 Patch release. Two fixes carried back from the fleet dance, where they were found in a derived

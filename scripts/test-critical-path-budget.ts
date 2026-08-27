@@ -28,7 +28,7 @@ import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import {
-	BUDGET_HEADROOM,
+	BUDGET_PAD_BYTES,
 	type BudgetResult,
 	type CriticalPathBudget,
 	evaluateCriticalPathBudget,
@@ -176,18 +176,38 @@ try {
 		'--update-budget must not carry the previous gzip limit forward',
 	);
 	assert(
-		regenerated['maxCriticalPathBrotliBytes'] === Math.ceil(measuredBrotli * BUDGET_HEADROOM) &&
-			regenerated['maxCriticalPathGzipJsBytes'] ===
-				Math.ceil(measuredGzipJs * BUDGET_HEADROOM),
-		`Both limits must be recalculated with ${BUDGET_HEADROOM}x headroom over the measurement`,
+		regenerated['maxCriticalPathBrotliBytes'] === measuredBrotli + BUDGET_PAD_BYTES &&
+			regenerated['maxCriticalPathGzipJsBytes'] === measuredGzipJs + BUDGET_PAD_BYTES,
+		`Both limits must be recalculated as the measurement plus ${kb(BUDGET_PAD_BYTES)}`,
 	);
 	const writtenText = textOf(written);
 	assert(
-		writtenText.includes('+10% headroom') &&
-			writtenText.includes(kb(Math.ceil(measuredGzipJs * BUDGET_HEADROOM))) &&
-			writtenText.includes(kb(Math.ceil(measuredBrotli * BUDGET_HEADROOM))),
-		'Regeneration must document the headroom it applied and report both new limits',
+		writtenText.includes(`${kb(BUDGET_PAD_BYTES)} churn pad`) &&
+			writtenText.includes(kb(measuredGzipJs + BUDGET_PAD_BYTES)) &&
+			writtenText.includes(kb(measuredBrotli + BUDGET_PAD_BYTES)),
+		'Regeneration must document the pad it applied and report both new limits',
 	);
+
+	// The pad is a fixed byte allowance for hash churn, not a share of the measurement. A
+	// percentage grows with the shared framework runtime, which is the part that does not churn,
+	// so a bigger app would silently be handed more slack than a smaller one.
+	writeFixture({ maxCriticalPathBrotliBytes: 1, maxCriticalPathGzipJsBytes: 1 });
+	writeCriticalPathBudget({
+		budgetPath,
+		totalBrotliBytes: measuredBrotli * 2,
+		totalGzipJsBytes: measuredGzipJs * 2,
+	});
+	const doubled = readFixture();
+	assert(
+		doubled['maxCriticalPathBrotliBytes'] === measuredBrotli * 2 + BUDGET_PAD_BYTES &&
+			doubled['maxCriticalPathGzipJsBytes'] === measuredGzipJs * 2 + BUDGET_PAD_BYTES,
+		'The pad must not scale with the measurement',
+	);
+	writeCriticalPathBudget({
+		budgetPath,
+		totalBrotliBytes: measuredBrotli,
+		totalGzipJsBytes: measuredGzipJs,
+	});
 
 	// 5. The regenerated budget is immediately enforceable: the build that produced it passes, and
 	//    the gate has not been disabled — a build that outgrows either new limit still fails.
@@ -197,11 +217,11 @@ try {
 		'A build must pass against the budget regenerated from that same build — the whole point',
 	);
 	assert(
-		!evaluate(measuredBrotli, Math.ceil(measuredGzipJs * BUDGET_HEADROOM) + 1).ok,
+		!evaluate(measuredBrotli, measuredGzipJs + BUDGET_PAD_BYTES + 1).ok,
 		'A regenerated gzip limit must still fail a build that outgrows it',
 	);
 	assert(
-		!evaluate(Math.ceil(measuredBrotli * BUDGET_HEADROOM) + 1, measuredGzipJs).ok,
+		!evaluate(measuredBrotli + BUDGET_PAD_BYTES + 1, measuredGzipJs).ok,
 		'A regenerated brotli limit must still fail a build that outgrows it',
 	);
 
