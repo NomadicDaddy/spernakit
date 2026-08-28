@@ -41,9 +41,11 @@ const notificationCrudRoutes = new Elysia({
 		'/',
 		({ query, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			// The listing follows the header, whoever sent it; only its absence opens the
-			// cross-workspace view, and requireSelectedWorkspaceAccess has already decided who may
-			// ask for one. See backend/src/guards/workspaceHeader.ts.
+			// The listing follows the header, whoever sent it, and its absence widens rather than
+			// narrows. Unlike the statistics and unread-count routes next door, this one carries no
+			// workspace guard, so the header is not checked against membership; every row is already
+			// scoped to userId below, so naming a workspace the caller is not in narrows the result
+			// to nothing rather than reaching anyone else's notifications.
 			const result = list({
 				limit: query.limit ?? DEFAULT_PAGE_LIMIT,
 				page: query.page ?? DEFAULT_PAGE,

@@ -15,16 +15,10 @@ import {
 	listTemplates,
 } from '../../services/dashboardService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
-import {
-	badRequestError,
-	extractErrorMessage,
-	notFoundError,
-	RATE_ERROR_CODES,
-	rateLimitError,
-} from '../../utils/errorResponse.ts';
+import { badRequestError, extractErrorMessage, notFoundError } from '../../utils/errorResponse.ts';
 import { guardDashboardsEnabled, widgetSchema } from './schemas.ts';
 import {
-	checkSharedRateLimit,
+	enforceSharedRateLimit,
 	handleImportDashboard,
 	validateDashboardWriteWorkspace,
 } from './templates-import.helpers.ts';
@@ -92,18 +86,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: ({ request, set }) => {
-				const result = checkSharedRateLimit(request);
-				if (result.limited) {
-					set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
-					set.headers['Retry-After'] = String(result.retryAfter ?? 0);
-					return rateLimitError(
-						result.retryAfter ?? 0,
-						RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED,
-					);
-				}
-				return undefined;
-			},
 			detail: {
 				description:
 					'View a shared dashboard by its share token. Does not require authentication. ' +
@@ -130,6 +112,9 @@ const dashboardTemplatesRoutes = new Elysia({
 			params: t.Object({
 				token: t.String({ maxLength: 500, minLength: 1 }),
 			}),
+			transform: ({ request }) => {
+				enforceSharedRateLimit(request);
+			},
 		},
 	)
 	/* ------------------------------------------------------------------ */

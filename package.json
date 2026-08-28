@@ -1,6 +1,6 @@
 {
 	"name": "spernakit",
-	"version": "3.44.3",
+	"version": "3.45.0",
 	"private": true,
 	"author": "NomadicDaddy",
 	"license": "MIT",
@@ -190,6 +190,7 @@
 		"test:lost-lines": "bun scripts/test-lost-lines.ts",
 		"test:mutation-denylist": "bun scripts/test-mutation-denylist.ts",
 		"test:override-deltas": "bun scripts/test-override-deltas.ts",
+		"test:public-route-surface": "bun scripts/test-public-route-surface.ts",
 		"test:reset-packages": "bun scripts/test-reset-packages.ts",
 		"test:retention-zero": "bun scripts/test-retention-zero.ts",
 		"test:scaffolded-hooks": "bun scripts/test-scaffolded-hooks.ts",

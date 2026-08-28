@@ -9,7 +9,6 @@ import {
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
 import { assertUser } from '../../guards/role.ts';
-import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { getTotalCount } from '../../services/auditService.ts';
@@ -100,8 +99,6 @@ const systemDashboardRoutes = new Elysia({
 			return dataResponse(getDashboardData(authUser.id, workspaceId));
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) =>
-				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns aggregate dashboard statistics: total users, unread ' +
@@ -140,6 +137,7 @@ const systemDashboardRoutes = new Elysia({
 				summary: 'Get dashboard statistics (OPERATOR+)',
 			},
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspace: true,
 		},
 	);
 

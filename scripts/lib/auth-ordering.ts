@@ -10,8 +10,37 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-/** A guard call written into a route's `beforeHandle`, which Elysia reaches after validation. */
-const BEFORE_HANDLE_GUARD = /beforeHandle[^\n]*require(Auth|RoleFresh)/;
+/**
+ * Every guard whose place is ahead of validation.
+ *
+ * `requireAuth` and `requireRoleFresh` answer who the caller is; the workspace guards answer
+ * whether they may read the workspace they named; the shared-dashboard limit answers whether they
+ * may ask at all. All of them decide something the route has no business parsing a body for, so
+ * all of them belong at the transform stage, and any of them appearing in a `beforeHandle` is the
+ * same regression. This list held only the first two while five sites carried the workspace guard,
+ * which is how those five stayed invisible to a gate written to catch exactly them.
+ */
+const GUARDS = [
+	'authorizeRequest',
+	'authorizeSelectedWorkspace',
+	'checkSharedRateLimit',
+	'enforceSharedRateLimit',
+	'requireAuth',
+	'requireRoleFresh',
+	'requireSelectedWorkspaceAccess',
+	'requireWorkspaceAccess',
+	'requireWorkspaceRole',
+];
+
+/**
+ * A guard call written into a route's `beforeHandle`, which Elysia reaches after validation.
+ *
+ * Spans lines. Each converted site was written across two, with `beforeHandle` and the guard call
+ * on separate lines, so a pattern anchored to one line reported nothing about any of them. The
+ * window is bounded rather than open so a guard that merely appears further down the same file, in
+ * a comment or in an unrelated route, is not attributed to a `beforeHandle` above it.
+ */
+const BEFORE_HANDLE_GUARD = new RegExp(`beforeHandle[\\s\\S]{0,200}?\\b(?:${GUARDS.join('|')})\\b`);
 
 /**
  * Every route file that still runs an authorization guard from `beforeHandle`.

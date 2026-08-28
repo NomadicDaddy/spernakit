@@ -6,7 +6,6 @@ import {
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
 import { assertUser } from '../../guards/role.ts';
-import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
@@ -33,8 +32,6 @@ const notificationPreferencesRoutes = new Elysia({
 			return dataResponse(getStatistics(authUser.id, workspaceId ?? undefined));
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) =>
-				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns aggregate notification statistics for the user, including total ' +
@@ -68,6 +65,7 @@ const notificationPreferencesRoutes = new Elysia({
 				summary: 'Get notification statistics',
 			},
 			requireAuth: true,
+			requireSelectedWorkspace: true,
 		},
 	)
 	.get(
@@ -80,8 +78,6 @@ const notificationPreferencesRoutes = new Elysia({
 			return dataResponse({ count: getUnreadCount(authUser.id, workspaceId ?? undefined) });
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) =>
-				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns the count of unread notifications for the authenticated user. ' +
@@ -106,6 +102,7 @@ const notificationPreferencesRoutes = new Elysia({
 				summary: 'Get unread notification count',
 			},
 			requireAuth: true,
+			requireSelectedWorkspace: true,
 		},
 	)
 	.get(

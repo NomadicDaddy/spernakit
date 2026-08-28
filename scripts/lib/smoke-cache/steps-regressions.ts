@@ -143,6 +143,23 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-onboarding-password-step.ts',
 		],
 	},
+	// Boots the real application and sends one anonymous request per registered route, so its
+	// world is every route file, the plugins and guards those requests pass through, the app
+	// bootstrap that mounts them, the migrations and seed the boot needs, and the list of routes
+	// that are public on purpose.
+	'test:public-route-surface': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/create-api-app.ts',
+			'backend/src/db/seed/**',
+			'backend/src/guards/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/**',
+			'scripts/lib/public-routes.ts',
+			'scripts/test-public-route-surface.ts',
+		],
+	},
 	// Same in-process temp-DB shape as `test:impersonation-audit` above.
 	'test:retention-zero': {
 		excludes: COMMON_EXCLUDES,

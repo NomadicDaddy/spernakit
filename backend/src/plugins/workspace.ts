@@ -1,5 +1,9 @@
 import { Elysia } from 'elysia';
 
+import {
+	authorizeSelectedWorkspace,
+	type WorkspaceGuardContext,
+} from '../guards/workspaceAccess.ts';
 import { invalidWorkspaceHeaderError } from '../guards/workspaceHeader.ts';
 import { parseWorkspaceId } from '../utils/validation.ts';
 
@@ -39,6 +43,35 @@ const workspacePlugin = new Elysia({ name: 'workspace' })
 		if (workspaceId !== null) return;
 
 		return invalidWorkspaceHeaderError(set);
+	})
+	/**
+	 * A route option that rejects a caller with no access to the selected workspace.
+	 *
+	 * The hook runs at the transform stage, the same stage `requireAuth` and `requireRole` run at
+	 * and the stage before Elysia validates the request against the route's schema. Routes that
+	 * carried this check in `beforeHandle` ran it after the body and query had already been
+	 * checked, so a caller who may not read the selected workspace and sent a malformed query was
+	 * answered 400 with that query's constraints instead of the 403 the route owed them.
+	 *
+	 * It lives on this plugin rather than on `authPlugin` because the check reads workspace
+	 * membership from the database, and `user` is already in scope here: a scoped derive runs
+	 * ahead of a per-route macro transform, so both `user` and `workspaceId` are set by the time
+	 * this runs even though the auth plugin is applied separately.
+	 *
+	 * A transform hook cannot short-circuit by returning, so `authorizeSelectedWorkspace` throws;
+	 * the `onError` handler in create-api-app.ts turns that into the same 401 or 403 envelope the
+	 * `beforeHandle` form produced.
+	 */
+	.macro({
+		// Elysia types a macro's transform context with the derived fields optional and readonly,
+		// because a macro is declared without knowing which instances the scoped derives above
+		// reached. Both are set at runtime, which the cast states rather than widening
+		// WorkspaceGuardContext for a case that cannot occur.
+		requireSelectedWorkspace: (enabled: boolean) => ({
+			transform(ctx) {
+				if (enabled) authorizeSelectedWorkspace(ctx as unknown as WorkspaceGuardContext);
+			},
+		}),
 	});
 
 export { workspacePlugin };

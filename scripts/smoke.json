@@ -203,6 +203,10 @@
 					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
 				},
 				{
+					"command": "bun run test:public-route-surface",
+					"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded"
+				},
+				{
 					"command": "bun run test:bug-report-supersede",
 					"description": "A corrected bug report can name the one that replaced it, both reports read the link back, the default inbox stops counting the superseded one as open work, and a link that is circular, self-referential, or points at nothing is refused"
 				},

@@ -10,7 +10,6 @@ import {
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
 import { assertUser, isSysop } from '../../guards/role.ts';
-import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationTypeSchema, UserRoleSchema } from '../../schemas/domain.ts';
@@ -164,8 +163,6 @@ const notificationBroadcastRoutes = new Elysia({
 			return dataResponse({ count });
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) =>
-				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Marks all unread notifications as read for the authenticated user. Returns ' +
@@ -186,6 +183,7 @@ const notificationBroadcastRoutes = new Elysia({
 				summary: 'Mark all notifications as read',
 			},
 			requireAuth: true,
+			requireSelectedWorkspace: true,
 		},
 	);
 
