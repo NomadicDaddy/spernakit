@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
-import { assertUser, isSysop } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -41,7 +41,9 @@ const notificationCrudRoutes = new Elysia({
 		'/',
 		({ query, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const userIsSysop = isSysop(authUser);
+			// The listing follows the header, whoever sent it; only its absence opens the
+			// cross-workspace view, and requireSelectedWorkspaceAccess has already decided who may
+			// ask for one. See backend/src/guards/workspaceHeader.ts.
 			const result = list({
 				limit: query.limit ?? DEFAULT_PAGE_LIMIT,
 				page: query.page ?? DEFAULT_PAGE,
@@ -51,7 +53,7 @@ const notificationCrudRoutes = new Elysia({
 				...(query.sortDir ? { sortDir: query.sortDir } : {}),
 				...(query.type ? { type: query.type } : {}),
 				userId: authUser.id,
-				...(!userIsSysop && workspaceId ? { workspaceId } : {}),
+				...(workspaceId ? { workspaceId } : {}),
 			});
 
 			const fields = validateFields(parseFields(query.fields), NOTIFICATION_LIST_FIELDS);

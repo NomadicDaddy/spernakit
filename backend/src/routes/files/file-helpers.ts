@@ -5,6 +5,7 @@ import { BYTES_PER_MB } from '../../constants/files.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser, hasMinimumRole, isSysop } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
+import { missingWorkspaceHeaderError } from '../../guards/workspaceHeader.ts';
 import { getById } from '../../services/fileService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
@@ -32,11 +33,7 @@ function validateWorkspaceScope({
 	const userIsSysop = isSysop(user);
 
 	if (!userIsSysop && !workspaceId) {
-		set.status = HTTP_STATUS.BAD_REQUEST;
-		return {
-			error: true,
-			response: badRequestError('X-Workspace-Id header is required for file operations'),
-		};
+		return { error: true, response: missingWorkspaceHeaderError(set) };
 	}
 
 	if (workspaceId) {
@@ -48,13 +45,19 @@ function validateWorkspaceScope({
 }
 
 /**
- * Returns workspaceId for non-SYSOP users, undefined for SYSOP (cross-workspace access).
+ * The workspace a file lookup is scoped to, or undefined for a lookup across every workspace.
+ *
+ * The scope follows the header, not the caller: an id that was sent is always honoured, and only
+ * its absence opens the cross-workspace lookup. Who is allowed to make that lookup was already
+ * settled by {@link validateWorkspaceScope}, which refuses a missing header for everyone but a
+ * SYSOP. Reading the role again here is what used to discard a workspace a SYSOP had deliberately
+ * named and answer with every workspace's files instead.
+ *
+ * @param workspaceId - The id the request's workspace header carried, or null when it sent none.
+ * @returns The workspace to scope to, or undefined to look across all of them.
  */
-function scopedWorkspaceId(
-	user: AuthPayload,
-	workspaceId: null | number,
-): null | number | undefined {
-	return !isSysop(user) ? workspaceId : undefined;
+function scopedWorkspaceId(workspaceId: null | number): null | number | undefined {
+	return workspaceId ?? undefined;
 }
 
 /* ------------------------------------------------------------------ */
@@ -136,7 +139,7 @@ function resolveFileWithAccess({
 	user: AuthPayload;
 	workspaceId: null | number;
 }): { error: false; file: FileRecord } | { error: true; response: ErrorResponse } {
-	const file = getById(fileId, scopedWorkspaceId(user, workspaceId));
+	const file = getById(fileId, scopedWorkspaceId(workspaceId));
 	if (!file) {
 		set.status = HTTP_STATUS.NOT_FOUND;
 		return { error: true, response: notFoundError('File') };

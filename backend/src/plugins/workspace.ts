@@ -1,7 +1,6 @@
 import { Elysia } from 'elysia';
 
-import { HTTP_STATUS } from '../constants/httpStatus.ts';
-import { badRequestError, VALIDATION_ERROR_CODES } from '../utils/errorResponse.ts';
+import { invalidWorkspaceHeaderError } from '../guards/workspaceHeader.ts';
 import { parseWorkspaceId } from '../utils/validation.ts';
 
 /**
@@ -32,18 +31,14 @@ const workspacePlugin = new Elysia({ name: 'workspace' })
 	 * client that builds headers unconditionally sends when nothing is selected, and treating it
 	 * as an error would reject requests that are asking for exactly what null means.
 	 *
-	 * The value is not echoed back. The message says what a workspace id has to look like, which
-	 * is the part the caller does not already have.
+	 * The reply itself comes from `guards/workspaceHeader.ts`, which owns every message about
+	 * this header so a caller cannot be told two different things about the same one.
 	 */
 	.onBeforeHandle({ as: 'scoped' }, ({ set, workspaceId, workspaceIdHeader }) => {
 		if (workspaceIdHeader === null || workspaceIdHeader.trim() === '') return;
 		if (workspaceId !== null) return;
 
-		set.status = HTTP_STATUS.BAD_REQUEST;
-		return badRequestError(
-			'Invalid X-Workspace-ID header: expected a positive integer',
-			VALIDATION_ERROR_CODES.VALIDATION_INVALID_FORMAT,
-		);
+		return invalidWorkspaceHeaderError(set);
 	});
 
 export { workspacePlugin };

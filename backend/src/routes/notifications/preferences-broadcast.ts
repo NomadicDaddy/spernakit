@@ -1,7 +1,11 @@
 import { Elysia, t } from 'elysia';
 
-import { dataExample, UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop } from '../../guards/role.ts';
+import {
+	dataExample,
+	missingWorkspaceHeaderExample,
+	UNAUTHORIZED_EXAMPLE,
+} from '../../constants/responseExamples.ts';
+import { assertUser } from '../../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -23,10 +27,10 @@ const notificationPreferencesRoutes = new Elysia({
 		'/statistics',
 		({ user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const userIsSysop = isSysop(authUser);
-			return dataResponse(
-				getStatistics(authUser.id, !userIsSysop && workspaceId ? workspaceId : undefined),
-			);
+			// The listing follows the header, whoever sent it; only its absence opens the
+			// cross-workspace view, and requireSelectedWorkspaceAccess has already decided who may
+			// ask for one. See backend/src/guards/workspaceHeader.ts.
+			return dataResponse(getStatistics(authUser.id, workspaceId ?? undefined));
 		},
 		{
 			beforeHandle: ({ set, user, workspaceId }) =>
@@ -34,8 +38,10 @@ const notificationPreferencesRoutes = new Elysia({
 			detail: {
 				description:
 					'Returns aggregate notification statistics for the user, including total ' +
-					'count, unread count, and counts by type. Scoped to current workspace via ' +
-					'X-Workspace-Id header (SYSOP sees all).',
+					'count, unread count, and counts by type. Scoped to the workspace named by ' +
+					'the X-Workspace-ID header; a SYSOP may leave the header off to count across ' +
+					'every workspace, and for anyone else a request that names no workspace is ' +
+					'answered 400.',
 				responses: {
 					'200': {
 						content: {
@@ -56,6 +62,7 @@ const notificationPreferencesRoutes = new Elysia({
 						},
 						description: 'Notification statistics.',
 					},
+					'400': missingWorkspaceHeaderExample(),
 					'401': UNAUTHORIZED_EXAMPLE,
 				},
 				summary: 'Get notification statistics',
@@ -67,13 +74,10 @@ const notificationPreferencesRoutes = new Elysia({
 		'/unread-count',
 		({ user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const userIsSysop = isSysop(authUser);
-			return dataResponse({
-				count: getUnreadCount(
-					authUser.id,
-					!userIsSysop && workspaceId ? workspaceId : undefined,
-				),
-			});
+			// The listing follows the header, whoever sent it; only its absence opens the
+			// cross-workspace view, and requireSelectedWorkspaceAccess has already decided who may
+			// ask for one. See backend/src/guards/workspaceHeader.ts.
+			return dataResponse({ count: getUnreadCount(authUser.id, workspaceId ?? undefined) });
 		},
 		{
 			beforeHandle: ({ set, user, workspaceId }) =>
@@ -81,8 +85,10 @@ const notificationPreferencesRoutes = new Elysia({
 			detail: {
 				description:
 					'Returns the count of unread notifications for the authenticated user. ' +
-					'Returns { data: { count: number } }. Scoped to current workspace via ' +
-					'X-Workspace-Id header (SYSOP sees all).',
+					'Returns { data: { count: number } }. Scoped to the workspace named by the ' +
+					'X-Workspace-ID header; a SYSOP may leave the header off to count across ' +
+					'every workspace, and for anyone else a request that names no workspace is ' +
+					'answered 400.',
 				responses: {
 					'200': {
 						content: {
@@ -94,6 +100,7 @@ const notificationPreferencesRoutes = new Elysia({
 						},
 						description: 'Unread count.',
 					},
+					'400': missingWorkspaceHeaderExample(),
 					'401': UNAUTHORIZED_EXAMPLE,
 				},
 				summary: 'Get unread notification count',

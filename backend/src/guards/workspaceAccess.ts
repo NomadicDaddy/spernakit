@@ -6,12 +6,12 @@ import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { getUserAuthStatus } from '../services/userService.ts';
 import { getMembershipRole, isWorkspaceMember } from '../services/workspaceService.ts';
 import { ROLE_HIERARCHY } from '../types/roles.ts';
+import { type ErrorResponse, forbiddenError, unauthorizedError } from '../utils/errorResponse.ts';
 import {
-	badRequestError,
-	type ErrorResponse,
-	forbiddenError,
-	unauthorizedError,
-} from '../utils/errorResponse.ts';
+	missingWorkspaceHeaderError,
+	unknownWorkspaceError,
+	workspaceExists,
+} from './workspaceHeader.ts';
 
 const VALID_WORKSPACE_ROLES = new Set<string>(Object.keys(WORKSPACE_ROLE_HIERARCHY));
 
@@ -49,8 +49,7 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 	 * before any handler runs, so a null here means the caller sent no header at all.
 	 */
 	if (!ctx.workspaceId) {
-		ctx.set.status = HTTP_STATUS.BAD_REQUEST;
-		return { ok: false, response: badRequestError('Missing X-Workspace-ID header') };
+		return { ok: false, response: missingWorkspaceHeaderError(ctx.set) };
 	}
 
 	// Verify role from DB to prevent stale JWT claims from granting workspace access
@@ -65,6 +64,13 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 	}
 
 	const bypassRoleCheck = ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP;
+	// A SYSOP can reach every workspace, so one they named and that is not there is absent rather
+	// than off limits, and saying so is what stops the request from being answered against some
+	// wider set of rows instead. Everybody else is answered by the membership check that follows,
+	// which deliberately gives the same reply either way.
+	if (bypassRoleCheck && !workspaceExists(ctx.workspaceId)) {
+		return { ok: false, response: unknownWorkspaceError(ctx.set) };
+	}
 	return { authUser: ctx.user, bypassRoleCheck, ok: true, workspaceId: ctx.workspaceId };
 }
 
@@ -111,11 +117,15 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
 	if (!ctx.workspaceId) {
 		if (userIsSysop) return undefined;
 
-		ctx.set.status = HTTP_STATUS.BAD_REQUEST;
-		return badRequestError('Missing X-Workspace-ID header');
+		return missingWorkspaceHeaderError(ctx.set);
 	}
 
-	if (userIsSysop) return undefined;
+	// A SYSOP who named a workspace asked to be narrowed to it, so the id is checked rather than
+	// waved through: answering an absent workspace with the cross-workspace listing would hand back
+	// more than was asked for, which is the one wrong answer here.
+	if (userIsSysop) {
+		return workspaceExists(ctx.workspaceId) ? undefined : unknownWorkspaceError(ctx.set);
+	}
 
 	if (!isWorkspaceMember(ctx.workspaceId, ctx.user.id)) {
 		ctx.set.status = HTTP_STATUS.FORBIDDEN;

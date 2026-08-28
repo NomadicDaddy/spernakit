@@ -1,9 +1,9 @@
 import { Elysia, t } from 'elysia';
 
 import {
-	badRequestExample,
 	dataExample,
 	FORBIDDEN_EXAMPLE,
+	missingWorkspaceHeaderExample,
 	notFoundExample,
 	SUCCESS_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
@@ -32,10 +32,11 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 		}),
 		detail: {
 			description:
-				'Uploads a file via multipart/form-data. Optionally scoped to a workspace ' +
-				'via the X-Workspace-Id header. File size and type constraints are enforced ' +
-				'server-side. Returns 201 with file metadata (id, originalName, mimeType, ' +
-				'size) on success. SYSOP users can upload without workspace scope.',
+				'Uploads a file via multipart/form-data. Scoped to the workspace named by the ' +
+				'X-Workspace-ID header; a SYSOP may leave the header off, and for anyone else a ' +
+				'request that names no workspace is answered 400. File size and type constraints ' +
+				'are enforced server-side. Returns 201 with file metadata (id, originalName, ' +
+				'mimeType, size) on success.',
 			responses: {
 				'201': {
 					content: {
@@ -55,7 +56,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 					},
 					description: 'File uploaded successfully.',
 				},
-				'400': badRequestExample('No file provided'),
+				'400': missingWorkspaceHeaderExample('No file provided'),
 				'401': UNAUTHORIZED_EXAMPLE,
 			},
 			summary: 'Upload a file',
@@ -68,13 +69,15 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			description:
 				'Downloads the binary content of a file by its numeric ID. Returns the file ' +
 				'with appropriate Content-Type and Content-Disposition headers for browser ' +
-				'download. Only the file owner or ADMIN+ users can download. Workspace access ' +
-				'is validated via X-Workspace-Id header. SYSOP users bypass all checks. ' +
+				'download. Only the file owner or ADMIN+ users can download. Scoped to the ' +
+				'workspace named by the X-Workspace-ID header; a SYSOP may leave the header off, ' +
+				'and for anyone else a request that names no workspace is answered 400. ' +
 				'Returns 403 if not owner/admin, 404 if not found.',
 			responses: {
 				'200': {
 					description: 'File binary content with appropriate headers.',
 				},
+				'400': missingWorkspaceHeaderExample(),
 				'401': UNAUTHORIZED_EXAMPLE,
 				'403': FORBIDDEN_EXAMPLE,
 				'404': notFoundExample('File'),
@@ -89,7 +92,9 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			description:
 				'Returns metadata for a file without downloading its content. Includes id, ' +
 				'originalName, mimeType, size, uploadedBy, workspaceId, and timestamps. ' +
-				'Workspace access enforced via X-Workspace-Id header. Returns 404 if not found. ' +
+				'Scoped to the workspace named by the X-Workspace-ID header; a SYSOP may leave ' +
+				'the header off, and for anyone else a request that names no workspace is ' +
+				'answered 400. Returns 404 if not found. ' +
 				'This is an API-only endpoint for programmatic consumers (e.g., API-key ' +
 				'integrations). The frontend file list already provides metadata inline.',
 			responses: {
@@ -112,6 +117,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 					},
 					description: 'File metadata.',
 				},
+				'400': missingWorkspaceHeaderExample(),
 				'401': UNAUTHORIZED_EXAMPLE,
 				'404': notFoundExample('File'),
 			},
@@ -125,8 +131,9 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			description:
 				'Lists files with pagination support. Returns array of file records with ' +
 				'metadata and total count. Results are ordered by creation date (newest ' +
-				'first). Workspace access enforced via X-Workspace-Id header. SYSOP users ' +
-				'bypass workspace scoping.',
+				'first). Scoped to the workspace named by the X-Workspace-ID header; a SYSOP ' +
+				'may leave the header off to list across every workspace, and for anyone else a ' +
+				'request that names no workspace is answered 400.',
 			responses: {
 				'200': {
 					content: {
@@ -160,6 +167,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 					},
 					description: 'Paginated file list.',
 				},
+				'400': missingWorkspaceHeaderExample(),
 				'401': UNAUTHORIZED_EXAMPLE,
 			},
 			summary: 'List files with pagination',
@@ -174,9 +182,10 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 		detail: {
 			description:
 				'Soft-deletes a file by ID (marks as deleted, preserves data). Only the ' +
-				'file owner or ADMIN+ users can delete. Workspace access enforced via ' +
-				'X-Workspace-Id header. SYSOP users bypass all checks. Returns 403 if ' +
-				'not owner/admin, 404 if the file does not exist.',
+				'file owner or ADMIN+ users can delete. Scoped to the workspace named by the ' +
+				'X-Workspace-ID header; a SYSOP may leave the header off, and for anyone else a ' +
+				'request that names no workspace is answered 400. Returns 403 if not ' +
+				'owner/admin, 404 if the file does not exist.',
 			responses: {
 				'200': {
 					content: {
@@ -186,6 +195,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 					},
 					description: 'File soft-deleted.',
 				},
+				'400': missingWorkspaceHeaderExample(),
 				'401': UNAUTHORIZED_EXAMPLE,
 				'403': FORBIDDEN_EXAMPLE,
 				'404': notFoundExample('File'),

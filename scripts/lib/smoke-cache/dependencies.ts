@@ -5,13 +5,15 @@
  * whether the step can be skipped on an unchanged tree.
  *
  * The map itself lives in cohesive modules for project-invariant guards, feature-integration
- * checks, and compile/format/build steps because a single literal outgrew the 300-line modularity
- * gate. This module is the facade the cache and the smoke runner consume.
+ * checks, application regression gates, and compile/format/build steps because a single literal
+ * outgrew the 300-line modularity gate. This module is the facade the cache and the smoke runner
+ * consume.
  */
 
 import { CHECK_STEP_DEPENDENCIES } from './steps-checks.ts';
 import { INTEGRATION_STEP_DEPENDENCIES } from './steps-integration.ts';
 import { METADATA_STEP_DEPENDENCIES } from './steps-metadata.ts';
+import { REGRESSION_STEP_DEPENDENCIES } from './steps-regressions.ts';
 import { SELF_TEST_STEP_DEPENDENCIES } from './steps-selftests.ts';
 import { TOOLCHAIN_STEP_DEPENDENCIES } from './steps-toolchain.ts';
 import { type StepDependencies } from './types.ts';
@@ -41,6 +43,7 @@ export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	...CHECK_STEP_DEPENDENCIES,
 	...INTEGRATION_STEP_DEPENDENCIES,
 	...METADATA_STEP_DEPENDENCIES,
+	...REGRESSION_STEP_DEPENDENCIES,
 	...SELF_TEST_STEP_DEPENDENCIES,
 	...TOOLCHAIN_STEP_DEPENDENCIES,
 };

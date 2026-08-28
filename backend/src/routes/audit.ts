@@ -5,12 +5,12 @@ import type { AuthPayload } from '../plugins/auth.ts';
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../constants/pagination.ts';
 import {
-	badRequestExample,
 	FORBIDDEN_EXAMPLE,
+	missingWorkspaceHeaderExample,
 	paginatedExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../constants/responseExamples.ts';
-import { assertUser, isSysop } from '../guards/role.ts';
+import { assertUser } from '../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../guards/workspaceAccess.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { workspacePlugin } from '../plugins/workspace.ts';
@@ -49,7 +49,9 @@ function handleListAuditLogs({
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const authUser = assertUser(user);
+	// Kept for its throw, not its value: the handler reads no account of its own any more, but a
+	// request that reached here without one is a wiring fault rather than an empty listing.
+	assertUser(user);
 	if (params.dateFrom && !isValidDateString(params.dateFrom)) {
 		set.status = HTTP_STATUS.BAD_REQUEST;
 		return badRequestError('Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)');
@@ -67,7 +69,9 @@ function handleListAuditLogs({
 		}
 	}
 
-	const userIsSysop = isSysop(authUser);
+	// The listing follows the header, whoever sent it; only its absence opens the cross-workspace
+	// view, and requireSelectedWorkspaceAccess has already decided who may ask for one. See
+	// backend/src/guards/workspaceHeader.ts.
 	const result = query({
 		limit: params.limit ?? DEFAULT_PAGE_LIMIT,
 		page: params.page ?? DEFAULT_PAGE,
@@ -85,7 +89,7 @@ function handleListAuditLogs({
 		...(params.sortBy ? { sortBy: params.sortBy } : {}),
 		...(params.sortDir ? { sortDir: params.sortDir } : {}),
 		...(params.userId ? { userId: params.userId } : {}),
-		...(!userIsSysop && workspaceId ? { workspaceId } : {}),
+		...(workspaceId ? { workspaceId } : {}),
 	});
 
 	const fields = validateFields(parseFields(params.fields), AUDIT_LIST_FIELDS);
@@ -110,8 +114,10 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 				'Sortable by createdAt, username, action, ' +
 				'resource or ipAddress via sortBy/sortDir; an unrecognised sortBy falls back to ' +
 				'createdAt descending. Date range is validated - dateTo must be ' +
-				'after dateFrom. Scoped to workspace via X-Workspace-Id header (SYSOP sees ' +
-				'all). Use the optional `fields` parameter to request only specific fields ' +
+				'after dateFrom. Scoped to the workspace named by the X-Workspace-ID header; a ' +
+				'SYSOP may leave the header off to read across every workspace, and for anyone ' +
+				'else a request that names no workspace is answered 400. ' +
+				'Use the optional `fields` parameter to request only specific fields ' +
 				'(e.g. `fields=id,action,userId,createdAt`). Rows written during a SYSOP impersonation ' +
 				'session carry `impersonatedBy`/`impersonatorUsername` naming the real operator; `userId` ' +
 				'is the account the request ran as. ' +
@@ -190,7 +196,7 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 					},
 					description: 'Paginated audit log entries.',
 				},
-				'400': badRequestExample(
+				'400': missingWorkspaceHeaderExample(
 					'Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)',
 				),
 				'401': UNAUTHORIZED_EXAMPLE,
