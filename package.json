@@ -167,6 +167,7 @@
 		"test:auth-reset-ui-dev": "bun scripts/test-auth-reset-ui.ts --mode dev",
 		"test:auth-reset-ui-preview": "bun scripts/test-auth-reset-ui.ts --mode preview",
 		"test:backup-compression": "bun scripts/test-backup-compression.ts",
+		"test:bug-report-whitespace": "bun scripts/test-bug-report-whitespace.ts",
 		"test:bundle-budget": "bun scripts/test-bundle-budget.ts",
 		"test:clear-logs": "bun scripts/test-clear-logs.ts",
 		"test:config-preflight": "bun scripts/test-config-preflight.ts",

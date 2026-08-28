@@ -20,11 +20,38 @@ import { notFoundError } from '../utils/errorResponse.ts';
 const MAX_DESCRIPTION_LENGTH = 5000;
 const MAX_EMAIL_LENGTH = 255;
 
+/** Body fields the service stores trimmed, so the schema has to be shown the trimmed value. */
+const TRIMMED_FIELDS = ['description', 'email'] as const;
+
 /**
  * Status union derived from the shared tuple rather than hand-written, so adding a
  * status to `BUG_REPORT_STATUSES` reaches this route without editing it.
  */
 const statusSchema = t.Union(BUG_REPORT_STATUSES.map((status) => t.Literal(status)));
+
+/**
+ * Trim the submitted strings before Elysia checks them against the schema.
+ *
+ * The service stores a trimmed description, so the value the schema is asked about has to be the
+ * trimmed one. Checking first and trimming afterwards let a description of nothing but spaces
+ * satisfy `minLength: 1`, trim away to nothing, and land in the table as a row titled
+ * `(untitled)` with no body. Reports are closed by status rather than deleted and the PATCH route
+ * changes only the status, so such a row can never be corrected or removed.
+ *
+ * A transform hook is the last stage before validation, which is what makes this the place for it
+ * rather than the handler. Every string the service trims is trimmed here, so the constraint the
+ * schema asserts is the constraint the stored value satisfies.
+ *
+ * @param body - The parsed request body, mutated in place.
+ */
+function trimSubmittedText(body: unknown): void {
+	if (typeof body !== 'object' || body === null) return;
+	const record = body as Record<string, unknown>;
+	for (const field of TRIMMED_FIELDS) {
+		const value = record[field];
+		if (typeof value === 'string') record[field] = value.trim();
+	}
+}
 
 const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 	.use(authPlugin)
@@ -102,13 +129,16 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 						description: 'Bug report or feature request created successfully.',
 					},
 					'400': badRequestExample(
-						'Description is required and must not exceed 5000 characters',
+						'Description must not be empty after trimming, and must not exceed 5000 characters',
 					),
 					'401': UNAUTHORIZED_EXAMPLE,
 				},
 				summary: 'Submit a bug report or feature request',
 			},
 			requireAuth: true,
+			transform({ body }) {
+				trimSubmittedText(body);
+			},
 		},
 	)
 	.get(

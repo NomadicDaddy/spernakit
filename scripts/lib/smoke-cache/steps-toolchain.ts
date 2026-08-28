@@ -103,6 +103,20 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-before-validation.ts',
 		],
 	},
+	// Submits through the real route against a temp database, so its world is the intake route and
+	// the service behind it, the plugins those requests pass through, the seed that supplies the
+	// account, and the table the report lands in.
+	'test:bug-report-whitespace': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/db/schema/bugReports.ts',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/bugs.ts',
+			'backend/src/services/bugReportService.ts',
+			'scripts/test-bug-report-whitespace.ts',
+		],
+	},
 	// The fixture is self-contained: it copies clear-logs.ts into a temp tree and writes its own
 	// runbook there, so the real scripts/smoke.json is not part of this step's world.
 	'test:clear-logs': {

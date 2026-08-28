@@ -42,14 +42,23 @@ const TITLE_MAX_LENGTH = 80;
 
 /**
  * Derive a concise title from a bug report description.
- * Takes the first line, trims whitespace, and truncates to TITLE_MAX_LENGTH
- * on a word boundary when possible. Falls back to '(untitled)' if the
- * description is empty after trimming.
+ *
+ * The title comes from the first line that carries something rather than from the first line, so a
+ * description that opens with a blank line is still named after what it says. It is truncated to
+ * TITLE_MAX_LENGTH on a word boundary when one falls close enough to the end.
+ *
  * @param description - Raw description text from the submitter
  * @returns A short, single-line title derived from `description`
  */
 function deriveTitle(description: string): string {
-	const firstLine = description.split(/\r?\n/, 1)[0]?.trim() ?? '';
+	const firstLine =
+		description
+			.split(/\r?\n/)
+			.find((line) => line.trim().length > 0)
+			?.trim() ?? '';
+	// Kept for rows stored before the route began trimming the description ahead of validating
+	// it. A report submitted through the API can no longer be empty here: a description that is
+	// empty after trimming is answered 400 before it reaches this service.
 	if (firstLine.length === 0) return '(untitled)';
 	if (firstLine.length <= TITLE_MAX_LENGTH) return firstLine;
 
