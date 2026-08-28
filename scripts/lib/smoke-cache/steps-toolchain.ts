@@ -99,6 +99,18 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
 	},
+	// Spawns a probe through the real spawn-background wiring and reads the log files back, so
+	// its world is the logger and the configuration it reads, the spawn helpers, and the probe.
+	'test:error-log-wiring': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/**',
+			'backend/src/utils/logger.ts',
+			'config/**',
+			'scripts/lib/process/**',
+			'scripts/test-error-log-wiring.ts',
+		],
+	},
 	// Runs in-process against a temp SQLite file (like `test:retention-zero`), so its world is the
 	// backend source plus the migrations it applies; a change anywhere in backend/src re-runs it.
 	'test:impersonation-audit': {

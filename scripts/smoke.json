@@ -187,6 +187,10 @@
 					"description": "Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},
 				{
+					"command": "bun run test:error-log-wiring",
+					"description": "Application errors reach logs/<name>.error.log in every logging mode, redacted the same way, while the main log keeps every level"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},
