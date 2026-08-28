@@ -219,6 +219,10 @@
 					"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted"
 				},
 				{
+					"command": "bun run test:view-transition-abort",
+					"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message"
+				},
+				{
 					"command": "bun run test:workspace-header-contract",
 					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself"
 				},

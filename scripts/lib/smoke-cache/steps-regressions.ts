@@ -155,6 +155,21 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/src/**', 'config/**', 'scripts/test-upload-validation.ts'],
 	},
+	// Dispatches its own navigations at the module that holds a skipped transition's promises, and
+	// then reads the three files it cannot reach from an assertion: the stylesheet the transitions
+	// come from, the entry point that subscribes, and the crawl harness that has to stay able to
+	// fail on this noise.
+	'test:view-transition-abort': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/lib/viewTransitions.ts',
+			'frontend/src/main.tsx',
+			'frontend/src/tailwind.css',
+			'scripts/crawltest-events.ts',
+			'scripts/crawltest-types.ts',
+			'scripts/test-view-transition-abort.ts',
+		],
+	},
 	// Drives two routes from different modules in process and then reads the whole backend and
 	// frontend source for a route that words the header its own way, so its world is both source
 	// trees plus the documents its spelling scan covers.

@@ -199,6 +199,7 @@
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
 		"test:upload-validation": "bun scripts/test-upload-validation.ts",
+		"test:view-transition-abort": "bun scripts/test-view-transition-abort.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
 		"test:workspace-header-contract": "bun scripts/test-workspace-header-contract.ts",
 		"test:workspace-subresource-existence": "bun scripts/test-workspace-subresource-existence.ts",
