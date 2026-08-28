@@ -19,6 +19,12 @@ const SUBMITTED_VALUE_MARKER = ' but found: ';
  * unauthorized caller gets a 400 describing their own payload because Elysia
  * validates the body before `beforeHandle` runs the role guard.
  *
+ * A range violation carries no property path. Elysia reports it through the
+ * `property` branch with an empty `path`, and the parameter name appears on no
+ * field of the ValidationError, so the constraint is reported on its own rather
+ * than under a made-up `(root)` label that named the wrong thing. Type
+ * violations still arrive through the `query` branch with a real path.
+ *
  * Only the failing property paths and the schema's expectation are reported.
  * The submitted values (`error.value`, and `value` on each entry of
  * `error.all`) are never read, and the one summary Elysia builds that quotes
@@ -31,13 +37,14 @@ function describeValidationError(error: unknown): string {
 	if (!(error instanceof ValidationError)) return 'Validation failed';
 	const details = error.all
 		.map((entry) => {
-			const path =
-				typeof entry.path === 'string' && entry.path.length > 0 ? entry.path : '(root)';
+			const path = typeof entry.path === 'string' ? entry.path : '';
 			const summary = entry.summary ?? entry.message;
 			const described =
 				typeof summary === 'string' ? (summary.split(SUBMITTED_VALUE_MARKER)[0] ?? '') : '';
+			if (path.length === 0) return described;
 			return described.length > 0 ? `${path}: ${described}` : path;
 		})
+		.filter((line) => line.length > 0)
 		.filter((line, index, lines) => lines.indexOf(line) === index);
 	if (details.length === 0) return `Validation failed on ${error.type}`;
 	return `Validation failed on ${error.type} - ${details.join('; ')}`;

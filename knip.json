@@ -11,13 +11,13 @@
 	},
 	"workspaces": {
 		".": {
-			"entry": ["scripts/*.ts"],
+			"entry": ["scripts/*.ts", "scripts/lib/process/error-log-probe.ts"],
 			"ignoreBinaries": ["netstat"],
 			"project": ["scripts/**/*.ts"]
 		},
 		"backend": {
 			"entry": ["src/create-api-app.ts"],
-			"ignoreDependencies": ["pino-roll"],
+			"ignoreDependencies": ["pino-pretty", "pino-roll"],
 			"project": ["src/**/*.ts"]
 		},
 		"frontend": {

@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { WS_CRUD_EVENTS } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import {
 	acknowledgeAlert,
@@ -45,9 +45,9 @@ const healthAlertsConfigRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: acknowledgeAlertDocs,
 			params: HealthAlertIdSchema,
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -63,9 +63,9 @@ const healthAlertsConfigRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: resolveAlertDocs,
 			params: HealthAlertIdSchema,
+			requireRole: 'ADMIN',
 		},
 	)
 	.get(
@@ -74,8 +74,8 @@ const healthAlertsConfigRoutes = new Elysia({
 			return dataResponse(getHealthConfig());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: getHealthConfigDocs,
+			requireRole: 'ADMIN',
 		},
 	)
 	.put(
@@ -92,7 +92,6 @@ const healthAlertsConfigRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object(
 				{
 					alertsEnabled: t.Optional(t.Boolean()),
@@ -123,6 +122,7 @@ const healthAlertsConfigRoutes = new Elysia({
 				},
 			),
 			detail: updateHealthConfigDocs,
+			requireRole: 'SYSOP',
 		},
 	)
 	.post(
@@ -132,8 +132,8 @@ const healthAlertsConfigRoutes = new Elysia({
 			return dataResponse({ batches: result.batches, resolved: result.cleaned });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: cleanupAlertsDocs,
+			requireRole: 'ADMIN',
 		},
 	);
 

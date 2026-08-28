@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam } from '../../schemas/pagination.ts';
 import {
 	cleanupOldLogs,
 	getActiveAlerts,
@@ -32,8 +32,8 @@ const healthChecksRoutes = new Elysia({
 			return dataResponse(await runAndStoreChecks());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('OPERATOR')({ set, user }),
 			detail: healthDetailsDocs,
+			requireRole: 'OPERATOR',
 		},
 	)
 	.get(
@@ -47,11 +47,11 @@ const healthChecksRoutes = new Elysia({
 			});
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: healthHistoryDocs,
 			query: t.Object({
-				limit: t.Optional(t.Numeric({ default: 100, maximum: 1000, minimum: 1 })),
+				limit: limitParam({ default: 100, maximum: 1000 }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -65,7 +65,6 @@ const healthChecksRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: runHealthCheckDocs,
 			params: t.Object({
 				checkName: t.String({
@@ -74,6 +73,7 @@ const healthChecksRoutes = new Elysia({
 					pattern: '^[a-z][a-z0-9_-]*$',
 				}),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.delete(
@@ -83,8 +83,8 @@ const healthChecksRoutes = new Elysia({
 			return dataResponse({ batches: result.batches, deleted: result.cleaned });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: cleanupHealthLogsDocs,
+			requireRole: 'ADMIN',
 		},
 	);
 

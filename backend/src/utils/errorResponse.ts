@@ -28,6 +28,7 @@ import {
 	NotFoundError,
 	UniqueConstraintError,
 } from './errorTypes.ts';
+import { isPreValidationRejection, PreValidationRejection } from './preValidationRejection.ts';
 
 export type { ErrorResponse };
 export {
@@ -50,9 +51,11 @@ export {
 export {
 	extractErrorMessage,
 	isMfaAlreadyEnabledError,
+	isPreValidationRejection,
 	isRawUniqueViolation,
 	isUniqueConstraintError,
 	MfaAlreadyEnabledError,
 	NotFoundError,
+	PreValidationRejection,
 	UniqueConstraintError,
 };

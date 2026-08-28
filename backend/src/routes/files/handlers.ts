@@ -101,7 +101,7 @@ async function handleDownloadFile({
 	});
 	if (resolved.error) return resolved.response;
 
-	const result = await download(params.id, scopedWorkspaceId(ctx.authUser, workspaceId));
+	const result = await download(params.id, scopedWorkspaceId(workspaceId));
 	if (!result) {
 		set.status = HTTP_STATUS.NOT_FOUND;
 		return notFoundError('File');
@@ -165,7 +165,7 @@ function handleListFiles({
 		limit,
 		page,
 		uploadedBy: isPrivileged ? undefined : ctx.authUser.id,
-		workspaceId: scopedWorkspaceId(ctx.authUser, workspaceId),
+		workspaceId: scopedWorkspaceId(workspaceId),
 	});
 
 	return paginatedResponse(result);
@@ -193,7 +193,7 @@ function handleDeleteFile({
 	});
 	if (resolved.error) return resolved.response;
 
-	softDelete(params.id, ctx.authUser.id, scopedWorkspaceId(ctx.authUser, workspaceId));
+	softDelete(params.id, ctx.authUser.id, scopedWorkspaceId(workspaceId));
 
 	if (workspaceId) {
 		broadcastCrudToWorkspace(workspaceId, WS_CRUD_EVENTS.FILE_DELETED, { id: params.id });

@@ -12,7 +12,13 @@ import {
 } from '../../services/dashboardService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
-import { badRequestError, extractErrorMessage } from '../../utils/errorResponse.ts';
+import {
+	badRequestError,
+	extractErrorMessage,
+	RATE_ERROR_CODES,
+	rateLimitError,
+} from '../../utils/errorResponse.ts';
+import { PreValidationRejection } from '../../utils/preValidationRejection.ts';
 
 /* Per-route rate limit for unauthenticated shared dashboard endpoint */
 const SHARED_RATE_LIMIT_MAX = 30;
@@ -101,4 +107,37 @@ function handleImportDashboard({
 	}
 }
 
-export { checkSharedRateLimit, handleImportDashboard, validateDashboardWriteWorkspace };
+/**
+ * Apply the shared-dashboard rate limit and throw the 429 rather than returning it.
+ *
+ * `GET /shared/:token` is the one route in this file open to an unauthenticated caller, and the
+ * limit is the only thing standing between that caller and the work behind it. Run from
+ * `beforeHandle`, it ran after Elysia had already validated the request against the route's
+ * schema, so a caller past the limit still had every request parsed and checked before being told
+ * to stop. Raising it from a transform hook puts the limit ahead of that work, which is the same
+ * ordering `rateLimitPlugin` uses for the global limit.
+ *
+ * The reply is unchanged: the same 429 envelope and the same `Retry-After` header, now carried on
+ * the rejection instead of written onto `set`.
+ *
+ * @param request - The incoming request, for the client address the limit is keyed on.
+ * @throws PreValidationRejection when this address is over the limit.
+ */
+function enforceSharedRateLimit(request: Request): void {
+	const result = checkSharedRateLimit(request);
+	if (!result.limited) return;
+
+	const retryAfter = result.retryAfter ?? 0;
+	throw new PreValidationRejection(
+		HTTP_STATUS.TOO_MANY_REQUESTS,
+		rateLimitError(retryAfter, RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED),
+		{ 'Retry-After': String(retryAfter) },
+	);
+}
+
+export {
+	checkSharedRateLimit,
+	enforceSharedRateLimit,
+	handleImportDashboard,
+	validateDashboardWriteWorkspace,
+};

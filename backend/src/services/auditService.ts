@@ -1,4 +1,4 @@
-import { and, count, eq, gte, inArray, isNull, lte, or } from 'drizzle-orm';
+import { and, count, eq, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 
 import { getDb } from '../db/index.ts';
@@ -29,6 +29,26 @@ const AUDIT_SORT_COLUMNS = {
  */
 const impersonators = alias(users, 'impersonators');
 
+/**
+ * The response status the writer already recorded, read back out of the row.
+ *
+ * `auditPlugin` stores `details.status` only when the response was 400 or above, so a NULL here is
+ * a request that succeeded. The outcome is derived from that one value rather than kept in a column
+ * of its own, because a stored copy is a second source of truth and the two can disagree.
+ */
+const AUDIT_STATUS = sql<null | number>`json_extract(${auditLogs.details}, '$.status')`;
+
+/**
+ * The `username` the request body carried, which `auditPlugin` copies into `details.entity`.
+ *
+ * On a failed sign-in this is the account the caller was trying to reach, and it is the only thing
+ * that tells such a row apart from routine unattributed activity, which renders as System. It
+ * discloses nothing the caller did not supply, and only ADMIN and above can read this log.
+ */
+const AUDIT_SUBMITTED_USERNAME = sql<
+	null | string
+>`json_extract(${auditLogs.details}, '$.entity.username')`;
+
 interface AuditEntry {
 	action: string;
 	createdAt: string;
@@ -39,6 +59,10 @@ interface AuditEntry {
 	ipAddress: null | string;
 	resource: null | string;
 	resourceId: null | string;
+	/** The response status, for a request that failed; null for one that succeeded. */
+	status: null | number;
+	/** The username the request body carried, which is the attempted account on a failed sign-in. */
+	submittedUsername: null | string;
 	userId: null | number;
 	username: null | string;
 }
@@ -60,6 +84,8 @@ interface QueryParams {
 	dateFrom?: string;
 	dateTo?: string;
 	limit?: number;
+	/** `failed` narrows to responses of 400 or above, `succeeded` to everything else. */
+	outcome?: 'failed' | 'succeeded';
 	page?: number;
 	search?: string;
 	/** A key of AUDIT_SORT_COLUMNS; anything else falls back to newest first. */
@@ -139,6 +165,16 @@ function query(params: QueryParams): {
 	if (params.action) {
 		conditions.push(likeEscaped(auditLogs.action, `%${escapeLikePattern(params.action)}%`));
 	}
+	if (params.outcome === 'failed') {
+		conditions.push(sql`coalesce(${AUDIT_STATUS}, 0) >= 400`);
+	}
+	if (params.outcome === 'succeeded') {
+		/*
+		 * `coalesce` rather than "IS NULL OR < 400": a top-level OR needs parentheses of its own to
+		 * survive being ANDed with the other filters, and a single expression cannot lose them.
+		 */
+		conditions.push(sql`coalesce(${AUDIT_STATUS}, 0) < 400`);
+	}
 	if (params.dateFrom) {
 		conditions.push(gte(auditLogs.createdAt, new Date(params.dateFrom)));
 	}
@@ -190,6 +226,8 @@ function query(params: QueryParams): {
 					impersonatedBy: auditLogs.impersonatedBy,
 					impersonatorUsername: impersonators.username,
 					ipAddress: auditLogs.ipAddress,
+					status: AUDIT_STATUS,
+					submittedUsername: AUDIT_SUBMITTED_USERNAME,
 					userId: auditLogs.userId,
 					username: users.username,
 				})
@@ -228,6 +266,8 @@ function query(params: QueryParams): {
 				ipAddress: row.ipAddress,
 				resource: row.entityType,
 				resourceId: row.entityId,
+				status: row.status,
+				submittedUsername: row.submittedUsername,
 				userId: row.userId,
 				username: row.username,
 			}));

@@ -6,7 +6,6 @@ import {
 	FORBIDDEN_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { getAuthSettings, isPasswordExpired } from '../../services/authService.ts';
 import { getDemoAccounts } from '../../services/demoService.ts';
@@ -56,7 +55,6 @@ const authUtilsRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth'
 			return dataResponse(results);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Checks password policy compliance across all users. Returns auth ' +
@@ -102,6 +100,7 @@ const authUtilsRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth'
 				},
 				summary: 'Get security health report (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.get(

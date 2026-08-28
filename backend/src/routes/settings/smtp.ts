@@ -15,7 +15,7 @@ import {
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
 import { EMAIL_MAX_LENGTH } from '../../constants/validation.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { escapeHtml, sendEmail } from '../../services/emailService.ts';
@@ -89,7 +89,6 @@ const settingsSmtpRoutes = new Elysia({
 			return dataResponse(await getSmtpConfigMasked());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Retrieves SMTP configuration including host, port, secure flag, ' +
@@ -119,6 +118,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Get SMTP configuration (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.put(
@@ -139,7 +139,6 @@ const settingsSmtpRoutes = new Elysia({
 			return dataResponse(config);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				fromAddress: t.Optional(t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH })),
 				fromName: t.Optional(t.String({ maxLength: 100 })),
@@ -178,10 +177,10 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Update SMTP configuration (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.post('/smtp/test', handleSmtpTest, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		body: t.Object({
 			message: t.Optional(t.String({ maxLength: 2000 })),
 			subject: t.Optional(t.String({ maxLength: 255 })),
@@ -209,6 +208,7 @@ const settingsSmtpRoutes = new Elysia({
 			},
 			summary: 'Send SMTP test email (SYSOP only)',
 		},
+		requireRole: 'SYSOP',
 	})
 	.get(
 		'/email/status',
@@ -218,7 +218,6 @@ const settingsSmtpRoutes = new Elysia({
 			return dataResponse(await getEmailStatus());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Returns email configuration status including whether SMTP is configured, ' +
@@ -251,6 +250,7 @@ const settingsSmtpRoutes = new Elysia({
 				},
 				summary: 'Get email status (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	);
 

@@ -1,13 +1,15 @@
 import type { BugReportKind, BugReportStatus } from 'spernakit-shared';
 
-import { and, count, desc, eq } from 'drizzle-orm';
+import { and, count, desc, eq, isNull } from 'drizzle-orm';
 
 import type { PaginatedResponse } from '../utils/dbHelpers.ts';
+import type { BugReportWithLinks, SupersedeResult } from './bug/bugSupersedeService.ts';
 
 import { getDb } from '../db/index.ts';
 import { bugReports } from '../db/schema/bugReports.ts';
 import { escapeLikePattern, likeEscaped, paginatedQuery } from '../utils/dbHelpers.ts';
 import { logger } from '../utils/logger.ts';
+import { attachSupersedes, supersede, withLinks } from './bug/bugSupersedeService.ts';
 import { getUserById } from './userService.ts';
 
 /* -------------------------------------------------------------------------- */
@@ -26,6 +28,11 @@ interface SubmitBugInput {
 
 /** Triage filters for {@link list}. An omitted field is not constrained. */
 interface ListFilters {
+	/**
+	 * Include reports another report has replaced. Off by default: a superseded report is not
+	 * separate open work, and counting it as such is the thing this link exists to stop.
+	 */
+	includeSuperseded?: boolean | undefined;
 	kind?: BugReportKind | undefined;
 	/** Free-text substring match over the report description. */
 	search?: string | undefined;
@@ -34,7 +41,7 @@ interface ListFilters {
 
 interface StatusUpdateResult {
 	previousStatus: BugReportStatus;
-	report: BugReport;
+	report: BugReportWithLinks;
 }
 
 /** Maximum length of the auto-generated title derived from a report's description. */
@@ -42,14 +49,23 @@ const TITLE_MAX_LENGTH = 80;
 
 /**
  * Derive a concise title from a bug report description.
- * Takes the first line, trims whitespace, and truncates to TITLE_MAX_LENGTH
- * on a word boundary when possible. Falls back to '(untitled)' if the
- * description is empty after trimming.
+ *
+ * The title comes from the first line that carries something rather than from the first line, so a
+ * description that opens with a blank line is still named after what it says. It is truncated to
+ * TITLE_MAX_LENGTH on a word boundary when one falls close enough to the end.
+ *
  * @param description - Raw description text from the submitter
  * @returns A short, single-line title derived from `description`
  */
 function deriveTitle(description: string): string {
-	const firstLine = description.split(/\r?\n/, 1)[0]?.trim() ?? '';
+	const firstLine =
+		description
+			.split(/\r?\n/)
+			.find((line) => line.trim().length > 0)
+			?.trim() ?? '';
+	// Kept for rows stored before the route began trimming the description ahead of validating
+	// it. A report submitted through the API can no longer be empty here: a description that is
+	// empty after trimming is answered 400 before it reaches this service.
 	if (firstLine.length === 0) return '(untitled)';
 	if (firstLine.length <= TITLE_MAX_LENGTH) return firstLine;
 
@@ -68,7 +84,7 @@ function deriveTitle(description: string): string {
  * @param input - Bug report submission data
  * @returns The created bug report
  */
-function submit(input: SubmitBugInput): BugReport {
+function submit(input: SubmitBugInput): BugReportWithLinks {
 	const description = input.description.trim();
 	const title = deriveTitle(description);
 	const email = input.email?.trim() || null;
@@ -98,7 +114,35 @@ function submit(input: SubmitBugInput): BugReport {
 		.get();
 
 	logger.info({ bugId: inserted.id, kind }, 'New bug report submitted');
-	return inserted;
+	// Every route answers with the same report shape, so a caller does not have to know which one
+	// it asked. No query is needed for the list: a report that was created a moment ago cannot yet
+	// be named as the replacement for anything.
+	return { ...inserted, supersedesIds: [] };
+}
+
+/**
+ * Read one report by id.
+ *
+ * @param id - Bug report id.
+ * @returns The report, or undefined when no report has that id.
+ */
+function getById(id: number): BugReport | undefined {
+	return getDb().select().from(bugReports).where(eq(bugReports.id, id)).get();
+}
+
+/**
+ * Read one report by id, carrying the reports it replaces.
+ *
+ * The inbox leaves a superseded report out of the default listing, so a triager who follows the
+ * link on the report that replaced it would otherwise have nowhere to arrive. This is where they
+ * arrive, and it answers for a superseded report the same as for any other.
+ *
+ * @param id - Bug report id.
+ * @returns The report with its links, or undefined when no report has that id.
+ */
+function getWithLinks(id: number): BugReportWithLinks | undefined {
+	const report = getById(id);
+	return report ? withLinks(report) : undefined;
 }
 
 /**
@@ -123,9 +167,10 @@ function list(
 	page: number,
 	limit: number,
 	filters: ListFilters = {},
-): PaginatedResponse<BugReport> {
+): PaginatedResponse<BugReportWithLinks> {
 	const db = getDb();
 	const conditions = [
+		...(filters.includeSuperseded ? [] : [isNull(bugReports.supersededById)]),
 		...(filters.status ? [eq(bugReports.status, filters.status)] : []),
 		...(filters.kind ? [eq(bugReports.kind, filters.kind)] : []),
 		...(filters.search
@@ -138,14 +183,16 @@ function list(
 		page,
 		limit,
 		(limitNum, offset) =>
-			db
-				.select()
-				.from(bugReports)
-				.where(where)
-				.orderBy(desc(bugReports.createdAt))
-				.limit(limitNum)
-				.offset(offset)
-				.all(),
+			attachSupersedes(
+				db
+					.select()
+					.from(bugReports)
+					.where(where)
+					.orderBy(desc(bugReports.createdAt))
+					.limit(limitNum)
+					.offset(offset)
+					.all(),
+			),
 		() => db.select({ count: count() }).from(bugReports).where(where).get(),
 	);
 }
@@ -182,8 +229,17 @@ function updateStatus(id: number, status: BugReportStatus): StatusUpdateResult |
 		{ bugId: id, previousStatus: result.previousStatus, status },
 		'Bug report status updated',
 	);
-	return result;
+	// Annotated after the transaction: the transaction exists so the previous status cannot go
+	// stale between the read and the write, and the supersede link is not part of that question.
+	return { previousStatus: result.previousStatus, report: withLinks(result.report) };
 }
 
-export { list, submit, updateStatus };
-export type { BugReport, ListFilters, StatusUpdateResult, SubmitBugInput };
+export { getById, getWithLinks, list, submit, supersede, updateStatus, withLinks };
+export type {
+	BugReport,
+	BugReportWithLinks,
+	ListFilters,
+	StatusUpdateResult,
+	SubmitBugInput,
+	SupersedeResult,
+};

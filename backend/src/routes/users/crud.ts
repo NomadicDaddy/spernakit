@@ -1,6 +1,5 @@
 import { Elysia, t } from 'elysia';
 
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
 import {
 	EMAIL_MAX_LENGTH,
 	PASSWORD_MAX_LENGTH,
@@ -9,9 +8,9 @@ import {
 	USERNAME_MIN_LENGTH,
 	USERNAME_PATTERN,
 } from '../../constants/validation.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { UserRoleSchema } from '../../schemas/domain.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import {
 	adminResetPasswordDocs,
 	createUserDocs,
@@ -40,7 +39,6 @@ const usersCrudRoutes = new Elysia({
 })
 	.use(authPlugin)
 	.get('/', handleListUsers, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: listUsersDocs,
 		query: t.Object({
 			fields: t.Optional(
@@ -49,22 +47,20 @@ const usersCrudRoutes = new Elysia({
 					maxLength: 500,
 				}),
 			),
-			limit: t.Optional(
-				t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-			),
-			page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+			limit: limitParam(),
+			page: pageParam(),
 			role: t.Optional(UserRoleSchema),
 			search: t.Optional(t.String({ maxLength: 200 })),
 		}),
+		requireRole: 'ADMIN',
 	})
 	// API-only: No frontend caller (list endpoint covers UI needs). Available for API-key consumers.
 	.get('/:id', handleGetUserById, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: getUserByIdDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/', handleCreateUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			email: t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH }),
 			password: t.String({
@@ -79,9 +75,9 @@ const usersCrudRoutes = new Elysia({
 			}),
 		}),
 		detail: createUserDocs,
+		requireRole: 'ADMIN',
 	})
 	.put('/:id', handleUpdateUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			email: t.Optional(t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH })),
 			role: t.Optional(UserRoleSchema),
@@ -95,25 +91,26 @@ const usersCrudRoutes = new Elysia({
 		}),
 		detail: updateUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.delete('/:id', handleDeleteUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: deleteUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/:id/unlock', handleUnlockUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: unlockUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/:id/reset-password', handleAdminResetPassword, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Union([
 			t.Object({ mode: t.Literal('set'), password: t.String({ minLength: 1 }) }),
 			t.Object({ mode: t.Literal('email') }),
 		]),
 		detail: adminResetPasswordDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	});
 
 export { usersCrudRoutes };

@@ -10,7 +10,7 @@ import {
 	FORBIDDEN_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { UserRoleSchema } from '../../schemas/domain.ts';
 import { bulkDeleteUsers, bulkUpdateUserRoles } from '../../services/userService.ts';
@@ -61,7 +61,6 @@ const usersBulkRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Object({
 				ids: t.Array(t.Number({ minimum: 1 }), { maxItems: 100, minItems: 1 }),
 			}),
@@ -103,6 +102,7 @@ const usersBulkRoutes = new Elysia({
 				},
 				summary: 'Bulk delete users (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.put(
@@ -124,7 +124,6 @@ const usersBulkRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Object({
 				updates: t.Array(
 					t.Object({
@@ -172,6 +171,7 @@ const usersBulkRoutes = new Elysia({
 				},
 				summary: 'Bulk update user roles (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	);
 

@@ -11,9 +11,15 @@ const MAX_METRICS_HOURS = 168;
 /** Maximum number of items in a single batch operation */
 const MAX_BATCH_SIZE = 100;
 
+/*
+ * Truncates before clamping. A fractional limit reaches SQL as a fractional LIMIT/OFFSET pair,
+ * which SQLite accepts and silently rounds, so the page boundaries stop lining up. Route schemas
+ * reject fractions at the edge; this covers the services that are called directly.
+ */
 function clampLimit(limit: number | undefined): number {
 	const val = limit ?? DEFAULT_PAGE_LIMIT;
-	return Math.min(Math.max(1, val), MAX_PAGE_LIMIT);
+	if (!Number.isFinite(val)) return DEFAULT_PAGE_LIMIT;
+	return Math.min(Math.max(1, Math.trunc(val)), MAX_PAGE_LIMIT);
 }
 
 export {

@@ -4,7 +4,12 @@ import type { UserRole } from '../types/roles.ts';
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { getUserAuthStatus } from '../services/userService.ts';
 import { ROLE_HIERARCHY } from '../types/roles.ts';
-import { type ErrorResponse, forbiddenError, unauthorizedError } from '../utils/errorResponse.ts';
+import {
+	type ErrorResponse,
+	forbiddenError,
+	PreValidationRejection,
+	unauthorizedError,
+} from '../utils/errorResponse.ts';
 
 interface GuardContext {
 	set: { status?: number | string };
@@ -130,4 +135,39 @@ function requireRoleFresh(minimumRole: UserRole): (ctx: GuardContext) => ErrorRe
 	};
 }
 
-export { assertUser, canModifyRole, hasMinimumRole, isSysop, requireAuth, requireRoleFresh };
+/**
+ * Run an authorization guard and throw its rejection instead of returning it.
+ *
+ * `requireAuth` and `requireRoleFresh` were written for `beforeHandle`, where returning a value
+ * short-circuits the request. Elysia ignores a returned value in a transform hook, so the same
+ * guard has to raise its rejection to stop the request there. Throwing is the only thing that
+ * short-circuits before validation, which is the whole point of moving these checks earlier: a
+ * caller the route would reject anyway must never have their body read against the schema.
+ *
+ * The policy itself is not duplicated here. This wraps the existing guards so there is exactly one
+ * definition of what authenticated and sufficiently privileged mean, and `requireRoleFresh`'s
+ * refresh of `ctx.user.role` still reaches the handler because the transform hook mutates the same
+ * request context the handler is given.
+ *
+ * @param ctx - The request context, carrying the derived user and the response `set`.
+ * @param minimumRole - The role the route requires, or null when it only requires a session.
+ * @throws PreValidationRejection when the caller is unauthenticated or under-privileged.
+ */
+function authorizeRequest(ctx: GuardContext, minimumRole: null | UserRole): void {
+	const rejection = minimumRole === null ? requireAuth(ctx) : requireRoleFresh(minimumRole)(ctx);
+	if (!rejection) return;
+
+	const status = typeof ctx.set.status === 'number' ? ctx.set.status : HTTP_STATUS.UNAUTHORIZED;
+	throw new PreValidationRejection(status, rejection);
+}
+
+export type { GuardContext };
+export {
+	assertUser,
+	authorizeRequest,
+	canModifyRole,
+	hasMinimumRole,
+	isSysop,
+	requireAuth,
+	requireRoleFresh,
+};

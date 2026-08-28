@@ -9,8 +9,7 @@ import {
 	SUCCESS_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
-import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationTypeSchema, UserRoleSchema } from '../../schemas/domain.ts';
@@ -36,7 +35,6 @@ const notificationBroadcastRoutes = new Elysia({
 			return dataResponse({ deletedNotificationsDays: config.retention.notificationsDays });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Returns the effective notification retention policy used by the cleanup ' +
@@ -62,6 +60,7 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Get notification retention policy (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -89,7 +88,6 @@ const notificationBroadcastRoutes = new Elysia({
 			return dataResponse({ count });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Object({
 				message: t.String({ maxLength: 1000, minLength: 1 }),
 				roleFilter: t.Optional(UserRoleSchema),
@@ -117,6 +115,7 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Broadcast notification to users (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.put(
@@ -131,7 +130,6 @@ const notificationBroadcastRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Marks a single notification as read by its ID. Only the notification owner ' +
@@ -152,6 +150,7 @@ const notificationBroadcastRoutes = new Elysia({
 				summary: 'Mark notification as read',
 			},
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.put(
@@ -164,11 +163,6 @@ const notificationBroadcastRoutes = new Elysia({
 			return dataResponse({ count });
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) => {
-				const authGuard = requireAuth({ set, user });
-				if (authGuard) return authGuard;
-				return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-			},
 			detail: {
 				description:
 					'Marks all unread notifications as read for the authenticated user. Returns ' +
@@ -188,6 +182,8 @@ const notificationBroadcastRoutes = new Elysia({
 				},
 				summary: 'Mark all notifications as read',
 			},
+			requireAuth: true,
+			requireSelectedWorkspace: true,
 		},
 	);
 

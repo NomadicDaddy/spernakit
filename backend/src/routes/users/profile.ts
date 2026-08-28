@@ -15,7 +15,7 @@ import {
 	USERNAME_MIN_LENGTH,
 	USERNAME_PATTERN,
 } from '../../constants/validation.ts';
-import { assertUser, requireAuth } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin, parseCookies } from '../../plugins/auth.ts';
 import {
 	changeUserPassword,
@@ -187,7 +187,6 @@ const usersProfileRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				username: t.Optional(
 					t.String({
@@ -198,18 +197,18 @@ const usersProfileRoutes = new Elysia({
 				),
 			}),
 			detail: updateProfileDocs,
+			requireAuth: true,
 		},
 	)
 	.post('/me/email-change', handleEmailChangeRequest, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			currentPassword: t.String({ maxLength: PASSWORD_MAX_LENGTH, minLength: 1 }),
 			newEmail: t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH }),
 		}),
 		detail: requestEmailChangeDocs,
+		requireAuth: true,
 	})
 	.put('/me/password', handleChangePassword, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			currentPassword: t.String({ maxLength: PASSWORD_MAX_LENGTH, minLength: 1 }),
 			newPassword: t.String({
@@ -218,6 +217,7 @@ const usersProfileRoutes = new Elysia({
 			}),
 		}),
 		detail: handleChangePasswordDocs,
+		requireAuth: true,
 	})
 	.get(
 		'/check-username/:username',
@@ -228,7 +228,6 @@ const usersProfileRoutes = new Elysia({
 			return dataResponse({ available: !taken });
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: checkUsernameDocs,
 			params: t.Object({
 				username: t.String({
@@ -237,6 +236,7 @@ const usersProfileRoutes = new Elysia({
 					pattern: USERNAME_PATTERN,
 				}),
 			}),
+			requireAuth: true,
 		},
 	);
 

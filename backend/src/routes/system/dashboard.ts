@@ -5,10 +5,10 @@ import { DASHBOARD_CACHE_TTL_MS } from '../../constants/dashboard.ts';
 import {
 	dataExample,
 	FORBIDDEN_EXAMPLE,
+	missingWorkspaceHeaderExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop, requireRoleFresh } from '../../guards/role.ts';
-import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { getTotalCount } from '../../services/auditService.ts';
@@ -42,15 +42,19 @@ const dashboardCache = new LRUCache<string, DashboardResponse>({
 
 /**
  * Get cached dashboard response or compute fresh data.
- * Cache key includes user ID and workspace ID for proper isolation.
+ *
+ * The figures follow the header, whoever sent it: a caller who named a workspace is counting that
+ * workspace, and only a caller who named none gets the totals across all of them. Who is allowed
+ * to ask for those was settled by requireSelectedWorkspaceAccess before this runs. See
+ * backend/src/guards/workspaceHeader.ts. The cache key carries the same distinction, so the two
+ * answers cannot be served from each other's entry.
+ *
+ * @param userId - The caller, whose own unread count is part of the response.
+ * @param workspaceId - The workspace the header named, or null for the cross-workspace totals.
+ * @returns The dashboard figures, cached or freshly computed.
  */
-function getDashboardData(
-	userId: number,
-	userIsSysop: boolean,
-	workspaceId: null | number,
-): DashboardResponse {
-	const effectiveWorkspaceId = userIsSysop ? null : workspaceId;
-	const cacheKey = `${userId}:${effectiveWorkspaceId ?? 'all'}`;
+function getDashboardData(userId: number, workspaceId: null | number): DashboardResponse {
+	const cacheKey = `${userId}:${workspaceId ?? 'all'}`;
 
 	const cached = dashboardCache.get(cacheKey);
 	if (cached) {
@@ -58,8 +62,8 @@ function getDashboardData(
 	}
 
 	const totalUsers = getTotalUserCount();
-	const unreadNotifications = getUnreadCount(userId, effectiveWorkspaceId);
-	const auditEvents = getTotalCount(effectiveWorkspaceId);
+	const unreadNotifications = getUnreadCount(userId, workspaceId);
+	const auditEvents = getTotalCount(workspaceId);
 	const healthResult = runAllChecks();
 	const snapshot = collectSnapshot(getConnectionCount());
 
@@ -92,21 +96,17 @@ const systemDashboardRoutes = new Elysia({
 			const authUser = assertUser(user);
 			// Dashboard updates frequently - short cache (30s)
 			setCacheHeaders(set, 'SHORT');
-			const userIsSysop = isSysop(authUser);
-			return dataResponse(getDashboardData(authUser.id, userIsSysop, workspaceId));
+			return dataResponse(getDashboardData(authUser.id, workspaceId));
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) => {
-				const roleGuard = requireRoleFresh('OPERATOR')({ set, user });
-				if (roleGuard) return roleGuard;
-				return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-			},
 			detail: {
 				description:
 					'Returns aggregate dashboard statistics: total users, unread ' +
 					'notifications, audit event count, system health status, and real-time ' +
 					'metrics (CPU, memory, active WebSocket connections, request count). ' +
-					'Scoped to workspace via X-Workspace-Id header. ' +
+					'Scoped to the workspace named by the X-Workspace-ID header; a SYSOP may ' +
+					'leave the header off for the totals across every workspace, and for anyone ' +
+					'else a request that names no workspace is answered 400. ' +
 					'Cached server-side for a short duration. Requires OPERATOR role or higher.',
 				responses: {
 					'200': {
@@ -130,11 +130,14 @@ const systemDashboardRoutes = new Elysia({
 						},
 						description: 'Dashboard statistics retrieved successfully.',
 					},
+					'400': missingWorkspaceHeaderExample(),
 					'401': UNAUTHORIZED_EXAMPLE,
 					'403': FORBIDDEN_EXAMPLE,
 				},
 				summary: 'Get dashboard statistics (OPERATOR+)',
 			},
+			requireRole: 'OPERATOR',
+			requireSelectedWorkspace: true,
 		},
 	);
 
