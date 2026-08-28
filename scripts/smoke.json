@@ -219,6 +219,10 @@
 					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself"
 				},
 				{
+					"command": "bun run test:workspace-subresource-existence",
+					"description": "A workspace sub-resource answers 404 for a workspace that is not there, including for the member a soft delete left behind, while a non-member still hears the same status either way and an existing workspace answers as before"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},

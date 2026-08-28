@@ -180,7 +180,9 @@ const workspaceMembersBulkRoutes = new Elysia({
 					'Bulk add multiple members to a workspace. Each member is processed ' +
 					'individually. Returns partial success results indicating which members ' +
 					'were added and which failed (with reasons such as user not found or ' +
-					`already a member). Maximum ${MAX_BATCH_SIZE} members per request. ` +
+					'already a member). A workspace that does not exist answers 404 ' +
+					'rather than a batch result of zero. ' +
+					`Maximum ${MAX_BATCH_SIZE} members per request. ` +
 					'Requires workspace ADMIN role or SYSOP.',
 				responses: {
 					'200': {
@@ -227,6 +229,8 @@ const workspaceMembersBulkRoutes = new Elysia({
 				'Bulk remove multiple members from a workspace. Each member is processed ' +
 				'individually. Returns partial success results indicating which members ' +
 				'were removed and which failed (with reasons such as member not found). ' +
+				'A workspace that does not exist answers 404 rather than a batch result ' +
+				'of zero. ' +
 				`Maximum ${MAX_BATCH_SIZE} user IDs per request. ` +
 				'Requires workspace ADMIN role or SYSOP.',
 			responses: {

@@ -82,12 +82,16 @@ function invalidWorkspaceHeaderError(set: StatusSink): ErrorResponse {
 }
 
 /**
- * Answer a request naming a workspace that does not exist.
+ * Answer a request naming a workspace that does not exist, in the header or in the path.
  *
- * Only a SYSOP can reach this. Every other caller is answered by the membership check first, and
- * that check deliberately does not distinguish a workspace they cannot reach from one that is not
- * there. A SYSOP can reach every workspace, so for them a named workspace that is absent is a
- * plain not-found rather than a broader result quietly returned in its place.
+ * A caller reaches this only after passing the access check for the workspace they named. Everyone
+ * else is answered by the membership check first, and that check deliberately does not distinguish
+ * a workspace they cannot reach from one that is not there, so this status can never be used to
+ * learn which ids are real. A SYSOP can reach every workspace, so for them a named workspace that
+ * is absent is a plain not-found rather than a broader result, or an empty one, returned in its
+ * place. `guards/workspaceAccess.ts` asks the same question of a workspace named in the path, once
+ * per guard and after the access decision, so every route that runs a guard gets this answer
+ * without carrying a lookup of its own.
  *
  * @param set - The context's status sink, set to 404.
  * @returns The error body to return from the guard.

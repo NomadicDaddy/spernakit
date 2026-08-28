@@ -156,4 +156,16 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-workspace-role-predicate.ts'],
 	},
+	// Drives every workspace sub-resource route in process and then scans the route tree, so its
+	// world is the backend source it sends requests through plus both halves of its own harness.
+	'test:workspace-subresource-existence': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/workspace-subresource-scan.ts',
+			'scripts/lib/workspace-subresource-world.ts',
+			'scripts/test-workspace-subresource-existence.ts',
+		],
+	},
 };

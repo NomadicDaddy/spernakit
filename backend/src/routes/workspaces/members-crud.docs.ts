@@ -11,7 +11,8 @@ const listWorkspaceMembersDocs = {
 	description:
 		'Returns all members of a workspace with their roles. The requesting user must ' +
 		'be a member of workspace (or SYSOP). Each entry includes userId, username, email, ' +
-		'and workspace role.',
+		'and workspace role. A workspace that does not exist answers 404 rather than an ' +
+		'empty list; an empty list means the workspace is there and has no members.',
 	responses: {
 		'200': {
 			content: {
@@ -38,6 +39,7 @@ const listWorkspaceMembersDocs = {
 		},
 		'401': UNAUTHORIZED_EXAMPLE,
 		'403': FORBIDDEN_EXAMPLE,
+		'404': notFoundExample('Workspace'),
 	},
 	summary: 'Get workspace members',
 };
@@ -45,8 +47,8 @@ const listWorkspaceMembersDocs = {
 const addWorkspaceMemberDocs = {
 	description:
 		'Adds a user to workspace with specified role (ADMIN, MANAGER, OPERATOR, or ' +
-		'VIEWER). Returns 409 if user is already a member. Returns 201 on success. ' +
-		'Requires workspace ADMIN role or SYSOP.',
+		'VIEWER). Returns 409 if user is already a member, and 404 if the workspace does ' +
+		'not exist. Returns 201 on success. Requires workspace ADMIN role or SYSOP.',
 	responses: {
 		'201': {
 			content: {
@@ -58,6 +60,7 @@ const addWorkspaceMemberDocs = {
 		},
 		'401': UNAUTHORIZED_EXAMPLE,
 		'403': FORBIDDEN_EXAMPLE,
+		'404': notFoundExample('Workspace'),
 		'409': conflictExample('User is already a member'),
 	},
 	summary: 'Add a member to workspace (workspace ADMIN+)',
@@ -65,8 +68,9 @@ const addWorkspaceMemberDocs = {
 
 const removeWorkspaceMemberDocs = {
 	description:
-		'Removes a user from workspace by userId. Returns 404 if member is not found. ' +
-		'Requires workspace ADMIN role or SYSOP.',
+		'Removes a user from workspace by userId. Returns 404 if the workspace does not ' +
+		'exist, and 404 if it does and the member is not in it. Requires workspace ADMIN ' +
+		'role or SYSOP.',
 	responses: {
 		'200': {
 			content: {
@@ -86,8 +90,8 @@ const removeWorkspaceMemberDocs = {
 const updateWorkspaceMemberRoleDocs = {
 	description:
 		"Changes a workspace member's role. Valid roles: ADMIN, MANAGER, OPERATOR, " +
-		'VIEWER. Returns 404 if member is not found in workspace. Requires workspace ' +
-		'ADMIN role or SYSOP.',
+		'VIEWER. Returns 404 if the workspace does not exist, and 404 if it does and the ' +
+		'member is not in it. Requires workspace ADMIN role or SYSOP.',
 	responses: {
 		'200': {
 			content: {

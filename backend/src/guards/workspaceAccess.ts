@@ -37,6 +37,10 @@ type AuthWorkspaceValidation =
  * requireWorkspaceRole. Sets ctx.set.status on error so the caller can return the
  * response directly. When bypassRoleCheck is true, the user is SYSOP and the caller
  * MUST grant access without further membership/role checks.
+ *
+ * It decides reachability only, and says nothing about whether the workspace is there. Each caller
+ * finishes with {@link requireWorkspacePresent}, which has to run after this rather than inside it
+ * so that a caller who was going to be refused is refused first.
  */
 function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceValidation {
 	if (!ctx.user) {
@@ -64,14 +68,33 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 	}
 
 	const bypassRoleCheck = ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP;
-	// A SYSOP can reach every workspace, so one they named and that is not there is absent rather
-	// than off limits, and saying so is what stops the request from being answered against some
-	// wider set of rows instead. Everybody else is answered by the membership check that follows,
-	// which deliberately gives the same reply either way.
-	if (bypassRoleCheck && !workspaceExists(ctx.workspaceId)) {
-		return { ok: false, response: unknownWorkspaceError(ctx.set) };
-	}
 	return { authUser: ctx.user, bypassRoleCheck, ok: true, workspaceId: ctx.workspaceId };
+}
+
+/**
+ * Answer 404 for a workspace the caller may reach but that is not there.
+ *
+ * Every guard below calls this last, after it has decided whether the caller has access at all,
+ * and that order is the whole point: a caller without access is answered 403 for a workspace that
+ * exists and for one that does not, so the status can never be used to learn which ids are real.
+ * Only a caller who could have read the workspace is told that it is absent.
+ *
+ * A soft delete leaves the membership rows behind while the query layer stops returning the
+ * workspace, so a member of a deleted workspace passes the membership check and would otherwise be
+ * answered as if the workspace were still there. That caller read the member roster of a deleted
+ * workspace and could still add and remove members in it. Asking the question here rather than in
+ * each route means every consumer of these guards gets the same answer, including routes added
+ * later that never think about it.
+ *
+ * @param ctx - The guard context, whose status this writes on the absent path.
+ * @param workspaceId - The workspace the request named.
+ * @returns An error response when the workspace is not there, otherwise undefined.
+ */
+function requireWorkspacePresent(
+	ctx: WorkspaceGuardContext,
+	workspaceId: number,
+): ErrorResponse | undefined {
+	return workspaceExists(workspaceId) ? undefined : unknownWorkspaceError(ctx.set);
 }
 
 /**
@@ -83,14 +106,13 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 function requireWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorResponse | undefined {
 	const result = validateAuthAndWorkspace(ctx);
 	if (!result.ok) return result.response;
-	if (result.bypassRoleCheck) return undefined;
 
-	if (!isWorkspaceMember(result.workspaceId, result.authUser.id)) {
+	if (!result.bypassRoleCheck && !isWorkspaceMember(result.workspaceId, result.authUser.id)) {
 		ctx.set.status = HTTP_STATUS.FORBIDDEN;
 		return forbiddenError();
 	}
 
-	return undefined;
+	return requireWorkspacePresent(ctx, result.workspaceId);
 }
 
 /**
@@ -123,16 +145,12 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
 	// A SYSOP who named a workspace asked to be narrowed to it, so the id is checked rather than
 	// waved through: answering an absent workspace with the cross-workspace listing would hand back
 	// more than was asked for, which is the one wrong answer here.
-	if (userIsSysop) {
-		return workspaceExists(ctx.workspaceId) ? undefined : unknownWorkspaceError(ctx.set);
-	}
-
-	if (!isWorkspaceMember(ctx.workspaceId, ctx.user.id)) {
+	if (!userIsSysop && !isWorkspaceMember(ctx.workspaceId, ctx.user.id)) {
 		ctx.set.status = HTTP_STATUS.FORBIDDEN;
 		return forbiddenError();
 	}
 
-	return undefined;
+	return requireWorkspacePresent(ctx, ctx.workspaceId);
 }
 
 /**
@@ -195,9 +213,13 @@ function requireWorkspaceRole(
 ): ErrorResponse | undefined {
 	const result = validateAuthAndWorkspace(ctx);
 	if (!result.ok) return result.response;
-	if (result.bypassRoleCheck) return undefined;
 
-	if (hasWorkspaceRole(result.authUser.id, result.workspaceId, minimumRole)) return undefined;
+	if (
+		result.bypassRoleCheck ||
+		hasWorkspaceRole(result.authUser.id, result.workspaceId, minimumRole)
+	) {
+		return requireWorkspacePresent(ctx, result.workspaceId);
+	}
 
 	// The predicate has already denied; the remaining lookup only chooses how to say so. It costs
 	// one membership read on the rejection path and keeps a single owner for the grant decision.
