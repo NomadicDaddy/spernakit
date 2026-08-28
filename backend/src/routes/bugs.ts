@@ -1,57 +1,37 @@
 import { Elysia, t } from 'elysia';
-import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
-import {
-	badRequestExample,
-	FORBIDDEN_EXAMPLE,
-	notFoundExample,
-	UNAUTHORIZED_EXAMPLE,
-} from '../constants/responseExamples.ts';
 import { MAX_PROPERTIES_DEFAULT } from '../constants/validation.ts';
 import { assertUser } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { limitParam, pageParam } from '../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../services/auditService.ts';
-import { list, submit, updateStatus } from '../services/bugReportService.ts';
+import {
+	getById,
+	getWithLinks,
+	list,
+	submit,
+	supersede,
+	updateStatus,
+	withLinks,
+} from '../services/bugReportService.ts';
 import { dataResponse, paginatedResponse } from '../utils/apiResponse.ts';
-import { notFoundError } from '../utils/errorResponse.ts';
-
-const MAX_DESCRIPTION_LENGTH = 5000;
-const MAX_EMAIL_LENGTH = 255;
-
-/** Body fields the service stores trimmed, so the schema has to be shown the trimmed value. */
-const TRIMMED_FIELDS = ['description', 'email'] as const;
-
-/**
- * Status union derived from the shared tuple rather than hand-written, so adding a
- * status to `BUG_REPORT_STATUSES` reaches this route without editing it.
- */
-const statusSchema = t.Union(BUG_REPORT_STATUSES.map((status) => t.Literal(status)));
-
-/**
- * Trim the submitted strings before Elysia checks them against the schema.
- *
- * The service stores a trimmed description, so the value the schema is asked about has to be the
- * trimmed one. Checking first and trimming afterwards let a description of nothing but spaces
- * satisfy `minLength: 1`, trim away to nothing, and land in the table as a row titled
- * `(untitled)` with no body. Reports are closed by status rather than deleted and the PATCH route
- * changes only the status, so such a row can never be corrected or removed.
- *
- * A transform hook is the last stage before validation, which is what makes this the place for it
- * rather than the handler. Every string the service trims is trimmed here, so the constraint the
- * schema asserts is the constraint the stored value satisfies.
- *
- * @param body - The parsed request body, mutated in place.
- */
-function trimSubmittedText(body: unknown): void {
-	if (typeof body !== 'object' || body === null) return;
-	const record = body as Record<string, unknown>;
-	for (const field of TRIMMED_FIELDS) {
-		const value = record[field];
-		if (typeof value === 'string') record[field] = value.trim();
-	}
-}
+import { forbiddenError, notFoundError } from '../utils/errorResponse.ts';
+import {
+	getBugDocs,
+	listBugsDocs,
+	submitBugDocs,
+	supersedeBugDocs,
+	updateBugStatusDocs,
+} from './bugs.docs.ts';
+import {
+	MAX_DESCRIPTION_LENGTH,
+	MAX_EMAIL_LENGTH,
+	mayActOn,
+	statusSchema,
+	supersedeRefusal,
+	trimSubmittedText,
+} from './bugs.helpers.ts';
 
 const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 	.use(authPlugin)
@@ -89,65 +69,25 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 					),
 				),
 			}),
-			detail: {
-				description:
-					'Submit a bug report or feature request with automatic metadata capture. ' +
-					'Requires authentication. Entries are persisted to the bug_reports table. ' +
-					'The frontend captures browser info, URL, screen size, and other ' +
-					'diagnostic information automatically. The optional kind field ' +
-					"distinguishes 'bug' (default) from 'feature' (enhancement request).",
-				responses: {
-					'200': {
-						content: {
-							'application/json': {
-								examples: {
-									success: {
-										summary: 'Bug report submitted successfully',
-										value: {
-											data: {
-												createdAt: '2026-03-05T12:00:00Z',
-												description: 'Application crashes on login',
-												email: 'user@example.com',
-												id: 42,
-												kind: 'bug',
-												metadata: {
-													reportedBy: {
-														userId: 1,
-														username: 'operator',
-													},
-												},
-												status: 'open',
-												title: 'Application crashes on login',
-												updatedAt: '2026-03-05T12:00:00Z',
-												userId: 1,
-											},
-										},
-									},
-								},
-							},
-						},
-						description: 'Bug report or feature request created successfully.',
-					},
-					'400': badRequestExample(
-						'Description must not be empty after trimming, and must not exceed 5000 characters',
-					),
-					'401': UNAUTHORIZED_EXAMPLE,
-				},
-				summary: 'Submit a bug report or feature request',
-			},
+			detail: submitBugDocs,
 			requireAuth: true,
 			transform({ body }) {
 				trimSubmittedText(body);
 			},
 		},
 	)
+	// The path is `''`, matching the POST above, and not `'/'`. Registering the two forms on the
+	// same collection puts a `/api/v1/bugs` node and a `/api/v1/bugs/` node in the router, and a
+	// GET of either URL then resolves to the node the POST created and finds no GET on it. The
+	// listing answered 404 both ways until these agreed.
 	.get(
-		'/',
+		'',
 		({ query }) => {
 			const page = query.page ?? 1;
 			const limit = query.limit ?? 50;
 			return paginatedResponse(
 				list(page, limit, {
+					includeSuperseded: query.includeSuperseded ?? false,
 					...(query.kind ? { kind: query.kind } : {}),
 					...(query.search ? { search: query.search } : {}),
 					...(query.status ? { status: query.status } : {}),
@@ -155,19 +95,9 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			);
 		},
 		{
-			detail: {
-				description:
-					'Get bug reports with pagination, newest first. Optionally filtered by ' +
-					'triage status, by kind (bug or feature), and by free-text search over the ' +
-					'description. Every filter is applied in SQL, so the returned total counts ' +
-					'the filtered set rather than the whole inbox. Requires ADMIN or SYSOP role.',
-				responses: {
-					'401': UNAUTHORIZED_EXAMPLE,
-					'403': FORBIDDEN_EXAMPLE,
-				},
-				summary: 'List bug reports (ADMIN+)',
-			},
+			detail: listBugsDocs,
 			query: t.Object({
+				includeSuperseded: t.Optional(t.BooleanString()),
 				kind: t.Optional(t.Union([t.Literal('bug'), t.Literal('feature')])),
 				limit: limitParam({ default: 50 }),
 				page: pageParam(),
@@ -175,6 +105,33 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				status: t.Optional(statusSchema),
 			}),
 			requireRole: 'ADMIN',
+		},
+	)
+	.get(
+		'/:id',
+		({ params, set, user }) => {
+			const authedUser = assertUser(user);
+
+			const report = getWithLinks(params.id);
+			if (!report) {
+				set.status = HTTP_STATUS.NOT_FOUND;
+				return notFoundError('Bug report');
+			}
+			if (!mayActOn(report.userId, authedUser)) {
+				set.status = HTTP_STATUS.FORBIDDEN;
+				return forbiddenError('Only the reporter or an administrator can read a report');
+			}
+			return dataResponse(report);
+		},
+		{
+			detail: getBugDocs,
+			params: t.Object({
+				id: t.Numeric({ minimum: 1 }),
+			}),
+			// Not ADMIN-only, because the reporter may set the supersede link on their own report
+			// and would otherwise be unable to read back what they just wrote. The listing above
+			// stays ADMIN-only: reading one report you filed is not the same as reading the queue.
+			requireAuth: true,
 		},
 	)
 	.patch(
@@ -205,22 +162,58 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			body: t.Object({
 				status: statusSchema,
 			}),
-			detail: {
-				description:
-					'Move a bug report or feature request to a new triage status. Reports are ' +
-					'retained indefinitely and closed via status rather than deleted, so this is ' +
-					'the only way a report leaves the open state. Requires ADMIN or SYSOP role.',
-				responses: {
-					'401': UNAUTHORIZED_EXAMPLE,
-					'403': FORBIDDEN_EXAMPLE,
-					'404': notFoundExample('Bug report'),
-				},
-				summary: 'Update bug report status (ADMIN+)',
-			},
+			detail: updateBugStatusDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireRole: 'ADMIN',
+		},
+	)
+	.put(
+		'/:id/superseded-by',
+		({ body, params, set, user }) => {
+			const authedUser = assertUser(user);
+
+			// Read before the write, because the answer to "may I" is about the report that is
+			// actually there. An id nobody filed is 404 whoever asks, which is the same answer the
+			// service would give, and asking here keeps the ownership check off a row it invented.
+			const existing = getById(params.id);
+			if (!existing) {
+				set.status = HTTP_STATUS.NOT_FOUND;
+				return notFoundError('Bug report');
+			}
+			if (!mayActOn(existing.userId, authedUser)) {
+				set.status = HTTP_STATUS.FORBIDDEN;
+				return forbiddenError(
+					'Only the reporter or an administrator can supersede a report',
+				);
+			}
+
+			const result = supersede(params.id, body.reportId);
+			if (result.kind !== 'ok') return supersedeRefusal(result, set);
+
+			logAudit({
+				action: 'bug.superseded',
+				details: {
+					previousSupersededById: existing.supersededById,
+					supersededById: body.reportId,
+				},
+				entityId: String(params.id),
+				entityType: 'bug-report',
+				...actorFields(authedUser),
+			});
+
+			return dataResponse(withLinks(result.report));
+		},
+		{
+			body: t.Object({
+				reportId: t.Union([t.Numeric({ minimum: 1 }), t.Null()]),
+			}),
+			detail: supersedeBugDocs,
+			params: t.Object({
+				id: t.Numeric({ minimum: 1 }),
+			}),
+			requireAuth: true,
 		},
 	);
 

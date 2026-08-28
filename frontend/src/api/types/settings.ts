@@ -57,6 +57,15 @@ interface BugReport {
 	kind: BugReportKind;
 	metadata: null | Record<string, unknown>;
 	status: BugReportStatus;
+	/** The later report that replaces this one, or null when nothing has replaced it. */
+	supersededById: null | number;
+	/**
+	 * The earlier reports this one was filed as a correction of. Empty for most reports.
+	 *
+	 * Plural because one correction can replace two reports of the same thing, which is how a
+	 * duplicate pair gets merged.
+	 */
+	supersedesIds: number[];
 	title: string;
 	updatedAt: string;
 	userId: null | number;

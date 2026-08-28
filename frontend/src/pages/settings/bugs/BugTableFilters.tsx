@@ -1,6 +1,7 @@
 import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
 	Select,
 	SelectContent,
@@ -8,11 +9,14 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 import { KIND_LABEL, KINDS, STATUS_LABEL } from './bugMeta';
 
 interface BugTableFiltersProps {
+	includeSuperseded: boolean;
 	kind: string;
+	onIncludeSupersededChange: (checked: boolean) => void;
 	onKindChange: (value: string) => void;
 	onSearchChange: (value: string) => void;
 	onStatusChange: (value: string) => void;
@@ -21,16 +25,18 @@ interface BugTableFiltersProps {
 }
 
 /**
- * Search, status and kind filters for the submissions table.
+ * Search, status, kind and superseded filters for the submissions table.
  *
- * All three go to the server, so the pagination total counts the filtered set. The description
+ * All four go to the server, so the pagination total counts the filtered set. The description
  * search used to be a `searchColumn`, which is a client-side TanStack filter: against a
  * server-paginated list it hid rows from the current page of twenty while the footer went on
  * reporting the server's unfiltered total, so the table read "No results." above "Showing 1-2 of
  * 2". Same geometry as `UserTableFilters`.
  */
 function BugTableFilters({
+	includeSuperseded,
 	kind,
+	onIncludeSupersededChange,
 	onKindChange,
 	onSearchChange,
 	onStatusChange,
@@ -75,6 +81,23 @@ function BugTableFilters({
 					))}
 				</SelectContent>
 			</Select>
+			{/*
+			  A switch rather than a fourth status value, because superseded is not a status: a
+			  report that was replaced still has one, and a triager filtering for Open wants the
+			  open reports that are still current. Same control the data viewer uses to show rows
+			  it hides by default.
+			*/}
+			<div className="flex items-center gap-2">
+				<Switch
+					aria-label="Show superseded reports"
+					checked={includeSuperseded}
+					id="include-superseded"
+					onCheckedChange={onIncludeSupersededChange}
+				/>
+				<Label className="text-sm" htmlFor="include-superseded">
+					Show superseded
+				</Label>
+			</div>
 		</div>
 	);
 }

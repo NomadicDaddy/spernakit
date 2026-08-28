@@ -48,6 +48,25 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-before-validation.ts',
 		],
 	},
+	// Sets and reads the supersede link through the real routes against a temp database, so its
+	// world is the bug routes and both services behind them, the migrations that add the column
+	// the link lives in, the plugins those requests pass through, and the seed that supplies the
+	// reporter and the administrator the two halves of the authorization rule are checked with.
+	'test:bug-report-supersede': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/db/schema/bugReports.ts',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/bugs.helpers.ts',
+			'backend/src/routes/bugs.ts',
+			'backend/src/services/bug/bugSupersedeService.ts',
+			'backend/src/services/bugReportService.ts',
+			'scripts/lib/bug-supersede-world.ts',
+			'scripts/test-bug-report-supersede.ts',
+		],
+	},
 	// Submits through the real route against a temp database, so its world is the intake route and
 	// the service behind it, the plugins those requests pass through, the seed that supplies the
 	// account, and the table the report lands in.
@@ -57,6 +76,7 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/db/schema/bugReports.ts',
 			'backend/src/db/seed/**',
 			'backend/src/plugins/**',
+			'backend/src/routes/bugs.helpers.ts',
 			'backend/src/routes/bugs.ts',
 			'backend/src/services/bugReportService.ts',
 			'scripts/test-bug-report-whitespace.ts',
