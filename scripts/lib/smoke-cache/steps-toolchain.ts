@@ -145,6 +145,13 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/shared-core/**/*.ts', 'scripts/test-shared-core-write.ts'],
 	},
+	// Runs in process against the loaded configuration: what it asserts moves when the file
+	// validation service, the request-body ceiling, or the configured MIME allowlist and size
+	// limits move, so the config tree is part of its world alongside the backend source.
+	'test:upload-validation': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/src/**', 'config/**', 'scripts/test-upload-validation.ts'],
+	},
 	// Same in-process temp-DB shape as `test:impersonation-audit`: it applies the migrations and
 	// exercises the guard module, so its world is the backend source plus the gate script itself.
 	'test:workspace-role-predicate': {

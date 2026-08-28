@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { initializeConfig } from './config/configLoader.ts';
 import { projectRoot } from './config/configUtils.ts';
 import { assertDbUnderDataDir } from './config/databaseLocation.ts';
+import { resolveMaxRequestBodySize } from './config/requestBodyLimit.ts';
 import { HTTP_STATUS } from './constants/httpStatus.ts';
 import { createApiApp } from './create-api-app.ts';
 import { runAutoMigrations } from './db/autoMigrate.ts';
@@ -121,8 +122,16 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 
 	// Root app: mounts API routes and WebSocket at root level
 	// Registration order below is load-bearing; see the comment on .onError.
+	// The transport ceiling is kept above storage.maxFileSize so an oversize upload is answered
+	// by the route with a described 400 rather than by the connection closing mid-body.
+	// See config/requestBodyLimit.ts.
 	const elysiaApp = new Elysia({
-		serve: { maxRequestBodySize: config.server.maxRequestBodySize },
+		serve: {
+			maxRequestBodySize: resolveMaxRequestBodySize(
+				config.server.maxRequestBodySize,
+				config.storage.maxFileSize,
+			),
+		},
 	})
 		.use(apiApp)
 		// Root-level error handler for surfaces outside the /api/v1 chain (ws upgrade,

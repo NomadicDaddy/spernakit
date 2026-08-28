@@ -183,6 +183,10 @@
 					"description": "hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it"
 				},
 				{
+					"command": "bun run test:upload-validation",
+					"description": "Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},
