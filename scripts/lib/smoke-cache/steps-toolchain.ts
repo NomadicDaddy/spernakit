@@ -102,6 +102,19 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	// Imports the frontend page tree in process and renders it, so its world is most of
+	// frontend/src rather than a named handful of files: the query client, the API client the
+	// page fetches through, the page and its child components, and the app slug the source tree
+	// reads at import time.
+	'test:dashboard-not-found': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/defaults.json',
+			'frontend/src/**',
+			'scripts/lib/frontend-render.ts',
+			'scripts/test-dashboard-not-found.ts',
+		],
+	},
 	'test:dashboard-share-revoke': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

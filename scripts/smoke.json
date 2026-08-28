@@ -199,6 +199,10 @@
 					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
 				},
 				{
+					"command": "bun run test:dashboard-not-found",
+					"description": "A deleted dashboard renders the page not-found state with a route back, is not retried, and the error boundary still renders readable text for errors that are genuinely unexpected"
+				},
+				{
 					"command": "bun run test:dashboard-share-revoke",
 					"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted"
 				},

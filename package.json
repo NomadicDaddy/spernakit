@@ -173,6 +173,7 @@
 		"test:critical-path-budget": "bun scripts/test-critical-path-budget.ts",
 		"test:destructive-comments": "bun scripts/test-destructive-comments.ts",
 		"test:destructive-evidence": "bun scripts/test-destructive-evidence.ts",
+		"test:dashboard-not-found": "bun scripts/test-dashboard-not-found.ts",
 		"test:dashboard-share-revoke": "bun scripts/test-dashboard-share-revoke.ts",
 		"test:error-log-wiring": "bun scripts/test-error-log-wiring.ts",
 		"test:onboarding-password-step": "bun scripts/test-onboarding-password-step.ts",

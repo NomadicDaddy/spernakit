@@ -4,12 +4,28 @@ import { ApiError } from '@/api/apiError';
 import { showErrorToast } from '@/api/errorHandling';
 
 /**
+ * A 404 is an answer, not a failure.
+ *
+ * The resource is not there, and neither asking again nor escalating to an error boundary changes
+ * that. Both of the rules below consult this one predicate so the behavior is decided once here
+ * rather than per page: a page added later gets it without opting in, and a page cannot opt out of
+ * it by accident. Opening a deleted dashboard used to spend three retries with exponential backoff
+ * on a response that was already final, and then throw past the page's own not-found branch into
+ * the error boundary, which is how a deleted dashboard ended up showing several seconds of skeleton
+ * followed by a generic failure.
+ */
+function isNotFound(error: Error): boolean {
+	return error instanceof ApiError && error.status === 404;
+}
+
+/**
  * Never retry 429 at the TanStack level — the fetch-level retryHandler already
  * retries 429 with Retry-After backoff. Stacking TanStack retries on top would
  * only worsen the rate-limit window.
  */
 function shouldRetryQuery(failureCount: number, error: Error): boolean {
 	if (error instanceof ApiError && error.status === 429) return false;
+	if (isNotFound(error)) return false;
 	return failureCount < 3;
 }
 
@@ -20,13 +36,17 @@ function shouldRetryQuery(failureCount: number, error: Error): boolean {
  *
  * Only throws after all retries are exhausted (TanStack calls this on final failure).
  * Does not throw for 401 (handled by token refresh / redirect) or 403 (permission
- * checks are page-level concerns).
+ * checks are page-level concerns), nor for 404, which every page that can receive one
+ * reports itself. A thrown 404 reaches the boundary as an unexplained failure and takes
+ * the page's own not-found branch out of the running; returned as a result, the page can
+ * say which thing was not found and offer the way back. Anything still thrown from here
+ * is genuinely unexpected, and the boundary's visible fallback is the right answer to it.
  */
 function shouldThrowOnError(error: Error): boolean {
 	if (error instanceof ApiError) {
 		if (error.status === 401 || error.status === 403) return false;
 	}
-	return true;
+	return !isNotFound(error);
 }
 
 /** Show the global error toast for API errors — fires once, after retries are exhausted. */
