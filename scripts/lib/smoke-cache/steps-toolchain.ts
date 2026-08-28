@@ -85,6 +85,19 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
+	// Drives the real API in process against a temp database, so its world is the dashboard
+	// routes and services it calls, the plugins and guards those routes stack, and the schema.
+	'test:dashboard-share-revoke': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/db/schema/**',
+			'backend/src/guards/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/dashboards/**',
+			'backend/src/services/dashboard/**',
+			'scripts/test-dashboard-share-revoke.ts',
+		],
+	},
 	'test:destructive-comments': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

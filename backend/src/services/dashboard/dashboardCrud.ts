@@ -232,8 +232,18 @@ function deleteDashboard(
 		softDeleteWidgets(dashboardId, userId, tx);
 
 		const now = new Date();
+		// Clearing the share columns is part of the delete, not a follow-up: a share link outlives
+		// the dashboard otherwise, and the public route reads the row by token without asking
+		// whether it is deleted.
 		tx.update(dashboardConfigs)
-			.set({ deletedAt: now, deletedBy: userId, isDeleted: true, updatedAt: now })
+			.set({
+				deletedAt: now,
+				deletedBy: userId,
+				isDeleted: true,
+				shareExpiresAt: null,
+				shareToken: null,
+				updatedAt: now,
+			})
 			.where(eq(dashboardConfigs.id, dashboardId))
 			.run();
 	});
