@@ -6,7 +6,7 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import type { WidgetInput } from '../../services/dashboardService.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -96,8 +96,8 @@ const dashboardCrudRoutes = new Elysia({
 			return dataResponse(listDashboards(authUser.id, scope));
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: listDashboardsDocs,
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -116,11 +116,11 @@ const dashboardCrudRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: getDashboardDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -154,12 +154,12 @@ const dashboardCrudRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1 }),
 				widgets: t.Optional(t.Array(widgetSchema)),
 			}),
 			detail: createDashboardDocs,
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -189,7 +189,6 @@ const dashboardCrudRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1 }),
 				widgets: t.Optional(t.Array(widgetSchema)),
@@ -198,6 +197,7 @@ const dashboardCrudRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -218,11 +218,11 @@ const dashboardCrudRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			detail: deleteDashboardDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	);
 

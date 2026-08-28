@@ -7,7 +7,6 @@ import {
 	NOTIFICATION_SETTINGS_KEYS,
 } from '../../constants/appFeatures.ts';
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
-import { requireAuth } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { getByKeys, type SeedDefaultEntry, seedDefaults } from '../../services/settingsService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
@@ -232,7 +231,6 @@ const settingsAppFeaturesRoutes = new Elysia({
 			return dataResponse(getAppFeatures());
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns app-wide feature flags that affect navigation and layout defaults. ' +
@@ -256,6 +254,7 @@ const settingsAppFeaturesRoutes = new Elysia({
 				},
 				summary: 'Get app feature flags',
 			},
+			requireAuth: true,
 		},
 	);
 

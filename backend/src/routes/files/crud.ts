@@ -8,7 +8,6 @@ import {
 	SUCCESS_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { requireAuth } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { limitParam, pageParam } from '../../schemas/pagination.ts';
@@ -28,7 +27,6 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 	.use(authPlugin)
 	.use(workspacePlugin)
 	.post('/upload', handleUploadFile, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			file: t.File(),
 		}),
@@ -62,10 +60,10 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			},
 			summary: 'Upload a file',
 		},
+		requireAuth: true,
 		type: 'multipart',
 	})
 	.get('/:id', handleDownloadFile, {
-		beforeHandle: requireAuth,
 		detail: {
 			description:
 				'Downloads the binary content of a file by its numeric ID. Returns the file ' +
@@ -84,9 +82,9 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			summary: 'Download a file by ID',
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	})
 	.get('/:id/info', handleGetFileInfo, {
-		beforeHandle: requireAuth,
 		detail: {
 			description:
 				'Returns metadata for a file without downloading its content. Includes id, ' +
@@ -120,9 +118,9 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			summary: 'Get file metadata',
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	})
 	.get('/', handleListFiles, {
-		beforeHandle: requireAuth,
 		detail: {
 			description:
 				'Lists files with pagination support. Returns array of file records with ' +
@@ -170,9 +168,9 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			limit: limitParam(),
 			page: pageParam(),
 		}),
+		requireAuth: true,
 	})
 	.delete('/:id', handleDeleteFile, {
-		beforeHandle: requireAuth,
 		detail: {
 			description:
 				'Soft-deletes a file by ID (marks as deleted, preserves data). Only the ' +
@@ -195,6 +193,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			summary: 'Delete a file',
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	});
 
 export { fileRoutes };

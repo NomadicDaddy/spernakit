@@ -162,6 +162,7 @@
 		"template:sync-plan": "bun scripts/template-sync-plan.ts",
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
 		"test:audit-outcome-filter": "bun scripts/test-audit-outcome-filter.ts",
+		"test:auth-before-validation": "bun scripts/test-auth-before-validation.ts",
 		"test:auth-reset-api": "bun scripts/test-auth-reset-api.ts",
 		"test:auth-reset-ui-dev": "bun scripts/test-auth-reset-ui.ts --mode dev",
 		"test:auth-reset-ui-preview": "bun scripts/test-auth-reset-ui.ts --mode preview",

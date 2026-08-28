@@ -9,7 +9,7 @@ import {
 	UNAUTHORIZED_EXAMPLE,
 } from '../constants/responseExamples.ts';
 import { MAX_PROPERTIES_DEFAULT } from '../constants/validation.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
+import { assertUser } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { limitParam, pageParam } from '../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../services/auditService.ts';
@@ -44,7 +44,6 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			return dataResponse(saved);
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				description: t.String({ maxLength: MAX_DESCRIPTION_LENGTH, minLength: 1 }),
 				email: t.Optional(t.String({ format: 'email', maxLength: MAX_EMAIL_LENGTH })),
@@ -109,6 +108,7 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				},
 				summary: 'Submit a bug report or feature request',
 			},
+			requireAuth: true,
 		},
 	)
 	.get(
@@ -125,7 +125,6 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Get bug reports with pagination, newest first. Optionally filtered by ' +
@@ -145,6 +144,7 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 				search: t.Optional(t.String({ maxLength: 200 })),
 				status: t.Optional(statusSchema),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.patch(
@@ -172,7 +172,6 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			return dataResponse(result.report);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Object({
 				status: statusSchema,
 			}),
@@ -191,6 +190,7 @@ const bugsRoutes = new Elysia({ detail: { tags: ['Bugs'] }, prefix: '/bugs' })
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	);
 

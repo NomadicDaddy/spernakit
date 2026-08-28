@@ -6,7 +6,7 @@ import {
 	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
@@ -45,7 +45,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			return dataResponse(listTemplates());
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns list of available dashboard templates that can be used ' +
@@ -76,6 +75,7 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'List dashboard templates',
 			},
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -162,7 +162,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				templateId: t.String({ maxLength: 100, minLength: 1 }),
 			}),
@@ -190,13 +189,13 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'Create dashboard from template',
 			},
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  POST /dashboards/import — import dashboard from JSON               */
 	/* ------------------------------------------------------------------ */
 	.post('/import', handleImportDashboard, {
-		beforeHandle: requireRoleFresh('OPERATOR'),
 		body: t.Object({
 			name: t.String({ maxLength: 100, minLength: 1 }),
 			version: t.Integer({ minimum: 1 }),
@@ -225,6 +224,7 @@ const dashboardTemplatesRoutes = new Elysia({
 			},
 			summary: 'Import dashboard',
 		},
+		requireRole: 'OPERATOR',
 	});
 
 export { dashboardTemplatesRoutes };

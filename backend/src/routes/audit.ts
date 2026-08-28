@@ -10,7 +10,7 @@ import {
 	paginatedExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../constants/responseExamples.ts';
-import { assertUser, isSysop, requireRoleFresh } from '../guards/role.ts';
+import { assertUser, isSysop } from '../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../guards/workspaceAccess.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { workspacePlugin } from '../plugins/workspace.ts';
@@ -96,11 +96,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 	.use(authPlugin)
 	.use(workspacePlugin)
 	.get('/', handleListAuditLogs, {
-		beforeHandle: ({ set, user, workspaceId }) => {
-			const roleGuard = requireRoleFresh('ADMIN')({ set, user });
-			if (roleGuard) return roleGuard;
-			return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-		},
+		beforeHandle: ({ set, user, workspaceId }) =>
+			requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 		detail: {
 			description:
 				'Returns a paginated list of audit log entries. Supports filtering by action ' +
@@ -236,6 +233,7 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 			),
 			userId: t.Optional(t.Numeric({ minimum: 1 })),
 		}),
+		requireRole: 'ADMIN',
 	});
 
 export { auditRoutes };

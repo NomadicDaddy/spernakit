@@ -8,7 +8,6 @@ import {
 	USERNAME_MIN_LENGTH,
 	USERNAME_PATTERN,
 } from '../../constants/validation.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { UserRoleSchema } from '../../schemas/domain.ts';
 import { limitParam, pageParam } from '../../schemas/pagination.ts';
@@ -40,7 +39,6 @@ const usersCrudRoutes = new Elysia({
 })
 	.use(authPlugin)
 	.get('/', handleListUsers, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: listUsersDocs,
 		query: t.Object({
 			fields: t.Optional(
@@ -54,15 +52,15 @@ const usersCrudRoutes = new Elysia({
 			role: t.Optional(UserRoleSchema),
 			search: t.Optional(t.String({ maxLength: 200 })),
 		}),
+		requireRole: 'ADMIN',
 	})
 	// API-only: No frontend caller (list endpoint covers UI needs). Available for API-key consumers.
 	.get('/:id', handleGetUserById, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: getUserByIdDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/', handleCreateUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			email: t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH }),
 			password: t.String({
@@ -77,9 +75,9 @@ const usersCrudRoutes = new Elysia({
 			}),
 		}),
 		detail: createUserDocs,
+		requireRole: 'ADMIN',
 	})
 	.put('/:id', handleUpdateUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			email: t.Optional(t.String({ format: 'email', maxLength: EMAIL_MAX_LENGTH })),
 			role: t.Optional(UserRoleSchema),
@@ -93,25 +91,26 @@ const usersCrudRoutes = new Elysia({
 		}),
 		detail: updateUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.delete('/:id', handleDeleteUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: deleteUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/:id/unlock', handleUnlockUser, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		detail: unlockUserDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	})
 	.post('/:id/reset-password', handleAdminResetPassword, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Union([
 			t.Object({ mode: t.Literal('set'), password: t.String({ minLength: 1 }) }),
 			t.Object({ mode: t.Literal('email') }),
 		]),
 		detail: adminResetPasswordDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'ADMIN',
 	});
 
 export { usersCrudRoutes };

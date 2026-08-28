@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DATE_RANGE_DEFAULT_DAYS, DATE_RANGE_MAX_DAYS } from '../../constants/validation.ts';
-import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
@@ -75,7 +75,6 @@ const dashboardShareExportRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Optional(
 				t.Object({
 					expiresInDays: t.Optional(
@@ -89,6 +88,7 @@ const dashboardShareExportRoutes = new Elysia({
 			),
 			detail: shareDashboardDocs,
 			params: idParams,
+			requireRole: 'ADMIN',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -107,9 +107,9 @@ const dashboardShareExportRoutes = new Elysia({
 			return dataResponse(state);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: getShareStateDocs,
 			params: idParams,
+			requireRole: 'ADMIN',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -128,9 +128,9 @@ const dashboardShareExportRoutes = new Elysia({
 			return dataResponse(state);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: revokeShareDocs,
 			params: idParams,
+			requireRole: 'ADMIN',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -149,9 +149,9 @@ const dashboardShareExportRoutes = new Elysia({
 			return dataResponse(exported);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: exportDashboardDocs,
 			params: idParams,
+			requireAuth: true,
 		},
 	);
 

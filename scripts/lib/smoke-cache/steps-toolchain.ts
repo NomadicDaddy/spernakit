@@ -85,6 +85,24 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-audit-outcome-filter.ts',
 		],
 	},
+	// Asserts the lifecycle stage authorization runs at, so its world is the plugins that carry the
+	// guards and the limiter, the error handler that turns their throw back into a response, the one
+	// representative route it exercises, and every route file it scans for a guard that has gone
+	// back to beforeHandle.
+	'test:auth-before-validation': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/create-api-app.ts',
+			'backend/src/db/seed/**',
+			'backend/src/guards/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/**',
+			'backend/src/utils/errorResponse.ts',
+			'backend/src/utils/preValidationRejection.ts',
+			'scripts/lib/auth-ordering.ts',
+			'scripts/test-auth-before-validation.ts',
+		],
+	},
 	// The fixture is self-contained: it copies clear-logs.ts into a temp tree and writes its own
 	// runbook there, so the real scripts/smoke.json is not part of this step's world.
 	'test:clear-logs': {

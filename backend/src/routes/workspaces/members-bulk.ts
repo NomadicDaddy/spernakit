@@ -11,7 +11,6 @@ import {
 	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { requireAuth } from '../../guards/role.ts';
 import {
 	canModifyWorkspaceRole,
 	validateWorkspaceRole,
@@ -162,7 +161,6 @@ const workspaceMembersBulkRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				members: t.Array(
 					t.Object({
@@ -217,10 +215,10 @@ const workspaceMembersBulkRoutes = new Elysia({
 				summary: 'Bulk add workspace members (workspace ADMIN+)',
 			},
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.post('/:id/members/bulk-delete', handleBulkDeleteMembers, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			userIds: t.Array(t.Number({ minimum: 1 }), { maxItems: 100, minItems: 1 }),
 		}),
@@ -262,6 +260,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 			summary: 'Bulk remove workspace members (workspace ADMIN+)',
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	});
 
 export { workspaceMembersBulkRoutes };

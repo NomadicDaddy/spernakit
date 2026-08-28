@@ -199,6 +199,10 @@
 					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
 				},
 				{
+					"command": "bun run test:auth-before-validation",
+					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
+				},
+				{
 					"command": "bun run test:dashboard-not-found",
 					"description": "A deleted dashboard renders the page not-found state with a route back, is not retried, and the error boundary still renders readable text for errors that are genuinely unexpected"
 				},

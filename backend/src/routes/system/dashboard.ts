@@ -7,7 +7,7 @@ import {
 	FORBIDDEN_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -96,11 +96,8 @@ const systemDashboardRoutes = new Elysia({
 			return dataResponse(getDashboardData(authUser.id, userIsSysop, workspaceId));
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) => {
-				const roleGuard = requireRoleFresh('OPERATOR')({ set, user });
-				if (roleGuard) return roleGuard;
-				return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-			},
+			beforeHandle: ({ set, user, workspaceId }) =>
+				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns aggregate dashboard statistics: total users, unread ' +
@@ -135,6 +132,7 @@ const systemDashboardRoutes = new Elysia({
 				},
 				summary: 'Get dashboard statistics (OPERATOR+)',
 			},
+			requireRole: 'OPERATOR',
 		},
 	);
 

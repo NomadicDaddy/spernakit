@@ -10,7 +10,7 @@ import {
 	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { getAll, getByKey, update } from '../../services/settingsService.ts';
@@ -44,7 +44,6 @@ const settingsGeneralRoutes = new Elysia({
 			return dataResponse(rows);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Returns all application settings as key-value pairs. Each setting includes ' +
@@ -83,6 +82,7 @@ const settingsGeneralRoutes = new Elysia({
 				},
 				summary: 'List all settings (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	// API-only: No frontend caller (bulk GET covers UI needs). Available for API-key consumers.
@@ -107,7 +107,6 @@ const settingsGeneralRoutes = new Elysia({
 			return dataResponse(setting);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Returns a single setting by its key string. Security-sensitive keys ' +
@@ -139,6 +138,7 @@ const settingsGeneralRoutes = new Elysia({
 			params: t.Object({
 				key: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_.]+$' }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.put(
@@ -178,7 +178,6 @@ const settingsGeneralRoutes = new Elysia({
 			return dataResponse(setting);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			body: t.Object({
 				description: t.Optional(t.String({ maxLength: 1000 })),
 				value: t.String({ maxLength: 2000, minLength: 1 }),
@@ -221,6 +220,7 @@ const settingsGeneralRoutes = new Elysia({
 			params: t.Object({
 				key: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_.]+$' }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	);
 

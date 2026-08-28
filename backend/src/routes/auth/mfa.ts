@@ -1,7 +1,6 @@
 import { Elysia, t } from 'elysia';
 
 import { PASSWORD_MAX_LENGTH } from '../../constants/validation.ts';
-import { requireAuth } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { csrfPlugin } from '../../plugins/csrf.ts';
 import {
@@ -34,22 +33,22 @@ const authMfaRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth/mf
 	.use(authPlugin)
 	.use(csrfPlugin)
 	.get('/status', handleMfaStatus, {
-		beforeHandle: requireAuth,
 		detail: mfaStatusDocs,
+		requireAuth: true,
 	})
 	.post('/setup', handleMfaSetup, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			currentPassword: t.String({ maxLength: PASSWORD_MAX_LENGTH, minLength: 1 }),
 		}),
 		detail: mfaSetupDocs,
+		requireAuth: true,
 	})
 	.post('/verify-setup', handleVerifyMfaSetup, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			code: t.String({ maxLength: 6, minLength: 6, pattern: '^[0-9]{6}$' }),
 		}),
 		detail: mfaVerifySetupDocs,
+		requireAuth: true,
 	})
 	.post('/verify', handleVerifyMfa, {
 		body: t.Object({
@@ -66,18 +65,18 @@ const authMfaRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth/mf
 		detail: mfaVerifyRecoveryDocs,
 	})
 	.post('/disable', handleDisableMfa, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			code: t.String({ maxLength: 6, minLength: 6, pattern: '^[0-9]{6}$' }),
 		}),
 		detail: mfaDisableDocs,
+		requireAuth: true,
 	})
 	.post('/recovery-codes', handleRegenerateRecoveryCodes, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			code: t.String({ maxLength: 6, minLength: 6, pattern: '^[0-9]{6}$' }),
 		}),
 		detail: mfaRegenerateRecoveryCodesDocs,
+		requireAuth: true,
 	});
 
 export { authMfaRoutes };

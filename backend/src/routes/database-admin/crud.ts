@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
@@ -54,22 +54,21 @@ const databaseAdminRoutes = new Elysia({
 	})
 	// Schema introspection (SYSOP)
 	.get('/schema', handleListSchema, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description: 'Returns all tables with metadata (name, column count, row count).',
 			summary: 'List all database tables (SYSOP)',
 		},
+		requireRole: 'SYSOP',
 	})
 	.get('/schema/relationships', handleGetRelationships, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description:
 				'Returns all foreign key relationships across all tables for ERD rendering.',
 			summary: 'Get all table relationships (SYSOP)',
 		},
+		requireRole: 'SYSOP',
 	})
 	.get('/schema/:tableName', handleGetTableDetails, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description:
 				'Returns detailed table metadata including columns, foreign keys, and indexes.',
@@ -78,10 +77,10 @@ const databaseAdminRoutes = new Elysia({
 		params: t.Object({
 			tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 		}),
+		requireRole: 'SYSOP',
 	})
 	// Data operations (SYSOP)
 	.get('/data/:tableName', handleGetTableData, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description: 'Returns paginated rows from a table with optional soft-delete filtering.',
 			summary: 'Get table data (SYSOP)',
@@ -94,6 +93,7 @@ const databaseAdminRoutes = new Elysia({
 			limit: limitParam(),
 			page: pageParam(),
 		}),
+		requireRole: 'SYSOP',
 	})
 	.post(
 		'/data/:tableName',
@@ -102,7 +102,6 @@ const databaseAdminRoutes = new Elysia({
 			return handleInsertRow({ body, params, set, user: authUser });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()])),
 			detail: {
 				description:
@@ -112,6 +111,7 @@ const databaseAdminRoutes = new Elysia({
 			params: t.Object({
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
+			requireRole: 'SYSOP',
 		},
 	)
 	.put(
@@ -121,7 +121,6 @@ const databaseAdminRoutes = new Elysia({
 			return handleUpdateRow({ body, params, set, user: authUser });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Record(t.String(), t.Union([t.String(), t.Number(), t.Boolean(), t.Null()])),
 			detail: {
 				description: 'Updates a row by primary key. Returns 403 when safe mode is enabled.',
@@ -131,6 +130,7 @@ const databaseAdminRoutes = new Elysia({
 				rowId: t.Numeric({ minimum: 1 }),
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
+			requireRole: 'SYSOP',
 		},
 	)
 	.delete(
@@ -140,7 +140,6 @@ const databaseAdminRoutes = new Elysia({
 			return handleDeleteRow({ params, set, user: authUser });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Deletes a row. Soft-deletes if table has is_deleted column, hard-deletes otherwise. Returns 403 when safe mode is enabled.',
@@ -150,6 +149,7 @@ const databaseAdminRoutes = new Elysia({
 				rowId: t.Numeric({ minimum: 1 }),
 				tableName: t.String({ minLength: 1, pattern: '^[a-z_][a-z0-9_]*$' }),
 			}),
+			requireRole: 'SYSOP',
 		},
 	)
 	// Query execution (SYSOP only — can access all tables)
@@ -160,7 +160,6 @@ const databaseAdminRoutes = new Elysia({
 			return handleExecuteQuery({ body, set, user: authUser });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				sql: t.String({ maxLength: 4096, minLength: 1 }),
 			}),
@@ -169,15 +168,16 @@ const databaseAdminRoutes = new Elysia({
 					'Executes a read-only SELECT query. Non-SELECT statements are rejected server-side.',
 				summary: 'Execute read-only query (SYSOP)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	// Safe mode management
 	.get('/safe-mode', () => dataResponse({ enabled: getSafeMode() }), {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description: 'Returns the current safe mode state.',
 			summary: 'Get safe mode status (SYSOP)',
 		},
+		requireRole: 'SYSOP',
 	})
 	.put(
 		'/safe-mode',
@@ -195,7 +195,6 @@ const databaseAdminRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				enabled: t.Boolean(),
 			}),
@@ -203,6 +202,7 @@ const databaseAdminRoutes = new Elysia({
 				description: 'Toggles safe mode on or off. Only SYSOP can change this.',
 				summary: 'Toggle safe mode (SYSOP)',
 			},
+			requireRole: 'SYSOP',
 		},
 	);
 

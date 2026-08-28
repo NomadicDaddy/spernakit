@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
-import { assertUser, isSysop, requireAuth } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { requireSelectedWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -29,11 +29,8 @@ const notificationPreferencesRoutes = new Elysia({
 			);
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) => {
-				const authGuard = requireAuth({ set, user });
-				if (authGuard) return authGuard;
-				return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-			},
+			beforeHandle: ({ set, user, workspaceId }) =>
+				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns aggregate notification statistics for the user, including total ' +
@@ -63,6 +60,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get notification statistics',
 			},
+			requireAuth: true,
 		},
 	)
 	.get(
@@ -78,11 +76,8 @@ const notificationPreferencesRoutes = new Elysia({
 			});
 		},
 		{
-			beforeHandle: ({ set, user, workspaceId }) => {
-				const authGuard = requireAuth({ set, user });
-				if (authGuard) return authGuard;
-				return requireSelectedWorkspaceAccess({ set, user, workspaceId });
-			},
+			beforeHandle: ({ set, user, workspaceId }) =>
+				requireSelectedWorkspaceAccess({ set, user, workspaceId }),
 			detail: {
 				description:
 					'Returns the count of unread notifications for the authenticated user. ' +
@@ -103,6 +98,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get unread notification count',
 			},
+			requireAuth: true,
 		},
 	)
 	.get(
@@ -112,7 +108,6 @@ const notificationPreferencesRoutes = new Elysia({
 			return dataResponse(getPreferences(authUser.id));
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns notification preferences for the authenticated user, including ' +
@@ -138,6 +133,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Get notification preferences',
 			},
+			requireAuth: true,
 		},
 	)
 	.put(
@@ -154,7 +150,6 @@ const notificationPreferencesRoutes = new Elysia({
 			return dataResponse(preferences);
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				emailNotifications: t.Boolean(),
 				marketingEmails: t.Boolean(),
@@ -188,6 +183,7 @@ const notificationPreferencesRoutes = new Elysia({
 				},
 				summary: 'Update notification preferences',
 			},
+			requireAuth: true,
 		},
 	);
 

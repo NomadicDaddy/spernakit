@@ -37,6 +37,7 @@ import { workspaceRoutes } from './routes/workspaces/index.ts';
 import { READINESS_CACHE_TTL_MS, runAllChecks } from './services/health/healthChecks.ts';
 import {
 	internalError,
+	isPreValidationRejection,
 	notFoundError,
 	RESOURCE_ERROR_CODES,
 	SERVER_ERROR_CODES,
@@ -123,6 +124,17 @@ function createApiApp(options?: CreateApiAppOptions) {
 
 	return app
 		.onError(({ code, error, requestId, set }) => {
+			// Checked before every code, including VALIDATION. A guard or the rate limiter that
+			// rejected a request at the transform stage had to throw to stop it there, since a
+			// transform hook cannot short-circuit by returning; the throw carries the response it
+			// already decided on. Treating it as a fault would turn a 401 into a 500.
+			if (isPreValidationRejection(error)) {
+				set.status = error.httpStatus;
+				for (const [name, value] of Object.entries(error.headers)) {
+					set.headers[name] = value;
+				}
+				return error.body;
+			}
 			if (code === 'VALIDATION') {
 				set.status = HTTP_STATUS.BAD_REQUEST;
 				// The same value-free description serves both sinks. error.message is deliberately
