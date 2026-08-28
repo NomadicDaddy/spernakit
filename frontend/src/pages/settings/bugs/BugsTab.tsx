@@ -1,50 +1,34 @@
-import type { ColumnDef } from '@tanstack/react-table';
-
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bug } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { BUG_REPORT_STATUSES } from 'spernakit-shared';
 
 import type { BugReport, PaginatedResponse } from '@/api/types';
-import type { DataTableFeatures } from '@/components/shared/data-table/features';
 
 import { listBugs, updateBugStatus } from '@/api/bugs';
 import { DataTable } from '@/components/shared/data-table/DataTable';
 import { SectionHeader } from '@/components/shared/SectionHeader';
-import { Badge } from '@/components/ui/badge';
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select';
-import { useFormatters } from '@/hooks/useFormatters';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
 import { BugDetailDialog } from './BugDetailDialog';
-import {
-	isBugKind,
-	isBugStatus,
-	KIND_LABEL,
-	KIND_VARIANT,
-	STATUS_LABEL,
-	STATUS_VARIANT,
-} from './bugMeta';
+import { isBugKind, isBugStatus, STATUS_LABEL } from './bugMeta';
 import { BugTableFilters } from './BugTableFilters';
+import { useBugColumns } from './useBugColumns';
 
 function BugsTab() {
-	const { formatDate } = useFormatters();
 	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const queryClient = useQueryClient();
-	const [selectedBug, setSelectedBug] = useState<BugReport | null>(null);
+	const [selectedBugId, setSelectedBugId] = useState<null | number>(null);
 
 	const statusFilter = getFilter('status');
 	const kindFilter = getFilter('kind');
 	const search = getFilter('search');
 	const status = isBugStatus(statusFilter) ? statusFilter : undefined;
 	const kind = isBugKind(kindFilter) ? kindFilter : undefined;
+	// A superseded report is not separate open work, so the inbox leaves it out until asked. The
+	// toggle exists because "left out" must not mean "unreachable": the reports themselves are
+	// retained, and a triager auditing a merge needs to be able to see both halves of one.
+	const includeSuperseded = getFilter('superseded') === 'include';
 
 	const { data, isLoading } = useQuery<PaginatedResponse<BugReport>>({
 		// `search` is part of the query key, so every keystroke started a new query. Without
@@ -53,8 +37,8 @@ function BugsTab() {
 		// accepted exactly one character per tap. useUsers, useNotifications, useHealthChecks
 		// and useAppFeatures all set this already; this inline query was the only one that did not.
 		placeholderData: keepPreviousData,
-		queryFn: () => listBugs(page, limit, { kind, search, status }),
-		queryKey: ['bugs', page, limit, status, kind, search],
+		queryFn: () => listBugs(page, limit, { includeSuperseded, kind, search, status }),
+		queryKey: ['bugs', page, limit, status, kind, search, includeSuperseded],
 	});
 
 	const statusMutation = useMutation({
@@ -73,127 +57,16 @@ function BugsTab() {
 		},
 	});
 
+	const columns = useBugColumns({
+		isStatusPending: statusMutation.isPending,
+		onOpenReport: setSelectedBugId,
+		onStatusChange: (id, next) => {
+			statusMutation.mutate({ id, status: next });
+		},
+	});
+
 	const bugs = data?.data ?? [];
 	const total = data?.total ?? 0;
-
-	/*
-	 * Identity first, editable state last — the order /settings/users uses.
-	 *
-	 * This table led with Status and Kind, so the first 311px of every row at 1440 were two chips
-	 * and a form control and the report's own text did not begin until x=584. Scanning the inbox
-	 * meant reading past a column of interactive chrome to reach the content. The id column is new:
-	 * the surface already names rows that way internally (the status trigger's accessible name is
-	 * "Status for report 2", and the toast says "Report #2 is now Resolved") but never showed it.
-	 */
-	const columns: ColumnDef<DataTableFeatures, BugReport, unknown>[] = [
-		{
-			accessorKey: 'id',
-			cell: ({ row }) => (
-				<span className="font-mono text-xs text-muted-foreground">#{row.original.id}</span>
-			),
-			header: '#',
-			size: 56,
-		},
-		{
-			accessorKey: 'description',
-			// No `max-w-md`. At 1920 and 2250 that cap held the text to 448px inside a 664px column
-			// and left a 208px void before Reporter, so the layout got emptier as the viewport grew.
-			//
-			// `line-clamp-2` alone does NOT bound this — an earlier comment here claimed it did.
-			// TableCell sets `whitespace-nowrap` on every cell in the app, and a clamp cannot clamp
-			// text forbidden to wrap, so the clamp was inert and the column was sized by the whole
-			// string: one 3,493-character report produced a 23,155px table inside a 332px mobile
-			// scroller, putting the Status control 22,823px off screen. The intake accepts 5,000
-			// characters, so a string that long is reachable through the app's own form rather than
-			// only by seeding. `whitespace-normal` re-enables wrapping locally so the clamp can bind;
-			// the `ch` cap bounds the measure without reintroducing the fixed-px void described above.
-			//
-			// The clamped text still has to be readable somewhere, hence the button: before it a report
-			// was truncated in the only place it was ever shown — no tooltip, no expander, no detail
-			// view — so the triage queue could not be triaged from what it displayed.
-			cell: ({ row }) => (
-				<button
-					className="line-clamp-2 max-w-[60ch] cursor-pointer text-left break-words whitespace-normal hover:underline"
-					onClick={() => {
-						setSelectedBug(row.original);
-					}}
-					type="button">
-					{row.original.description}
-				</button>
-			),
-			header: 'Description',
-		},
-		{
-			accessorKey: 'kind',
-			cell: ({ row }) => (
-				<Badge variant={KIND_VARIANT[row.original.kind]}>
-					{KIND_LABEL[row.original.kind]}
-				</Badge>
-			),
-			header: 'Kind',
-			size: 100,
-		},
-		{
-			accessorFn: (row) => {
-				const reportedBy = row.metadata?.reportedBy as { username?: string } | undefined;
-				return reportedBy?.username ?? '—';
-			},
-			header: 'Reporter',
-			id: 'reporter',
-			size: 130,
-		},
-		{
-			accessorKey: 'email',
-			cell: ({ row }) => (
-				<span className="text-sm text-muted-foreground">{row.original.email ?? '—'}</span>
-			),
-			header: 'Email',
-			size: 180,
-		},
-		{
-			accessorKey: 'createdAt',
-			cell: ({ row }) => (
-				<span className="text-sm whitespace-nowrap text-muted-foreground">
-					{formatDate(row.original.createdAt)}
-				</span>
-			),
-			header: 'Date',
-			size: 110,
-		},
-		{
-			accessorKey: 'status',
-			cell: ({ row }) => (
-				<Select
-					disabled={statusMutation.isPending}
-					onValueChange={(next) => {
-						if (!isBugStatus(next) || next === row.original.status) return;
-						statusMutation.mutate({ id: row.original.id, status: next });
-					}}
-					value={row.original.status}>
-					<SelectTrigger
-						aria-label={`Status for report ${String(row.original.id)}`}
-						className="w-[150px]">
-						<SelectValue>
-							<Badge variant={STATUS_VARIANT[row.original.status]}>
-								{STATUS_LABEL[row.original.status]}
-							</Badge>
-						</SelectValue>
-					</SelectTrigger>
-					<SelectContent>
-						{BUG_REPORT_STATUSES.map((value) => (
-							<SelectItem key={value} value={value}>
-								{STATUS_LABEL[value]}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			),
-			header: 'Status',
-			// Declared, so the column holds its control instead of stretching to 299px around a
-			// 150px trigger and stranding another 149px of the row.
-			size: 170,
-		},
-	];
 
 	if (isLoading) {
 		return (
@@ -226,15 +99,20 @@ function BugsTab() {
 					// The SectionHeader above the table owns the h2.
 					headingLevel: 'h3',
 					icon: Bug,
-					// All three filters are server-side — the same reason the description search had
+					// All the filters are server-side — the same reason the description search had
 					// to stop being a `searchColumn`. The table cannot see them, so it is told.
-					isFiltered: search !== '' || status !== undefined || kind !== undefined,
-					// One navigation, not three — see the warning on `setFilter`.
+					isFiltered:
+						search !== '' ||
+						status !== undefined ||
+						kind !== undefined ||
+						includeSuperseded,
+					// One navigation, not four — see the warning on `setFilter`.
 					onClearFilters: () => {
 						setFilters((params) => {
 							params.delete('search');
 							params.delete('status');
 							params.delete('kind');
+							params.delete('superseded');
 							params.delete('page');
 						});
 					},
@@ -249,7 +127,11 @@ function BugsTab() {
 				}}
 				toolbar={
 					<BugTableFilters
+						includeSuperseded={includeSuperseded}
 						kind={kind ?? 'all'}
+						onIncludeSupersededChange={(next) => {
+							setFilter('superseded', next ? 'include' : '');
+						}}
 						onKindChange={(value) => {
 							setFilter('kind', value === 'all' ? '' : value);
 						}}
@@ -265,10 +147,11 @@ function BugsTab() {
 				}
 			/>
 			<BugDetailDialog
-				bug={selectedBug}
+				bugId={selectedBugId}
 				onOpenChange={(open) => {
-					if (!open) setSelectedBug(null);
+					if (!open) setSelectedBugId(null);
 				}}
+				onOpenReport={setSelectedBugId}
 			/>
 		</div>
 	);

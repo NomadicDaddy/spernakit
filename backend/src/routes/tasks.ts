@@ -2,7 +2,6 @@ import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { SERVICE_ERRORS } from '../constants/serviceResults.ts';
-import { requireRoleFresh } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import {
 	getTaskHistory,
@@ -77,8 +76,8 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 			return dataResponse(getTaskList());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: listTasksDocs,
+			requireRole: 'ADMIN',
 		},
 	)
 	.get(
@@ -87,11 +86,11 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 			return dataResponse(getTaskHistory(params.name));
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: taskHistoryDocs,
 			params: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_-]*$' }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -105,15 +104,14 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: triggerTaskDocs,
 			params: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_-]*$' }),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.patch('/:name', handleUpdateTask, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			cronExpression: t.Optional(
 				t.String({ maxLength: 20, minLength: 1, pattern: '^\\d+(ms|[dhms])$' }),
@@ -124,6 +122,7 @@ const taskRoutes = new Elysia({ detail: { tags: ['Tasks'] }, prefix: '/tasks' })
 		params: t.Object({
 			name: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-z][a-z0-9_-]*$' }),
 		}),
+		requireRole: 'ADMIN',
 	});
 
 export { taskRoutes };

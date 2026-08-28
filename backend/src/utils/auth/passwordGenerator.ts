@@ -79,6 +79,21 @@ function getSeedCredential(role: UserRole): SeedCredential | undefined {
 }
 
 /**
+ * The seed account for a role, without its password.
+ *
+ * `getSeedCredential` is the wrong tool when a caller only needs to find the row: it computes the
+ * development password, which a caller that is not signing in has no business holding, and it is
+ * wrong in production where the seed generated a random one. This returns the identity alone, so a
+ * derived app that renames its SYSOP account in SEED_USERS moves every lookup with it.
+ *
+ * @param role - The seed role to look up.
+ * @returns The role's seeded email, role and username, or undefined when no seed user holds it.
+ */
+function getSeedIdentity(role: UserRole): undefined | UserInfo {
+	return SEED_USERS.find((user) => user.role === role);
+}
+
+/**
  * The account crawltest will sign in as, so the seed can exempt it from a forced password change.
  *
  * `scripts/crawltest.ts` falls back to the SYSOP development-seed credential when
@@ -133,8 +148,9 @@ export {
 	generateSecurePassword,
 	getCredentials,
 	getSeedCredential,
+	getSeedIdentity,
 	getSeedUsersWithPasswords,
 	resolveCrawlEmail,
 	SEED_USER_COUNT,
 };
-export type { SeedCredential };
+export type { SeedCredential, UserInfo };

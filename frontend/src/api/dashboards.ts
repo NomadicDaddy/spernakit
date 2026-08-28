@@ -74,6 +74,12 @@ interface ShareResult {
 	shareToken: string;
 }
 
+/** Whether a dashboard currently has a working share link, and when it lapses. */
+interface ShareState {
+	expiresAt: null | string;
+	isActive: boolean;
+}
+
 /* -------------------------------------------------------------------------- */
 /*  API functions                                                             */
 /* -------------------------------------------------------------------------- */
@@ -126,6 +132,16 @@ function shareDashboard(id: number, expiresInDays?: number): Promise<DataRespons
 	});
 }
 
+/** Read whether a dashboard's share link is live, without being handed the link. ADMIN+. */
+function getDashboardShareState(id: number): Promise<DataResponse<ShareState>> {
+	return apiClient.get(`/dashboards/${String(id)}/share`);
+}
+
+/** Revoke a dashboard's share link, so the issued URL stops working. Requires ADMIN+ role. */
+function revokeDashboardShare(id: number): Promise<DataResponse<ShareState>> {
+	return apiClient.delete(`/dashboards/${String(id)}/share`);
+}
+
 /** Fetch a publicly shared dashboard by its share token (no auth required). */
 function getSharedDashboard(token: string): Promise<DataResponse<DashboardWithWidgets>> {
 	return apiClient.get(`/dashboards/shared/${token}`);
@@ -147,10 +163,12 @@ export {
 	deleteDashboard,
 	exportDashboard,
 	getDashboard,
+	getDashboardShareState,
 	getSharedDashboard,
 	importDashboard,
 	listDashboards,
 	listTemplates,
+	revokeDashboardShare,
 	shareDashboard,
 	updateDashboard,
 };
@@ -161,6 +179,7 @@ export type {
 	DashboardWidget,
 	DashboardWithWidgets,
 	MetricType,
+	ShareState,
 	WidgetInput,
 	WidgetType,
 };

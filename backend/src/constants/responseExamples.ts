@@ -4,7 +4,12 @@
  * These examples are used in `detail.responses` across route definitions to provide
  * realistic response samples in the Swagger UI. They follow the OpenAPI 3.x
  * ExampleObject format: { summary, value }.
+ *
+ * The success-envelope helpers live in `successExamples.ts` and are re-exported here, so a route
+ * imports every example it needs from this one module regardless of which half it came from.
  */
+
+import { MISSING_WORKSPACE_HEADER, WORKSPACE_HEADER } from '../guards/workspaceHeader.ts';
 
 /* -------------------------------------------------------------------------- */
 /*  Return types for response example helpers                                 */
@@ -23,16 +28,6 @@ interface ErrorResponseExample {
 		};
 	};
 	description: string;
-}
-
-interface DataExampleObject<T> {
-	summary: string;
-	value: { data: T };
-}
-
-interface PaginatedExampleObject<T> {
-	summary: string;
-	value: { data: T[]; limit: number; page: number; total: number };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -161,6 +156,49 @@ function conflictExample(message: string): ErrorResponseExample {
 	};
 }
 
+/**
+ * 400 Bad Request - the route needs a workspace and the request named none.
+ *
+ * The message is the guard's own, imported rather than retyped, so the documented reply and the
+ * real one cannot drift apart. A route that answers 400 for a reason of its own passes that message
+ * in and gets both cases; the workspace case is always present, which is the point of having one
+ * builder rather than each route remembering to mention it.
+ *
+ * @param alsoMessage - A further 400 this route can answer with, such as a failed field check.
+ * @param code - The error code carried by that further case.
+ * @returns OpenAPI response object for 400 Bad Request.
+ */
+function missingWorkspaceHeaderExample(
+	alsoMessage?: string,
+	code = 'VALIDATION_FAILED',
+): ErrorResponseExample {
+	return {
+		content: {
+			'application/json': {
+				examples: {
+					...(alsoMessage
+						? {
+								badRequest: {
+									summary: 'Request validation failed',
+									value: { code, error: 'Bad request', message: alsoMessage },
+								},
+							}
+						: {}),
+					missingWorkspaceHeader: {
+						summary: 'The request named no workspace',
+						value: {
+							code: 'VALIDATION_FAILED',
+							error: 'Bad request',
+							message: MISSING_WORKSPACE_HEADER,
+						},
+					},
+				},
+			},
+		},
+		description: `Invalid request parameters, or no workspace named by the ${WORKSPACE_HEADER} header.`,
+	};
+}
+
 /** 429 Rate limited. */
 const RATE_LIMITED_EXAMPLE = {
 	content: {
@@ -200,60 +238,15 @@ const INTERNAL_ERROR_EXAMPLE = {
 	description: 'Unexpected server error.',
 };
 
-/* -------------------------------------------------------------------------- */
-/*  Success response helpers                                                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Wraps a value in the standard { data: T } response envelope.
- * @param summary
- * @param value
- * @returns OpenAPI ExampleObject with data envelope
- */
-function dataExample<T>(summary: string, value: T): DataExampleObject<T> {
-	return {
-		summary,
-		value: { data: value },
-	};
-}
-
-/** Mutation success example — { data: null }. */
-const SUCCESS_EXAMPLE = {
-	summary: 'Operation succeeded',
-	value: { data: null },
-};
-
-/**
- * Builds a paginated response example.
- * @param summary
- * @param items
- * @param total
- * @param page
- * @param limit
- * @returns OpenAPI ExampleObject with paginated data envelope
- */
-function paginatedExample<T>(
-	summary: string,
-	items: T[],
-	total: number,
-	page = 1,
-	limit = 20,
-): PaginatedExampleObject<T> {
-	return {
-		summary,
-		value: { data: items, limit, page, total },
-	};
-}
+export { dataExample, paginatedExample, SUCCESS_EXAMPLE } from './successExamples.ts';
 
 export {
 	badRequestExample,
 	conflictExample,
-	dataExample,
 	FORBIDDEN_EXAMPLE,
 	INTERNAL_ERROR_EXAMPLE,
+	missingWorkspaceHeaderExample,
 	notFoundExample,
-	paginatedExample,
 	RATE_LIMITED_EXAMPLE,
-	SUCCESS_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 };

@@ -26,6 +26,10 @@ interface AuditLog {
 	ipAddress: null | string;
 	resource: null | string;
 	resourceId: null | number;
+	/** The response status when the request failed; null when it succeeded. */
+	status: null | number;
+	/** The username the request body carried, which is the attempted account on a failed sign-in. */
+	submittedUsername: null | string;
 	userId: null | number;
 	username: null | string;
 }
@@ -53,6 +57,15 @@ interface BugReport {
 	kind: BugReportKind;
 	metadata: null | Record<string, unknown>;
 	status: BugReportStatus;
+	/** The later report that replaces this one, or null when nothing has replaced it. */
+	supersededById: null | number;
+	/**
+	 * The earlier reports this one was filed as a correction of. Empty for most reports.
+	 *
+	 * Plural because one correction can replace two reports of the same thing, which is how a
+	 * duplicate pair gets merged.
+	 */
+	supersedesIds: number[];
 	title: string;
 	updatedAt: string;
 	userId: null | number;

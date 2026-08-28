@@ -99,7 +99,26 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 				 * it is on. The type treatment is shared; the emphasis is not.
 				 */
 				<span className="text-sm text-muted-foreground">
-					{row.original.username ?? <span className="italic">System</span>}
+					{/*
+					 * A row with nobody behind it reads as System, and a rejected sign-in used to read
+					 * that way too: the attempt never authenticated, so nothing attached a user to it,
+					 * and the log said the system had acted. `submittedUsername` is the account the
+					 * request body named, which is the one thing that tells a rejected attempt apart
+					 * from routine unattributed activity. It is what the caller supplied rather than
+					 * anything looked up, so showing it discloses nothing the caller did not already
+					 * know, and only ADMIN and above can read this table at all.
+					 */}
+					{row.original.username ?? (
+						<span
+							className="italic"
+							title={
+								row.original.submittedUsername === null
+									? undefined
+									: 'The account this request named. It did not sign in.'
+							}>
+							{row.original.submittedUsername ?? 'System'}
+						</span>
+					)}
 					{/*
 					 * An impersonated row names the operator behind it. `username` stays the account
 					 * the request ran as — that is what authorization saw — so the impersonator is a
@@ -139,6 +158,15 @@ export function useAuditColumns({ expandedRow, setExpandedRow }: AuditColumnsPro
 						 * this is the discriminating column and must not be its smallest text.
 						 */}
 						<span className="font-mono text-sm">{path}</span>
+						{/*
+						 * The status, and only when the request failed: `status` is null for every row
+						 * that succeeded, so a table with no red in it is a table where nothing went
+						 * wrong. Reading that used to mean opening each row's details one at a time,
+						 * which is not a thing anyone does across a page of twenty.
+						 */}
+						{row.original.status !== null && (
+							<Badge variant="destructive">{row.original.status}</Badge>
+						)}
 					</div>
 				);
 			},

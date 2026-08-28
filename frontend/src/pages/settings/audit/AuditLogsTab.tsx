@@ -33,10 +33,23 @@ const SEARCH_DEBOUNCE_MS = 400;
  */
 const METHOD_FILTERS = ['DELETE', 'PATCH', 'POST', 'PUT'];
 
+/**
+ * The two halves of the outcome the writer already records.
+ *
+ * The log kept every rejected request and offered no way to ask for them, so the question an audit
+ * log exists to answer — has anyone been failing to get in — could only be answered by reading the
+ * whole table. Server-side like the method filter, so it narrows the result set rather than a page.
+ */
+const OUTCOME_FILTERS = [
+	{ label: 'Failed', value: 'failed' },
+	{ label: 'Succeeded', value: 'succeeded' },
+];
+
 function AuditLogsTab() {
 	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
 	const search = getFilter('search');
 	const method = getFilter('method');
+	const outcome = getFilter('outcome');
 	const [searchInput, setSearchInput] = useState(search);
 	const [expandedRow, setExpandedRow] = useState<null | number>(null);
 	const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
@@ -72,9 +85,20 @@ function AuditLogsTab() {
 				sortBy,
 				sortDir,
 				...(method ? { action: `${method} ` } : {}),
+				...(outcome ? { outcome } : {}),
 				...(search ? { search } : {}),
 			}),
-		queryKey: ['audit-logs', activeWorkspaceId, page, limit, search, method, sortBy, sortDir],
+		queryKey: [
+			'audit-logs',
+			activeWorkspaceId,
+			page,
+			limit,
+			search,
+			method,
+			outcome,
+			sortBy,
+			sortDir,
+		],
 	});
 
 	const columns = useAuditColumns({ expandedRow, setExpandedRow });
@@ -97,7 +121,7 @@ function AuditLogsTab() {
 						icon: ScrollText,
 						// Both filters go to the server, so TanStack's own filter state stays empty
 						// and the table would otherwise call a filtered-to-nothing log "empty".
-						isFiltered: search !== '' || method !== '',
+						isFiltered: search !== '' || method !== '' || outcome !== '',
 						// One navigation, not two — see the warning on `setFilter`. The debounced
 						// input is cleared too, or it would re-commit the term it still holds.
 						onClearFilters: () => {
@@ -105,6 +129,7 @@ function AuditLogsTab() {
 							setFilters((params) => {
 								params.delete('search');
 								params.delete('method');
+								params.delete('outcome');
 								params.delete('page');
 							});
 						},
@@ -168,6 +193,23 @@ function AuditLogsTab() {
 									{METHOD_FILTERS.map((value) => (
 										<SelectItem key={value} value={value}>
 											{value}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+							<Select
+								onValueChange={(value) => {
+									setFilter('outcome', value === 'all' ? '' : value);
+								}}
+								value={outcome || 'all'}>
+								<SelectTrigger aria-label="Filter by outcome" className="w-[150px]">
+									<SelectValue placeholder="All outcomes" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">All outcomes</SelectItem>
+									{OUTCOME_FILTERS.map((item) => (
+										<SelectItem key={item.value} value={item.value}>
+											{item.label}
 										</SelectItem>
 									))}
 								</SelectContent>

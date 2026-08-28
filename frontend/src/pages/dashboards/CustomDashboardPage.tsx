@@ -1,12 +1,13 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { toast } from 'sonner';
 
-import { getDashboard, shareDashboard } from '@/api/dashboards';
+import { getDashboard } from '@/api/dashboards';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboardLayout } from '@/hooks/dashboards/useDashboardLayout';
+import { useDashboardShare } from '@/hooks/dashboards/useDashboardShare';
 import { useDashboardWidgets } from '@/hooks/dashboards/useDashboardWidgets';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useContainerWidth } from '@/hooks/useContainerWidth';
@@ -75,22 +76,11 @@ function CustomDashboardPage() {
 		},
 	});
 
-	const shareMutation = useMutation({
-		mutationFn: () => shareDashboard(dashboardId),
-		onSuccess: (result) => {
-			const token = result.data.shareToken;
-			setDialog({
-				expiresAt: result.data.shareExpiresAt,
-				kind: 'share',
-				url: `${window.location.origin}/dashboards/shared/${token}`,
-			});
-			/*
-			 * The endpoint deliberately reuses an existing unexpired token rather than rotating
-			 * it, so a fixed "Share link generated" reported an action that had not happened and
-			 * implied the link already handed out might have been replaced. `shareToken` on the
-			 * dashboard record tells the two cases apart before the call is made.
-			 */
-			toast.success(dashboard?.shareToken ? 'Share link ready' : 'Share link created');
+	const { isRevoking, isSharing, revoke, share, shareState } = useDashboardShare({
+		dashboardId,
+		enabled: isAdmin(),
+		onShared: (url, expiresAt) => {
+			setDialog({ expiresAt, kind: 'share', url });
 		},
 	});
 
@@ -106,7 +96,9 @@ function CustomDashboardPage() {
 	};
 
 	const handleShareClick = () => {
-		shareMutation.mutate();
+		// Opening the dialog is the share call: the endpoint reuses a live token, so this shows the
+		// existing link when there is one and creates one when there is not.
+		share();
 	};
 
 	if (isLoading) {
@@ -138,7 +130,7 @@ function CustomDashboardPage() {
 					canShare={isAdmin()}
 					dashboardName={dashboard.name}
 					isSavePending={saveMutation.isPending}
-					isSharePending={shareMutation.isPending}
+					isSharePending={isSharing}
 					onAddWidget={() => setDialog({ kind: 'addWidget' })}
 					onCancel={() => {
 						/*
@@ -160,7 +152,7 @@ function CustomDashboardPage() {
 					canMutate={canMutate}
 					canShare={isAdmin()}
 					dashboardName={dashboard.name}
-					isSharePending={shareMutation.isPending}
+					isSharePending={isSharing}
 					onEdit={() => setEditMode(true)}
 					onRename={handleRenameClick}
 					onShare={handleShareClick}
@@ -204,11 +196,16 @@ function CustomDashboardPage() {
 			/>
 
 			<ShareDashboardDialog
+				isActive={shareState?.isActive ?? false}
 				isOpen={dialog.kind === 'share'}
+				isRevoking={isRevoking}
+				isSharing={isSharing}
 				onCopy={copyShareUrl}
+				onCreateNew={share}
 				onOpenChange={(open) => {
 					if (!open) closeDialog();
 				}}
+				onRevoke={revoke}
 				shareUrl={dialog.kind === 'share' ? dialog.url : ''}
 				{...(dialog.kind === 'share' ? { expiresAt: dialog.expiresAt } : {})}
 			/>

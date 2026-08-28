@@ -1,0 +1,2 @@
+ALTER TABLE `bug_reports` ADD `superseded_by_id` integer REFERENCES bug_reports(id) ON DELETE SET NULL;--> statement-breakpoint
+CREATE INDEX `idx_bug_reports_superseded_by_id` ON `bug_reports` (`superseded_by_id`);

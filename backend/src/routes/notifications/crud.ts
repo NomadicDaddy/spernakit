@@ -1,12 +1,13 @@
 import { Elysia, t } from 'elysia';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
-import { assertUser, isSysop, requireAuth } from '../../guards/role.ts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
+import { assertUser } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationReadStatusSchema, NotificationTypeSchema } from '../../schemas/domain.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import {
 	bulkDelete,
 	create,
@@ -40,7 +41,11 @@ const notificationCrudRoutes = new Elysia({
 		'/',
 		({ query, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const userIsSysop = isSysop(authUser);
+			// The listing follows the header, whoever sent it, and its absence widens rather than
+			// narrows. Unlike the statistics and unread-count routes next door, this one carries no
+			// workspace guard, so the header is not checked against membership; every row is already
+			// scoped to userId below, so naming a workspace the caller is not in narrows the result
+			// to nothing rather than reaching anyone else's notifications.
 			const result = list({
 				limit: query.limit ?? DEFAULT_PAGE_LIMIT,
 				page: query.page ?? DEFAULT_PAGE,
@@ -50,14 +55,13 @@ const notificationCrudRoutes = new Elysia({
 				...(query.sortDir ? { sortDir: query.sortDir } : {}),
 				...(query.type ? { type: query.type } : {}),
 				userId: authUser.id,
-				...(!userIsSysop && workspaceId ? { workspaceId } : {}),
+				...(workspaceId ? { workspaceId } : {}),
 			});
 
 			const fields = validateFields(parseFields(query.fields), NOTIFICATION_LIST_FIELDS);
 			return paginatedResponse(result, projectFields(result.data, fields));
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: listNotificationsDocs,
 			query: t.Object({
 				fields: t.Optional(
@@ -66,10 +70,8 @@ const notificationCrudRoutes = new Elysia({
 						maxLength: 255,
 					}),
 				),
-				limit: t.Optional(
-					t.Numeric({ default: DEFAULT_PAGE_LIMIT, maximum: MAX_PAGE_LIMIT, minimum: 1 }),
-				),
-				page: t.Optional(t.Numeric({ default: DEFAULT_PAGE, minimum: 1 })),
+				limit: limitParam(),
+				page: pageParam(),
 				readStatus: t.Optional(NotificationReadStatusSchema),
 				sortBy: t.Optional(
 					t.String({
@@ -87,6 +89,7 @@ const notificationCrudRoutes = new Elysia({
 				),
 				type: t.Optional(NotificationTypeSchema),
 			}),
+			requireAuth: true,
 		},
 	)
 	.get(
@@ -101,9 +104,9 @@ const notificationCrudRoutes = new Elysia({
 			return dataResponse(notification);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: getNotificationDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.post(
@@ -126,7 +129,6 @@ const notificationCrudRoutes = new Elysia({
 			return dataResponse(notification);
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				message: t.String({ maxLength: 1000, minLength: 1 }),
 				metadata: t.Optional(
@@ -139,6 +141,7 @@ const notificationCrudRoutes = new Elysia({
 				type: t.Optional(NotificationTypeSchema),
 			}),
 			detail: createNotificationDocs,
+			requireAuth: true,
 		},
 	)
 	.delete(
@@ -153,9 +156,9 @@ const notificationCrudRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: deleteNotificationDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.post(
@@ -166,11 +169,11 @@ const notificationCrudRoutes = new Elysia({
 			return dataResponse({ count });
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				ids: t.Array(t.Number({ minimum: 1 }), { maxItems: 100, minItems: 1 }),
 			}),
 			detail: bulkDeleteNotificationsDocs,
+			requireAuth: true,
 		},
 	);
 

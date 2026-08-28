@@ -15,7 +15,11 @@
  * - CSV validation checks for consistent column structure but does not validate
  *   cell content for malicious payloads.
  * - Line length limits prevent DoS attacks via extremely long lines that could
- *   cause memory issues during processing.
+ *   cause memory issues during processing. They apply to text formats only, because
+ *   a binary body has no lines to be long: the whole file is usually one run of bytes
+ *   with no newline in it. Oversized binary bodies are bounded by size instead, by
+ *   server.maxRequestBodySize before the body is buffered and by storage.maxFileSize
+ *   once it is.
  * - For production environments with high security requirements, consider:
  *   - Virus/malware scanning integration (ClamAV, VirusTotal API)
  *   - Content Security Policy enforcement at display time
@@ -115,7 +119,8 @@ function validateCsvStructure(text: string): null | string {
 	return null;
 }
 
-// Validate line lengths in text content to prevent DoS attacks.
+// Validate line lengths in text content to prevent DoS attacks. Only ever called for a MIME
+// type listed in TEXT_CONTENT_VALIDATORS; binary bodies are bounded by size, not by line length.
 function validateLineLengths(text: string): null | string {
 	const lines = text.split('\n').slice(0, MAX_LINES_TO_SCAN);
 	for (let i = 0; i < lines.length; i++) {
@@ -154,14 +159,38 @@ function validatePlainTextContent(text: string): null | string {
 }
 
 /**
+ * Content validators for the text formats this service inspects.
+ *
+ * Membership here is the single decision about whether a body is text. A format listed in this
+ * map is decoded as UTF-8 and passed through the line-length check before its own validator runs.
+ * A format that is absent is binary as far as this service is concerned: it is never decoded and
+ * never scanned for lines. Adding a text format picks up the line-length check with no second
+ * edit, and a binary format cannot acquire the check by being added anywhere else.
+ */
+const TEXT_CONTENT_VALIDATORS: Record<string, (text: string) => null | string> = {
+	'application/json': validateJsonContent,
+	'text/csv': validateCsvContent,
+	'text/plain': validatePlainTextContent,
+};
+
+/** The MIME types treated as text, read from the one map that decides it. */
+export const TEXT_CONTENT_MIME_TYPES: readonly string[] = Object.keys(TEXT_CONTENT_VALIDATORS);
+
+/**
  * Validate content of text-based file uploads.
  * Rejects files whose content is inconsistent with the claimed MIME type.
+ *
+ * Returns null immediately for any MIME type this service does not treat as text, so a binary
+ * body is never decoded, never scanned for lines, and never rejected for a text-shaped reason.
  *
  * @param data - File buffer
  * @param claimedMime - Client-claimed MIME type (already normalized)
  * @returns Error message if content is invalid, null if acceptable
  */
 export function validateTextContent(data: Buffer, claimedMime: string): null | string {
+	const validateFormat = TEXT_CONTENT_VALIDATORS[claimedMime];
+	if (!validateFormat) return null;
+
 	if (data.length > MAX_TEXT_VALIDATION_SIZE) {
 		const maxMb = Math.round(MAX_TEXT_VALIDATION_SIZE / BYTES_PER_MB);
 		return `Text file exceeds maximum validation size of ${maxMb}MB`;
@@ -172,16 +201,7 @@ export function validateTextContent(data: Buffer, claimedMime: string): null | s
 	const lineError = validateLineLengths(fullText);
 	if (lineError) return lineError;
 
-	switch (claimedMime) {
-		case 'application/json':
-			return validateJsonContent(fullText);
-		case 'text/csv':
-			return validateCsvContent(fullText);
-		case 'text/plain':
-			return validatePlainTextContent(fullText);
-		default:
-			return null;
-	}
+	return validateFormat(fullText);
 }
 
 /**
@@ -255,7 +275,9 @@ export function validateFile(mimeType: string, size: number, data?: Buffer): nul
 		}
 	}
 
-	// Validate text-based uploads for dangerous content (HTML injection, invalid JSON)
+	// Validate text-based uploads for dangerous content (HTML injection, invalid JSON).
+	// Binary bodies fall straight back out of this call: the size checks above and
+	// server.maxRequestBodySize are what bound them, not the text line-length check.
 	if (data) {
 		const textError = validateTextContent(data, normalizedMimeType);
 		if (textError) return textError;

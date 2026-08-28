@@ -6,7 +6,7 @@ import {
 	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
@@ -15,16 +15,10 @@ import {
 	listTemplates,
 } from '../../services/dashboardService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
-import {
-	badRequestError,
-	extractErrorMessage,
-	notFoundError,
-	RATE_ERROR_CODES,
-	rateLimitError,
-} from '../../utils/errorResponse.ts';
+import { badRequestError, extractErrorMessage, notFoundError } from '../../utils/errorResponse.ts';
 import { guardDashboardsEnabled, widgetSchema } from './schemas.ts';
 import {
-	checkSharedRateLimit,
+	enforceSharedRateLimit,
 	handleImportDashboard,
 	validateDashboardWriteWorkspace,
 } from './templates-import.helpers.ts';
@@ -45,7 +39,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			return dataResponse(listTemplates());
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns list of available dashboard templates that can be used ' +
@@ -76,6 +69,7 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'List dashboard templates',
 			},
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -92,18 +86,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: ({ request, set }) => {
-				const result = checkSharedRateLimit(request);
-				if (result.limited) {
-					set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
-					set.headers['Retry-After'] = String(result.retryAfter ?? 0);
-					return rateLimitError(
-						result.retryAfter ?? 0,
-						RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED,
-					);
-				}
-				return undefined;
-			},
 			detail: {
 				description:
 					'View a shared dashboard by its share token. Does not require authentication. ' +
@@ -130,6 +112,9 @@ const dashboardTemplatesRoutes = new Elysia({
 			params: t.Object({
 				token: t.String({ maxLength: 500, minLength: 1 }),
 			}),
+			transform: ({ request }) => {
+				enforceSharedRateLimit(request);
+			},
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -162,7 +147,6 @@ const dashboardTemplatesRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				templateId: t.String({ maxLength: 100, minLength: 1 }),
 			}),
@@ -190,13 +174,13 @@ const dashboardTemplatesRoutes = new Elysia({
 				},
 				summary: 'Create dashboard from template',
 			},
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
 	/*  POST /dashboards/import — import dashboard from JSON               */
 	/* ------------------------------------------------------------------ */
 	.post('/import', handleImportDashboard, {
-		beforeHandle: requireRoleFresh('OPERATOR'),
 		body: t.Object({
 			name: t.String({ maxLength: 100, minLength: 1 }),
 			version: t.Integer({ minimum: 1 }),
@@ -225,6 +209,7 @@ const dashboardTemplatesRoutes = new Elysia({
 			},
 			summary: 'Import dashboard',
 		},
+		requireRole: 'OPERATOR',
 	});
 
 export { dashboardTemplatesRoutes };

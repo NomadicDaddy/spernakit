@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../constants/responseExamples.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
+import { assertUser } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../services/auditService.ts';
 import {
@@ -26,7 +26,6 @@ const onboardingRoutes = new Elysia({
 			return dataResponse(getOnboardingStatus());
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns the current onboarding status including a checklist of setup steps ' +
@@ -60,6 +59,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Get onboarding status',
 			},
+			requireAuth: true,
 		},
 	)
 	.post(
@@ -76,7 +76,6 @@ const onboardingRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: requireRoleFresh('ADMIN'),
 			detail: {
 				description:
 					'Marks onboarding as completed for the current admin user. ' +
@@ -101,6 +100,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Complete onboarding',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -117,7 +117,6 @@ const onboardingRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: requireRoleFresh('ADMIN'),
 			detail: {
 				description:
 					'Resets onboarding status so the checklist appears again. ' +
@@ -142,6 +141,7 @@ const onboardingRoutes = new Elysia({
 				},
 				summary: 'Reset onboarding',
 			},
+			requireRole: 'ADMIN',
 		},
 	);
 

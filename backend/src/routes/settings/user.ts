@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import { dataExample, UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
-import { assertUser, requireAuth } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { getUserUiSettings, updateUserUiSettings } from '../../services/userService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
@@ -21,7 +21,6 @@ const settingsUserRoutes = new Elysia({
 			return dataResponse(settings);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns UI settings for the authenticated user. Settings include theme, ' +
@@ -55,6 +54,7 @@ const settingsUserRoutes = new Elysia({
 				},
 				summary: 'Get user UI settings',
 			},
+			requireAuth: true,
 		},
 	)
 	.put(
@@ -65,7 +65,6 @@ const settingsUserRoutes = new Elysia({
 			return dataResponse(settings);
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				appTheme: t.Optional(t.String({ maxLength: 50 })),
 				containerWidth: t.Optional(
@@ -123,6 +122,7 @@ const settingsUserRoutes = new Elysia({
 				},
 				summary: 'Update user UI settings',
 			},
+			requireAuth: true,
 		},
 	);
 

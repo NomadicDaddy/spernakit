@@ -11,8 +11,9 @@ import {
 	FIELD_LENGTH_MEDIUM,
 	MAX_PROPERTIES_DEFAULT,
 } from '../constants/validation.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../guards/role.ts';
+import { assertUser } from '../guards/role.ts';
 import { authPlugin } from '../plugins/auth.ts';
+import { limitParam } from '../schemas/pagination.ts';
 import {
 	getDashboardStats,
 	getEventSummary,
@@ -34,7 +35,6 @@ const businessMetricsRoutes = new Elysia({
 			return dataResponse(getDashboardStats(query.days));
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('OPERATOR')({ set, user }),
 			detail: {
 				description:
 					'Returns business metrics dashboard statistics including daily/monthly active ' +
@@ -79,6 +79,7 @@ const businessMetricsRoutes = new Elysia({
 					}),
 				),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	)
 	.get(
@@ -88,7 +89,6 @@ const businessMetricsRoutes = new Elysia({
 			return dataResponse(getEventSummary(query.days, query.limit));
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('OPERATOR')({ set, user }),
 			detail: {
 				description:
 					'Returns event summary grouped by category and name for the specified time ' +
@@ -129,14 +129,9 @@ const businessMetricsRoutes = new Elysia({
 						minimum: 1,
 					}),
 				),
-				limit: t.Optional(
-					t.Numeric({
-						default: 20,
-						maximum: 100,
-						minimum: 1,
-					}),
-				),
+				limit: limitParam(),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	)
 	.get(
@@ -146,7 +141,6 @@ const businessMetricsRoutes = new Elysia({
 			return dataResponse(getUserActivity(Number(params.userId), query.days));
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Returns activity metrics for a specific user including total events, ' +
@@ -193,6 +187,7 @@ const businessMetricsRoutes = new Elysia({
 					}),
 				),
 			}),
+			requireRole: 'ADMIN',
 		},
 	)
 	.post(
@@ -212,7 +207,6 @@ const businessMetricsRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				eventCategory: t.Union([
 					t.Literal('conversion'),
@@ -259,6 +253,7 @@ const businessMetricsRoutes = new Elysia({
 				},
 				summary: 'Track a business event',
 			},
+			requireAuth: true,
 		},
 	);
 

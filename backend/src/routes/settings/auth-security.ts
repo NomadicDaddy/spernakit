@@ -9,7 +9,7 @@ import {
 	FORBIDDEN_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { getAuthSettings, updateAuthSettings } from '../../services/authService.ts';
@@ -64,7 +64,6 @@ const settingsAuthSecurityRoutes = new Elysia({
 			return dataResponse(settings);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 			detail: {
 				description:
 					'Retrieves authentication security settings including password policy, ' +
@@ -93,6 +92,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 				},
 				summary: 'Get auth security settings (ADMIN+)',
 			},
+			requireRole: 'ADMIN',
 		},
 	)
 	.put(
@@ -110,7 +110,6 @@ const settingsAuthSecurityRoutes = new Elysia({
 			return dataResponse(settings);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				authRateLimitEnabled: t.Optional(t.Boolean()),
 				authRateLimitMaxRequests: t.Optional(t.Integer({ minimum: 1 })),
@@ -154,10 +153,10 @@ const settingsAuthSecurityRoutes = new Elysia({
 				},
 				summary: 'Update auth security settings (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.post('/auth-security/rotate-backup-key', handleRotateBackupKey, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description:
 				'Re-encrypts every existing backup file under the current `backupEncryptionKey`. ' +
@@ -205,6 +204,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 			},
 			summary: 'Re-encrypt backups under rotated key (SYSOP only)',
 		},
+		requireRole: 'SYSOP',
 	});
 
 export { settingsAuthSecurityRoutes };

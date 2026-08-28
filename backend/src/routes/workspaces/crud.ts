@@ -4,10 +4,11 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT } from '../../constants/pagination.ts';
-import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
@@ -198,12 +199,12 @@ const workspaceCrudRoutes = new Elysia({
 			return paginatedResponse(result);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: listWorkspacesDocs,
 			query: t.Object({
-				limit: t.Optional(t.Number({ maximum: MAX_PAGE_LIMIT, minimum: 1 })),
-				page: t.Optional(t.Number({ minimum: 1 })),
+				limit: limitParam(),
+				page: pageParam(),
 			}),
+			requireAuth: true,
 		},
 	)
 	// API-only: No frontend caller (list endpoint covers UI needs). Available for API-key consumers.
@@ -226,22 +227,21 @@ const workspaceCrudRoutes = new Elysia({
 			return dataResponse(result.workspace);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: getWorkspaceByIdDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.post('/', handleCreateWorkspace, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('ADMIN')({ set, user }),
 		body: t.Object({
 			description: t.Optional(t.String({ maxLength: 1000 })),
 			name: t.String({ maxLength: 255, minLength: 1 }),
 			slug: t.String({ maxLength: 100, minLength: 1, pattern: '^[a-zA-Z0-9_-]+$' }),
 		}),
 		detail: createWorkspaceDocs,
+		requireRole: 'ADMIN',
 	})
 	.put('/:id', handleUpdateWorkspace, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			description: t.Optional(t.String({ maxLength: 1000 })),
 			name: t.Optional(t.String({ maxLength: 255, minLength: 1 })),
@@ -261,11 +261,12 @@ const workspaceCrudRoutes = new Elysia({
 		}),
 		detail: updateWorkspaceDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	})
 	.delete('/:id', handleDeleteWorkspace, {
-		beforeHandle: requireAuth,
 		detail: deleteWorkspaceDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	});
 
 export { workspaceCrudRoutes };

@@ -2,7 +2,11 @@ import { Elysia } from 'elysia';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { RATE_ERROR_CODES, rateLimitError } from '../../utils/errorResponse.ts';
+import {
+	PreValidationRejection,
+	RATE_ERROR_CODES,
+	rateLimitError,
+} from '../../utils/errorResponse.ts';
 import {
 	checkLimit,
 	getRateLimitKeys,
@@ -39,7 +43,21 @@ const RATE_LIMIT_EXEMPT_PREFIXES = [
 	'/api/v1/dashboards/shared/',
 ];
 
-const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onBeforeHandle(
+/**
+ * Global API rate limiter.
+ *
+ * Runs at the transform stage rather than in `beforeHandle` so that it stays ahead of the
+ * authorization checks the auth plugin's `requireAuth` and `requireRole` options now perform, which
+ * also run there. Both had to move together: leaving the limiter in `beforeHandle` would have let
+ * an anonymous flood of a protected route be answered 401 without ever being counted. The earlier
+ * position closes a second hole that predates that change, where a request carrying a body the
+ * route's schema rejected was answered 400 by validation and never counted either.
+ *
+ * A transform hook cannot short-circuit by returning a value, so a limited request is raised as a
+ * PreValidationRejection carrying its own Retry-After header; create-api-app.ts's onError returns
+ * it unchanged. The unlimited path still sets its X-RateLimit-* headers directly on `set`.
+ */
+const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onTransform(
 	{ as: 'scoped' },
 	({ request, set }) => {
 		if (isRateLimitBypassed()) return;
@@ -64,11 +82,11 @@ const rateLimitPlugin = new Elysia({ name: 'rate-limit' }).onBeforeHandle(
 			);
 
 			if (result.limited) {
-				set.status = HTTP_STATUS.TOO_MANY_REQUESTS;
-				set.headers['Retry-After'] = String(result.retryAfter || 0);
-				return rateLimitError(
-					result.retryAfter || 0,
-					RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED,
+				const retryAfter = result.retryAfter || 0;
+				throw new PreValidationRejection(
+					HTTP_STATUS.TOO_MANY_REQUESTS,
+					rateLimitError(retryAfter, RATE_ERROR_CODES.RATE_API_LIMIT_EXCEEDED),
+					{ 'Retry-After': String(retryAfter) },
 				);
 			}
 

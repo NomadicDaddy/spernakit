@@ -1,6 +1,6 @@
 # Spernakit Documentation
 
-These documents describe the Spernakit v3.44.3 application template as it ships today. Start with
+These documents describe the Spernakit v3.45.0 application template as it ships today. Start with
 the guides that match the work you are doing, then use the reference documents for details.
 
 ## Start here

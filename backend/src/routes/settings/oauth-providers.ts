@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { OAUTH_PROVIDERS } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import {
@@ -71,13 +71,13 @@ const settingsOAuthProvidersRoutes = new Elysia({
 			return dataResponse({ providers });
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Returns OAuth provider settings from the database. Client secrets are ' +
 					'returned as last-4 characters only. Requires SYSOP role.',
 				summary: 'Get OAuth provider settings (SYSOP)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.patch(
@@ -102,7 +102,6 @@ const settingsOAuthProvidersRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				callbackUrlOverride: t.Optional(t.Nullable(t.String({ maxLength: 500 }))),
 				clientId: t.Optional(t.String({ maxLength: 500 })),
@@ -116,10 +115,10 @@ const settingsOAuthProvidersRoutes = new Elysia({
 				summary: 'Update OAuth provider settings (SYSOP)',
 			},
 			params: providerParam,
+			requireRole: 'SYSOP',
 		},
 	)
 	.post('/oauth-providers/:provider/test', handleOAuthProviderTest, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description:
 				'Tests connectivity to an OAuth provider endpoint. Returns status code and ' +
@@ -127,6 +126,7 @@ const settingsOAuthProvidersRoutes = new Elysia({
 			summary: 'Test OAuth provider connection (SYSOP)',
 		},
 		params: providerParam,
+		requireRole: 'SYSOP',
 	});
 
 export { settingsOAuthProvidersRoutes };

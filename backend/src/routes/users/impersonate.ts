@@ -4,7 +4,7 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin, parseCookies, signAccessToken } from '../../plugins/auth.ts';
 import { log as logAudit } from '../../services/auditService.ts';
 import { getUserAuthStatus, getUserById } from '../../services/userService.ts';
@@ -168,7 +168,6 @@ const usersImpersonateRoutes = new Elysia({
 })
 	.use(authPlugin)
 	.post('/:id/impersonate', handleStartImpersonate, {
-		beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 		detail: {
 			description:
 				'Start impersonating another user (SYSOP only). Issues a new access token ' +
@@ -177,12 +176,9 @@ const usersImpersonateRoutes = new Elysia({
 			summary: 'Start impersonating a user (SYSOP)',
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'SYSOP',
 	})
 	.post('/impersonate/stop', handleStopImpersonate, {
-		// requireRoleFresh('SYSOP') would evaluate the impersonated TARGET's role
-		// and always 403. The handler rejects non-impersonating sessions and
-		// re-validates the original impersonator's fresh SYSOP role itself.
-		beforeHandle: requireAuth,
 		detail: {
 			description:
 				'Stop impersonating and restore the original SYSOP session. Requires an active ' +
@@ -191,6 +187,10 @@ const usersImpersonateRoutes = new Elysia({
 				'restores the stashed original token.',
 			summary: 'Stop impersonating (impersonation session only)',
 		},
+		// requireRoleFresh('SYSOP') would evaluate the impersonated TARGET's role
+		// and always 403. The handler rejects non-impersonating sessions and
+		// re-validates the original impersonator's fresh SYSOP role itself.
+		requireAuth: true,
 	});
 
 export { usersImpersonateRoutes };

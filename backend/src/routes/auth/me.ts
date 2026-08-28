@@ -3,7 +3,7 @@ import { Elysia } from 'elysia';
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { UNAUTHORIZED_EXAMPLE } from '../../constants/responseExamples.ts';
-import { assertUser, requireAuth } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserAuthStatus } from '../../services/userService.ts';
@@ -42,7 +42,6 @@ const authMeRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth' })
 			});
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: {
 				description:
 					'Returns profile of currently authenticated user (id, username, ' +
@@ -74,6 +73,7 @@ const authMeRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/auth' })
 				},
 				summary: 'Get current authenticated user',
 			},
+			requireAuth: true,
 		},
 	);
 

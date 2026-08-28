@@ -6,7 +6,7 @@ import type { UserRole } from '../../types/roles.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, hasMinimumRole, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, hasMinimumRole } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { ApiKeyScopeSchema } from '../../schemas/domain.ts';
 import {
@@ -162,13 +162,12 @@ const usersApiKeysRoutes = new Elysia({
 			return dataResponse(keys);
 		},
 		{
-			beforeHandle: requireRoleFresh('VIEWER'),
 			detail: listApiKeysDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireRole: 'VIEWER',
 		},
 	)
 	.post('/:id/api-keys', handleCreateApiKey, {
-		beforeHandle: requireRoleFresh('VIEWER'),
 		body: t.Object({
 			expiresAt: t.Optional(t.String({ format: 'date-time' })),
 			keyName: t.String({ maxLength: 100, minLength: 1 }),
@@ -176,6 +175,7 @@ const usersApiKeysRoutes = new Elysia({
 		}),
 		detail: createApiKeyDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+		requireRole: 'VIEWER',
 	})
 	.delete(
 		'/:id/api-keys/:keyId',
@@ -197,12 +197,12 @@ const usersApiKeysRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireRoleFresh('VIEWER'),
 			detail: revokeApiKeyDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 				keyId: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'VIEWER',
 		},
 	);
 

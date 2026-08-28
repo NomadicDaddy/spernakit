@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 
 import { getConfig } from '../config/configLoader.ts';
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
+import { WORKSPACE_HEADER } from '../guards/workspaceHeader.ts';
 import { appendVaryToken } from '../utils/headerUtils.ts';
 import { isOriginAllowed } from '../utils/originValidation.ts';
 
@@ -36,8 +37,10 @@ const corsPlugin = new Elysia({ name: 'cors' })
 				set.headers['Access-Control-Allow-Origin'] = origin;
 				set.headers['Access-Control-Allow-Methods'] =
 					'GET, POST, PUT, DELETE, PATCH, OPTIONS';
+				// The workspace header is named by the guard that reads it, so the allow-list
+				// cannot come to publish a spelling the server does not answer to.
 				set.headers['Access-Control-Allow-Headers'] =
-					'Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-API-Key, X-API-Signature, X-API-Timestamp, X-API-Nonce, X-Request-ID, X-Session-ID, X-Workspace-ID';
+					`Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-API-Key, X-API-Signature, X-API-Timestamp, X-API-Nonce, X-Request-ID, X-Session-ID, ${WORKSPACE_HEADER}`;
 				set.headers['Access-Control-Expose-Headers'] = 'X-CSRF-Token, X-Request-ID';
 				set.headers['Access-Control-Allow-Credentials'] = 'true';
 				set.headers['Access-Control-Max-Age'] = String(CORS_MAX_AGE_SECONDS);

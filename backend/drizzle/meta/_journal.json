@@ -15,6 +15,13 @@
       "when": 1787279032420,
       "tag": "20260821022352_clumsy_the_anarchist",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787888541833,
+      "tag": "20260828034221_fearless_tigra",
+      "breakpoints": true
     }
   ]
 }

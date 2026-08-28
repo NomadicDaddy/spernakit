@@ -14,7 +14,9 @@ export {
 export { exportDashboard, importDashboard } from './dashboard/dashboardExportService.ts';
 export {
 	DashboardSharingDisabledError,
+	getDashboardShareState,
 	getSharedDashboard,
+	revokeDashboardShare,
 	shareDashboard,
 } from './dashboard/dashboardSharingService.ts';
 export { createFromTemplate, listTemplates } from './dashboard/dashboardTemplateService.ts';

@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { WS_CRUD_EVENTS } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, requireAuth } from '../../guards/role.ts';
+import { assertUser } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { type AuthPayload, authPlugin } from '../../plugins/auth.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
@@ -85,9 +85,9 @@ const workspaceMembersCrudRoutes = new Elysia({
 			return dataResponse(getMembers(id));
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: listWorkspaceMembersDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.post(
@@ -121,7 +121,6 @@ const workspaceMembersCrudRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireAuth,
 			body: t.Object({
 				role: t.Union([
 					t.Literal('ADMIN'),
@@ -133,6 +132,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 			}),
 			detail: addWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.delete(
@@ -164,13 +164,12 @@ const workspaceMembersCrudRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: removeWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }), userId: t.Numeric({ minimum: 1 }) }),
+			requireAuth: true,
 		},
 	)
 	.put('/:id/members/:userId/role', handleUpdateMemberRole, {
-		beforeHandle: requireAuth,
 		body: t.Object({
 			role: t.Union([
 				t.Literal('ADMIN'),
@@ -181,6 +180,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 		}),
 		detail: updateWorkspaceMemberRoleDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }), userId: t.Numeric({ minimum: 1 }) }),
+		requireAuth: true,
 	});
 
 export { workspaceMembersCrudRoutes };

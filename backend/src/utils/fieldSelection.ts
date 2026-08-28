@@ -88,6 +88,8 @@ const AUDIT_LIST_FIELDS = new Set([
 	'ipAddress',
 	'resource',
 	'resourceId',
+	'status',
+	'submittedUsername',
 	'userId',
 	'username',
 ]);

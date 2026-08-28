@@ -27,7 +27,7 @@
 	},
 	"audit": {
 		"enabled": true,
-		"ipWhitelist": ["127.0.0.1", "::1"]
+		"ipWhitelist": []
 	},
 	"cors": {
 		"allowNoOrigin": false,

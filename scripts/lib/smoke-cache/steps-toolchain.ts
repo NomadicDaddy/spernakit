@@ -2,9 +2,9 @@
  * Cache dependencies for the toolchain qc steps: the ones that compile, lint, format, validate
  * config, or measure the produced bundle.
  *
- * Split from the project-invariant guards in `steps-checks.ts` to keep each map inside the
- * 300-line modularity gate; `dependencies.ts` merges the two into the single map the cache
- * consumes.
+ * Split from the project-invariant guards in `steps-checks.ts` and the application regression
+ * gates in `steps-regressions.ts` to keep each map inside the 300-line modularity gate;
+ * `dependencies.ts` merges them into the single map the cache consumes.
  */
 
 import {
@@ -99,12 +99,6 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
 	},
-	// Runs in-process against a temp SQLite file (like `test:retention-zero`), so its world is the
-	// backend source plus the migrations it applies; a change anywhere in backend/src re-runs it.
-	'test:impersonation-audit': {
-		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
-	},
 	'test:mutation-denylist': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -121,11 +115,6 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/smoke.json',
 			'scripts/test-reset-packages.ts',
 		],
-	},
-	// Same in-process temp-DB shape as `test:impersonation-audit` above.
-	'test:retention-zero': {
-		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-retention-zero.ts'],
 	},
 	'test:secrets-file': {
 		excludes: COMMON_EXCLUDES,
@@ -144,12 +133,6 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:shared-core-write': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/lib/shared-core/**/*.ts', 'scripts/test-shared-core-write.ts'],
-	},
-	// Same in-process temp-DB shape as `test:impersonation-audit`: it applies the migrations and
-	// exercises the guard module, so its world is the backend source plus the gate script itself.
-	'test:workspace-role-predicate': {
-		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-workspace-role-predicate.ts'],
 	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,

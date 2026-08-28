@@ -9,7 +9,6 @@ import {
 	INTERNAL_ERROR_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import {
 	createBackup,
@@ -33,7 +32,6 @@ const systemBackupRoutes = new Elysia({
 			return dataResponse(getBackupStatus());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Returns current backup status including last backup time, backup ' +
@@ -70,6 +68,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Get database backup status (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.post(
@@ -82,7 +81,6 @@ const systemBackupRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Triggers an immediate database backup. Returns { data: { success, ' +
@@ -109,6 +107,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Trigger manual database backup (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	)
 	.post(
@@ -122,7 +121,6 @@ const systemBackupRoutes = new Elysia({
 			return dataResponse(result);
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			body: t.Object({
 				backupPath: t.String({ minLength: 1, pattern: '^[a-zA-Z0-9._-]+$' }),
 			}),
@@ -152,6 +150,7 @@ const systemBackupRoutes = new Elysia({
 				},
 				summary: 'Restore database from backup (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	);
 

@@ -6,7 +6,6 @@ import {
 	FORBIDDEN_EXAMPLE,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
-import { requireRoleFresh } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
@@ -31,7 +30,6 @@ const settingsRuntimeConfigRoutes = new Elysia({
 			return dataResponse(getRedactedConfigSnapshot());
 		},
 		{
-			beforeHandle: ({ set, user }) => requireRoleFresh('SYSOP')({ set, user }),
 			detail: {
 				description:
 					'Returns a read-only, redacted snapshot of the effective startup configuration ' +
@@ -63,6 +61,7 @@ const settingsRuntimeConfigRoutes = new Elysia({
 				},
 				summary: 'Get redacted runtime config overview (SYSOP only)',
 			},
+			requireRole: 'SYSOP',
 		},
 	);
 

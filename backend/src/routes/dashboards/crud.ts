@@ -6,7 +6,7 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import type { WidgetInput } from '../../services/dashboardService.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, isSysop, requireAuth, requireRoleFresh } from '../../guards/role.ts';
+import { assertUser, isSysop } from '../../guards/role.ts';
 import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
@@ -49,20 +49,6 @@ function toWidgetInputs(widgets: Static<typeof widgetSchema>[]): WidgetInput[] {
 	}));
 }
 
-/**
- * Resolve the active workspace scope for a dashboard query.
- *
- * SYSOP users with no explicit X-Workspace-ID header see all dashboards (cross-workspace).
- * All other callers (including SYSOPs who DO send a workspace header) are scoped to that
- * workspace, matching the existing notifications pattern.
- */
-function resolveDashboardScope(user: { role: string }, workspaceId: null | number): null | number {
-	if (isSysop(user as Parameters<typeof isSysop>[0]) && workspaceId === null) {
-		return null;
-	}
-	return workspaceId;
-}
-
 function validateDashboardWriteWorkspace({
 	set,
 	user,
@@ -92,12 +78,11 @@ const dashboardCrudRoutes = new Elysia({
 		'/',
 		({ user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const scope = resolveDashboardScope(authUser, workspaceId);
-			return dataResponse(listDashboards(authUser.id, scope));
+			return dataResponse(listDashboards(authUser.id, workspaceId));
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: listDashboardsDocs,
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -107,8 +92,7 @@ const dashboardCrudRoutes = new Elysia({
 		'/:id',
 		({ params, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const scope = resolveDashboardScope(authUser, workspaceId);
-			const dashboard = getDashboard(Number(params.id), authUser.id, scope);
+			const dashboard = getDashboard(Number(params.id), authUser.id, workspaceId);
 			if (!dashboard) {
 				set.status = HTTP_STATUS.NOT_FOUND;
 				return notFoundError('Dashboard');
@@ -116,11 +100,11 @@ const dashboardCrudRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: requireAuth,
 			detail: getDashboardDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireAuth: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -154,12 +138,12 @@ const dashboardCrudRoutes = new Elysia({
 			}
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1 }),
 				widgets: t.Optional(t.Array(widgetSchema)),
 			}),
 			detail: createDashboardDocs,
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -169,7 +153,6 @@ const dashboardCrudRoutes = new Elysia({
 		'/:id',
 		({ body, params, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const scope = resolveDashboardScope(authUser, workspaceId);
 			const dashboard = updateDashboard(
 				Number(params.id),
 				authUser.id,
@@ -177,7 +160,7 @@ const dashboardCrudRoutes = new Elysia({
 					name: body.name,
 					...(body.widgets ? { widgets: toWidgetInputs(body.widgets) } : {}),
 				},
-				scope,
+				workspaceId,
 			);
 			if (!dashboard) {
 				set.status = HTTP_STATUS.NOT_FOUND;
@@ -189,7 +172,6 @@ const dashboardCrudRoutes = new Elysia({
 			return dataResponse(dashboard);
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			body: t.Object({
 				name: t.String({ maxLength: 100, minLength: 1 }),
 				widgets: t.Optional(t.Array(widgetSchema)),
@@ -198,6 +180,7 @@ const dashboardCrudRoutes = new Elysia({
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -207,9 +190,8 @@ const dashboardCrudRoutes = new Elysia({
 		'/:id',
 		({ params, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const scope = resolveDashboardScope(authUser, workspaceId);
 			const dashboardId = Number(params.id);
-			const deleted = deleteDashboard(dashboardId, authUser.id, scope);
+			const deleted = deleteDashboard(dashboardId, authUser.id, workspaceId);
 			if (!deleted) {
 				set.status = HTTP_STATUS.NOT_FOUND;
 				return notFoundError('Dashboard');
@@ -218,11 +200,11 @@ const dashboardCrudRoutes = new Elysia({
 			return successResponse();
 		},
 		{
-			beforeHandle: requireRoleFresh('OPERATOR'),
 			detail: deleteDashboardDocs,
 			params: t.Object({
 				id: t.Numeric({ minimum: 1 }),
 			}),
+			requireRole: 'OPERATOR',
 		},
 	);
 

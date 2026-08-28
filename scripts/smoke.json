@@ -183,6 +183,58 @@
 					"description": "hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it"
 				},
 				{
+					"command": "bun run test:upload-validation",
+					"description": "Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
+				},
+				{
+					"command": "bun run test:error-log-wiring",
+					"description": "Application errors reach logs/<name>.error.log in every logging mode, redacted the same way, while the main log keeps every level"
+				},
+				{
+					"command": "bun run test:onboarding-password-step",
+					"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on"
+				},
+				{
+					"command": "bun run test:audit-outcome-filter",
+					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
+				},
+				{
+					"command": "bun run test:auth-before-validation",
+					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
+				},
+				{
+					"command": "bun run test:public-route-surface",
+					"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded"
+				},
+				{
+					"command": "bun run test:bug-report-supersede",
+					"description": "A corrected bug report can name the one that replaced it, both reports read the link back, the default inbox stops counting the superseded one as open work, and a link that is circular, self-referential, or points at nothing is refused"
+				},
+				{
+					"command": "bun run test:bug-report-whitespace",
+					"description": "A bug report whose description is empty once trimmed is refused rather than stored, every field the service trims is trimmed before the schema sees it, and a description opening with a blank line still gets a title"
+				},
+				{
+					"command": "bun run test:dashboard-not-found",
+					"description": "A deleted dashboard renders the page not-found state with a route back, is not retried, and the error boundary still renders readable text for errors that are genuinely unexpected"
+				},
+				{
+					"command": "bun run test:dashboard-share-revoke",
+					"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted"
+				},
+				{
+					"command": "bun run test:view-transition-abort",
+					"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message"
+				},
+				{
+					"command": "bun run test:workspace-header-contract",
+					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself"
+				},
+				{
+					"command": "bun run test:workspace-subresource-existence",
+					"description": "A workspace sub-resource answers 404 for a workspace that is not there, including for the member a soft delete left behind, while a non-member still hears the same status either way and an existing workspace answers as before"
+				},
+				{
 					"command": "bun run test:wait-for-http",
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},

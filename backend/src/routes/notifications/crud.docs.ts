@@ -80,8 +80,8 @@ const createNotificationDocs = {
 	description:
 		'Creates a new notification for a user. Defaults to the authenticated user ' +
 		'if userId is not provided. Type defaults to "info" if not specified (valid: ' +
-		'info, warning, error, success). Optionally scoped to a workspace via ' +
-		'X-Workspace-Id header. Returns 201 on success. This is an API-only endpoint ' +
+		'info, warning, error, success). Optionally scoped to the workspace named by the ' +
+		'X-Workspace-ID header. Returns 201 on success. This is an API-only endpoint ' +
 		'for programmatic consumers (e.g., scheduled tasks, external integrations via ' +
 		'API keys). Notifications are system-generated and not created through the UI.',
 	responses: {

@@ -3,6 +3,128 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.45.0] - 2026-08-28
+
+Minor release. It carries the findings the v3.44.3 fleet sweep produced across all ten derived
+applications, plus three new capabilities that came out of them. The largest change is structural:
+authorization now runs before body validation on every route, and a new gate proves that every route
+which does not refuse an anonymous caller is on a list that says why.
+
+### Added
+
+- The audit log can be filtered by outcome. `GET /api/v1/audit` takes `outcome=failed` or
+  `outcome=succeeded`, and every row carries the status the writer recorded and the username the
+  request named. A rejected sign-in never authenticates, so those rows used to render as `System`
+  and were indistinguishable from background activity; the viewer now shows the account that was
+  attempted and the status as a badge beside the path. Both fields are reachable through field
+  selection, so an operator can alert on a burst of failures.
+- A dashboard share link can be revoked. `DELETE /api/v1/dashboards/:id/share` clears the token and
+  its expiry, and `GET` on the same path reports whether a link is live and when it stops working.
+  Revoke deliberately ignores the `sharingEnabled` setting, because turning sharing off must not
+  strand links that were issued while it was on. The Share dialog shows the current state and offers
+  Revoke or Create new link.
+- A bug report can name the report that supersedes it. `PUT /api/v1/bugs/:id/superseded-by` sets the
+  link and `null` clears it, open to the reporter as well as to an administrator. Self-links, cycles
+  of any length, and successors naming no report are refused before anything is written, and the
+  link never touches either report's text or status. The default inbox leaves superseded reports out
+  of its rows and its total, and takes `includeSuperseded=true` to bring them back.
+- `test:public-route-surface` joins `smoke:qc`. It boots the application, enumerates every route
+  Elysia registered, and sends each one an anonymous request. Anything that answers has to appear in
+  `scripts/lib/public-routes.ts` with a written reason. Authorization travels as a route option, so a
+  route ships open by leaving `requireAuth` off and nothing looks wrong in the file; three route
+  modules hold guarded and unguarded handlers side by side, which is why this asks the application
+  rather than reading the source. The list is checked in both directions, so an entry naming a route
+  that no longer exists, or one whose route is guarded now, fails rather than sitting there as an
+  exemption nobody is using.
+
+### Security
+
+- Authorization runs before body validation. Elysia validates a request body against the route schema
+  before it calls `beforeHandle`, so guards living there ran too late: an anonymous caller who posted
+  a malformed body to a protected route was answered 400 with the field names and constraints of a
+  route they were never allowed to reach, and every rejected request had its body parsed and checked
+  before anyone asked who sent it. The guards now run at the transform stage. They travel as
+  `requireAuth`, `requireRole` and `requireSelectedWorkspace` route options carried by macros on the
+  plugins every route file already uses, so a route added later gets the ordering by writing the
+  option rather than by remembering a lifecycle rule. The shared-dashboard rate limiter moved with
+  them for the same reason. Converting the routes also fixed a latent bug: the old composite form
+  built a throwaway context object, so the role `requireRoleFresh` read back from the database never
+  reached the handler.
+- The workspace guards answer 404 for a workspace that is not there. A soft delete leaves the
+  membership rows behind and the membership queries do not join workspaces, so a member of a deleted
+  workspace passed every check: the member roster answered 200 with the full list, and adding and
+  removing members still succeeded. The existence check now runs last in each guard, so a caller who
+  was going to be refused hears 403 for a real workspace and for an absent one and the status cannot
+  be used to learn which ids exist.
+- `config/example.json` no longer excludes localhost from the audit log. It shipped
+  `audit.ipWhitelist` as `["127.0.0.1", "::1"]`, which is exactly the state the audit plugin's own
+  comment says must never happen, so a fresh clone started with no audit trail for anything reaching
+  it locally. The list is empty now, and `check:config` fails on any loopback entry, matching the
+  whole `127.0.0.0/8` range, the `::ffff:` mapped form and the name `localhost`. An address an
+  operator lists in `config/<slug>.json` is still honoured.
+
+### Changed
+
+- The workspace header has one owner and one answer. A caller who left `X-Workspace-ID` off was told
+  different things by different routes, in two spellings of the header name, neither matching what
+  the CORS allow-list publishes or the client sends. `backend/src/guards/workspaceHeader.ts` now owns
+  the header name, the missing-header message, a distinct message for a header that could not be
+  read, and the not-found answer. The scope rule is now plain: a listing follows the header whoever
+  sent it, and only a request naming no workspace gets the cross-workspace view. Previously the scope
+  was decided by re-reading the caller's role, so a SYSOP who named a workspace had that id discarded
+  and was answered with every workspace instead of the one they asked for.
+- A 404 is treated as an answer rather than a failure. `queryClient.ts` decides that in one predicate
+  that both the retry rule and the throw rule consult, so a page can render its own not-found state
+  instead of waiting through three retries and then handing an unnamed failure to the error boundary.
+  A page added later inherits this without opting in; everything else still throws.
+- The multipart transport ceiling now sits above `storage.maxFileSize`. Both shipped at 10 MB, so a
+  file at exactly the file limit exceeded the transport limit once the multipart envelope was added,
+  and Bun answers that with an empty 413 rather than the message the route would have given.
+
+### Fixed
+
+- An interrupted view transition no longer raises an unhandled rejection. The template opts every
+  navigation into a cross-document transition, and navigating again inside the 220ms animation skips
+  the running one, which rejects its promises with an `AbortError` that nothing held. Clicking twice
+  on any page produced a console rejection, and a crawler navigating faster than the animation
+  produced one on every page. `frontend/src/lib/viewTransitions.ts` holds those promises and absorbs
+  only an `AbortError`, so a transition that failed for another reason is still reported. The CSS is
+  untouched: same rule, same timing, same reduced-motion path.
+- A bug report that is empty once trimmed is refused. The route checked `minLength` against the
+  description exactly as it arrived and the service trimmed it afterwards, so a description of
+  nothing but spaces was stored as a row titled `(untitled)` with an empty body, which could then
+  never be corrected or removed. The route trims in a transform hook now, so the value the schema is
+  asked about is the value that gets stored, and a padded email address is accepted rather than
+  refused for padding that would have been removed anyway.
+- `GET /api/v1/bugs` answers. The listing registered its path with a trailing slash beside the POST's
+  empty string, which puts two nodes in the router and resolved a GET of either URL to the node the
+  POST created, so both spellings returned 404.
+- Opening a dashboard that no longer exists shows the not-found state. It previously showed a
+  skeleton for about seven seconds and then a failure that named nothing. The same was true of a
+  shared dashboard whose link had expired.
+- The onboarding checklist reports the sysop password change instead of affirming it. Its first step
+  was hard-coded complete and signing in was what made it true, so the checklist claimed a password
+  change nobody had performed, on the one account whose default password is published in the
+  project's own documentation. Signing in and changing the password are now separate steps, and the
+  second reads the seeded SYSOP row so it closes only when the account's holder actually changes it.
+- Application errors reach `logs/<name>.error.log`. That file is the spawned server's stderr, but the
+  logger sent every level to stdout, so it could only ever hold crashes and interpreter warnings, and
+  every tool that read it to judge a startup was reading a file that could not hold an application
+  error. Errors are copied to stderr rather than moved, so the main log still carries every level.
+  Transport targets are resolved to absolute paths, which fixes a logger loaded from outside
+  `backend/` dying with "unable to determine transport target for pino-pretty".
+- A binary upload is no longer rejected as a long text line. The line-length check ran over every
+  buffered upload before the switch that chose a text-format validator, so a binary body with no
+  newline in it was refused with "Line 1 exceeds maximum length of 10000 characters". It now runs
+  only for a MIME type that has a content validator.
+- A fractional `page` or `limit` is refused. Every paginated route declared them as `t.Numeric` with
+  no integer constraint, so `?page=1.5` became a fractional SQL `LIMIT`/`OFFSET`: a driver error on
+  some backends and a silently misaligned 200 on others. Both parameters now come from
+  `backend/src/schemas/pagination.ts` and are declared on `t.Integer`. A value outside its range also
+  reported a validation failure naming a property that exists on no schema; the message names the
+  parameter the caller actually sent. Reported by nine of the ten derived applications during the
+  v3.44.3 sweep.
+
 ## [3.44.3] - 2026-08-27
 
 Patch release. Removes a branch of the drift normalizer that could no longer be reached. No
