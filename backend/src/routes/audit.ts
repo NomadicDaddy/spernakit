@@ -38,6 +38,7 @@ function handleListAuditLogs({
 		dateTo?: string;
 		fields?: string;
 		limit?: number;
+		outcome?: 'failed' | 'succeeded';
 		page?: number;
 		search?: string;
 		sortBy?: string;
@@ -73,6 +74,7 @@ function handleListAuditLogs({
 		...(params.action ? { action: params.action } : {}),
 		...(params.dateFrom ? { dateFrom: params.dateFrom } : {}),
 		...(params.dateTo ? { dateTo: params.dateTo } : {}),
+		...(params.outcome ? { outcome: params.outcome } : {}),
 		...(params.search ? { search: params.search } : {}),
 		/*
 		 * Passed through unvalidated on purpose: the service owns the allowlist, and validating
@@ -103,7 +105,12 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 			description:
 				'Returns a paginated list of audit log entries. Supports filtering by action ' +
 				'type (e.g., user.login, workspace.create), userId, date range (dateFrom/dateTo ' +
-				'in ISO 8601), and free-text search. Sortable by createdAt, username, action, ' +
+				'in ISO 8601), and free-text search. Filter by outcome (`failed` for entries whose ' +
+				'response was 400 or above, `succeeded` for the rest) to ask the log whether anyone ' +
+				'has been failing to get in; every entry carries `status` (the response status, null ' +
+				'when the request succeeded) and `submittedUsername` (the username the request body ' +
+				'carried, which is the attempted account on a failed sign-in). ' +
+				'Sortable by createdAt, username, action, ' +
 				'resource or ipAddress via sortBy/sortDir; an unrecognised sortBy falls back to ' +
 				'createdAt descending. Date range is validated - dateTo must be ' +
 				'after dateFrom. Scoped to workspace via X-Workspace-Id header (SYSOP sees ' +
@@ -121,6 +128,20 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 									'Audit log entries',
 									[
 										{
+											action: 'POST /api/v1/auth/login',
+											createdAt: '2026-01-15T14:35:00Z',
+											details: '{"entity":{"username":"admin"},"status":401}',
+											id: 151,
+											impersonatedBy: null,
+											impersonatorUsername: null,
+											ip: '203.0.113.7',
+											status: 401,
+											submittedUsername: 'admin',
+											userId: null,
+											username: null,
+											workspaceId: null,
+										},
+										{
 											action: 'user.login',
 											createdAt: '2026-01-15T14:30:00Z',
 											details: null,
@@ -128,6 +149,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											impersonatedBy: null,
 											impersonatorUsername: null,
 											ip: '192.168.1.10',
+											status: null,
+											submittedUsername: null,
 											userId: 1,
 											username: 'admin',
 											workspaceId: 1,
@@ -140,6 +163,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											impersonatedBy: null,
 											impersonatorUsername: null,
 											ip: '192.168.1.10',
+											status: null,
+											submittedUsername: null,
 											userId: 1,
 											username: 'admin',
 											workspaceId: null,
@@ -152,6 +177,8 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 											impersonatedBy: 1,
 											impersonatorUsername: 'admin',
 											ip: '192.168.1.25',
+											status: null,
+											submittedUsername: null,
 											userId: 2,
 											username: 'operator1',
 											workspaceId: 1,
@@ -185,6 +212,12 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 				}),
 			),
 			limit: limitParam(),
+			outcome: t.Optional(
+				t.Union([t.Literal('failed'), t.Literal('succeeded')], {
+					description:
+						'`failed` returns entries whose response was 400 or above, `succeeded` the rest.',
+				}),
+			),
 			page: pageParam(),
 			search: t.Optional(t.String({ maxLength: 255 })),
 			sortBy: t.Optional(

@@ -195,6 +195,10 @@
 					"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on"
 				},
 				{
+					"command": "bun run test:audit-outcome-filter",
+					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
+				},
+				{
 					"command": "bun run test:dashboard-share-revoke",
 					"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted"
 				},

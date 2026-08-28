@@ -68,6 +68,23 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: LINT_GLOBS,
 	},
+	// Signs in through the real login route and reads the log back through the real listing, so
+	// its world is the audit writer and reader, the field allowlist they share, and everything the
+	// two requests pass through on the way.
+	'test:audit-outcome-filter': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/db/schema/**',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/audit.ts',
+			'backend/src/routes/auth/**',
+			'backend/src/services/auditService.ts',
+			'backend/src/services/authService.ts',
+			'backend/src/utils/fieldSelection.ts',
+			'scripts/test-audit-outcome-filter.ts',
+		],
+	},
 	// The fixture is self-contained: it copies clear-logs.ts into a temp tree and writes its own
 	// runbook there, so the real scripts/smoke.json is not part of this step's world.
 	'test:clear-logs': {

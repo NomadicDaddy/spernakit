@@ -9,6 +9,8 @@ interface ListAuditLogsParams {
 	dateFrom?: string;
 	dateTo?: string;
 	limit?: string;
+	/** `failed` for responses of 400 or above, `succeeded` for the rest. */
+	outcome?: string;
 	page?: string;
 	search?: string;
 	/** Column to sort by: createdAt, username, action, resource, ipAddress. */

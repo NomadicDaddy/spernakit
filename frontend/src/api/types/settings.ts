@@ -26,6 +26,10 @@ interface AuditLog {
 	ipAddress: null | string;
 	resource: null | string;
 	resourceId: null | number;
+	/** The response status when the request failed; null when it succeeded. */
+	status: null | number;
+	/** The username the request body carried, which is the attempted account on a failed sign-in. */
+	submittedUsername: null | string;
 	userId: null | number;
 	username: null | string;
 }
