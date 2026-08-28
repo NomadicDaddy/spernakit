@@ -85,8 +85,6 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/validate-config.ts',
 		],
 	},
-	// Drives the real API in process against a temp database, so its world is the dashboard
-	// routes and services it calls, the plugins and guards those routes stack, and the schema.
 	'test:dashboard-share-revoke': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -136,6 +134,25 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/services/database-admin/schemaIntrospection.ts',
 			'backend/src/services/database-admin/dataValidation.ts',
 			'scripts/test-mutation-denylist.ts',
+		],
+	},
+	// Drives the real API in process against a temp database, so its world is the dashboard
+	// routes and services it calls, the plugins and guards those routes stack, and the schema.
+	// Seeds through the real seed path and reads the checklist over the real API, so its world is
+	// the onboarding service and route, the accounts and settings the seed writes, the password
+	// writers it drives, and the guard those requests pass through.
+	'test:onboarding-password-step': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/db/schema/**',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/onboarding.ts',
+			'backend/src/services/auth/**',
+			'backend/src/services/onboardingService.ts',
+			'backend/src/services/user/userPasswordAdminService.ts',
+			'backend/src/utils/auth/**',
+			'scripts/test-onboarding-password-step.ts',
 		],
 	},
 	'test:reset-packages': {
