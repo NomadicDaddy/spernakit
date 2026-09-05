@@ -34,10 +34,7 @@ async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
 		const configKey = `${smtpConfig.host}:${smtpConfig.port}:${smtpConfig.user}:${smtpConfig.secure}`;
 		if (!cachedTransporter || configKey !== cachedConfigKey) {
 			cachedTransporter = nodemailer.createTransport({
-				auth:
-					smtpConfig.user.length > 0
-						? { pass: smtpConfig.password, user: smtpConfig.user }
-						: undefined,
+				auth: { pass: smtpConfig.password, user: smtpConfig.user },
 				host: smtpConfig.host,
 				pool: true,
 				port: smtpConfig.port,
@@ -48,9 +45,9 @@ async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
 
 		await cachedTransporter.sendMail({
 			from: { address: smtpConfig.fromAddress, name: smtpConfig.fromName },
-			html: input.html,
+			...(input.html === undefined ? {} : { html: input.html }),
 			subject: input.subject,
-			text: input.text,
+			...(input.text === undefined ? {} : { text: input.text }),
 			to: input.to,
 		});
 		logger.info({ subject: input.subject }, 'Email sent successfully');
