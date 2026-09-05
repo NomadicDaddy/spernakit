@@ -3,11 +3,12 @@
  * Crawltest Analyze Script
  *
  * Reads logs/crawltest.json and surfaces which pages have non-'good' Web Vitals
- * ratings plus the top-N slowest pages by LCP and FCP. Lightweight report, not a
- * quality gate — always exits 0.
+ * ratings plus the top-N slowest pages by LCP and FCP. Missing or failed crawl reports
+ * fail; dev vitals remain informational and do not certify production performance.
  *
  * Usage:
  *   bun scripts/crawltest-analyze.ts
+ *   bun scripts/crawltest-analyze.ts --report <path>
  */
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -92,15 +93,23 @@ function printTopSlowest(
 // Main
 // ---------------------------------------------------------------------------
 
-const reportPath = path.resolve(import.meta.dirname, '..', 'logs', 'crawltest.json');
+const reportArgument = process.argv.indexOf('--report');
+const reportPath =
+	reportArgument === -1
+		? path.resolve(import.meta.dirname, '..', 'logs', 'crawltest.json')
+		: path.resolve(process.argv[reportArgument + 1] ?? '');
 
 if (!existsSync(reportPath)) {
 	console.log('⚠ No crawltest report found at logs/crawltest.json');
 	console.log('  Run `bun run crawltest` first to generate it.');
-	process.exit(0);
+	process.exit(1);
 }
 
 const report = JSON.parse(readFileSync(reportPath, 'utf-8')) as CrawlReport;
+if (!report.summary.success) {
+	console.error('The crawl report records failure.');
+	process.exit(1);
+}
 const ageMs = Date.now() - statSync(reportPath).mtimeMs;
 
 console.log('\n📊 Crawltest Web Vitals Analysis');

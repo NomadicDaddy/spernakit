@@ -49,7 +49,7 @@ Currently defined modes:
 - `docker-local` - docker dev stack smoke
 - `docker-prod` - docker prod stack smoke
 - `qc` - check-only quality checks: drift, typecheck, lint, build, api-types, format check, deps
-- `screenshots` - dev smoke with screenshot capture
+- `screenshots` - production frontend capture with release evidence
 - `reset` - full package reset, QC, and Docker rebuild without publishing
 
 Each step maps directly to a `command` plus a human-readable `description` used in log output.
@@ -372,7 +372,9 @@ Steps (in order):
 
 ### 7. Screenshots
 
-Runs the dev smoke flow with screenshot capture enabled for all pages.
+Builds and serves the production frontend, then captures the full crawl at 2250×1309. Each run
+keeps its images and analyzer verdict in a separate versioned run directory. Release evidence
+requires a clean committed candidate and complete route coverage.
 
 Command:
 
@@ -384,19 +386,21 @@ bun scripts/smoke.ts --mode screenshots
 
 Steps (in order):
 
-1. `bun run stop`
+1. `bun run build:frontend`
+    - Build the production release frontend.
+2. `bun run stop`
     - Stop any running processes.
-2. `bun scripts/clear-logs.ts`
+3. `bun scripts/clear-logs.ts`
     - Clear logs.
-3. `bun run start`
-    - Start services in background.
-4. `bun scripts/wait-for-http.ts --url http://localhost:{{BACKEND_PORT}}/api/v1/health --timeoutMs 30000`
+4. `bun scripts/start.ts --check --preview`
+    - Start services with the production frontend.
+5. `bun scripts/wait-for-http.ts --url http://localhost:{{BACKEND_PORT}}/api/v1/health --timeoutMs 30000`
     - Wait for backend to be ready.
-5. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000`
+6. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000`
     - Wait for frontend to be ready.
-6. `bun scripts/crawltest.ts --mode dev --screenshot-pages --404 --bug`
+7. `bun scripts/crawltest.ts --mode preview --screenshot-pages --404 --bug`
     - Crawl test with screenshots.
-7. `bun run stop`
+8. `bun run stop`
     - Stop services.
 
 ## Exit Codes and Logs
@@ -423,7 +427,7 @@ The following bun scripts are available in `package.json`:
 | `bun run smoke:docker-prod`  | Run docker prod smoke tests                                          |
 | `bun run smoke:qc`           | Run check-only quality checks (typecheck, lint, format check, build) |
 | `bun run smoke:reset`        | Full package reset and rebuild without publishing                    |
-| `bun run smoke:screenshots`  | Dev crawltest with screenshot capture                                |
+| `bun run smoke:screenshots`  | Production frontend capture with release evidence                    |
 
 ## Related Scripts
 
