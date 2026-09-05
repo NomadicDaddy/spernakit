@@ -18,12 +18,12 @@ by license family, and it does not inventory the Alpine base system.
 | -------------------------------------------------------------------- | ------- | ------------- |
 | [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger) | 1.3.1   | MIT           |
 | [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox) | 0.34.52 | MIT           |
-| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.21.0  | MIT           |
+| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.23.1  | MIT           |
 | [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)             | 0.45.2  | Apache-2.0    |
-| [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.29  | MIT           |
+| [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.30  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)           | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                 | 11.5.2  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 9.0.5   | MIT-0         |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 9.0.6   | MIT-0         |
 | [otpauth](https://www.npmjs.com/package/otpauth)                     | 9.5.1   | MIT           |
 | [pg](https://www.npmjs.com/package/pg)                               | 8.23.0  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                           | 10.3.1  | MIT           |
@@ -49,22 +49,22 @@ by license family, and it does not inventory the Alpine base system.
 | [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.3.7   | MIT        |
 | [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.21  | MIT        |
 | [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.16  | MIT        |
-| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.101.4 | MIT        |
-| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.1.2   | MIT        |
-| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.9  | MIT        |
+| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.102.8 | MIT        |
+| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.2.4   | MIT        |
+| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.10 | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.31.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.37.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
 | [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.4   | MIT        |
-| [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.0   | MIT        |
+| [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.1   | MIT        |
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
 | [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.8   | MIT        |
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
-| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.1.1   | Apache-2.0 |
+| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.2.1   | Apache-2.0 |
 | [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.15  | MIT        |
 
 ## Required notices by license family

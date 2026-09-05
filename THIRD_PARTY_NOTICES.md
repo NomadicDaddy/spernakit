@@ -2208,7 +2208,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/query-core@5.101.4
+### @tanstack/query-core@5.102.8
 
 License: MIT
 
@@ -2236,7 +2236,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-query@5.101.4
+### @tanstack/react-query@5.102.8
 
 License: MIT
 
@@ -2292,7 +2292,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-table@9.1.2
+### @tanstack/react-table@9.2.4
 
 License: MIT
 
@@ -2320,7 +2320,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-virtual@3.14.9
+### @tanstack/react-virtual@3.14.10
 
 License: MIT
 
@@ -2376,7 +2376,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/table-core@9.1.2
+### @tanstack/table-core@9.2.4
 
 License: MIT
 
@@ -2404,7 +2404,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/virtual-core@3.17.7
+### @tanstack/virtual-core@3.17.8
 
 License: MIT
 
@@ -2684,7 +2684,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/node@26.2.0
+### @types/node@26.4.0
 
 License: MIT
 
@@ -2712,7 +2712,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/pg@8.21.0
+### @types/pg@8.23.1
 
 License: MIT
 
@@ -3873,7 +3873,7 @@ Apache License
    limitations under the License.
 ```
 
-### elysia@1.4.29
+### elysia@1.4.30
 
 License: MIT
 
@@ -4681,7 +4681,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.31.0
+### lucide-react@1.37.0
 
 License: ISC
 
@@ -4801,7 +4801,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@9.0.5
+### nodemailer@9.0.6
 
 License: MIT-0
 
@@ -5785,7 +5785,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react-router@8.3.0
+### react-router@8.3.1
 
 License: MIT
 
@@ -6559,7 +6559,7 @@ SOFTWARE.
 
 License: MIT AND ISC
 
-### web-vitals@6.1.1
+### web-vitals@6.2.1
 
 License: Apache-2.0
 

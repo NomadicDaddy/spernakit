@@ -202,7 +202,7 @@ graph TD
 - **Service layer pattern**: Business logic separated from route handlers
 - **Handler extraction**: Complex route handlers (>30 lines) extracted as named functions co-located in the route file
 - **Service organization**: Hybrid flat + subdirectory - simple services are flat files, complex services get a subdirectory with a facade file (see DEVELOPMENT.md for details)
-- **Plugin pipeline**: Client IP → Request ID → Logger → CORS → Security Headers → Auth → Password Change Guard → CSRF → Rate Limit → Auth Rate Limit → Workspace → Audit (note: `apiKey` is a per-route guard, not a plugin)
+- **Plugin pipeline**: Client IP → Request ID → Logger → CORS → Security Headers → Auth → Password Change Guard → CSRF → Rate Limit → Auth Rate Limit → Workspace → Audit. The scoped `authPlugin` resolves JWT-cookie and `X-API-Key` identities; its route authorization macros use the shared role guard, which caps API-key access at the key scope and the owner's current database role.
 - **Session correlation**: `X-Request-ID` (session-scoped counter) + `X-Session-ID` (per-browser-session UUID) for full request traceability
 - **Configuration**: JSON-driven config via `config/spernakit.json` (Bun is configured with `env = false`, so `.env` files are not auto-loaded)
 - **Security**: CSP headers, rate limiting, input validation, SQL injection prevention
@@ -241,7 +241,7 @@ graph TD
 
 #### Frontend Hooks & Stores
 
-**Hook organization**: All hooks live under `frontend/src/hooks/` (never colocated under `pages/*/hooks/`). Keep a hook flat at `hooks/{name}.ts` unless a single domain has **3 or more** related hooks - then group them under `hooks/{domain}/{name}.ts` (e.g., `hooks/dashboards/`, `hooks/notifications/`, `hooks/layout/`). Do not nest more than one level deep.
+**Hook organization**: All hooks live under `frontend/src/hooks/` (never colocated under `pages/*/hooks/`). Keep a hook flat at `hooks/{name}.ts` unless a single domain has **2 or more** related hooks - then group them under `hooks/{domain}/{name}.ts` (e.g., `hooks/dashboards/`, `hooks/notifications/`, `hooks/layout/`). Do not nest more than one level deep.
 
 - **useAuth** (`hooks/useAuth.ts`): Authentication state, user info, login/logout methods
 - **useAuthorization** (`hooks/useAuthorization.ts`): Hierarchical role-based permission checking (`hasMinRole()`, `hasRole()`, `can()`, `isSysop`, `isAdmin`)
