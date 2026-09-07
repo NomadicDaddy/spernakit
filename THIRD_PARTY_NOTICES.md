@@ -4261,7 +4261,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.41.0
+### lucide-react@1.42.0
 
 License: ISC
 
@@ -4381,7 +4381,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@10.0.0
+### nodemailer@10.0.1
 
 License: MIT-0
 
