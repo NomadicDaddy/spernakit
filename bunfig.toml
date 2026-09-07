@@ -1,20 +1,6 @@
 [install]
 peer = false
 
-# Supply-chain hardening: refuse to install package versions published less
-# than 7 days ago (604800 seconds). Compromised releases are usually yanked
-# within days; this window keeps a poisoned version from being pulled in by
-# a lockfile regeneration before the ecosystem reacts.
-#
-# Bun can reject young versions even during a frozen-lockfile install.
-minimumReleaseAge = 604800
-
-# Approved 2026-09-05 for nodemailer 10.0.0 and otpauth 9.5.2 so the validated
-# dependency update can install. Bun exemptions apply to package names, not
-# individual versions; review these exceptions when either exact pin changes.
-# All other packages retain the seven-day window.
-minimumReleaseAgeExcludes = ["nodemailer", "otpauth"]
-
 # Disable automatic .env file loading - we use JSON config exclusively.
 # Note: This does NOT prevent explicit process.env reads in configLoader.ts
 # for production secret injection (the only approved use of env vars).

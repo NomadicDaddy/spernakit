@@ -82,6 +82,10 @@ COPY shared/ shared/
 COPY frontend/ frontend/
 # vite.config.ts reads app name from defaults.json and version from root package.json
 COPY backend/src/config/defaults.json backend/src/config/defaults.json
+# releaseBuildPlugin.ts imports this to stamp dist/release-build.json. There is no
+# Git checkout in the image, so the plugin records no source attestation and the
+# build proceeds; only the file itself has to be present to resolve the import.
+COPY scripts/lib/release-build.ts scripts/lib/release-build.ts
 
 WORKDIR /app/frontend
 RUN bunx tsc -p tsconfig.build.json && bunx vite build
