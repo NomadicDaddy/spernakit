@@ -116,6 +116,17 @@ export async function captureReleaseBuild(root: string, baseUrl: string): Promis
 		if (!/^[\w./-]+$/.test(asset.file) || asset.file.split('/').includes('..')) {
 			throw new Error('Invalid production asset path.');
 		}
+		const onDisk = readFileSync(join(root, 'frontend', 'dist', asset.file));
+		if (sha256(onDisk) !== asset.sha256) {
+			throw new Error(`Production asset differs from the built candidate: ${asset.file}`);
+		}
+		// A precompressed variant cannot be verified by fetching its own path. The server answers
+		// /assets/x.js.br with Content-Encoding: br, and every compliant client decodes that before
+		// the body is readable, so the bytes that come back are the original file rather than the
+		// .br one. Setting Accept-Encoding: identity does not change it. Their content is still
+		// covered: the canonical fetch below is what the server negotiates out of these same files,
+		// and the hash above proves the emitted artifact matches the attestation.
+		if (asset.file.endsWith('.br') || asset.file.endsWith('.gz')) continue;
 		const served = await fetch(new URL(`/${asset.file}`, baseUrl), {
 			signal: AbortSignal.timeout(45_000),
 		});
@@ -130,11 +141,7 @@ export async function captureReleaseBuild(root: string, baseUrl: string): Promis
 				);
 			servedBytes = new TextEncoder().encode(html);
 		}
-		if (
-			!served.ok ||
-			sha256(servedBytes) !== asset.sha256 ||
-			sha256(readFileSync(join(root, 'frontend', 'dist', asset.file))) !== asset.sha256
-		) {
+		if (!served.ok || sha256(servedBytes) !== asset.sha256) {
 			throw new Error(`Production asset differs from the built candidate: ${asset.file}`);
 		}
 	}

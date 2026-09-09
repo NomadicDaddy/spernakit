@@ -102,7 +102,10 @@ export async function screenshotPreLoginPages(
 ): Promise<void> {
 	if (!session.page || !opts.screenshotDir) return;
 
-	const preLoginRoutes = ['/register'];
+	// /login is added to visitedUrls by loginSession below, and a release capture requires an image
+	// for every route it visited, so the sign-in page has to be photographed here rather than only
+	// walked through on the way to a session.
+	const preLoginRoutes = ['/login', '/register'];
 	console.log('📷 Screenshotting pre-login pages...');
 
 	for (const route of preLoginRoutes) {

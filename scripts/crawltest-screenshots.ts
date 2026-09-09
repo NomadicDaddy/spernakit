@@ -32,6 +32,25 @@ export async function ensureScreenshotDir(
 }
 
 // ---------------------------------------------------------------------------
+// Route slugs
+// ---------------------------------------------------------------------------
+
+/**
+ * Name a screenshot after the whole route rather than its pathname alone.
+ *
+ * `/settings/database` and its `?panel=data`, `?panel=erd` and `?panel=sql` views are four routes
+ * the crawl visits and photographs separately, and all four used to write `settings-database.png`
+ * and overwrite each other. The run then claimed four routes behind a single image, which a release
+ * capture reads as an incomplete inventory. The query string is part of what makes the page
+ * different, so it belongs in the name.
+ */
+export function routeSlug(url: URL): string {
+	const pathSlug = url.pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
+	const querySlug = url.search.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+	return querySlug ? `${pathSlug}-${querySlug}` : pathSlug;
+}
+
+// ---------------------------------------------------------------------------
 // Page screenshot
 // ---------------------------------------------------------------------------
 
@@ -46,8 +65,8 @@ export async function screenshotPage(
 	const dir = await ensureScreenshotDir(opts, state, rootDir);
 	if (!dir) return null;
 
-	const urlPath = new URL(url).pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
-	const filename = `${urlPath}.png`;
+	const captured = new URL(url);
+	const filename = `${routeSlug(captured)}.png`;
 	const filepath = path.join(dir, filename);
 
 	const SCREENSHOT_TIMEOUT = 15_000;
@@ -64,7 +83,6 @@ export async function screenshotPage(
 			});
 			await Promise.race([screenshotPromise, timeoutPromise]);
 			results.screenshotsTaken++;
-			const captured = new URL(url);
 			results.screenshotImages.push({
 				file: filename,
 				route: captured.pathname + captured.search,
@@ -185,7 +203,7 @@ export async function screenshotSubTabs(
 	);
 	if (groups.length === 0) return 0;
 
-	const urlSlug = new URL(pageUrl).pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
+	const urlSlug = routeSlug(new URL(pageUrl));
 	const dir = path.resolve(rootDir, opts.screenshotDir);
 	let subTabNavCount = 0;
 
