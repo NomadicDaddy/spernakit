@@ -130,11 +130,29 @@ is listening on that port is what gets measured.
 
 - Console summary with pass/fail status
 - Detailed JSON report: `logs/crawltest.json`
-- Screenshots (when enabled): `screenshots/v<version>/*.png`, alongside a `crawl-result.json`
-  recording whether that crawl passed. The pre-push screenshot guard reads it and refuses a release
-  tag whose capture came from a failed crawl, so a directory full of PNGs is not enough.
+- Screenshots (when enabled): `screenshots/v<version>/runs/<run-id>/`, holding the PNGs, the crawl
+  report, and a `crawl-result.json` recording the commit, tree, production build and analyzer
+  verdict behind them. `screenshots/v<version>/release-run.json` names the run that counts. The
+  pre-push screenshot guard reads that chain and refuses a release tag whose capture came from a
+  failed crawl, a different commit, or a dirty tree, so a directory full of PNGs is not enough.
 
 See `scripts/readme.md` for complete CLI reference and configuration options.
+
+### The capture contract
+
+`.screenshot-capture` at the repository root is the route coverage contract. It is JSON: a `schema`
+number, a `viewport` of 2250x1309, and `routes`, a list of regular expressions that every release
+capture has to visit. A release crawl fails when one of them goes unvisited, which is what stops a
+capture that quietly lost pages from passing as a complete one.
+
+Delete the file to stop capturing releases in a repository at all. One with no `.screenshot-capture`
+is exempt from the guard, which is the normal state of a CLI or a library.
+
+**A derived app owns its own route list.** The contract ships carrying the template's routes, so an
+app that removed one of those pages fails its own release crawl until that entry goes. Trim the
+routes the app does not serve, add the ones it added, and record the file in `.templateoverrides` as
+a `KEEP` that names which routes differ and why. Leave `schema` and `viewport` alone; the guard
+checks both against fixed values, and a capture taken at another size does not verify.
 
 ## Authentication Reset Testing
 
