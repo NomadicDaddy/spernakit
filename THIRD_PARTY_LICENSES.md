@@ -51,11 +51,11 @@ by license family, and it does not inventory the Alpine base system.
 | [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.16  | MIT        |
 | [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.102.8 | MIT        |
 | [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.2.4   | MIT        |
-| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.10 | MIT        |
+| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.11 | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.42.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.43.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |

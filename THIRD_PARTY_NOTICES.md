@@ -1900,7 +1900,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-virtual@3.14.10
+### @tanstack/react-virtual@3.14.11
 
 License: MIT
 
@@ -1984,7 +1984,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/virtual-core@3.17.8
+### @tanstack/virtual-core@3.17.9
 
 License: MIT
 
@@ -2264,7 +2264,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/node@26.4.1
+### @types/node@26.5.0
 
 License: MIT
 
@@ -4261,7 +4261,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.42.0
+### lucide-react@1.43.0
 
 License: ISC
 
@@ -6023,7 +6023,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### undici-types@8.3.0
+### undici-types@8.9.0
 
 License: MIT
 
