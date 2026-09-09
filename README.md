@@ -1,14 +1,14 @@
-# Spernakit v3.45.0
+# Spernakit v3.46.0
 
 Self-hosted admin application template built from scratch with Bun-native tooling.
 
-Spernakit v3.45.0 is the current template baseline. Changes must follow the architecture rules in the
+Spernakit v3.46.0 is the current template baseline. Changes must follow the architecture rules in the
 template docs, stay wired end to end, and pass the quality gates before they are treated as
 complete.
 
 ## Overview
 
-Spernakit v3.45.0 is a full-stack self-hosted admin application template for building
+Spernakit v3.46.0 is a full-stack self-hosted admin application template for building
 Spernakit-derived apps. It provides authentication, RBAC, multi-tenancy via workspaces,
 audit logging, real-time notifications, file uploads, scheduled tasks, health monitoring,
 and an admin UI covering all of it.
@@ -112,7 +112,7 @@ authoritative and update this README.
 
 ## Prerequisites
 
-- [Bun 1.4.0+](https://bun.sh) as the required package manager and runtime
+- [Bun 1.4.2+](https://bun.sh) as the required package manager and runtime
 - Node.js 24.x as optional compatibility tooling
 - SQLite by default, with PostgreSQL support through `config.database.dialect`
 
@@ -158,7 +158,7 @@ spernakit/
 
 | Layer                       | Technology                                      |
 | --------------------------- | ----------------------------------------------- |
-| Runtime and package manager | Bun 1.4.0+                                      |
+| Runtime and package manager | Bun 1.4.2+                                      |
 | Backend                     | Elysia + Drizzle ORM                            |
 | Database                    | SQLite by default, PostgreSQL supported         |
 | Frontend                    | React 19 + Vite 8                               |

@@ -7,7 +7,7 @@
  * happened yet.
  *
  * Fails the build when any audit report under .aidd/audit-reports/ uses a date
- * (in filename or top-level heading) that is after the current local date.
+ * after today: UTC for runtime-generated filenames, local time for report prose.
  * This prevents reports with invalid future-dated metadata from landing.
  *
  * Scope: only .aidd/audit-reports/*.md files. Historical iteration logs and
@@ -38,8 +38,7 @@ interface Violation {
 	kind: 'date-field' | 'filename' | 'heading';
 }
 
-function todayLocalIso(): string {
-	const now = new Date();
+function todayLocalIso(now: Date): string {
 	const year = now.getFullYear();
 	const month = String(now.getMonth() + 1).padStart(2, '0');
 	const day = String(now.getDate()).padStart(2, '0');
@@ -71,13 +70,18 @@ function relFromRoot(projectRoot: string, absPath: string): string {
 		.replace(/\\/g, '/');
 }
 
-function collectViolations(projectRoot: string, today: string, file: string): Violation[] {
+function collectViolations(
+	projectRoot: string,
+	today: string,
+	utcToday: string,
+	file: string,
+): Violation[] {
 	const violations: Violation[] = [];
 	const rel = relFromRoot(projectRoot, file);
 	const basename = file.split(/[\\/]/).pop() ?? '';
 
 	const nameMatch = /\b(\d{4}-\d{2}-\d{2})\b/.exec(basename);
-	if (nameMatch && nameMatch[1]! > today) {
+	if (nameMatch && nameMatch[1]! > utcToday) {
 		violations.push({ date: nameMatch[1]!, file: rel, kind: 'filename' });
 	}
 
@@ -117,8 +121,12 @@ function collectViolations(projectRoot: string, today: string, file: string): Vi
 	return violations;
 }
 
-export function runAuditArtifactHygiene(projectRoot = DEFAULT_PROJECT_ROOT): number {
-	const today = todayLocalIso();
+export function runAuditArtifactHygiene(
+	projectRoot = DEFAULT_PROJECT_ROOT,
+	now = new Date(),
+): number {
+	const today = todayLocalIso(now);
+	const utcToday = now.toISOString().slice(0, 10);
 	const reportsDir = resolve(projectRoot, REPORTS_SUBDIR);
 	const reports = listReports(reportsDir);
 
@@ -130,17 +138,20 @@ export function runAuditArtifactHygiene(projectRoot = DEFAULT_PROJECT_ROOT): num
 		return 0;
 	}
 
-	const violations = reports.flatMap((file) => collectViolations(projectRoot, today, file));
+	const violations = reports.flatMap((file) =>
+		collectViolations(projectRoot, today, utcToday, file),
+	);
 
 	if (violations.length === 0) {
 		console.log(
-			`[OK] Audit artifact hygiene: ${reports.length} report(s) at or before ${today}.`,
+			`[OK] Audit artifact hygiene: ${reports.length} report(s); UTC date ${utcToday}, local date ${today}.`,
 		);
 		return 0;
 	}
 
 	console.error(`[FAIL] Audit artifact hygiene: ${violations.length} future-dated reference(s).`);
 	console.error(`  Current local date: ${today}`);
+	console.error(`  Current UTC filename date: ${utcToday}`);
 	for (const violation of violations) {
 		const suffix = violation.context ? ` — ${violation.context}` : '';
 		console.error(`  ${violation.file} (${violation.kind}): ${violation.date}${suffix}`);

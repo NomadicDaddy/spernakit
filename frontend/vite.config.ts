@@ -7,6 +7,7 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, type PluginOption } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 
+import { releaseBuildPlugin } from './releaseBuildPlugin.ts';
 import { lucideDirectImportsPlugin } from './vite-plugins/lucideDirectImports.ts';
 import { stripCssFallbacksPlugin } from './vite-plugins/stripCssFallbacks.ts';
 
@@ -197,6 +198,7 @@ export default defineConfig({
 		include: ['react-grid-layout'],
 	},
 	plugins: [
+		releaseBuildPlugin(resolve(configDir, '..')),
 		lucideDirectImportsPlugin(),
 		react({
 			babel: {

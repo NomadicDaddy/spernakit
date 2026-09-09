@@ -17,7 +17,7 @@ This guide gets a Spernakit app running on your machine.
 
 You'll need:
 
-- **Bun 1.4.0+** ([Install Bun](https://bun.sh)) - the runtime and required package manager
+- **Bun 1.4.2+** ([Install Bun](https://bun.sh)) - the runtime and required package manager
 - **Git**
 - **A code editor** (VS Code recommended)
 

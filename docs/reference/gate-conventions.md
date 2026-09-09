@@ -1,5 +1,10 @@
 # Gate Conventions
 
+> **Shared-core file.** spernakit owns this document. aidd and every other target carry a
+> byte-identical copy, synced by `scripts/sync-shared-core.ts` under the `gate-conventions` bundle
+> and enforced by `check:shared-core`. Edit it here and sync outward; an edit made in a copy shows
+> up as drift and fails that gate.
+
 A **gate** is a script that asserts something about the repository and fails the build when the
 assertion does not hold. It is declared by a `check*` task, or by a reasoned entry in that
 repository's `scripts/gate-conventions-allowlist.json` under `gates` for the handful that assert
@@ -131,7 +136,7 @@ Name the quantity as a quantity. The check reads the interpolated expression, no
 around it, and recognizes `.length`, `.size`, `.filter(...)`, and identifiers built from a count
 vocabulary (`count`, `examined`, `scanned`, `files`, `rows`, `entries`, `packages`, and a handful
 more, bare or camelCase). It does this rather than accept any interpolation because
-`check-max-lines.ts` passes with `no file exceeds ${MAX_LINES} lines`, and that number is a
+`check-max-lines.ts` passed with `no file exceeds ${MAX_LINES} lines`, and that number is a
 threshold, not a count of anything the gate looked at. A gate whose count lives in a domain noun --
 `${workflows}`, say -- renames it (`${scanned}`) rather than taking a waiver; the count reads more
 plainly for a human that way too.
@@ -152,7 +157,7 @@ Cite the assertion ID where one exists. Both repositories keep an assertion cata
 audit that will ask whether the invariant is still enforced.
 
 The ID shapes differ by repository and that is fine. spernakit uses `ASSERT-###`; aidd uses five
-prefixes (`BEH`, `DATA`, `QUAL`, `SEC`, `WEB`) across twenty-nine stable IDs that existing audit
+prefixes (`BEH`, `DATA`, `QUAL`, `SEC`, `WEB`) across thirty-eight stable IDs that existing audit
 reports already cite. Renumbering them would break every citation, so the convention accepts any
 `[A-Z]{3,6}-###` shape rather than forcing one scheme onto the other repository.
 
@@ -254,7 +259,7 @@ Keyed by rule, not by path, deliberately. Thirty gates do not each have their ow
 they call `main()` at module scope; they have one story, and repeating it thirty times would make the
 file unreadable and the reasons unmaintained.
 
-Three things make the list shrink rather than sit:
+Four things make the list shrink rather than sit:
 
 - A waived rule that has **started passing** for a path is reported as a finding against the
   allowlist. Fixing a gate forces the waiver out.
@@ -306,7 +311,9 @@ the **same commit** as the change.
    have seen tomorrow's.
 5. **Add the step to `scripts/smoke.json` and regenerate `scripts/smoke.md`** with
    `bun run smoke:docs`. In aidd the equivalent is `scripts/lib/smoke-qc/steps.ts`, plus
-   `FAST_QC_STEP_NAMES` in `fast-subset.ts` if the step belongs to the fast subset.
+   `FAST_QC_STEP_NAMES` in `fast-subset.ts` if the step belongs to the fast subset; the same
+   `bun run smoke:docs` regenerates `scripts/smoke-qc.md` from it, and `check:smoke-docs` fails when
+   the two drift.
 6. **Update `scripts/lib/template/classify.ts`** when file ownership changes, so derived apps
    classify the new files correctly.
 

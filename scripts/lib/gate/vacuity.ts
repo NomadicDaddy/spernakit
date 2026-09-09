@@ -48,9 +48,10 @@ const DISCOVERY =
  * Identifiers that name a quantity.
  *
  * `check-max-lines.ts` is why this is a vocabulary and not "does the line interpolate anything".
- * Its success line reads `no file exceeds ${MAX_LINES} lines` -- an interpolated number that is a
- * threshold, not a count of the files it walked. It is a real finding, and a looser test would
- * clear it.
+ * Its success line used to read `no file exceeds ${MAX_LINES} lines` -- an interpolated number
+ * that is a threshold, not a count of the files it walked. That was a real finding, and a looser
+ * test would have cleared it; the gate now reports `${examined} file(s) examined` alongside the
+ * threshold, so the example stands as the motivating case rather than a live defect.
  */
 const COUNT_WORDS = [
 	'checked',

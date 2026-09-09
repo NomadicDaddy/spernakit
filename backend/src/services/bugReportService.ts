@@ -235,11 +235,4 @@ function updateStatus(id: number, status: BugReportStatus): StatusUpdateResult |
 }
 
 export { getById, getWithLinks, list, submit, supersede, updateStatus, withLinks };
-export type {
-	BugReport,
-	BugReportWithLinks,
-	ListFilters,
-	StatusUpdateResult,
-	SubmitBugInput,
-	SupersedeResult,
-};
+export type { BugReport, ListFilters, StatusUpdateResult, SubmitBugInput, SupersedeResult };

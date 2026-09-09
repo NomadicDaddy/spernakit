@@ -32,7 +32,6 @@ import {
 
 const TEMPLATE_VERSION = '9.0.0';
 const ZERO = '0'.repeat(40);
-const LOCAL_SHA = '1'.repeat(40);
 const repoRoot = join(import.meta.dir, '..');
 const fixtureParent = join(repoRoot, 'tmp');
 mkdirSync(fixtureParent, { recursive: true });
@@ -242,13 +241,31 @@ try {
 	assert(appGit.exitCode === 0, `Fixture app git init failed:\n${appGit.output}`);
 
 	assertCommitChain(appDir, bash);
+	assert(
+		run(['git', 'add', '.screenshot-capture'], appDir).exitCode === 0,
+		'Fixture capture declaration staging failed.',
+	);
+	const captureCommit = run(
+		[
+			'git',
+			'-c',
+			'user.email=fixture@example.com',
+			'-c',
+			'user.name=Fixture',
+			'commit',
+			'-m',
+			'Declare release capture',
+		],
+		appDir,
+	);
+	assert(captureCommit.exitCode === 0, `Fixture capture commit failed:\n${captureCommit.output}`);
+	const candidate = run(['git', 'rev-parse', 'HEAD'], appDir).output.trim();
 
 	const screenshotPath = `screenshots/v${TEMPLATE_VERSION}/unreviewed.png`;
 	write(appDir, screenshotPath, 'fixture');
 	const staged = run(['git', 'add', screenshotPath], appDir);
 	assert(staged.exitCode === 0, `Fixture screenshot staging failed:\n${staged.output}`);
-	const refLine =
-		`refs/tags/v${TEMPLATE_VERSION} ${LOCAL_SHA} ` + `refs/tags/v${TEMPLATE_VERSION} ${ZERO}\n`;
+	const refLine = `refs/tags/v1.0.0 ${candidate} refs/tags/v1.0.0 ${ZERO}\n`;
 	const hook = run([bash, '.githooks/pre-push', 'origin', 'fixture'], appDir, refLine);
 	assert(
 		hook.exitCode !== 0,
@@ -256,7 +273,7 @@ try {
 	);
 	assert(
 		hook.output.includes('pre-push: screenshot guard') &&
-			hook.output.includes('has only 1 PNG(s)') &&
+			hook.output.includes('Expected one version directory') &&
 			hook.output.includes('PUSH BLOCKED'),
 		`The scaffolded hook must reach the screenshot guard failure:\n${hook.output}`,
 	);

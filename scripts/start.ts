@@ -28,6 +28,7 @@ const { values } = parseArgs({
 	args: process.argv.slice(2),
 	options: {
 		check: { default: false, type: 'boolean' },
+		preview: { default: false, type: 'boolean' },
 	},
 	strict: true,
 });
@@ -105,7 +106,9 @@ const frontendPid = spawnBackground(
 	logsDir,
 	'frontend',
 	'bun',
-	['run', 'dev'],
+	values.preview
+		? ['x', 'vite', 'preview', '--host', '127.0.0.1', '--port', String(frontendPort)]
+		: ['run', 'dev'],
 	path.join(rootDir, 'frontend'),
 );
 

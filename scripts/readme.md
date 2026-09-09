@@ -73,7 +73,7 @@ has to land with.
 | API type contract validation                     | `bun run check:api-types`                             | `scripts/check-api-types.ts`              |
 | Validate config against schema                   | `bun run config:validate`                             | `scripts/validate-config.ts`              |
 | Generate JSON schema for editor intellisense     | `bun run config:schema`                               | `scripts/generate-config-schema.ts`       |
-| Dev crawltest with screenshot capture            | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json` |
+| Production screenshot capture                    | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json` |
 | Generate read-only template sync packet          | `bun run template:sync-plan -- --app ../acme-monitor` | `scripts/template-sync-plan.ts`           |
 | Restate the fleet manifest after a version bump  | `bun run fleet-manifest:sync`                         | `scripts/sync-fleet-manifest.ts`          |
 
