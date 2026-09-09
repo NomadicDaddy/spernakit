@@ -27,6 +27,7 @@ export class TestResults {
 	dialogsTested = 0;
 	routesDiscovered = 0;
 	screenshotsTaken = 0;
+	screenshotImages: { file: string; route: string }[] = [];
 	selectsTested = 0;
 	switchesTested = 0;
 

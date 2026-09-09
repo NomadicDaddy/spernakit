@@ -491,6 +491,10 @@
 		"screenshots": {
 			"steps": [
 				{
+					"command": "bun run build:frontend",
+					"description": "Build the production release frontend"
+				},
+				{
 					"command": "bun run stop",
 					"description": "Stop any running processes"
 				},
@@ -499,8 +503,8 @@
 					"description": "Clear logs"
 				},
 				{
-					"command": "bun run start",
-					"description": "Start services in background"
+					"command": "bun scripts/start.ts --check --preview",
+					"description": "Start services with the production frontend"
 				},
 				{
 					"command": "bun scripts/wait-for-http.ts --url http://localhost:{{BACKEND_PORT}}/api/v1/health --timeoutMs 30000",
@@ -511,7 +515,7 @@
 					"description": "Wait for frontend to be ready"
 				},
 				{
-					"command": "bun scripts/crawltest.ts --mode dev --screenshot-pages --404 --bug",
+					"command": "bun scripts/crawltest.ts --mode preview --screenshot-pages --404 --bug",
 					"description": "Crawl test with screenshots",
 					"logFile": "logs/crawltest-screenshots.log"
 				},

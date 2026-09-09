@@ -3,6 +3,70 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.46.0] - 2026-09-09
+
+Minor release. A release screenshot capture becomes evidence rather than a folder of images: the
+production build identifies the source it came from and the bytes it emitted, the crawl records what
+it actually visited, and the pre-push guard verifies that chain against the tagged tree before a
+version tag can be published. The rest of the release is the Bun 1.4.2 pin, a production image that
+builds again, and the dependency refresh that came with it.
+
+### Added
+
+- A release capture now proves what it photographed. The production build writes
+  `release-build.json` beside its assets, recording the commit and tree it was built from, whether
+  that checkout was clean, and a SHA-256 for every emitted file. The crawl fetches each of those
+  assets back from the running server and stops if a single byte differs from what was built, so a
+  capture can no longer be taken against a stale bundle or a dev server that happens to be listening.
+- `.screenshot-capture` carries the capture contract. It used to be a comment explaining that the
+  repository captures screenshots; it is now the route list and the 2250x1309 viewport a full
+  capture has to cover, and the crawl seeds itself from those routes rather than hoping the link
+  graph reaches them. Repositories that do not capture still opt out by not having the file.
+- Each capture keeps its own run. Images, the crawl report and the verdict land in
+  `screenshots/v<version>/runs/<id>/`, and only a full attempt at the contract viewport with 404
+  checking enabled writes `release-run.json` to name the authoritative run. A narrow diagnostic crawl
+  can be taken at any time without displacing the capture a release depends on.
+- `bun scripts/start.ts --preview` serves the built frontend through `vite preview` instead of the
+  dev server, which is how `smoke:screenshots` now gets a production frontend to photograph.
+
+### Changed
+
+- The pre-push screenshot guard verifies the capture instead of counting PNG files. It reads the
+  contract out of the tagged commit, requires the tag to match that commit's `package.json` version,
+  and checks the recorded run end to end: a clean candidate matching the tag, a production build
+  identity, the analyzer verdict, the crawl report digest, every contract route visited, and every
+  listed image present with the recorded hash and the contract's pixel dimensions. A tagged tree with
+  no `.screenshot-capture` still needs no capture. What is gone is the `--no-verify` escape hatch for
+  a tag that should have carried one.
+- `smoke:screenshots` builds and serves the production frontend before crawling, replacing the dev
+  smoke run it used to be.
+- The crawl analyzer fails on a missing or failed report rather than exiting zero, and takes
+  `--report <path>` so a capture can be analyzed in place. Web Vitals from a dev build stay
+  informational.
+- A failed screenshot is recorded as a crawl error rather than a line of console output, and a
+  sub-tab the crawler cannot select fails the run instead of being skipped.
+- Bun is pinned to 1.4.2 across the root, backend and frontend manifests, with `engines.bun` at
+  `>=1.4.2` and all three Dockerfile stages on the matching multi-architecture base image digest.
+  1.4.1 is skipped because it shipped an Elysia build regression.
+- nodemailer moves to 10.0.1. Version 10 rejects option values that are `undefined`, so the SMTP
+  transport now always passes an auth object and includes the HTML and text bodies only when they are
+  set. The rest of the runtime and tooling dependencies were refreshed with it and the generated
+  license documents follow.
+
+### Fixed
+
+- The production image builds again. Three separate things stopped it. `minimumReleaseAge` in
+  `bunfig.toml` applied to resolution rather than only to lockfile updates, so any environment
+  without a package cache, which is exactly what a container and CI are, re-resolved the existing
+  pins and failed on whichever ones had been published that week; the key is removed, since which
+  versions enter the repository is decided when a pin is chosen and reviewed. The frontend builder
+  stage never copied `scripts/lib/release-build.ts`, which the Vite release plugin imports, so the
+  stage could not resolve it. And `licenses/base-image-packages.md` followed the new base image,
+  where libexpat moved to 2.8.4-r0.
+- Audit report filenames are validated against the UTC date. They are generated from UTC at runtime
+  but were compared against the local date, so a machine ahead of UTC saw its own reports as
+  future-dated. Headings and date fields still read local time.
+
 ## [3.45.0] - 2026-08-28
 
 Minor release. It carries the findings the v3.44.3 fleet sweep produced across all ten derived

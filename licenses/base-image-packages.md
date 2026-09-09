@@ -57,7 +57,7 @@ application. Their licenses apply to those components rather than the applicatio
 | libapk2                | 2.14.10-r0       | GPL-2.0-only                                                      |
 | libbz2                 | 1.0.8-r6         | bzip2-1.0.6                                                       |
 | libcrypto3             | 3.5.8-r0         | Apache-2.0                                                        |
-| libexpat               | 2.8.3-r0         | MIT                                                               |
+| libexpat               | 2.8.4-r0         | MIT                                                               |
 | libffi                 | 3.4.8-r0         | MIT                                                               |
 | libgcc                 | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
 | libgomp                | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
