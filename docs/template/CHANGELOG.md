@@ -66,6 +66,17 @@ builds again, and the dependency refresh that came with it.
 - Audit report filenames are validated against the UTC date. They are generated from UTC at runtime
   but were compared against the local date, so a machine ahead of UTC saw its own reports as
   future-dated. Headings and date fields still read local time.
+- Every screenshot is now recorded against the route it came from. `/settings/database` and its
+  three `?panel=` views all wrote `settings-database.png` and overwrote each other, so the archive
+  kept one image for four routes; file names carry the query string now. The 404 page and the bug
+  report dialog wrote their files straight to disk without registering them anywhere, and the
+  sign-in page was walked through on the way to a session but never photographed. All three go
+  through the same inventory the capture is checked against.
+- Precompressed assets no longer fail the production asset check. A `.br` or `.gz` file cannot be
+  verified by fetching its own path: the server answers with `Content-Encoding` set and every
+  client decodes the body before it can be read, so the bytes that come back are the original file.
+  They are compared on disk against the build attestation instead, and the file the server
+  negotiates out of them is still fetched and compared.
 
 ## [3.45.0] - 2026-08-28
 
