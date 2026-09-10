@@ -217,7 +217,8 @@
 		"shared-core:write": "bun scripts/sync-shared-core.ts --write",
 		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts",
 		"test:dialog-form-survival": "bun scripts/test-dialog-form-survival.ts",
-		"test:username-parity": "bun scripts/test-username-parity.ts"
+		"test:username-parity": "bun scripts/test-username-parity.ts",
+		"test:step-up-password-message": "bun scripts/test-step-up-password-message.ts"
 	},
 	"type": "module",
 	"workspaces": [

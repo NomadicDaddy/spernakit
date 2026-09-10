@@ -235,6 +235,10 @@
 					"description": "A dialog form is put back to its starting state when it opens and at no other time, so a submission the server refuses leaves every field as it was and a dialog the parent closes on success opens empty next time"
 				},
 				{
+					"command": "bun run test:step-up-password-message",
+					"description": "A form that asks an already signed-in user for their current password says that the current password is wrong when it is, from every surface that asks for one, and answers with a status that does not send the client off to refresh the session or sign the user out"
+				},
+				{
 					"command": "bun run test:username-parity",
 					"description": "The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds"
 				},

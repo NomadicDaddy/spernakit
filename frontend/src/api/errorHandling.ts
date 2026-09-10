@@ -5,6 +5,7 @@ import type { ErrorCode } from './types';
 const ERROR_CODE_MESSAGES: Partial<Record<ErrorCode, string>> = {
 	AUTH_ACCOUNT_DELETED: 'This account has been deleted.',
 	AUTH_ACCOUNT_LOCKED: 'Account locked due to too many failed attempts.',
+	AUTH_CURRENT_PASSWORD_INVALID: 'Current password is incorrect.',
 	AUTH_INVALID_CREDENTIALS: 'Invalid username or password. Check your credentials and try again.',
 	AUTH_PASSWORD_CHANGE_REQUIRED: 'Please change your default password before continuing.',
 	AUTH_PASSWORD_EXPIRED: 'Your password has expired. Please reset your password.',

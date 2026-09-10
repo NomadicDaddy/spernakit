@@ -7,6 +7,10 @@
  * dependency set is the slice of the application its request passes through, so they move when
  * the product moves rather than when the toolchain does. `dependencies.ts` merges every map into
  * the single one the cache consumes.
+ *
+ * The gates whose question needs the API standing up live here. The ones whose world is the
+ * page rather than the server live in `steps-regressions-browser.ts`, split out when the two
+ * together outgrew the 300-line modularity gate.
  */
 
 import { COMMON_EXCLUDES } from './globs.ts';
@@ -69,18 +73,6 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-rate-limit-state.ts',
 		],
 	},
-	// Reads the retry and throw rules in process and then reads the two files it cannot reach from
-	// an assertion: the query client that wires them in, and the toast module that decides what a
-	// rejected read says.
-	'test:bad-request-recovery': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'frontend/src/api/errorHandling.ts',
-			'frontend/src/lib/queryClient.ts',
-			'frontend/src/lib/queryErrorPolicy.ts',
-			'scripts/test-bad-request-recovery.ts',
-		],
-	},
 	// Sets and reads the supersede link through the real routes against a temp database, so its
 	// world is the bug routes and both services behind them, the migrations that add the column
 	// the link lives in, the plugins those requests pass through, and the seed that supplies the
@@ -115,19 +107,6 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-bug-report-whitespace.ts',
 		],
 	},
-	// Imports the frontend page tree in process and renders it, so its world is most of
-	// frontend/src rather than a named handful of files: the query client, the API client the
-	// page fetches through, the page and its child components, and the app slug the source tree
-	// reads at import time.
-	'test:dashboard-not-found': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/src/config/defaults.json',
-			'frontend/src/**',
-			'scripts/lib/frontend-render.ts',
-			'scripts/test-dashboard-not-found.ts',
-		],
-	},
 	// Drives the real API in process against a temp database, so its world is the dashboard
 	// routes and services it calls, the plugins and guards those routes stack, and the schema.
 	'test:dashboard-share-revoke': {
@@ -139,17 +118,6 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/routes/dashboards/**',
 			'backend/src/services/dashboard/**',
 			'scripts/test-dashboard-share-revoke.ts',
-		],
-	},
-	// Reads the frontend source tree for a dialog that clears its own form on the way out of a
-	// submit, and drives the scan over synthetic fixtures, so its world is the whole frontend
-	// source plus the scan and the gate that runs it.
-	'test:dialog-form-survival': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'frontend/src/**',
-			'scripts/lib/dialog-form-survival.ts',
-			'scripts/test-dialog-form-survival.ts',
 		],
 	},
 	// Spawns a probe through the real spawn-background wiring and reads the log files back, so
@@ -204,21 +172,28 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-public-route-surface.ts',
 		],
 	},
-	// Reads the frontend source tree for a component that adjusts state during render, and drives
-	// the scan itself over synthetic fixtures, so its world is the whole frontend source plus the
-	// scan and the gate that runs it.
-	'test:render-phase-sync': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'frontend/src/**',
-			'scripts/lib/render-phase-sync.ts',
-			'scripts/test-render-phase-sync.ts',
-		],
-	},
 	// Same in-process temp-DB shape as `test:impersonation-audit` above.
 	'test:retention-zero': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-retention-zero.ts'],
+	},
+	// Drives the three routes that re-check a current password in process and then reads those
+	// route files back for a rejection that answers with the sign-in code, so its world is the
+	// route tree, the services behind it, the shared error codes both sides name, the module the
+	// browser keeps its sentences in, and the fixture, scan and gate themselves.
+	'test:step-up-password-message': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/routes/**',
+			'backend/src/services/auth/**',
+			'backend/src/utils/errorResponse.ts',
+			'backend/src/utils/errorResponseBuilders.ts',
+			'frontend/src/api/errorHandling.ts',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/step-up-password.ts',
+			'scripts/test-step-up-password-message.ts',
+			'shared/src/errorCodes.ts',
+		],
 	},
 	// Runs in process against the loaded configuration: what it asserts moves when the file
 	// validation service, the request-body ceiling, or the configured MIME allowlist and size
@@ -240,21 +215,6 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/lib/username-parity.ts',
 			'scripts/test-username-parity.ts',
 			'shared/src/usernamePolicy.ts',
-		],
-	},
-	// Dispatches its own navigations at the module that holds a skipped transition's promises, and
-	// then reads the three files it cannot reach from an assertion: the stylesheet the transitions
-	// come from, the entry point that subscribes, and the crawl harness that has to stay able to
-	// fail on this noise.
-	'test:view-transition-abort': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'frontend/src/lib/viewTransitions.ts',
-			'frontend/src/main.tsx',
-			'frontend/src/tailwind.css',
-			'scripts/crawltest-events.ts',
-			'scripts/crawltest-types.ts',
-			'scripts/test-view-transition-abort.ts',
 		],
 	},
 	// Drives two routes from different modules in process and then reads the whole backend and

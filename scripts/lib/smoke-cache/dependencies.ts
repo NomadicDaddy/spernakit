@@ -5,14 +5,15 @@
  * whether the step can be skipped on an unchanged tree.
  *
  * The map itself lives in cohesive modules for project-invariant guards, feature-integration
- * checks, application regression gates, and compile/format/build steps because a single literal
- * outgrew the 300-line modularity gate. This module is the facade the cache and the smoke runner
- * consume.
+ * checks, application regression gates split by whether the gate drives the server or the page,
+ * and compile/format/build steps, because a single literal outgrew the 300-line modularity gate.
+ * This module is the facade the cache and the smoke runner consume.
  */
 
 import { CHECK_STEP_DEPENDENCIES } from './steps-checks.ts';
 import { INTEGRATION_STEP_DEPENDENCIES } from './steps-integration.ts';
 import { METADATA_STEP_DEPENDENCIES } from './steps-metadata.ts';
+import { BROWSER_REGRESSION_STEP_DEPENDENCIES } from './steps-regressions-browser.ts';
 import { REGRESSION_STEP_DEPENDENCIES } from './steps-regressions.ts';
 import { SELF_TEST_STEP_DEPENDENCIES } from './steps-selftests.ts';
 import { TOOLCHAIN_STEP_DEPENDENCIES } from './steps-toolchain.ts';
@@ -40,6 +41,7 @@ export const UNCACHEABLE_STEPS = new Set([
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
+	...BROWSER_REGRESSION_STEP_DEPENDENCIES,
 	...CHECK_STEP_DEPENDENCIES,
 	...INTEGRATION_STEP_DEPENDENCIES,
 	...METADATA_STEP_DEPENDENCIES,

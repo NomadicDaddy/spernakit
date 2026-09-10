@@ -58,6 +58,42 @@ function post(
 	claim?: Claim,
 	csrfToken?: string,
 ): Promise<Response> {
+	return sendJson(app, 'POST', path, body, claim, csrfToken);
+}
+
+/**
+ * The same request as `post`, sent as a PUT.
+ *
+ * Separate rather than a method argument on `post` because every existing caller reads as a
+ * POST and should keep reading that way; a gate that needs the other verb says so at the call
+ * site.
+ *
+ * @param app - The running fixture application.
+ * @param path - The path to request, including the /api/v1 prefix.
+ * @param body - The request body, serialized as JSON.
+ * @param claim - The identity to sign into a cookie, or nothing for an anonymous request.
+ * @param csrfToken - The CSRF token to send, or nothing to send none.
+ * @returns The application’s response.
+ */
+function put(
+	app: App,
+	path: string,
+	body: unknown,
+	claim?: Claim,
+	csrfToken?: string,
+): Promise<Response> {
+	return sendJson(app, 'PUT', path, body, claim, csrfToken);
+}
+
+/** The one place a signed, CSRF-carrying JSON request is built. */
+function sendJson(
+	app: App,
+	method: 'POST' | 'PUT',
+	path: string,
+	body: unknown,
+	claim?: Claim,
+	csrfToken?: string,
+): Promise<Response> {
 	const config = getConfig();
 	const headers: Record<string, string> = {
 		'content-type': 'application/json',
@@ -73,7 +109,7 @@ function post(
 		new Request(`http://localhost${path}`, {
 			body: JSON.stringify(body),
 			headers,
-			method: 'POST',
+			method,
 		}),
 	);
 }
@@ -133,5 +169,5 @@ async function startFixture(repoRoot: string): Promise<{ app: App; dispose: () =
 	return { app: createApiApp(), dispose };
 }
 
-export { get, post, seedUserId, startFixture };
+export { get, post, put, seedUserId, startFixture };
 export type { App, Claim };

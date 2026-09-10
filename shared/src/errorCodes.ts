@@ -38,6 +38,16 @@ const AUTH_ERROR_CODES = {
 	/** CSRF token is invalid or missing */
 	AUTH_CSRF_TOKEN_INVALID: 'AUTH_CSRF_TOKEN_INVALID',
 
+	/**
+	 * The current password supplied to confirm an already signed-in user is wrong.
+	 *
+	 * Deliberately not AUTH_INVALID_CREDENTIALS. That code answers the question "should we
+	 * let this caller in at all", and the browser words it for the sign-in form, which asks
+	 * for a username as well. A step-up check asks one already signed-in user for one field,
+	 * and the answer has to name that field.
+	 */
+	AUTH_CURRENT_PASSWORD_INVALID: 'AUTH_CURRENT_PASSWORD_INVALID',
+
 	/** Email change confirmation token is invalid or expired */
 	AUTH_EMAIL_CHANGE_TOKEN_INVALID: 'AUTH_EMAIL_CHANGE_TOKEN_INVALID',
 
