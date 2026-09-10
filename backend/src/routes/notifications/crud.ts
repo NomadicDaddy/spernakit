@@ -3,7 +3,6 @@ import { Elysia, t } from 'elysia';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationReadStatusSchema, NotificationTypeSchema } from '../../schemas/domain.ts';
@@ -113,10 +112,6 @@ const notificationCrudRoutes = new Elysia({
 		'/',
 		({ body, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			if (workspaceId) {
-				const guard = requireWorkspaceAccess({ set, user: authUser, workspaceId });
-				if (guard) return guard;
-			}
 			const notification = create({
 				message: body.message,
 				metadata: body.metadata ?? null,
@@ -142,6 +137,7 @@ const notificationCrudRoutes = new Elysia({
 			}),
 			detail: createNotificationDocs,
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	.delete(

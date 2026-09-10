@@ -4,6 +4,7 @@ import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { getRequiresPasswordChange } from '../services/userService.ts';
 import { AUTH_ERROR_CODES, forbiddenError } from '../utils/errorResponse.ts';
 import { getCachedPasswordChange, setCachedPasswordChange } from '../utils/passwordChangeCache.ts';
+import { PreValidationRejection } from '../utils/preValidationRejection.ts';
 import { authPlugin } from './auth.ts';
 
 /**
@@ -40,29 +41,40 @@ function requiresPasswordChangeCheck(userId: number): boolean {
  * When an authenticated user has `requiresPasswordChange = true`, all API requests
  * (except exempt paths) return 403 with AUTH_PASSWORD_CHANGE_REQUIRED error code.
  * This forces the frontend to redirect to the password change flow.
+ *
+ * The check runs at the transform stage, before Elysia validates the request against the route's
+ * schema, for the same reason the auth, selected-workspace and CSRF guards do. The decision reads
+ * only `user` and `path`, so nothing about it needs a validated body; running it in
+ * `beforeHandle` meant an account that had to change its password and sent a malformed body was
+ * answered with a 400 describing the schema rather than the 403 that tells the frontend to start
+ * the password-change flow.
+ *
+ * A transform hook cannot short-circuit by returning, so the rejection is thrown; the `onError`
+ * handler in create-api-app.ts turns it back into the same envelope this produced before.
  */
 const passwordChangeGuardPlugin = new Elysia({ name: 'password-change-guard' })
 	.use(authPlugin)
-	.onBeforeHandle({ as: 'scoped' }, ({ path, set, user }) => {
-		if (!user) return undefined;
+	.onTransform({ as: 'scoped' }, ({ path, set, user }) => {
+		if (!user) return;
 
 		// API key requests are not tied to password state
-		if (user.isApiKey) return undefined;
+		if (user.isApiKey) return;
 
 		// Strip the /api/v1 prefix to get the route-local path
 		const localPath = path.replace(/^\/api\/v1/, '');
 
-		if (EXEMPT_PATHS.has(localPath)) return undefined;
+		if (EXEMPT_PATHS.has(localPath)) return;
 
 		if (requiresPasswordChangeCheck(user.id)) {
 			set.status = HTTP_STATUS.FORBIDDEN;
-			return forbiddenError(
-				'Password change required before accessing this resource',
-				AUTH_ERROR_CODES.AUTH_PASSWORD_CHANGE_REQUIRED,
+			throw new PreValidationRejection(
+				HTTP_STATUS.FORBIDDEN,
+				forbiddenError(
+					'Password change required before accessing this resource',
+					AUTH_ERROR_CODES.AUTH_PASSWORD_CHANGE_REQUIRED,
+				),
 			);
 		}
-
-		return undefined;
 	});
 
 export { passwordChangeGuardPlugin };
