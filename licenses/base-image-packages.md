@@ -35,7 +35,7 @@ application. Their licenses apply to those components rather than the applicatio
 - `readline@8.2.13-r1` (GPL-3.0-or-later)
 - `scanelf@1.3.8-r1` (GPL-2.0-only)
 - `ssl_client@1.37.0-r20` (GPL-2.0-only)
-- `xz-libs@5.8.3-r0` (GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later)
+- `xz-libs@5.8.4-r0` (GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later)
 
 ## All base image packages
 
@@ -91,5 +91,5 @@ application. Their licenses apply to those components rather than the applicatio
 | ssl_client             | 1.37.0-r20       | GPL-2.0-only                                                      |
 | supervisor-pyc         | 4.2.5-r5         | BSD-4-Clause AND BSD-3-Clause-Clear                               |
 | supervisor             | 4.2.5-r5         | BSD-4-Clause AND BSD-3-Clause-Clear                               |
-| xz-libs                | 5.8.3-r0         | GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later |
+| xz-libs                | 5.8.4-r0         | GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later |
 | zlib                   | 1.3.2-r0         | Zlib                                                              |
