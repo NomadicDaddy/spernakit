@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, like, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, like, sql } from 'drizzle-orm';
 
 import type { StoredMetric } from './metricsCollectionService.ts';
 
@@ -44,20 +44,62 @@ function getWebVitalRating(metadata: unknown): null | string {
 /**
  * Query metrics history for a time range.
  *
+ * The window is thinned down to `limitCount` points rather than cut off at its newest end. Taking
+ * the newest `limitCount` rows made every range longer than `limitCount` minutes look the same:
+ * the collector writes one sample a minute and the route caps the count at 100, so the dashboard's
+ * 6h, 12h and 24h options all drew the same hundred minutes and the chart's x-axis did not grow
+ * when the range did.
+ *
+ * The thinning keeps every nth row counting back from the newest, with n chosen so that what
+ * survives fits under the cap, so a point is a sample that was really recorded rather than an
+ * average of the ones around it. A window holding no more rows than the cap keeps all of them, at
+ * full resolution, which is what the 1h range still gets.
+ *
  * @param hours - Number of hours to look back (default: 24)
  * @param limitCount - Maximum entries to return (default: 100)
- * @returns Array of stored metric entries
+ * @returns Array of stored metric entries, newest first
  */
 function getMetricsHistory(hours = 24, limitCount = 100): StoredMetric[] {
 	const db = getDb();
 	const since = new Date(Date.now() - hours * MS_PER_HOUR);
+	const sinceSqlParam = getSqlTimestampParam(since);
+	// A caller reaching the service directly is not bound by the route's schema, and the stride
+	// below divides by this.
+	const points = Math.max(1, Math.trunc(limitCount));
+
+	/*
+	 * The stride is ceil(rows / points), written as (rows + points - 1) / points because both
+	 * dialects apply integer division to integer operands. Window functions do the counting so the
+	 * row set never crosses the wire; this is the same arrangement the p75 query below uses, and
+	 * for the same reason.
+	 */
+	const sampledIds = db
+		.select({ id: sql<number>`sampled.id` })
+		.from(
+			sql`(
+				SELECT
+					id,
+					created_at,
+					ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn,
+					COUNT(*) OVER () AS cnt
+				FROM ${systemMetrics}
+				WHERE metric_type = 'system'
+					AND created_at >= ${sinceSqlParam}
+			) AS sampled`,
+		)
+		.where(sql`(sampled.rn - 1) % ((sampled.cnt + ${points} - 1) / ${points}) = 0`)
+		.orderBy(sql`sampled.created_at DESC`)
+		.limit(points)
+		.all()
+		.map((row) => row.id);
+
+	if (sampledIds.length === 0) return [];
 
 	const rows = db
 		.select()
 		.from(systemMetrics)
-		.where(and(eq(systemMetrics.metricType, 'system'), gte(systemMetrics.createdAt, since)))
+		.where(inArray(systemMetrics.id, sampledIds))
 		.orderBy(desc(systemMetrics.createdAt))
-		.limit(limitCount)
 		.all();
 
 	return rows.map((row) => ({

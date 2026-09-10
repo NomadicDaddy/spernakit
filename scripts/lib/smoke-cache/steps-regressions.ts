@@ -138,6 +138,20 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
 	},
+	// Seeds a day of one-minute samples into a temp SQLite file and reads the history back through
+	// the query service, so its world is that service, the route whose cap and window it answers
+	// under, the schema and migrations the seed writes through, and the gate itself.
+	'test:metrics-history-window': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/constants/pagination.ts',
+			'backend/src/db/**',
+			'backend/src/routes/system/metrics.ts',
+			'backend/src/services/metrics/**',
+			'scripts/test-metrics-history-window.ts',
+		],
+	},
 	// Seeds through the real seed path and reads the checklist over the real API, so its world is
 	// the onboarding service and route, the accounts and settings the seed writes, the password
 	// writers it drives, and the guard those requests pass through.
