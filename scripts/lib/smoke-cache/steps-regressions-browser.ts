@@ -37,6 +37,19 @@ export const BROWSER_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependenci
 			'scripts/test-dashboard-not-found.ts',
 		],
 	},
+	// Runs the focus-origin rule against the stand-in document and then reads the two overlay
+	// components that call it, so its world is the rule, the stand-in, and the pair of components
+	// that must keep reading the origin on open and re-checking it on close.
+	'test:dialog-focus-return': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/components/ui/alert-dialog.tsx',
+			'frontend/src/components/ui/dialog.tsx',
+			'frontend/src/lib/focusReturn.ts',
+			'scripts/lib/focus-dom.ts',
+			'scripts/test-dialog-focus-return.ts',
+		],
+	},
 	// Reads the frontend source tree for a dialog that clears its own form on the way out of a
 	// submit, and drives the scan over synthetic fixtures, so its world is the whole frontend
 	// source plus the scan and the gate that runs it.

@@ -231,6 +231,10 @@
 					"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message"
 				},
 				{
+					"command": "bun run test:dialog-focus-return",
+					"description": "A dialog dismissed after being opened from a data-table row actions menu puts focus back on that row's menu button rather than on the document body, because the origin an overlay is handed is resolved to something that is still on the page once the menu has closed"
+				},
+				{
 					"command": "bun run test:dialog-form-survival",
 					"description": "A dialog form is put back to its starting state when it opens and at no other time, so a submission the server refuses leaves every field as it was and a dialog the parent closes on success opens empty next time"
 				},
