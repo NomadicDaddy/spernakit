@@ -240,7 +240,7 @@
 				},
 				{
 					"command": "bun run test:workspace-subresource-existence",
-					"description": "A workspace sub-resource answers 404 for a workspace that is not there, including for the member a soft delete left behind, while a non-member still hears the same status either way and an existing workspace answers as before"
+					"description": "A workspace sub-resource answers 404 for a name that points at nothing, whether that is a workspace a soft delete left members behind in or a user id no account carries, while a non-member still hears the same status either way, a real duplicate member still conflicts and an existing workspace answers as before"
 				},
 				{
 					"command": "bun run test:wait-for-http",

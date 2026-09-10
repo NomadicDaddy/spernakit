@@ -238,7 +238,9 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'backend/drizzle/**',
 			'backend/src/**',
+			'scripts/lib/workspace-subresource-claims.ts',
 			'scripts/lib/workspace-subresource-scan.ts',
+			'scripts/lib/workspace-subresource-tally.ts',
 			'scripts/lib/workspace-subresource-world.ts',
 			'scripts/test-workspace-subresource-existence.ts',
 		],

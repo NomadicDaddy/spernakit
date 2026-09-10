@@ -44,11 +44,45 @@ const listWorkspaceMembersDocs = {
 	summary: 'Get workspace members',
 };
 
+/**
+ * The add route can be told about two things that are not there, and answers 404 for both.
+ *
+ * `notFoundExample` describes one resource, so the two are spelled out here rather than picking
+ * whichever one the reader is less likely to hit.
+ */
+const ADD_MEMBER_NOT_FOUND_EXAMPLE = {
+	content: {
+		'application/json': {
+			examples: {
+				noSuchUser: {
+					summary: 'User does not exist',
+					value: {
+						code: 'RESOURCE_NOT_FOUND',
+						error: 'Not found',
+						message: 'User not found',
+					},
+				},
+				noSuchWorkspace: {
+					summary: 'Workspace does not exist',
+					value: {
+						code: 'RESOURCE_NOT_FOUND',
+						error: 'Not found',
+						message: 'Workspace not found',
+					},
+				},
+			},
+		},
+	},
+	description: 'Workspace or user not found.',
+};
+
 const addWorkspaceMemberDocs = {
 	description:
 		'Adds a user to workspace with specified role (ADMIN, MANAGER, OPERATOR, or ' +
-		'VIEWER). Returns 409 if user is already a member, and 404 if the workspace does ' +
-		'not exist. Returns 201 on success. Requires workspace ADMIN role or SYSOP.',
+		'VIEWER). Returns 404 if the workspace does not exist and 404 if the user does ' +
+		'not exist, matching what the bulk route reports for the same user id. Returns ' +
+		'409 only when the user exists and is already a member. Returns 201 on success. ' +
+		'Requires workspace ADMIN role or SYSOP.',
 	responses: {
 		'201': {
 			content: {
@@ -60,7 +94,7 @@ const addWorkspaceMemberDocs = {
 		},
 		'401': UNAUTHORIZED_EXAMPLE,
 		'403': FORBIDDEN_EXAMPLE,
-		'404': notFoundExample('Workspace'),
+		'404': ADD_MEMBER_NOT_FOUND_EXAMPLE,
 		'409': conflictExample('User is already a member'),
 	},
 	summary: 'Add a member to workspace (workspace ADMIN+)',

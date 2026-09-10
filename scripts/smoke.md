@@ -206,7 +206,7 @@ Steps (in order):
 29. `bun run test:workspace-header-contract`
     - A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself.
 30. `bun run test:workspace-subresource-existence`
-    - A workspace sub-resource answers 404 for a workspace that is not there, including for the member a soft delete left behind, while a non-member still hears the same status either way and an existing workspace answers as before.
+    - A workspace sub-resource answers 404 for a name that points at nothing, whether that is a workspace a soft delete left members behind in or a user id no account carries, while a non-member still hears the same status either way, a real duplicate member still conflicts and an existing workspace answers as before.
 31. `bun run test:wait-for-http`
     - Docker readiness failures print bounded container log diagnostics.
 32. `bun run check:db-location`

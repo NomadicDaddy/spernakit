@@ -91,8 +91,14 @@ const workspaceMembersCrudRoutes = new Elysia({
 			const roleErr = checkRoleAssignment(authUser, id, body.role, set);
 			if (roleErr) return roleErr;
 
-			const added = addMember(id, body.userId, body.role, authUser.id);
-			if (!added) {
+			const outcome = addMember(id, body.userId, body.role, authUser.id);
+			if (outcome === 'no-such-user') {
+				// Only a workspace ADMIN or a SYSOP reaches this line, and the bulk route beside it
+				// has always told them the same thing, so saying so here discloses nothing new.
+				set.status = HTTP_STATUS.NOT_FOUND;
+				return notFoundError('User');
+			}
+			if (outcome === 'already-member') {
 				set.status = HTTP_STATUS.CONFLICT;
 				return conflictError('User is already a member');
 			}
