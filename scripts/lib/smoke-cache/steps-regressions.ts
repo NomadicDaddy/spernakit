@@ -184,6 +184,20 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-onboarding-password-step.ts',
 		],
 	},
+	// Reads the shared page-size module in process and scans the two Selects that render from it, so
+	// its world is that module, both controls, the store that holds the size, and the server-side
+	// default the module is kept equal to.
+	'test:page-size-options': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/user/userSettingsService.ts',
+			'frontend/src/components/shared/data-table/DataTablePagination.tsx',
+			'frontend/src/lib/pageSize.ts',
+			'frontend/src/pages/profile/DisplayPreferences.tsx',
+			'frontend/src/stores/layoutStore.ts',
+			'scripts/test-page-size-options.ts',
+		],
+	},
 	// Boots the real application and sends one anonymous request per registered route, so its
 	// world is every route file, the plugins and guards those requests pass through, the app
 	// bootstrap that mounts them, the migrations and seed the boot needs, and the list of routes

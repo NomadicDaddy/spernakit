@@ -179,6 +179,10 @@
 					"description": "Impersonated mutations persist userId + impersonatedBy; kill-switch blocks start but not stop"
 				},
 				{
+					"command": "bun run test:page-size-options",
+					"description": "The rows-per-page controls offer one shared list of sizes, and the size in force is always on it"
+				},
+				{
 					"command": "bun run test:memory-health-thresholds",
 					"description": "The memory health check answers to its configured thresholds on this runtime rather than reporting healthy whatever the process is using"
 				},

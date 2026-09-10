@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { debouncedLocalStorage } from '@/lib/debouncedStorage';
+import { DEFAULT_ITEMS_PER_PAGE } from '@/lib/pageSize';
 import { STORAGE_KEYS } from '@/lib/storageKeys';
 
 type ContainerWidth = 'centered' | 'full-width';
@@ -22,15 +23,6 @@ interface LayoutState {
 	setLayoutMode: (mode: LayoutMode) => void;
 	setLayoutModeFromSync: (mode: LayoutMode) => void;
 }
-
-/**
- * Rows per page before the signed-in user's saved preference arrives.
- *
- * Kept equal to `DEFAULT_USER_UI_SETTINGS.itemsPerPage` in
- * backend/src/services/user/userSettingsService.ts. The Preferences page already showed 25 as the
- * selected value while every table rendered 20 rows, because nothing read the setting at all.
- */
-const DEFAULT_ITEMS_PER_PAGE = 25;
 
 /** Initial layout values — restored on logout via {@link LayoutState.reset}. */
 const LAYOUT_DEFAULTS: Pick<
