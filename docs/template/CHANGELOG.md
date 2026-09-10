@@ -77,6 +77,14 @@ builds again, and the dependency refresh that came with it.
   client decodes the body before it can be read, so the bytes that come back are the original file.
   They are compared on disk against the build attestation instead, and the file the server
   negotiates out of them is still fetched and compared.
+- `check:image-licenses` no longer fails CI when Alpine ships a patch release. The packages the
+  production stage adds on top of the pinned base image come from the live Alpine repository, which
+  replaces old versions rather than keeping them, so the version column in
+  `licenses/base-image-packages.md` went stale on its own and failed a tree nobody had touched.
+  That file now lists package names and licenses only, and changes only when a package is added,
+  removed or relicensed. Exact versions are written into each image at build time, in
+  `/app/licenses/base-image-versions.txt`, and the check confirms that record matches the image's
+  apk database.
 
 ## [3.45.0] - 2026-08-28
 

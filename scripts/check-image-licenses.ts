@@ -12,7 +12,9 @@
  *    image was built and opened.
  * 2. What the base image contributes. Alpine ships GPL-2.0 and GPL-3.0 programs (busybox and
  *    friends). They are unmodified OS components alongside the application rather than linked
- *    into it, but a derived project needs an exact inventory before choosing to distribute.
+ *    into it, but a derived project needs an exact inventory before choosing to distribute. The
+ *    committed inventory names each package and its license; the exact versions are recorded in
+ *    the image at build time, and this confirms that record describes the image it is in.
  *
  * Needs a built image and a working docker daemon, so it runs in the docker smoke modes rather
  * than in `smoke:qc`, which must stay static.
@@ -27,7 +29,10 @@ import { workspaceNames } from './lib/third-party-licenses/collect.ts';
 import {
 	collectBasePackages,
 	collectImagePackages,
+	IMAGE_VERSIONS,
 	renderInventory,
+	runInImage,
+	versionLine,
 } from './lib/third-party-licenses/image-inventory.ts';
 import {
 	verifyImageCarriesLicenses,
@@ -129,13 +134,22 @@ async function verifyNoticesCoverImage(root: string, image: string): Promise<boo
 	return true;
 }
 
-/** Refresh or verify the base inventory. Returns whether the file on disk is current. */
-async function reconcileInventory(root: string, image: string, update: boolean): Promise<boolean> {
-	const packages = await collectBasePackages(image);
-	if (packages.length === 0) {
-		throw new Error(`read no apk packages from ${image}; is it the production image?`);
-	}
+/** Table rows of an inventory, whitespace-collapsed so prettier's column padding is ignored. */
+function inventoryRows(markdown: string): Set<string> {
+	return new Set(
+		markdown
+			.split('\n')
+			.filter((line) => /^\|\s*[^\s|-]/.test(line) && !/^\|\s*Package\s*\|/.test(line))
+			.map((line) => line.replace(/\s+/g, ' ').trim()),
+	);
+}
 
+/** Refresh or verify the base inventory. Returns whether the file on disk is current. */
+async function reconcileInventory(
+	root: string,
+	packages: string[],
+	update: boolean,
+): Promise<boolean> {
 	// Formatted with the repo's prettier config for the same reason the other generated docs
 	// are: `format:check` reflows markdown tables, and an unformatted generator output would
 	// report drift against its own file forever.
@@ -152,12 +166,55 @@ async function reconcileInventory(root: string, image: string, update: boolean):
 		.text()
 		.catch(() => '');
 	if (committed !== generated) {
-		console.error(`[FAIL] ${INVENTORY} is out of date with the built image.`);
-		console.error('Run `bun run licenses:image` and commit the result.');
+		// The file carries names and licenses only, so a difference here is a package added, removed
+		// or relicensed, never an Alpine patch release. Name the rows so that is visible in CI.
+		const inImage = inventoryRows(generated);
+		const onDisk = inventoryRows(committed);
+		const added = [...inImage].filter((row) => !onDisk.has(row));
+		const removed = [...onDisk].filter((row) => !inImage.has(row));
+		console.error(`[FAIL] ${INVENTORY} no longer matches the built image.`);
+		for (const row of added) console.error(`  + ${row}`);
+		for (const row of removed) console.error(`  - ${row}`);
+		console.error(
+			'Review the change, then run `bun run licenses:image` and commit the result.',
+		);
 		return false;
 	}
 
 	console.log(`[OK] ${INVENTORY} matches the built image (${packages.length} packages).`);
+	return true;
+}
+
+/**
+ * The image's own version record has to describe the image it sits in. The Dockerfile writes it from
+ * the apk database, so the way it goes wrong is a later layer adding, removing or upgrading a package
+ * after the record was written. Comparing the record against the database catches that.
+ */
+async function verifyVersionRecord(image: string, packages: string[]): Promise<boolean> {
+	const recorded = (await runInImage(image, `cat ${IMAGE_VERSIONS}`))
+		.split('\n')
+		.map((line) => line.trim())
+		.filter(Boolean);
+	const expected = packages.map(versionLine);
+	const recordedSet = new Set(recorded);
+	const expectedSet = new Set(expected);
+	const unrecorded = expected.filter((line) => !recordedSet.has(line));
+	const stale = recorded.filter((line) => !expectedSet.has(line));
+
+	if (unrecorded.length > 0 || stale.length > 0) {
+		console.error(
+			`[FAIL] ${image}: ${IMAGE_VERSIONS} does not match the image's apk database.`,
+		);
+		for (const line of unrecorded) console.error(`  + ${line}`);
+		for (const line of stale) console.error(`  - ${line}`);
+		console.error('');
+		console.error('A Dockerfile layer changed packages after the record was written. Move the');
+		console.error('RUN that writes it below the last apk command in the production stage.');
+		return false;
+	}
+	console.log(
+		`[OK] ${image}: ${IMAGE_VERSIONS} records all ${packages.length} package versions.`,
+	);
 	return true;
 }
 
@@ -172,9 +229,14 @@ export async function runImageLicenses(options: ImageLicenseOptions): Promise<nu
 		// coverage first made `licenses:image` unable to refresh the inventory while any gap was
 		// open, including gaps whose repair is regenerating this very file. Coverage still runs on
 		// the way out, so `--update` cannot pass a check it should fail.
-		const inventoryOk = await reconcileInventory(root, image, options.update);
+		const packages = await collectBasePackages(image);
+		if (packages.length === 0) {
+			throw new Error(`read no apk packages from ${image}; is it the production image?`);
+		}
+		const inventoryOk = await reconcileInventory(root, packages, options.update);
+		const versionsOk = await verifyVersionRecord(image, packages);
 		const coverageOk = await verifyNoticesCoverImage(root, image);
-		return inventoryOk && coverageOk ? 0 : 1;
+		return inventoryOk && versionsOk && coverageOk ? 0 : 1;
 	} catch (err) {
 		console.error(
 			`[FAIL] check-image-licenses: ${err instanceof Error ? err.message : String(err)}`,
