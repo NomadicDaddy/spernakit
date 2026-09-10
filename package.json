@@ -205,6 +205,7 @@
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
 		"test:upload-validation": "bun scripts/test-upload-validation.ts",
+		"test:validation-union-values": "bun scripts/test-validation-union-values.ts",
 		"test:view-transition-abort": "bun scripts/test-view-transition-abort.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
 		"test:workspace-header-contract": "bun scripts/test-workspace-header-contract.ts",

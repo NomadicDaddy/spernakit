@@ -183,6 +183,10 @@
 					"description": "The rows-per-page controls offer one shared list of sizes, and the size in force is always on it"
 				},
 				{
+					"command": "bun run test:validation-union-values",
+					"description": "A rejected request is told which values a union accepts rather than the word string once per member, and is never told what it sent"
+				},
+				{
 					"command": "bun run test:memory-health-thresholds",
 					"description": "The memory health check answers to its configured thresholds on this runtime rather than reporting healthy whatever the process is using"
 				},
