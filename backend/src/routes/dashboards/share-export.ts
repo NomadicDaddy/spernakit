@@ -76,6 +76,7 @@ const dashboardShareExportRoutes = new Elysia({
 			detail: shareDashboardDocs,
 			params: idParams,
 			requireRole: 'ADMIN',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -96,6 +97,7 @@ const dashboardShareExportRoutes = new Elysia({
 			detail: getShareStateDocs,
 			params: idParams,
 			requireRole: 'ADMIN',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -116,6 +118,7 @@ const dashboardShareExportRoutes = new Elysia({
 			detail: revokeShareDocs,
 			params: idParams,
 			requireRole: 'ADMIN',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -136,6 +139,7 @@ const dashboardShareExportRoutes = new Elysia({
 			detail: exportDashboardDocs,
 			params: idParams,
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	);
 

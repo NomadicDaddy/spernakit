@@ -10,11 +10,17 @@
  * role, so a SYSOP who named a workspace had that id discarded and received every workspace's rows
  * instead of the one they asked for. Widening is the worst possible answer to a request to narrow.
  *
- * What is under test is the precondition itself rather than the two routes it is exercised through:
- * one message and one status for a missing header, the same order of role and header everywhere,
- * and a scope that follows the header whoever sent it. The two routes are deliberately from
- * different modules and stack their guards differently, and three source scans cover the routes
- * this gate does not send a request to.
+ * What is under test is the precondition itself rather than the routes it is exercised through:
+ * one message and one status for a missing header, the same order of role and header everywhere, a
+ * scope that follows the header whoever sent it, and one answer for a workspace that is not there.
+ * The routes are deliberately from four different modules that stack their guards differently, and
+ * four source scans cover the routes this gate does not send a request to.
+ *
+ * A third defect was reported later and belongs to the same precondition. Dashboards and
+ * notifications took the header straight into a query filter without authorizing it, so a workspace
+ * that does not exist was answered 200 with an empty page while files and audit logs answered 404
+ * for the same id in the same request. An empty page is a claim about what is in a workspace, and
+ * making it about one that was never created tells the caller the opposite of what happened.
  *
  * Runs in process against a throwaway temp-file SQLite database.
  */
@@ -30,21 +36,35 @@ import {
 } from '../backend/src/guards/workspaceHeader.ts';
 import {
 	findDiscardedWorkspaceIds,
+	findUnguardedWorkspaceReaders,
 	findUnownedHeaderMessages,
 	findWrongHeaderSpellings,
 } from './lib/workspace-header-scan.ts';
 import {
 	ABSENT_WORKSPACE,
 	AUDIT,
+	DASHBOARDS,
 	FILES,
 	get,
 	listedActions,
 	listedFileWorkspaces,
+	NOTIFICATIONS,
 	refusal,
 	startWorld,
 } from './lib/workspace-header-world.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+/**
+ * The listings that read the header, one per module that has its own way of stacking guards.
+ *
+ * Audit logs and files carry a workspace guard and always did. Dashboards and notifications
+ * read the header straight into a query filter with no guard at all, so a workspace that was
+ * not there came back as an empty page instead of a 404, which reads as "nothing here" rather
+ * than "no such workspace". They are in this list because the answer to a name that points at
+ * nothing is a property of the header, not of whichever module the caller happened to reach.
+ */
+const WORKSPACE_LISTINGS = [AUDIT, FILES, DASHBOARDS, NOTIFICATIONS];
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
@@ -148,7 +168,7 @@ async function aNamedWorkspaceIsHonoured(app: App, world: World): Promise<void> 
  * the workspace is absent or merely out of reach, so nothing here leaks which workspaces exist.
  */
 async function anAbsentWorkspaceIsRefused(app: App, world: World): Promise<void> {
-	for (const path of [AUDIT, FILES]) {
+	for (const path of WORKSPACE_LISTINGS) {
 		const answer = await refusal(
 			await get(app, path, {
 				role: 'SYSOP',
@@ -161,7 +181,7 @@ async function anAbsentWorkspaceIsRefused(app: App, world: World): Promise<void>
 			`${path} must answer a SYSOP naming an absent workspace 404, got ${String(answer.status)}`,
 		);
 	}
-	for (const path of [AUDIT, FILES]) {
+	for (const path of WORKSPACE_LISTINGS) {
 		const answer = await refusal(
 			await get(app, path, {
 				role: 'ADMIN',
@@ -174,15 +194,17 @@ async function anAbsentWorkspaceIsRefused(app: App, world: World): Promise<void>
 			`${path} must answer a non-member 403 rather than say whether it exists, got ${String(answer.status)}`,
 		);
 	}
-	const reachable = await get(app, AUDIT, {
-		role: 'ADMIN',
-		userId: world.adminId,
-		workspaceId: world.memberWorkspace,
-	});
-	assert(
-		reachable.status === 200,
-		`a member naming their own workspace must be served, got ${String(reachable.status)}`,
-	);
+	for (const path of WORKSPACE_LISTINGS) {
+		const reachable = await get(app, path, {
+			role: 'ADMIN',
+			userId: world.adminId,
+			workspaceId: world.memberWorkspace,
+		});
+		assert(
+			reachable.status === 200,
+			`${path} must serve a member naming their own workspace, got ${String(reachable.status)}`,
+		);
+	}
 }
 
 /**
@@ -206,6 +228,11 @@ function thePreconditionLivesInOnePlace(): void {
 	assert(
 		unowned.length === 0,
 		`only guards/workspaceHeader.ts may word a message about the header: ${unowned.join(', ')}`,
+	);
+	const unguarded = findUnguardedWorkspaceReaders(repoRoot);
+	assert(
+		unguarded.length === 0,
+		`a route that reads the header must authorize it, not just filter by it: ${unguarded.join(', ')}`,
 	);
 	const client = readFileSync(
 		join(repoRoot, 'frontend', 'src', 'api', 'requestHelpers.ts'),

@@ -236,7 +236,7 @@
 				},
 				{
 					"command": "bun run test:workspace-header-contract",
-					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself"
+					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, a workspace that does not exist is answered 404 on every listing that reads the header rather than an empty page on some of them, and no route reads the header without authorizing it or words the header's messages itself"
 				},
 				{
 					"command": "bun run test:workspace-subresource-existence",

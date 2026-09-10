@@ -67,6 +67,7 @@ const dashboardCrudRoutes = new Elysia({
 		{
 			detail: listDashboardsDocs,
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -89,6 +90,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -159,6 +161,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -183,6 +186,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	);
 

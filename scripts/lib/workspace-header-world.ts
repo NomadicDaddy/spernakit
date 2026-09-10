@@ -37,6 +37,10 @@ const SEED_ROUNDS = 4;
 const AUDIT = '/api/v1/audit-logs';
 /** Open to any signed-in account, and its workspace guard runs inside the handler. */
 const FILES = '/api/v1/files';
+/** Reads rows the caller owns and takes the workspace as a filter, so a bad one passed unnoticed. */
+const DASHBOARDS = '/api/v1/dashboards';
+/** The same shape in another module: rows scoped to the caller, workspace applied as a filter. */
+const NOTIFICATIONS = '/api/v1/notifications';
 /** An id no workspace was given, so naming it is naming something that is not there. */
 const ABSENT_WORKSPACE = 999_999;
 
@@ -198,10 +202,12 @@ export type { App, Caller, World };
 export {
 	ABSENT_WORKSPACE,
 	AUDIT,
+	DASHBOARDS,
 	FILES,
 	get,
 	listedActions,
 	listedFileWorkspaces,
+	NOTIFICATIONS,
 	refusal,
 	startWorld,
 };

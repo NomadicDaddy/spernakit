@@ -8,7 +8,10 @@ import {
 const listDashboardsDocs = {
 	description:
 		'Returns all custom dashboards owned by authenticated user. ' +
-		'Each dashboard includes metadata but not widgets (use GET /:id for full details).',
+		'Each dashboard includes metadata but not widgets (use GET /:id for full details). ' +
+		'Scoped to the workspace named by the X-Workspace-ID header when one is sent, ' +
+		'and to every workspace when none is. A header naming a workspace that does not ' +
+		'exist is answered 404 rather than an empty list.',
 	responses: {
 		'200': {
 			content: {

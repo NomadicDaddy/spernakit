@@ -204,7 +204,7 @@ Steps (in order):
 28. `bun run test:bad-request-recovery`
     - A read the API refuses as malformed is not retried and does not replace the page it came from, so a stale filter in the address leaves the table, the search box and the actions usable and says what happened.
 29. `bun run test:workspace-header-contract`
-    - A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself.
+    - A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, a workspace that does not exist is answered 404 on every listing that reads the header rather than an empty page on some of them, and no route reads the header without authorizing it or words the header's messages itself.
 30. `bun run test:workspace-subresource-existence`
     - A workspace sub-resource answers 404 for a name that points at nothing, whether that is a workspace a soft delete left members behind in or a user id no account carries, while a non-member still hears the same status either way, a real duplicate member still conflicts and an existing workspace answers as before.
 31. `bun run test:wait-for-http`

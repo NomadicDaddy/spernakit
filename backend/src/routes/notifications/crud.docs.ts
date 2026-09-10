@@ -11,6 +11,9 @@ const listNotificationsDocs = {
 		'Filter by readStatus (all, read, unread) and/or type (info, warning, ' +
 		'error, success). Use the optional `fields` parameter to request only ' +
 		'specific fields (e.g. `fields=id,title,type,readAt`). ' +
+		'Scoped to the workspace named by the X-Workspace-ID header when one is sent, ' +
+		'and to every workspace when none is. A header naming a workspace that does not ' +
+		'exist is answered 404 rather than an empty page. ' +
 		'Returns { data: [...], page, limit, total }.',
 	responses: {
 		'200': {
