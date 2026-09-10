@@ -143,7 +143,7 @@ export function CreateUserDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Create User</DialogTitle>
-					<DialogDescription>Add a new user to system.</DialogDescription>
+					<DialogDescription>Add a new user to the system.</DialogDescription>
 				</DialogHeader>
 				<form className="space-y-4" noValidate onSubmit={handleSubmit}>
 					<UserFormFields
