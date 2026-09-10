@@ -46,6 +46,7 @@ import {
 } from '../backend/src/services/onboardingService.ts';
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { passwordStepLinkFailures } from './lib/password-form-route.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STEP_ID = 'change-sysop-password';
@@ -175,6 +176,10 @@ async function defaultInstall(): Promise<void> {
 		'the baseline list must compose getPasswordChangeStep(), so an app writing its own steps can include it without reimplementing the query',
 	);
 
+	for (const failure of passwordStepLinkFailures(repoRoot, getPasswordChangeStep().link)) {
+		assert(false, failure);
+	}
+
 	const changed = await changeUserPassword(sysop.id, sysopSeed().password, NEW_PASSWORD);
 	assert(changed.success, `changing the sysop password: ${changed.error ?? 'refused'}`);
 
@@ -274,7 +279,7 @@ async function run(): Promise<void> {
 
 	if (failures.length === 0) {
 		console.log(
-			'[OK] onboarding-password-step: the checklist reports the sysop password change from the database, with the toggle off and on',
+			'[OK] onboarding-password-step: the checklist reports the sysop password change from the database with the toggle off and on, and links to the page the form is on',
 		);
 		process.exit(0);
 	}

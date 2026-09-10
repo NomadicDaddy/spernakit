@@ -170,7 +170,8 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	// Seeds through the real seed path and reads the checklist over the real API, so its world is
 	// the onboarding service and route, the accounts and settings the seed writes, the password
-	// writers it drives, and the guard those requests pass through.
+	// writers it drives, and the guard those requests pass through. It also resolves the step's link
+	// against the frontend, which adds the account pages and the route table it reads them from.
 	'test:onboarding-password-step': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -182,6 +183,10 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/services/onboardingService.ts',
 			'backend/src/services/user/userPasswordAdminService.ts',
 			'backend/src/utils/auth/**',
+			'frontend/src/pages/profile/**',
+			'frontend/src/routes/lazyPages.ts',
+			'frontend/src/routes/routeGroups.tsx',
+			'scripts/lib/password-form-route.ts',
 			'scripts/test-onboarding-password-step.ts',
 		],
 	},
