@@ -138,6 +138,21 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
 	},
+	// Drives the memory runner against the live process with the thresholds moved around it, reading
+	// them out of a temp SQLite file, so its world is the health services, the defaults they fall
+	// back to, the settings store the thresholds live in, and the gate itself.
+	'test:memory-health-thresholds': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/constants/health.ts',
+			'backend/src/db/**',
+			'backend/src/services/health/**',
+			'backend/src/services/settings/**',
+			'backend/src/services/settingsService.ts',
+			'scripts/test-memory-health-thresholds.ts',
+		],
+	},
 	// Seeds a day of one-minute samples into a temp SQLite file and reads the history back through
 	// the query service, so its world is that service, the route whose cap and window it answers
 	// under, the schema and migrations the seed writes through, and the gate itself.

@@ -190,6 +190,7 @@
 		"test:impersonation-audit": "bun scripts/test-impersonation-audit.ts",
 		"test:lockout-refresh": "bun scripts/test-lockout-refresh.ts",
 		"test:lost-lines": "bun scripts/test-lost-lines.ts",
+		"test:memory-health-thresholds": "bun scripts/test-memory-health-thresholds.ts",
 		"test:metrics-history-window": "bun scripts/test-metrics-history-window.ts",
 		"test:mutation-denylist": "bun scripts/test-mutation-denylist.ts",
 		"test:override-deltas": "bun scripts/test-override-deltas.ts",

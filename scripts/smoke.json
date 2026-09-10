@@ -179,6 +179,10 @@
 					"description": "Impersonated mutations persist userId + impersonatedBy; kill-switch blocks start but not stop"
 				},
 				{
+					"command": "bun run test:memory-health-thresholds",
+					"description": "The memory health check answers to its configured thresholds on this runtime rather than reporting healthy whatever the process is using"
+				},
+				{
 					"command": "bun run test:metrics-history-window",
 					"description": "Metrics history returns points spanning the range that was asked for rather than the newest hundred minutes of it"
 				},

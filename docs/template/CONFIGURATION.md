@@ -682,7 +682,7 @@ either file-based value.
 }
 ```
 
-Threshold values for `auth`, `db`, and `fs` are response-time limits in milliseconds; `memory` thresholds are heap-usage percentages.
+Threshold values for `auth`, `db`, and `fs` are response-time limits in milliseconds. The `memory` thresholds are fractions of the memory the process is allowed: resident set against the container limit when there is one, against the host total otherwise. Their setting keys are still named `memoryHeapDegradedThreshold` and `memoryHeapUnhealthyThreshold`, which is what they were called when the check compared heap sizes.
 
 ### Alerting (`alerting`)
 
