@@ -201,113 +201,115 @@ Steps (in order):
     - Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message.
 27. `bun run test:render-phase-sync`
     - A component that adjusts state during render compares against a sentinel nothing else writes, so a form seeded from the record it was opened for still holds what the user typed.
-28. `bun run test:workspace-header-contract`
+28. `bun run test:bad-request-recovery`
+    - A read the API refuses as malformed is not retried and does not replace the page it came from, so a stale filter in the address leaves the table, the search box and the actions usable and says what happened.
+29. `bun run test:workspace-header-contract`
     - A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself.
-29. `bun run test:workspace-subresource-existence`
+30. `bun run test:workspace-subresource-existence`
     - A workspace sub-resource answers 404 for a workspace that is not there, including for the member a soft delete left behind, while a non-member still hears the same status either way and an existing workspace answers as before.
-30. `bun run test:wait-for-http`
+31. `bun run test:wait-for-http`
     - Docker readiness failures print bounded container log diagnostics.
-31. `bun run check:db-location`
+32. `bun run check:db-location`
     - Database location guard (ASSERT-010: DB files only under data/).
-32. `bun run check:no-inline-references`
+33. `bun run check:no-inline-references`
     - Inline .references() ban (ASSERT-012).
-33. `bun run check:secrets-shape`
+34. `bun run check:secrets-shape`
     - Secrets file shape parity.
-34. `bun run check:leak-guard`
+35. `bun run check:leak-guard`
     - Leak-guard hook self-test (synthetic fixtures).
-35. `bun run check:licenses`
+36. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
-36. `bun run test:shared-core-write`
+37. `bun run test:shared-core-write`
     - Shared-core write path regression self-test (synthetic fleet).
-37. `bun run check:shared-core`
+38. `bun run check:shared-core`
     - Shared-core files in sibling repositories match their owning repository (when present).
-38. `bun run test:fleet-manifest`
+39. `bun run test:fleet-manifest`
     - Fleet manifest validator regression self-test.
-39. `bun run test:fleet-manifest-sync`
+40. `bun run test:fleet-manifest-sync`
     - Fleet manifest writer regression self-test.
-40. `bun run check:fleet-manifest`
+41. `bun run check:fleet-manifest`
     - Fleet manifest matches packages and runtime configs.
-41. `bun run check:image-publication`
+42. `bun run check:image-publication`
     - Template image publication guard.
-42. `bun run check:process-env`
+43. `bun run check:process-env`
     - Process environment access check.
-43. `bun run check:env-spread`
+44. `bun run check:env-spread`
     - Child processes receive only the environment they need.
-44. `bun run check:git-window-hide`
+45. `bun run check:git-window-hide`
     - Direct Git subprocesses hide their Windows console window.
-45. `bun run check:audit-artifact-hygiene`
+46. `bun run check:audit-artifact-hygiene`
     - No audit report claims a date that has not happened yet.
-46. `bun run check:max-lines`
+47. `bun run check:max-lines`
     - 300-line max-lines gate.
-47. `bun run check:script-targets`
+48. `bun run check:script-targets`
     - Every package.json script resolves to a real file and task.
-48. `bun run test:gate-conventions`
+49. `bun run test:gate-conventions`
     - Gate conventions meta-gate regression self-test.
-49. `bun run check:gate-conventions`
+50. `bun run check:gate-conventions`
     - Every gate follows docs/reference/gate-conventions.md.
-50. `bun run check-application`
+51. `bun run check-application`
     - Application check.
-51. `bun run test:destructive-comments`
+52. `bun run test:destructive-comments`
     - Destructive-confirmation reads code not prose (comment stripping and waiver honouring).
-52. `bun run test:destructive-evidence`
+53. `bun run test:destructive-evidence`
     - Destructive-confirmation evidence resolver assertion (window and one-level handler hop).
-53. `bun run check:destructive-confirmation`
+54. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-54. `bun run test:mutation-denylist`
+55. `bun run test:mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-55. `bun run check:docs`
+56. `bun run check:docs`
     - Documentation consistency check.
-56. `bun run check:version-refs`
+57. `bun run check:version-refs`
     - Current-state version claims in docs match package.json.
-57. `bun run check:smoke-docs`
+58. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-58. `bun run typecheck`
+59. `bun run typecheck`
     - Typecheck.
-59. `bun run lint`
+60. `bun run lint`
     - Lint.
-60. `bun run build`
+61. `bun run build`
     - Build.
-61. `bun run verify-minification`
+62. `bun run verify-minification`
     - Verify bundle minification and total size budget.
-62. `bun run check:critical-path`
+63. `bun run check:critical-path`
     - Verify critical-path size, React runtime placement, and no preload waterfall.
-63. `bun run check:api-types`
+64. `bun run check:api-types`
     - API type contract validation.
-64. `bun run check:feature-integration`
+65. `bun run check:feature-integration`
     - Feature integration check.
-65. `bun run test:feature-integration`
+66. `bun run test:feature-integration`
     - Feature integration rejects unmounted flat route modules.
-66. `bun run check:schema-parity`
+67. `bun run check:schema-parity`
     - SQLite/PG schema parity check.
-67. `bun run test:backup-compression`
+68. `bun run test:backup-compression`
     - Backup decompression guard rejects high-ratio archives and cleans up.
-68. `bun run test:bundle-budget`
+69. `bun run test:bundle-budget`
     - Bundle budget stays app-owned and is only enforced with matching provenance.
-69. `bun run test:crawl-credentials`
+70. `bun run test:crawl-credentials`
     - Crawl login resolves from the seed account and never from a tracked config file.
-70. `bun run test:critical-path-budget`
+71. `bun run test:critical-path-budget`
     - Critical-path budget stays app-owned and regenerates both recorded limits.
-71. `bun run test:lost-lines`
+72. `bun run test:lost-lines`
     - Upgrade audit reports app-authored lines the template copy deleted.
-72. `bun run test:override-deltas`
+73. `bun run test:override-deltas`
     - Override report names the template content each .templateoverrides entry withholds.
-73. `bun run test:reset-packages`
+74. `bun run test:reset-packages`
     - Package reset preserves dependencies when the frozen-install preflight fails.
-74. `bun run test:clear-logs`
+75. `bun run test:clear-logs`
     - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-75. `bun run test:scaffolded-hooks`
+76. `bun run test:scaffolded-hooks`
     - Scaffolded pre-push hook replays refs through both release guards.
-76. `bun run test:template-drift`
+77. `bun run test:template-drift`
     - Drift reports build-critical structural lines and files removed by the template.
-77. `bun run format:check`
+78. `bun run format:check`
     - Format check.
-78. `bun run test:aidd-format`
+79. `bun run test:aidd-format`
     - aidd metadata format gate self-test (synthetic fixtures).
-79. `bun run check:aidd-format`
+80. `bun run check:aidd-format`
     - Tracked .aidd metadata matches the repository Prettier shape.
-80. `bun run check-deps`
+81. `bun run check-deps`
     - Check dependency versions.
-81. `bun run check:dead-code`
+82. `bun run check:dead-code`
     - Dead code detection (knip).
 
 ### 5. Docker Prod

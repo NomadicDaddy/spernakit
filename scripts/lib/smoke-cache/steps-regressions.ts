@@ -48,6 +48,18 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-before-validation.ts',
 		],
 	},
+	// Reads the retry and throw rules in process and then reads the two files it cannot reach from
+	// an assertion: the query client that wires them in, and the toast module that decides what a
+	// rejected read says.
+	'test:bad-request-recovery': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/api/errorHandling.ts',
+			'frontend/src/lib/queryClient.ts',
+			'frontend/src/lib/queryErrorPolicy.ts',
+			'scripts/test-bad-request-recovery.ts',
+		],
+	},
 	// Sets and reads the supersede link through the real routes against a temp database, so its
 	// world is the bug routes and both services behind them, the migrations that add the column
 	// the link lives in, the plugins those requests pass through, and the seed that supplies the

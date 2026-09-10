@@ -231,6 +231,10 @@
 					"description": "A component that adjusts state during render compares against a sentinel nothing else writes, so a form seeded from the record it was opened for still holds what the user typed"
 				},
 				{
+					"command": "bun run test:bad-request-recovery",
+					"description": "A read the API refuses as malformed is not retried and does not replace the page it came from, so a stale filter in the address leaves the table, the search box and the actions usable and says what happened"
+				},
+				{
 					"command": "bun run test:workspace-header-contract",
 					"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, and no route words the header's messages itself"
 				},
