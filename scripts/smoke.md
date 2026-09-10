@@ -208,7 +208,7 @@ Steps (in order):
 30. `bun run test:dashboard-share-revoke`
     - A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted.
 31. `bun run test:view-transition-abort`
-    - Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message.
+    - Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, the cross-document opt-in stays out of the stylesheet, and the crawl is not taught to ignore the message.
 32. `bun run test:dialog-focus-return`
     - A dialog dismissed after being opened from a data-table row actions menu puts focus back on that row's menu button rather than on the document body, because the origin an overlay is handed is resolved to something that is still on the page once the menu has closed.
 33. `bun run test:dialog-form-survival`

@@ -235,15 +235,24 @@
 
 /* ──────────────────────────────────────────────
    CSS-native page transitions.
-   Opt-in per browser that supports the
-   View Transitions API. Respects
-   prefers-reduced-motion via the block above.
+   Styling only. The rule that turns these on
+   for full page loads, @view-transition with
+   navigation: auto, used to sit at the top of
+   the block below and was taken out: the
+   browser hands the arriving document no
+   transition object, so a navigation that
+   outruns the animation rejects with an
+   AbortError no script on the page can hold,
+   and the animation played on about one
+   navigation in eight anyway. What is left
+   styles a transition an app starts itself
+   with document.startViewTransition, and is
+   what the rule would use if an app puts it
+   back. Respects prefers-reduced-motion via
+   the block above.
    ────────────────────────────────────────────── */
 
 @supports (view-transition-name: root) {
-	@view-transition {
-		navigation: auto;
-	}
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation-duration: 220ms;

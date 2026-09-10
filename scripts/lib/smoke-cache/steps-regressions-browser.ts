@@ -73,9 +73,9 @@ export const BROWSER_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependenci
 		],
 	},
 	// Dispatches its own navigations at the module that holds a skipped transition's promises, and
-	// then reads the three files it cannot reach from an assertion: the stylesheet the transitions
-	// come from, the entry point that subscribes, and the crawl harness that has to stay able to
-	// fail on this noise.
+	// then reads the three files it cannot reach from an assertion: the stylesheet, which has to
+	// keep the cross-document opt-in out, the entry point that subscribes, and the crawl harness
+	// that has to stay able to fail on this noise.
 	'test:view-transition-abort': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

@@ -244,7 +244,7 @@
 				},
 				{
 					"command": "bun run test:view-transition-abort",
-					"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, and the crawl is not taught to ignore the message"
+					"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, the cross-document opt-in stays out of the stylesheet, and the crawl is not taught to ignore the message"
 				},
 				{
 					"command": "bun run test:dialog-focus-return",
