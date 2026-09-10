@@ -107,17 +107,20 @@ What the local verification image actually contains is checked against the built
   are reproduced in [\`THIRD_PARTY_NOTICES.md\`](./THIRD_PARTY_NOTICES.md).
 - \`bun run check:image-licenses\` opens the built image and fails if any npm package inside it
   is missing from that appendix, or if the notices are not present in the image.
-- The operating-system packages are inventoried in
+- The operating-system packages and their licenses are inventoried in
   [\`licenses/base-image-packages.md\`](./licenses/base-image-packages.md), read from the image's
-  own apk database.
+  own apk database. Their versions follow Alpine's patch releases, so each image records its own
+  exact versions in \`licenses/base-image-versions.txt\` when it is built, and the check confirms
+  that record matches the image.
 
-Both files are present inside the image, alongside \`LICENSE\` and this document.
+These files are present inside the image, alongside \`LICENSE\` and this document.
 
 The base image contains GPL-licensed programs (busybox, apk-tools, gettext and others). They
 are unmodified operating-system components alongside the application, not libraries
-linked into it. Their exact package versions are recorded in the base-image inventory. GPL and
-LGPL license texts plus downstream guidance are included in \`licenses/\`; Alpine's upstream
-source is published at <https://gitlab.alpinelinux.org/alpine/aports>.
+linked into it. Their exact package versions are recorded in each image's
+\`licenses/base-image-versions.txt\`. GPL and LGPL license texts plus downstream guidance are
+included in \`licenses/\`; Alpine's upstream source is published at
+<https://gitlab.alpinelinux.org/alpine/aports>.
 `,
 		heading: 'Scope and what is verified',
 	},

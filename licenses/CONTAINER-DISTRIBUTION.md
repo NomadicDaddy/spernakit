@@ -9,7 +9,8 @@ third-party components in that image. Before doing so, its owner should review t
 and satisfy the licenses that apply to it. At minimum:
 
 - preserve the license and attribution files already included in the image;
-- inventory the exact Bun, Alpine, and application-package versions in the distributed digest;
+- inventory the exact Bun, Alpine, and application-package versions in the distributed digest
+  (each image records its Alpine package versions in `licenses/base-image-versions.txt`);
 - provide complete corresponding source for GPL and LGPL components using a method permitted by
   the applicable license;
 - provide the source, object files, build scripts, and other machine-readable materials needed

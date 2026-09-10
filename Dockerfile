@@ -112,6 +112,13 @@ COPY --from=backend-builder /app/shared/ shared/
 COPY LICENSE THIRD_PARTY_LICENSES.md THIRD_PARTY_NOTICES.md ./
 COPY licenses/ licenses/
 
+# The exact version of every apk package in this image, read from its own database after the last
+# package change above. licenses/base-image-packages.md lists names and licenses only, because the
+# packages added above float with Alpine's patch releases; this record is the one that matches the
+# image digest. "bun run check:image-licenses" confirms it describes the image it is in.
+RUN awk -F: '/^P:/{p=$2} /^V:/{v=$2} /^L:/{print p "@" v " " $2}' /lib/apk/db/installed \
+    | sort > licenses/base-image-versions.txt
+
 # Copy backend
 COPY --from=backend-builder /app/backend/ backend/
 

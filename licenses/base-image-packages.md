@@ -10,86 +10,92 @@ the applicable GPL/LGPL texts and downstream guidance in
 [`CONTAINER-DISTRIBUTION.md`](./CONTAINER-DISTRIBUTION.md). Alpine publishes source at
 <https://gitlab.alpinelinux.org/alpine/aports>.
 
+Versions are deliberately not listed here. The packages added on top of the pinned base image
+come from the live Alpine repository, which replaces a patch release rather than keeping it, so
+a committed version list goes stale on its own. Each built image records the exact version of
+every package in `/app/licenses/base-image-versions.txt`, written from its apk database at
+build time; identify an image by its digest and read its versions from that file.
+
 ## Copyleft packages in the image
 
 **20** of them carry a GPL-family license (busybox and friends are the
 usual ones). They are separate programs in the same image, not libraries linked into the
 application. Their licenses apply to those components rather than the application code.
 
-- `alpine-baselayout-data@3.7.0-r0` (GPL-2.0-only)
-- `alpine-baselayout@3.7.0-r0` (GPL-2.0-only)
-- `apk-tools@2.14.10-r0` (GPL-2.0-only)
-- `busybox-binsh@1.37.0-r20` (GPL-2.0-only)
-- `busybox@1.37.0-r20` (GPL-2.0-only)
-- `gdbm@1.24-r0` (GPL-3.0-or-later)
-- `gettext-envsubst@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
-- `gettext-libs@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
-- `gettext@0.24.1-r0` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
-- `libapk2@2.14.10-r0` (GPL-2.0-only)
-- `libgcc@14.2.0-r6` (GPL-2.0-or-later AND LGPL-2.1-or-later)
-- `libgomp@14.2.0-r6` (GPL-2.0-or-later AND LGPL-2.1-or-later)
-- `libintl@0.24.1-r0` (LGPL-2.1-or-later)
-- `libstdc++@14.2.0-r6` (GPL-2.0-or-later AND LGPL-2.1-or-later)
-- `libunistring@1.3-r0` (GPL-2.0-or-later OR LGPL-3.0-or-later)
-- `musl-utils@1.2.5-r12` (MIT AND BSD-2-Clause AND GPL-2.0-or-later)
-- `readline@8.2.13-r1` (GPL-3.0-or-later)
-- `scanelf@1.3.8-r1` (GPL-2.0-only)
-- `ssl_client@1.37.0-r20` (GPL-2.0-only)
-- `xz-libs@5.8.4-r0` (GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later)
+- `alpine-baselayout-data` (GPL-2.0-only)
+- `alpine-baselayout` (GPL-2.0-only)
+- `apk-tools` (GPL-2.0-only)
+- `busybox-binsh` (GPL-2.0-only)
+- `busybox` (GPL-2.0-only)
+- `gdbm` (GPL-3.0-or-later)
+- `gettext-envsubst` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
+- `gettext-libs` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
+- `gettext` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
+- `libapk2` (GPL-2.0-only)
+- `libgcc` (GPL-2.0-or-later AND LGPL-2.1-or-later)
+- `libgomp` (GPL-2.0-or-later AND LGPL-2.1-or-later)
+- `libintl` (LGPL-2.1-or-later)
+- `libstdc++` (GPL-2.0-or-later AND LGPL-2.1-or-later)
+- `libunistring` (GPL-2.0-or-later OR LGPL-3.0-or-later)
+- `musl-utils` (MIT AND BSD-2-Clause AND GPL-2.0-or-later)
+- `readline` (GPL-3.0-or-later)
+- `scanelf` (GPL-2.0-only)
+- `ssl_client` (GPL-2.0-only)
+- `xz-libs` (GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later)
 
 ## All base image packages
 
-| Package                | Version          | License                                                           |
-| ---------------------- | ---------------- | ----------------------------------------------------------------- |
-| alpine-baselayout-data | 3.7.0-r0         | GPL-2.0-only                                                      |
-| alpine-baselayout      | 3.7.0-r0         | GPL-2.0-only                                                      |
-| alpine-keys            | 2.5-r0           | MIT                                                               |
-| alpine-release         | 3.22.5-r0        | MIT                                                               |
-| apk-tools              | 2.14.10-r0       | GPL-2.0-only                                                      |
-| brotli-libs            | 1.1.0-r2         | MIT                                                               |
-| busybox-binsh          | 1.37.0-r20       | GPL-2.0-only                                                      |
-| busybox                | 1.37.0-r20       | GPL-2.0-only                                                      |
-| ca-certificates-bundle | 20260611-r0      | MPL-2.0 AND MIT                                                   |
-| gdbm                   | 1.24-r0          | GPL-3.0-or-later                                                  |
-| gettext-envsubst       | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
-| gettext-libs           | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
-| gettext                | 0.24.1-r0        | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
-| libapk2                | 2.14.10-r0       | GPL-2.0-only                                                      |
-| libbz2                 | 1.0.8-r6         | bzip2-1.0.6                                                       |
-| libcrypto3             | 3.5.8-r0         | Apache-2.0                                                        |
-| libexpat               | 2.8.4-r0         | MIT                                                               |
-| libffi                 | 3.4.8-r0         | MIT                                                               |
-| libgcc                 | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
-| libgomp                | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
-| libintl                | 0.24.1-r0        | LGPL-2.1-or-later                                                 |
-| libncursesw            | 6.5_p20250503-r0 | X11                                                               |
-| libpanelw              | 6.5_p20250503-r0 | X11                                                               |
-| libssl3                | 3.5.8-r0         | Apache-2.0                                                        |
-| libstdc++              | 14.2.0-r6        | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
-| libunistring           | 1.3-r0           | GPL-2.0-or-later OR LGPL-3.0-or-later                             |
-| libxml2                | 2.13.9-r1        | MIT                                                               |
-| mpdecimal              | 4.0.1-r0         | BSD-2-Clause                                                      |
-| musl-utils             | 1.2.5-r12        | MIT AND BSD-2-Clause AND GPL-2.0-or-later                         |
-| musl                   | 1.2.5-r12        | MIT                                                               |
-| ncurses-terminfo-base  | 6.5_p20250503-r0 | X11                                                               |
-| nginx-mod-http-brotli  | 1.28.3-r7        | BSD-2-Clause                                                      |
-| nginx                  | 1.28.3-r7        | BSD-2-Clause                                                      |
-| pcre2                  | 10.46-r0         | BSD-3-Clause                                                      |
-| py3-packaging-pyc      | 25.0-r0          | Apache-2.0 AND BSD-2-Clause                                       |
-| py3-packaging          | 25.0-r0          | Apache-2.0 AND BSD-2-Clause                                       |
-| py3-parsing-pyc        | 3.2.5-r0         | MIT                                                               |
-| py3-parsing            | 3.2.5-r0         | MIT                                                               |
-| py3-setuptools-pyc     | 80.9.0-r0        | MIT                                                               |
-| py3-setuptools         | 80.9.0-r0        | MIT                                                               |
-| pyc                    | 3.12.14-r0       | PSF-2.0                                                           |
-| python3-pycache-pyc0   | 3.12.14-r0       | PSF-2.0                                                           |
-| python3-pyc            | 3.12.14-r0       | PSF-2.0                                                           |
-| python3                | 3.12.14-r0       | PSF-2.0                                                           |
-| readline               | 8.2.13-r1        | GPL-3.0-or-later                                                  |
-| scanelf                | 1.3.8-r1         | GPL-2.0-only                                                      |
-| sqlite-libs            | 3.49.2-r1        | blessing                                                          |
-| ssl_client             | 1.37.0-r20       | GPL-2.0-only                                                      |
-| supervisor-pyc         | 4.2.5-r5         | BSD-4-Clause AND BSD-3-Clause-Clear                               |
-| supervisor             | 4.2.5-r5         | BSD-4-Clause AND BSD-3-Clause-Clear                               |
-| xz-libs                | 5.8.4-r0         | GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later |
-| zlib                   | 1.3.2-r0         | Zlib                                                              |
+| Package                | License                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| alpine-baselayout-data | GPL-2.0-only                                                      |
+| alpine-baselayout      | GPL-2.0-only                                                      |
+| alpine-keys            | MIT                                                               |
+| alpine-release         | MIT                                                               |
+| apk-tools              | GPL-2.0-only                                                      |
+| brotli-libs            | MIT                                                               |
+| busybox-binsh          | GPL-2.0-only                                                      |
+| busybox                | GPL-2.0-only                                                      |
+| ca-certificates-bundle | MPL-2.0 AND MIT                                                   |
+| gdbm                   | GPL-3.0-or-later                                                  |
+| gettext-envsubst       | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
+| gettext-libs           | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
+| gettext                | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
+| libapk2                | GPL-2.0-only                                                      |
+| libbz2                 | bzip2-1.0.6                                                       |
+| libcrypto3             | Apache-2.0                                                        |
+| libexpat               | MIT                                                               |
+| libffi                 | MIT                                                               |
+| libgcc                 | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
+| libgomp                | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
+| libintl                | LGPL-2.1-or-later                                                 |
+| libncursesw            | X11                                                               |
+| libpanelw              | X11                                                               |
+| libssl3                | Apache-2.0                                                        |
+| libstdc++              | GPL-2.0-or-later AND LGPL-2.1-or-later                            |
+| libunistring           | GPL-2.0-or-later OR LGPL-3.0-or-later                             |
+| libxml2                | MIT                                                               |
+| mpdecimal              | BSD-2-Clause                                                      |
+| musl-utils             | MIT AND BSD-2-Clause AND GPL-2.0-or-later                         |
+| musl                   | MIT                                                               |
+| ncurses-terminfo-base  | X11                                                               |
+| nginx-mod-http-brotli  | BSD-2-Clause                                                      |
+| nginx                  | BSD-2-Clause                                                      |
+| pcre2                  | BSD-3-Clause                                                      |
+| py3-packaging-pyc      | Apache-2.0 AND BSD-2-Clause                                       |
+| py3-packaging          | Apache-2.0 AND BSD-2-Clause                                       |
+| py3-parsing-pyc        | MIT                                                               |
+| py3-parsing            | MIT                                                               |
+| py3-setuptools-pyc     | MIT                                                               |
+| py3-setuptools         | MIT                                                               |
+| pyc                    | PSF-2.0                                                           |
+| python3-pycache-pyc0   | PSF-2.0                                                           |
+| python3-pyc            | PSF-2.0                                                           |
+| python3                | PSF-2.0                                                           |
+| readline               | GPL-3.0-or-later                                                  |
+| scanelf                | GPL-2.0-only                                                      |
+| sqlite-libs            | blessing                                                          |
+| ssl_client             | GPL-2.0-only                                                      |
+| supervisor-pyc         | BSD-4-Clause AND BSD-3-Clause-Clear                               |
+| supervisor             | BSD-4-Clause AND BSD-3-Clause-Clear                               |
+| xz-libs                | GPL-2.0-or-later AND 0BSD AND Public-Domain AND LGPL-2.1-or-later |
+| zlib                   | Zlib                                                              |
