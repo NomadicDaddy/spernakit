@@ -1,10 +1,11 @@
 /**
- * The throwaway application the auth-ordering gate runs its probes against.
+ * The throwaway application the auth gates run their probes against.
  *
- * Standing the app up is a separate concern from the ordering property under test: a temp-file
- * SQLite database, the seed accounts, and a signed request are all things the gate needs to have
- * before it can ask its question, and none of them are the question. They live here so the gate
- * itself reads as the sequence of assertions it is.
+ * Standing the app up is a separate concern from the properties under test: a temp-file SQLite
+ * database, the seed accounts, and a signed request are all things a gate needs to have before it
+ * can ask its question, and none of them are the question. They live here so each gate reads as
+ * the sequence of assertions it is. Two gates use this now, the ordering one it was written for
+ * and the auth rate limit state one, and both want the same three things from it.
  */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -77,6 +78,26 @@ function post(
 	);
 }
 /**
+ * One GET, signed in as `claim` when one is given.
+ *
+ * Separate from `post` rather than folded into it because a GET carries no body and no CSRF
+ * token, and a helper that took both and used neither would invite a caller to pass them.
+ *
+ * @param app - The running fixture application.
+ * @param path - The path to request, including the /api/v1 prefix.
+ * @param claim - The identity to sign into a cookie, or nothing for an anonymous request.
+ * @returns The application's response.
+ */
+function get(app: App, path: string, claim?: Claim): Promise<Response> {
+	const config = getConfig();
+	const headers: Record<string, string> = { origin: config.server.frontendUrl };
+	if (claim) {
+		headers.cookie = `${config.security.authCookieName}=${signAccessToken(claim)}`;
+	}
+	return app.handle(new Request(`http://localhost${path}`, { headers }));
+}
+
+/**
  * Bring up the application against a fresh temp-file database and hand back a way to tear it down.
  *
  * Rate limiting starts off because most of the gate's probes send the same request several times
@@ -112,5 +133,5 @@ async function startFixture(repoRoot: string): Promise<{ app: App; dispose: () =
 	return { app: createApiApp(), dispose };
 }
 
-export { post, seedUserId, startFixture };
+export { get, post, seedUserId, startFixture };
 export type { App, Claim };

@@ -20,6 +20,7 @@ export {
 } from './auth/authPasswordReset.ts';
 export {
 	getAuthSettings,
+	isAuthRateLimitInEffect,
 	isPasswordExpired,
 	updateAuthSettings,
 } from './auth/authSecurityService.ts';

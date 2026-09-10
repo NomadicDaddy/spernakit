@@ -48,6 +48,27 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-before-validation.ts',
 		],
 	},
+	// Sends real sign-ins through the limiter and reads the settings route back, so its world is
+	// the rate limit plugin family, the auth security service that owns the shared rule, the login
+	// and settings routes the two probes use, and the card that states the result to a reader.
+	'test:auth-rate-limit-state': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/**',
+			'backend/src/create-api-app.ts',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/auth/**',
+			'backend/src/routes/settings/auth-security.ts',
+			'backend/src/services/auth/authSecurityService.ts',
+			'backend/src/services/authService.ts',
+			'frontend/src/api/authSecurity.ts',
+			'frontend/src/pages/settings/auth/AuthRateLimitSection.tsx',
+			'frontend/src/pages/settings/auth/AuthenticationTab.tsx',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/test-auth-rate-limit-state.ts',
+		],
+	},
 	// Reads the retry and throw rules in process and then reads the two files it cannot reach from
 	// an assertion: the query client that wires them in, and the toast module that decides what a
 	// rejected read says.

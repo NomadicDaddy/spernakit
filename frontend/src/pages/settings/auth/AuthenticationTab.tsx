@@ -129,6 +129,11 @@ function AuthenticationTab() {
 
 				<AuthRateLimitSection
 					authRateLimitEnabled={form.formValues.authRateLimitEnabled}
+					// Read from the server response rather than the form: config is set before
+					// boot, so there is nothing here to edit and nothing to leave unsaved. The
+					// optimistic default is true, which keeps a loading page from claiming a
+					// kill-switch is on before it knows.
+					authRateLimitEnabledInConfig={serverData?.authRateLimitEnabledInConfig ?? true}
 					authRateLimitMaxRequests={form.formValues.authRateLimitMaxRequests}
 					authRateLimitWindowMinutes={form.formValues.authRateLimitWindowMinutes}
 					{...form.rateLimitActions}

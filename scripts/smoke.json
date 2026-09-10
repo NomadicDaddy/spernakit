@@ -203,6 +203,10 @@
 					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
 				},
 				{
+					"command": "bun run test:auth-rate-limit-state",
+					"description": "Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule"
+				},
+				{
 					"command": "bun run test:public-route-surface",
 					"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded"
 				},

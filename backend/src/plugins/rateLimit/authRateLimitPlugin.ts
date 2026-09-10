@@ -6,12 +6,12 @@ import {
 	AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
 	AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS,
 } from '../../constants/rateLimit.ts';
-import { getAuthSettings } from '../../services/authService.ts';
+import { getAuthSettings, isAuthRateLimitInEffect } from '../../services/authService.ts';
 import { type RateLimitCheckResult } from '../../services/rateLimitService.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import { RATE_ERROR_CODES, rateLimitError } from '../../utils/errorResponse.ts';
 import { PreValidationRejection } from '../../utils/preValidationRejection.ts';
-import { checkLimit, isAuthRateLimitBypassed, type RateLimitBackend } from './helpers.ts';
+import { checkLimit, type RateLimitBackend } from './helpers.ts';
 import { createRateLimitStore } from './store.ts';
 
 const authStore = createRateLimitStore();
@@ -99,15 +99,12 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onTransform(
 
 		if (!url.pathname.startsWith('/api/v1/auth/')) return;
 		if (AUTH_SAFE_METHODS.has(request.method)) return;
-		if (isAuthRateLimitBypassed()) return;
 
-		// Honor SYSOP-controlled auth rate limit settings. The `authSettings` store is the
-		// editable source of truth; fall back to `config.rateLimit.authEnabled` so admins
-		// can still kill-switch auth limits via config.spernakit.json pre-boot.
+		// The SYSOP-editable setting and the pre-boot config kill-switch both have to be on, and
+		// `isAuthRateLimitInEffect` is what decides that. Settings > Authentication asks the same
+		// function, so what the page reports and what this plugin does cannot disagree.
 		const authSettings = getAuthSettings();
-		if (!authSettings.authRateLimitEnabled || !config.rateLimit.authEnabled) {
-			return;
-		}
+		if (!isAuthRateLimitInEffect(authSettings)) return;
 
 		authStore.startCleanup();
 
