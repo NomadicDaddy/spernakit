@@ -212,7 +212,8 @@
 		"smoke:docs": "bun scripts/sync-smoke-docs.ts",
 		"check:smoke-docs": "bun scripts/sync-smoke-docs.ts --check",
 		"test:shared-core-write": "bun scripts/test-shared-core-write.ts",
-		"shared-core:write": "bun scripts/sync-shared-core.ts --write"
+		"shared-core:write": "bun scripts/sync-shared-core.ts --write",
+		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts"
 	},
 	"type": "module",
 	"workspaces": [

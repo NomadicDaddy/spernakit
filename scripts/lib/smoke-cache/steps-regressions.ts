@@ -160,6 +160,17 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-public-route-surface.ts',
 		],
 	},
+	// Reads the frontend source tree for a component that adjusts state during render, and drives
+	// the scan itself over synthetic fixtures, so its world is the whole frontend source plus the
+	// scan and the gate that runs it.
+	'test:render-phase-sync': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/**',
+			'scripts/lib/render-phase-sync.ts',
+			'scripts/test-render-phase-sync.ts',
+		],
+	},
 	// Same in-process temp-DB shape as `test:impersonation-audit` above.
 	'test:retention-zero': {
 		excludes: COMMON_EXCLUDES,
