@@ -10,6 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog';
+import { useFreshOnOpen } from '@/hooks/useFreshOnOpen';
 
 import { WorkspaceFormFields } from './WorkspaceFormFields';
 
@@ -40,6 +41,17 @@ export function CreateWorkspaceDialog({
 	});
 	const [nameError, setNameError] = useState<null | string>(null);
 
+	/*
+	 * Opening is the only moment this form is cleared. It used to be cleared from the Dialog's
+	 * `onOpenChange`, which Radix calls only for a close the dialog itself asked for. The parent
+	 * closes it on success by clearing its dialog state instead, so a workspace that was created
+	 * successfully left its name, slug and description sitting in the fields for the next one.
+	 */
+	useFreshOnOpen(isOpen, () => {
+		setForm({ description: '', name: '', slug: '' });
+		setNameError(null);
+	});
+
 	const handleCreate = () => {
 		if (isPending) return;
 		if (!form.name.trim()) {
@@ -64,14 +76,6 @@ export function CreateWorkspaceDialog({
 		}
 	}
 
-	function handleOpenChange(open: boolean) {
-		if (!open) {
-			setForm({ description: '', name: '', slug: '' });
-			setNameError(null);
-		}
-		onOpenChange(open);
-	}
-
 	return (
 		/*
 		 * `Dialog`, not `AlertDialog`. This is a form, and the exemplar /settings/users reserves
@@ -82,7 +86,7 @@ export function CreateWorkspaceDialog({
 		 * user landed on the dismiss control of a form they had opened to fill in. DialogContent
 		 * renders its close after `children`, which puts first focus on the name field instead.
 		 */
-		<Dialog onOpenChange={handleOpenChange} open={isOpen}>
+		<Dialog onOpenChange={onOpenChange} open={isOpen}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Create Workspace</DialogTitle>
@@ -109,11 +113,9 @@ export function CreateWorkspaceDialog({
 				</div>
 				<DialogFooter>
 					<DialogClose asChild>
-						<Button
-							onClick={() => setForm({ description: '', name: '', slug: '' })}
-							variant="outline">
-							Cancel
-						</Button>
+						{/* No reset here. Clearing the form belongs to the open path, which is
+						    the one place that runs however the dialog was closed. */}
+						<Button variant="outline">Cancel</Button>
 					</DialogClose>
 					<Button disabled={isPending} onClick={handleCreate}>
 						{isPending ? 'Creating…' : 'Create'}

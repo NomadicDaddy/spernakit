@@ -47,6 +47,7 @@ interface UseDashboardWidgetsOptions {
 	dashboardName: string;
 	layoutMap: Map<string, Layout[0]>;
 	onAddWidgetSuccess?: () => void;
+	onRenameSuccess?: () => void;
 	onSaveSuccess: () => void;
 }
 
@@ -56,6 +57,7 @@ export function useDashboardWidgets({
 	dashboardName,
 	layoutMap,
 	onAddWidgetSuccess,
+	onRenameSuccess,
 	onSaveSuccess,
 }: UseDashboardWidgetsOptions) {
 	const queryClient = useQueryClient();
@@ -116,12 +118,20 @@ export function useDashboardWidgets({
 		});
 	};
 
+	/*
+	 * The rename dialog no longer closes itself when Save is pressed, because closing on the way
+	 * out of submit also cleared the field before the server had answered. Closing belongs here,
+	 * where the rename is known to have succeeded.
+	 */
 	const handleRename = (name: string) => {
 		if (!dashboard || !name.trim()) return;
-		saveMutation.mutate({
-			name: name.trim(),
-			widgets: mapWidgetsToInput(dashboard.widgets, layoutMap),
-		});
+		saveMutation.mutate(
+			{
+				name: name.trim(),
+				widgets: mapWidgetsToInput(dashboard.widgets, layoutMap),
+			},
+			{ onSuccess: () => onRenameSuccess?.() },
+		);
 	};
 
 	return {

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFreshOnOpen } from '@/hooks/useFreshOnOpen';
 import { usePasswordPolicy } from '@/hooks/usePasswordPolicy';
 import {
 	isValidEmail,
@@ -108,6 +109,11 @@ export function CreateUserDialog({
 		setTouched({ email: false, password: false, username: false });
 	}
 
+	// Opening is the only moment this form is cleared. It used to be cleared on the way out of
+	// handleSubmit, which happens before the server has answered, so a username the API refused
+	// took the email and the password down with it and left nothing to correct.
+	useFreshOnOpen(isOpen, resetDialog);
+
 	function handleSubmit(e: React.FormEvent) {
 		e.preventDefault();
 		if (isPending) return;
@@ -124,7 +130,6 @@ export function CreateUserDialog({
 			return;
 		}
 		onCreate(form);
-		resetDialog();
 	}
 
 	const passwordErrorId = 'create-password-error';
@@ -133,14 +138,7 @@ export function CreateUserDialog({
 		typeof liveErrors.password === 'string' && liveErrors.password.length > 0;
 
 	return (
-		<Dialog
-			onOpenChange={(open) => {
-				onOpenChange(open);
-				if (!open) {
-					resetDialog();
-				}
-			}}
-			open={isOpen}>
+		<Dialog onOpenChange={onOpenChange} open={isOpen}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Create User</DialogTitle>

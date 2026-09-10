@@ -141,6 +141,17 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-dashboard-share-revoke.ts',
 		],
 	},
+	// Reads the frontend source tree for a dialog that clears its own form on the way out of a
+	// submit, and drives the scan over synthetic fixtures, so its world is the whole frontend
+	// source plus the scan and the gate that runs it.
+	'test:dialog-form-survival': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/**',
+			'scripts/lib/dialog-form-survival.ts',
+			'scripts/test-dialog-form-survival.ts',
+		],
+	},
 	// Spawns a probe through the real spawn-background wiring and reads the log files back, so
 	// its world is the logger and the configuration it reads, the spawn helpers, and the probe.
 	'test:error-log-wiring': {

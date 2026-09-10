@@ -215,7 +215,8 @@
 		"check:smoke-docs": "bun scripts/sync-smoke-docs.ts --check",
 		"test:shared-core-write": "bun scripts/test-shared-core-write.ts",
 		"shared-core:write": "bun scripts/sync-shared-core.ts --write",
-		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts"
+		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts",
+		"test:dialog-form-survival": "bun scripts/test-dialog-form-survival.ts"
 	},
 	"type": "module",
 	"workspaces": [
