@@ -227,6 +227,21 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/src/**', 'config/**', 'scripts/test-upload-validation.ts'],
 	},
+	// Puts a corpus of names to the shared validator and to the real create-user route in process,
+	// and then reads both source trees for a rival copy of the rule, so its world is the frontend
+	// and backend sources, the policy module they read, the fixture that boots the API, and the
+	// scan and gate themselves.
+	'test:username-parity': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**',
+			'frontend/src/**',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/username-parity.ts',
+			'scripts/test-username-parity.ts',
+			'shared/src/usernamePolicy.ts',
+		],
+	},
 	// Dispatches its own navigations at the module that holds a skipped transition's promises, and
 	// then reads the three files it cannot reach from an assertion: the stylesheet the transitions
 	// come from, the entry point that subscribes, and the crawl harness that has to stay able to

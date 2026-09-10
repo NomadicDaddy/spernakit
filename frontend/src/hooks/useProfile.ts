@@ -5,7 +5,7 @@ import type { DataResponse, UserRole } from '@/api/types';
 
 import { apiClient } from '@/api/client';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
-import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH } from '@/lib/validation';
+import { validateUsername } from '@/lib/validation';
 
 interface ProfileUser {
 	email: string;
@@ -14,7 +14,6 @@ interface ProfileUser {
 	username: string;
 }
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]+$/;
 const USERNAME_DEBOUNCE_MS = 400;
 
 export type { ProfileUser };
@@ -60,11 +59,7 @@ export function useUsernameCheck(currentUsername: string) {
 			return;
 		}
 
-		if (
-			value.length < USERNAME_MIN_LENGTH ||
-			value.length > USERNAME_MAX_LENGTH ||
-			!USERNAME_PATTERN.test(value)
-		) {
+		if (validateUsername(value) !== null) {
 			setDebouncedValue('');
 			setClientStatus('invalid');
 			return;

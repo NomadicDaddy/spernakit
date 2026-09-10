@@ -1,12 +1,12 @@
 import type { PasswordValidationOptions } from 'spernakit-shared';
 
-import { PASSWORD_MIN_LENGTH, validatePasswordComplexity } from 'spernakit-shared';
-
-/** Minimum username length — must match backend TypeBox schema */
-const USERNAME_MIN_LENGTH = 2;
-
-/** Maximum username length — must match backend TypeBox schema */
-const USERNAME_MAX_LENGTH = 50;
+import {
+	PASSWORD_MIN_LENGTH,
+	USERNAME_MAX_LENGTH,
+	USERNAME_MIN_LENGTH,
+	validatePasswordComplexity,
+	validateUsername,
+} from 'spernakit-shared';
 
 /** Truncation threshold for data viewer cell values */
 const CELL_TRUNCATION_LENGTH = 80;
@@ -56,4 +56,5 @@ export {
 	USERNAME_MIN_LENGTH,
 	validatePasswordComplexity,
 	validatePasswordMatch,
+	validateUsername,
 };

@@ -1,4 +1,5 @@
 import { and, eq, like } from 'drizzle-orm';
+import { USERNAME_CHARACTER_CLASS, USERNAME_MAX_LENGTH } from 'spernakit-shared';
 
 import type {
 	HandleCallbackResult,
@@ -19,9 +20,15 @@ import { addMemberToDefaultWorkspace, isMemberOfDefaultWorkspace } from '../work
 /** Providers known to reliably verify email addresses before reporting emailVerified: true. */
 const TRUSTED_EMAIL_PROVIDERS = new Set<OAuthProvider>(['google', 'microsoft']);
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]+$/;
-const USERNAME_MIN_LENGTH = 3;
-const USERNAME_MAX_LENGTH = 50;
+/*
+ * The characters and the upper bound come from the shared policy, so a generated name is
+ * judged by the same rule the route schemas enforce. The lower bound is deliberately the
+ * generator's own: the API takes a two-character name, but a name derived from a provider's
+ * display name that came out this short is far more likely to be junk than a real handle,
+ * so the generator throws it away and issues a random one instead.
+ */
+const USERNAME_PATTERN = new RegExp(`^[${USERNAME_CHARACTER_CLASS}]+$`, 'u');
+const DERIVED_USERNAME_MIN_LENGTH = 3;
 
 interface EncryptedTokens {
 	accessTokenEncrypted: string;
@@ -50,7 +57,7 @@ function buildCallbackResult(user: {
 function sanitizeUsername(name: string): string {
 	const sanitized = name
 		.toLowerCase()
-		.replace(/[^a-zA-Z0-9_.-]/g, '-')
+		.replace(new RegExp(`[^${USERNAME_CHARACTER_CLASS}]`, 'gu'), '-')
 		.replace(/-+/g, '-')
 		.replace(/^-+|-+$/g, '')
 		.slice(0, USERNAME_MAX_LENGTH);
@@ -61,7 +68,7 @@ function generateUniqueUsername(baseName: string, db: ReturnType<typeof getDb>):
 	const sanitized = sanitizeUsername(baseName);
 	let username = sanitized || `user-${generateSecurePassword(8).toLowerCase()}`;
 
-	if (username.length < USERNAME_MIN_LENGTH) {
+	if (username.length < DERIVED_USERNAME_MIN_LENGTH) {
 		username = `user-${generateSecurePassword(8).toLowerCase()}`;
 	}
 
@@ -77,7 +84,8 @@ function generateUniqueUsername(baseName: string, db: ReturnType<typeof getDb>):
 	const MAX_USERNAME_SUFFIX = 999;
 
 	// Single query to find all existing suffixed usernames in one round trip.
-	// The base username is sanitized to [a-zA-Z0-9_.-] so LIKE wildcards (% _) are
+	// The base username is sanitized to the shared username character class, so LIKE
+	// wildcards (% _) are
 	// safe as literal characters in the prefix portion (SQLite LIKE treats _ and . literally
 	// unless ESCAPE is used, and % is not in the sanitized character set).
 	const prefix = `${username.slice(0, USERNAME_MAX_LENGTH - 4)}-`;

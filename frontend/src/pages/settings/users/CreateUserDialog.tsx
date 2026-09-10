@@ -19,8 +19,8 @@ import { usePasswordPolicy } from '@/hooks/usePasswordPolicy';
 import {
 	isValidEmail,
 	PASSWORD_MIN_LENGTH,
-	USERNAME_MIN_LENGTH,
 	validatePasswordComplexity,
+	validateUsername,
 } from '@/lib/validation';
 
 import { UserFormFields } from './UserFormFields';
@@ -51,13 +51,14 @@ interface CreateUserDialogProps {
 	onOpenChange: (open: boolean) => void;
 }
 
+/*
+ * Checked against the same rule the API enforces, and against the string the submit actually
+ * sends. This used to check the lower length bound alone, so a name carrying a space or a symbol
+ * passed here and was refused by the server; and it used to check a trimmed copy while the submit
+ * sent the untrimmed one, so a leading space passed here for the same reason.
+ */
 function getUsernameError(value: string): string | undefined {
-	const trimmed = value.trim();
-	if (trimmed.length === 0) return 'Username is required';
-	if (trimmed.length < USERNAME_MIN_LENGTH) {
-		return `Username must be at least ${USERNAME_MIN_LENGTH} characters`;
-	}
-	return undefined;
+	return validateUsername(value.trim()) ?? undefined;
 }
 
 function getEmailError(value: string): string | undefined {
@@ -129,7 +130,7 @@ export function CreateUserDialog({
 			}
 			return;
 		}
-		onCreate(form);
+		onCreate({ ...form, username: form.username.trim() });
 	}
 
 	const passwordErrorId = 'create-password-error';

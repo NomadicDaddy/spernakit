@@ -68,6 +68,15 @@ export type { ScheduledTaskStatus } from './scheduledTasks.ts';
 export { SYSTEM_METRIC_TYPES } from './systemMetricTypes.ts';
 export type { SystemMetricType } from './systemMetricTypes.ts';
 
+export {
+	USERNAME_CHARACTER_CLASS,
+	USERNAME_CHARACTERS_MESSAGE,
+	USERNAME_MAX_LENGTH,
+	USERNAME_MIN_LENGTH,
+	USERNAME_PATTERN,
+	validateUsername,
+} from './usernamePolicy.ts';
+
 export { WORKSPACE_ROLE_HIERARCHY, WORKSPACE_ROLES } from './workspaceRoles.ts';
 export type { WorkspaceMemberRole } from './workspaceRoles.ts';
 
