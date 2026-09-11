@@ -223,7 +223,9 @@
 		"test:dialog-focus-return": "bun scripts/test-dialog-focus-return.ts",
 		"test:dialog-form-survival": "bun scripts/test-dialog-form-survival.ts",
 		"test:username-parity": "bun scripts/test-username-parity.ts",
-		"test:step-up-password-message": "bun scripts/test-step-up-password-message.ts"
+		"test:step-up-password-message": "bun scripts/test-step-up-password-message.ts",
+		"check:smoke-steps": "bun scripts/check-smoke-steps.ts",
+		"test:smoke-steps": "bun scripts/test-smoke-steps.ts"
 	},
 	"type": "module",
 	"workspaces": [

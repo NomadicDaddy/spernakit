@@ -203,7 +203,7 @@ template instead of using the sync workflow.
 7. Run `bun install` if dependencies changed
 8. From the template: `bun run template:sync-features -- --app ../{app}` - copy the template's feature records into the app's `.aidd/`, then run `roadmap:apply` from aidd. The push form is the one to use here: the app has not been re-stamped yet, and the pull form skips on version mismatch. The file copy pass cannot do this at all - `.aidd/` is gitignored in the template, so it is invisible to every git-driven enumeration the other steps use. See [Template Feature Sync](#template-feature-sync).
 9. Bump `spernakit_version` in `package.json`
-10. Run `bun run smoke:qc`
+10. Run `bun run smoke:qc` - this includes `bun run check:smoke-steps`, which compares the app's `scripts/smoke.json` against the template's copy at the version just stamped and names any step the merge missed. An override on the runbook does not suppress it. See [Smoke Step Comparison](#smoke-step-comparison).
 11. Commit with `chore: sync spernakit template to vX.Y.Z` (or the short form `svX.Y.Z`)
 12. `bun run audit:lost-lines -- --app-dir ../{app} --rev {upgrade-commit}` - **blocking**. A non-zero exit means the copy deleted app-authored lines. Restore each one, or drop it deliberately, and amend the sync commit before cutting the release commit. See [Lost App Lines Audit](#lost-app-lines-audit).
 
@@ -291,6 +291,26 @@ Two other sections matter as much as the deltas. **WITHHOLDING NOTHING** names e
 **Exit codes**: advisory by default - withheld deltas are review items, not failures, because an override may be withholding exactly what its reason says it should. `--fail-on-delta` makes any withheld delta blocking, for a release gate that wants every entry re-merged or re-justified first. Unresolved entries always fail.
 
 **Self-test**: `bun run test:override-deltas` drives the shipped CLI against a two-tag template repository paired with an app frozen by its own overrides (`scripts/lib/template/override-deltas-fixture.ts`), reconstructing the nginx case beside a branded file, a scaffold-mapped file, an obsolete entry and a stale one, with a re-merged copy as the negative control.
+
+### Smoke Step Comparison
+
+A derived app that overrides `scripts/smoke.json` keeps its own copy of the runbook, and the override suppresses drift detection for that path, so every step the template adds afterwards is invisible. The release still delivers the scripts behind those steps and their cache entries, because neither file is overridden, while the steps that would run them are never merged. The app then runs a shorter gate list and reports green. Nothing compared the two files: `scripts/smoke-cache.ts` throws for a step with no cache entry, which is the opposite direction, and a step simply absent from the runbook never runs and nothing complains.
+
+**Running**: `bun run check:smoke-steps` from the derived app. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). It is a qc step, so `bun run smoke:qc` runs it, and in spernakit itself it skips because there is nothing to compare against.
+
+**What it compares**: the template side is read with `git show v{version}:scripts/smoke.json` at the version the app's own `package.json` declares, never from the template checkout's working tree. Between a template release and the dance that upgrades an app, the tip legitimately carries steps the app is not expected to have yet, and that is where the whole fleet sits for most of a release cycle. Every mode is compared, not qc alone, and a command that appears twice is compared by count.
+
+The comparison runs one way. An app command the template does not have is counted and ignored, because an app is entitled to its own steps. Only a template command the app lacks is a finding. Each finding names the mode, the command, its description, and the line in the app's own file where the mode block opens, which is where the step has to be inserted.
+
+It also checks the other half of the wiring: a step that runs `bun run <key>` where `package.json` declares no `<key>` script can never pass, so the key is named. `templateOnly` steps are exempt from that half and only that half. A derived app receives the whole runbook and the runner skips those steps at run time, while init withholds their `package.json` keys on purpose, so an app legitimately carries around sixteen steps whose keys are absent.
+
+**What it ignores**: `.templateoverrides` is not read at all. An override on `scripts/smoke.json` is exactly what hides the shortfall, so `KEEP` and `SKIP` cannot suppress this comparison, for that path or for `scripts/smoke.md` and `package.json`, the other two files a runbook merge touches.
+
+**Exit codes**: `0` when every template step is present and wired, `1` for findings, `2` for a bad flag or an unreadable input. Preconditions it cannot meet are `[SKIP]` lines that exit `0`, matching `check:drift`: no `spernakit_version`, no template repository, no such tag. `DRIFT_REQUIRED=1` turns each skip into a failure, so a dance run cannot pass on a template it could not read.
+
+The step is deliberately not cached. Half its input is a git tag in a sibling checkout that no local glob can name, and the skip path is what breaks caching: an app whose template tag is not fetched yet skips, exits `0`, and the cache records that as a pass, which would keep the finding hidden after the tag arrives even though nothing in the app changed.
+
+**Self-test**: `bun run test:smoke-steps` drives the shipped CLI against a two-tag template repository paired with an app frozen at the older runbook (`scripts/lib/smoke-steps/fixture.ts`), covering both modes, an override that fails to suppress the finding, an app-only step that is never reported, a withheld `templateOnly` key, and each skip with and without `DRIFT_REQUIRED=1`. It then repeats the proof against a real derived app: it copies a sibling app's `package.json` and runbook into a scratch directory, removes one template step, confirms the gate fails naming it, and confirms restoring it returns the gate to green. That half skips with a stated reason when no usable sibling is checked out.
 
 ### Module System
 

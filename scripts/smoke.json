@@ -123,6 +123,10 @@
 					"description": "Template drift check"
 				},
 				{
+					"command": "bun run check:smoke-steps",
+					"description": "Runbook carries every template smoke step at this app's template version"
+				},
+				{
 					"command": "bun run check:fresh-release",
 					"description": "Fresh public baseline content check",
 					"templateOnly": true
@@ -459,6 +463,10 @@
 				{
 					"command": "bun run test:override-deltas",
 					"description": "Override report names the template content each .templateoverrides entry withholds"
+				},
+				{
+					"command": "bun run test:smoke-steps",
+					"description": "Smoke step comparison names a template step a derived app's runbook lost"
 				},
 				{
 					"command": "bun run test:reset-packages",
