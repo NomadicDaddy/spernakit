@@ -3,6 +3,53 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.0] - 2026-09-11
+
+Minor release. Derived applications now detect quality checks missing from an overridden smoke
+runbook. The fleet testing fixes cover authorization ordering, workspace errors, form state,
+keyboard focus, validation messages, metrics, and health reporting.
+
+### Added
+
+- `check:smoke-steps` compares each application's smoke commands with its declared template
+  version, including overridden runbooks. It reports missing template steps and commands with no
+  package script. The check runs without caching so fetching a previously missing template tag
+  makes the comparison take effect immediately.
+
+### Fixed
+
+- Every authorization guard runs before body validation, including workspace membership and role
+  checks. Requests that should be refused no longer receive schema details first.
+- Workspace listings return 404 for an unknown workspace, and adding a member returns 404 for an
+  unknown user. Unauthorized callers continue to receive the same refusal regardless of existence.
+- Editing a workspace preserves typed names. Dialog forms remain mounted while a submission is
+  pending, and closing a dialog opened from a table row returns focus to that row's menu button.
+- Rejected URL filters leave the page usable with an error message and are not retried.
+- Username validation agrees between the browser and API. Password rechecks identify the current
+  password as the one refused, and union validation names the accepted values without echoing input.
+- Authentication settings display the pre-boot rate-limit kill-switch alongside the editable
+  setting. Tables display their actual page size, and onboarding links to the password form's page.
+- Dashboard history spans the requested interval. Memory health checks use the process's available
+  memory limit and configured thresholds.
+- The create-user dialog has a complete description. The stylesheet no longer opts into
+  cross-document view transitions.
+- The Vite proxy connects to the address family the backend binds instead of relying on localhost.
+- Documentation checks reject links to gitignored files, which are unavailable in a fresh clone.
+- Error-log verification waits for the logging transport to flush and the probe to finish within
+  its existing timeout, fixing failures on a cold dependency cache.
+- Container license inventories record package names and licenses without pinning live Alpine
+  package versions. Each built image retains and verifies its exact installed-version inventory.
+
+### Changed
+
+- Updated React and React DOM to 19.3.0, Vite to 8.3.0, lucide-react to 1.45.0, nodemailer to
+  10.0.6, the React type packages to 19.3.0, and eslint-plugin-jsdoc to 64.3.9. The lockfile and
+  generated license notices follow those versions.
+- Regenerated frontend size budgets from the React 19.3 production build. A controlled comparison
+  with the prior React runtime measured 29,324 additional JavaScript bytes, 7,161 additional
+  first-load Brotli bytes, and 7,899 additional first-load JavaScript gzip bytes. The critical-path
+  budget retains its 2 KB allowance; React preload and import-waterfall checks remain enforced.
+
 ## [3.46.0] - 2026-09-09
 
 Minor release. A release screenshot capture becomes evidence rather than a folder of images: the
