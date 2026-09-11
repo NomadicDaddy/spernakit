@@ -28,9 +28,11 @@ import { dirname, join, resolve } from 'node:path';
 import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { getConfig } from '../backend/src/config/configLoader.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { AUTH_ERROR_CODES } from '../shared/src/errorCodes.ts';
 import { type App, post, put, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { generateEcKeyPair } from './lib/crypto-keys.ts';
 import {
 	findSignInCodeInStepUp,
 	SIGN_IN_CODE,
@@ -184,6 +186,22 @@ async function run(): Promise<void> {
 
 	const { app, dispose } = await startFixture(repoRoot);
 	try {
+		const security = getConfig().security;
+		const mfaRoute = STEP_UP_ROUTES.find((route) => route.path === '/api/v1/auth/mfa/setup');
+		if (!mfaRoute) throw new Error('The step-up corpus is missing MFA setup');
+		security.mfaPrivateKey = '';
+		security.mfaPublicKey = '';
+		const unconfigured = await reject(app, mfaRoute);
+		assert(
+			unconfigured.status === 409 &&
+				unconfigured.code === AUTH_ERROR_CODES.AUTH_MFA_NOT_CONFIGURED,
+			'MFA setup must report missing server keys before checking the current password',
+		);
+
+		// Own the prerequisite: a fresh checkout has no workstation MFA signing keys.
+		const mfaKeys = generateEcKeyPair();
+		security.mfaPrivateKey = mfaKeys.privateKey;
+		security.mfaPublicKey = mfaKeys.publicKey;
 		await checkRejections(app);
 	} finally {
 		await dispose();

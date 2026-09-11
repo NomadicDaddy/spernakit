@@ -37,6 +37,8 @@ keyboard focus, validation messages, metrics, and health reporting.
 - Documentation checks reject links to gitignored files, which are unavailable in a fresh clone.
 - Error-log verification waits for the logging transport to flush and the probe to finish within
   its existing timeout, fixing failures on a cold dependency cache.
+- The current-password regression check provisions its own temporary MFA keys, so it exercises
+  password rejection in a fresh checkout as well as on a configured workstation.
 - Container license inventories record package names and licenses without pinning live Alpine
   package versions. Each built image retains and verifies its exact installed-version inventory.
 
