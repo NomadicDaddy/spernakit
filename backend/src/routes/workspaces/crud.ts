@@ -6,8 +6,8 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser, isSysop } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { workspacePlugin } from '../../plugins/workspace.ts';
 import { limitParam, pageParam } from '../../schemas/pagination.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
@@ -41,11 +41,7 @@ import {
 	buildWorkspaceUpdateAuditDetails,
 	type WorkspaceSettingsInput,
 } from './workspace-audit.ts';
-import {
-	findWorkspaceOrThrow,
-	requireWorkspaceAdmin,
-	type SetWithStatus,
-} from './workspace-helpers.ts';
+import { findWorkspaceOrThrow, type SetWithStatus } from './workspace-helpers.ts';
 
 interface CreateWorkspaceBody {
 	description?: string;
@@ -79,8 +75,7 @@ interface DeleteWorkspaceContext {
 }
 
 function handleUpdateWorkspace({ body, params, set, user }: UpdateWorkspaceContext) {
-	const ctx = requireWorkspaceAdmin(user, params.id, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 	const id = params.id;
 
 	// Fetch current workspace to compute settings diff
@@ -91,7 +86,7 @@ function handleUpdateWorkspace({ body, params, set, user }: UpdateWorkspaceConte
 		description: body.description,
 		name: body.name,
 		settings: body.settings,
-		updatedBy: ctx.authUser.id,
+		updatedBy: authUser.id,
 	});
 	if (!result) {
 		set.status = HTTP_STATUS.NOT_FOUND;
@@ -105,7 +100,7 @@ function handleUpdateWorkspace({ body, params, set, user }: UpdateWorkspaceConte
 		details: auditDetails,
 		entityId: String(id),
 		entityType: 'workspace',
-		...actorFields(ctx.authUser),
+		...actorFields(authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_UPDATED, { id });
@@ -113,8 +108,7 @@ function handleUpdateWorkspace({ body, params, set, user }: UpdateWorkspaceConte
 }
 
 function handleDeleteWorkspace({ params, set, user }: DeleteWorkspaceContext) {
-	const ctx = requireWorkspaceAdmin(user, params.id, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 	const id = params.id;
 
 	if (isDefaultWorkspace(id)) {
@@ -125,7 +119,7 @@ function handleDeleteWorkspace({ params, set, user }: DeleteWorkspaceContext) {
 		);
 	}
 
-	const deleted = softDelete(id, ctx.authUser.id);
+	const deleted = softDelete(id, authUser.id);
 	if (!deleted) {
 		set.status = HTTP_STATUS.NOT_FOUND;
 		return notFoundError('Workspace');
@@ -135,7 +129,7 @@ function handleDeleteWorkspace({ params, set, user }: DeleteWorkspaceContext) {
 		action: 'WORKSPACE_DELETE',
 		entityId: String(id),
 		entityType: 'workspace',
-		...actorFields(ctx.authUser),
+		...actorFields(authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_DELETED, { id });
@@ -185,6 +179,7 @@ const workspaceCrudRoutes = new Elysia({
 	prefix: '/workspaces',
 })
 	.use(authPlugin)
+	.use(workspacePlugin)
 	.get(
 		'/',
 		({ query, user }) => {
@@ -210,17 +205,8 @@ const workspaceCrudRoutes = new Elysia({
 	// API-only: No frontend caller (list endpoint covers UI needs). Available for API-key consumers.
 	.get(
 		'/:id',
-		({ params, set, user }) => {
-			const authUser = assertUser(user);
+		({ params, set }) => {
 			const id = params.id;
-
-			const guard = requireWorkspaceAccess({
-				set,
-				user: authUser,
-				workspaceId: id,
-			});
-			if (guard) return guard;
-
 			const result = findWorkspaceOrThrow(id, set);
 			if (result.error) return result.error;
 
@@ -230,6 +216,7 @@ const workspaceCrudRoutes = new Elysia({
 			detail: getWorkspaceByIdDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 			requireAuth: true,
+			requireWorkspaceMemberParam: true,
 		},
 	)
 	.post('/', handleCreateWorkspace, {
@@ -262,11 +249,13 @@ const workspaceCrudRoutes = new Elysia({
 		detail: updateWorkspaceDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireWorkspaceAdminParam: true,
 	})
 	.delete('/:id', handleDeleteWorkspace, {
 		detail: deleteWorkspaceDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireWorkspaceAdminParam: true,
 	});
 
 export { workspaceCrudRoutes };

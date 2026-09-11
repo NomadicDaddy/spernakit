@@ -6,8 +6,7 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 import type { WidgetInput } from '../../services/dashboardService.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, isSysop } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
+import { assertUser } from '../../guards/role.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
@@ -49,21 +48,6 @@ function toWidgetInputs(widgets: Static<typeof widgetSchema>[]): WidgetInput[] {
 	}));
 }
 
-function validateDashboardWriteWorkspace({
-	set,
-	user,
-	workspaceId,
-}: {
-	set: { status?: number | string };
-	user: Parameters<typeof isSysop>[0];
-	workspaceId: null | number;
-}): object | undefined {
-	if (isSysop(user) && workspaceId === null) {
-		return undefined;
-	}
-	return requireWorkspaceAccess({ set, user, workspaceId });
-}
-
 const dashboardCrudRoutes = new Elysia({
 	detail: { tags: ['Dashboards'] },
 	prefix: '/dashboards',
@@ -83,6 +67,7 @@ const dashboardCrudRoutes = new Elysia({
 		{
 			detail: listDashboardsDocs,
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -105,6 +90,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -114,13 +100,6 @@ const dashboardCrudRoutes = new Elysia({
 		'/',
 		({ body, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const workspaceGuard = validateDashboardWriteWorkspace({
-				set,
-				user: authUser,
-				workspaceId,
-			});
-			if (workspaceGuard) return workspaceGuard;
-
 			try {
 				const dashboard = createDashboard(authUser.id, {
 					name: body.name,
@@ -144,6 +123,7 @@ const dashboardCrudRoutes = new Elysia({
 			}),
 			detail: createDashboardDocs,
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspace: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -181,6 +161,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -205,6 +186,7 @@ const dashboardCrudRoutes = new Elysia({
 				id: t.Numeric({ minimum: 1 }),
 			}),
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspaceIfSent: true,
 		},
 	);
 

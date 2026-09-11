@@ -34,13 +34,15 @@ type ThresholdKey =
 
 const memoryThresholdFields = [
 	{
-		description: 'Heap usage percentage above which memory is marked degraded',
+		description:
+			'Percentage of the memory limit in use above which memory is marked degraded, measured as resident set against the container or host limit',
 		id: 'memoryDegraded',
 		key: 'memoryHeapDegradedThreshold' as const,
 		label: 'Memory Degraded Threshold (%)',
 	},
 	{
-		description: 'Heap usage percentage above which memory is marked unhealthy',
+		description:
+			'Percentage of the memory limit in use above which memory is marked unhealthy, measured as resident set against the container or host limit',
 		id: 'memoryUnhealthy',
 		key: 'memoryHeapUnhealthyThreshold' as const,
 		label: 'Memory Unhealthy Threshold (%)',

@@ -3,12 +3,23 @@
  * Regression coverage for an interrupted view transition staying quiet
  * (`.aidd/features/remediation-20260827-interrupted-view-transition-raises-aborterror`).
  *
- * The defect this gate was written for: the template opts every application into browser-native
+ * The defect this gate was written for: the template opted every application into browser-native
  * cross-document view transitions with a bare `@view-transition { navigation: auto }` rule, and
  * navigating again before the 220ms animation finished rejected the skipped transition's promises
  * with an `AbortError` that nothing anywhere held. It surfaced as an unhandled rejection in the
- * console and in any harness that counts one as a failure. Every page could produce it by being
- * clicked twice, and a crawler navigating faster than the animation produced it on every page.
+ * console and in any harness that counts one as a failure.
+ *
+ * The handling below gives the skip somewhere to land, and it holds for every transition the page
+ * is handed. It cannot hold a cross-document one, which is what the opt-in produced. Measured
+ * against the running template in both dev and a production preview build: the departing document
+ * gets a transition on `pageswap`, the destination document is handed none at all, so `pagereveal`
+ * arrives with `viewTransition` null, and the `AbortError` is raised in the destination's realm
+ * about five milliseconds after it starts parsing, which is before any module script has run.
+ * There is no object for the page to hold and no moment early enough to hold it from. The
+ * animation itself almost never ran either: seven of eight navigations skipped it outright. So the
+ * opt-in was removed, and the scan below is what keeps it out. The handling stays wired, because
+ * an application that declares the rule again for its own reasons still needs it, and because
+ * same-document transitions were never affected.
  *
  * The property under test is that the skip has somewhere to land and nothing else does: two
  * navigations inside the animation window raise nothing, a transition that failed for another
@@ -173,15 +184,24 @@ async function aNavigationWithoutATransitionIsInert(target: EventTarget): Promis
 }
 
 /**
- * The transitions themselves are unchanged, and the handling is wired in one place.
+ * The cross-document opt-in is not declared, and the handling is wired in one place.
  *
- * Specs 3 and 4. The fix is meant to be invisible: the same rule, the same 220ms, the same
- * reduced-motion block ahead of it, and a single call next to the stylesheet that starts them, so
- * an application inheriting the CSS inherits the handling rather than wiring it per page.
+ * Specs 3 and 4, read against what the browser actually does with them. The record asked for the
+ * transitions to be left as they were, on the understanding that the handling covered them. It
+ * does not cover the cross-document case, because the destination document is never handed the
+ * transition to hold, so the rule that turns those on has to stay out of the stylesheet.
+ * Everything that rule needed is still here: the same 220ms, the same reduced-motion block ahead
+ * of it, and a single subscription next to the stylesheet, so an application that puts the rule
+ * back inherits the handling rather than wiring it per page.
  */
-function theTransitionsAreUnchanged(): void {
+function theCrossDocumentOptInIsNotDeclared(): void {
 	const css = readFileSync(join(repoRoot, 'frontend', 'src', 'tailwind.css'), 'utf8');
-	assert(css.includes('navigation: auto'), 'the view-transition opt-in must still be declared');
+	// The comment above the block names the rule it is explaining, so read the declarations alone.
+	const declarations = css.replace(/\/\*[\s\S]*?\*\//g, '');
+	assert(
+		!/@view-transition\b/.test(declarations),
+		'the cross-document opt-in must stay out of the stylesheet: the destination document is handed no transition, so nothing in the page can hold the skip',
+	);
 	assert(
 		css.includes('animation-duration: 220ms'),
 		'the 220ms transition timing must be unchanged',
@@ -226,7 +246,7 @@ async function run(): Promise<void> {
 	await anUnrelatedFailureStillSurfaces(target);
 	await anUnrelatedRejectionIsUntouched();
 	await aNavigationWithoutATransitionIsInert(target);
-	theTransitionsAreUnchanged();
+	theCrossDocumentOptInIsNotDeclared();
 	theCrawlIsNotTaughtToIgnoreIt();
 
 	if (failures.length === 0) {

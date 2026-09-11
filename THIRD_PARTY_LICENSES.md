@@ -23,7 +23,7 @@ by license family, and it does not inventory the Alpine base system.
 | [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.30  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)           | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                 | 11.5.2  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 10.0.1  | MIT-0         |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 10.0.6  | MIT-0         |
 | [otpauth](https://www.npmjs.com/package/otpauth)                     | 9.5.2   | MIT           |
 | [pg](https://www.npmjs.com/package/pg)                               | 8.23.0  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                           | 10.3.1  | MIT           |
@@ -55,10 +55,10 @@ by license family, and it does not inventory the Alpine base system.
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.43.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.45.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
-| [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
-| [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
+| [react](https://www.npmjs.com/package/react)                                                 | 19.3.0  | MIT        |
+| [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.3.0  | MIT        |
 | [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.4   | MIT        |
 | [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.1   | MIT        |
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |

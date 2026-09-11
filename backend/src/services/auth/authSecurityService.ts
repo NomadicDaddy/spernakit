@@ -1,3 +1,4 @@
+import { getConfig } from '../../config/configLoader.ts';
 import { Type } from '../../config/configSchemaHelpers.ts';
 import { AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS } from '../../constants/rateLimit.ts';
 import { MS_PER_DAY } from '../../constants/scheduler.ts';
@@ -175,5 +176,31 @@ function meetsMinPasswordAge(passwordChangedAt: Date | null): boolean {
 	return age >= minAgeMs;
 }
 
-export { getAuthSettings, isPasswordExpired, meetsMinPasswordAge, updateAuthSettings };
+/**
+ * Whether auth rate limiting is actually throttling requests, rather than merely switched on.
+ *
+ * Two switches have to agree. `authRateLimitEnabled` is the record a SYSOP edits in Settings, and
+ * `rateLimit.authEnabled` is the pre-boot kill-switch a deployment sets in its config file to turn
+ * auth limits off without touching the database. `authRateLimitPlugin` returns early unless both
+ * are on, so reading only the first told an administrator that brute-force protection was active
+ * while every auth request went through unthrottled, and the Runtime Config page next door
+ * reported the opposite of the Authentication page.
+ *
+ * This is the one place that answers the question, so the plugin that enforces the limit and the
+ * settings API that describes it cannot drift apart again.
+ *
+ * @param settings - The stored auth security settings, already read by the caller.
+ * @returns True when a request to an auth route would be counted against a limit.
+ */
+function isAuthRateLimitInEffect(settings: AuthSecuritySettings): boolean {
+	return settings.authRateLimitEnabled && getConfig().rateLimit.authEnabled;
+}
+
+export {
+	getAuthSettings,
+	isAuthRateLimitInEffect,
+	isPasswordExpired,
+	meetsMinPasswordAge,
+	updateAuthSettings,
+};
 export type { AuthSecuritySettings };

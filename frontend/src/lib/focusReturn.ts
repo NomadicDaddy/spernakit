@@ -10,22 +10,43 @@
  *
  * `document.activeElement` alone is not enough to fix it. The common case here is a data-table row
  * menu: the user clicks "Edit" in a `DropdownMenu`, and that one click both closes the menu and
- * opens the dialog. React commits the unmount and the mount together, so by the time the dialog's
- * focus scope runs, the menu item that opened it is already detached and focus has fallen to
- * `<body>` — there is nothing left to read. What the user should get back is the row's menu button,
- * which is one step further back than any single snapshot can see.
+ * opens the dialog. The menu item is still attached when the dialog's focus scope reads the active
+ * element, so it looks like a usable answer, and it is gone by the time the dialog is dismissed —
+ * at which point focusing it would put focus on `<body>`, the thing this exists to prevent. What
+ * the user should get back is the row's menu button.
  *
- * Hence a short history. A capturing `focusin` listener records what has held focus, and the
- * opener is the most recent entry still attached to the document.
+ * That button is not in the focus history either. Radix opens a menu by moving focus from the
+ * trigger into the menu content in one step, and the trigger never raises a `focusin` of its own,
+ * so no record of it is made. It has to be found rather than remembered: menu content carries
+ * `aria-labelledby` pointing at the trigger's id, which is how a candidate inside a menu is turned
+ * into the button that opened it.
+ *
+ * The history covers the rest — an opener that has already handed focus on by the time the overlay
+ * mounts — with the most recent entry that is still attached winning.
  */
 
 /**
- * Eight is enough to step back past a menu item and its menu content to the trigger that opened
- * them, which is the longest chain this app actually produces, while keeping the array short enough
- * that nothing is retained for long. Entries are dropped as they age out, and a detached element is
- * skipped rather than held on to, so this does not keep removed DOM alive.
+ * Eight is enough to span the openers this app actually produces while keeping the array short
+ * enough that nothing is retained for long. Entries are dropped as they age out, and a detached
+ * element is skipped rather than held on to, so this does not keep removed DOM alive.
  */
 const HISTORY_LIMIT = 8;
+
+/**
+ * Radix renders `DropdownMenu` content, its sub-content, and every item inside them under
+ * `role="menu"`, and unmounts the lot when the menu closes. This app has no menubar and no context
+ * menu, so nothing matching this stays on the page.
+ */
+const MENU_CONTENT = '[role="menu"]';
+
+/**
+ * How many menus deep to keep walking out toward a trigger that is not itself in a menu.
+ *
+ * A submenu's trigger is a menu item in its parent's content, so one hop is not always enough. This
+ * app nests one level; the bound is here so that a malformed or circular `aria-labelledby` cannot
+ * spin rather than because the depth is expected.
+ */
+const MENU_HOPS = 4;
 
 const history: HTMLElement[] = [];
 
@@ -61,10 +82,42 @@ function trackFocusHistory() {
 	);
 }
 
-function isUsableOrigin(element: HTMLElement | undefined): element is HTMLElement {
+function isUsableOrigin(element: HTMLElement | null): element is HTMLElement {
 	// `<body>` is excluded deliberately: it is where focus lands when it has been lost, so returning
 	// it would be indistinguishable from the defect this exists to fix.
 	return !!element && element.isConnected && element !== document.body;
+}
+
+/**
+ * The button a menu was opened from, given anything inside that menu's content.
+ *
+ * @param element - A candidate known to sit inside `[role="menu"]`.
+ * @returns The trigger the menu names in `aria-labelledby`, or `null` when there is no such link.
+ */
+function menuTrigger(element: HTMLElement): HTMLElement | null {
+	const triggerId = element.closest(MENU_CONTENT)?.getAttribute('aria-labelledby');
+	if (!triggerId) return null;
+
+	const trigger = document.getElementById(triggerId);
+	return trigger instanceof HTMLElement ? trigger : null;
+}
+
+/**
+ * Turn one focus candidate into somewhere focus can still be returned to, or `null`.
+ *
+ * @param candidate - An element that held focus.
+ * @returns The candidate itself, the trigger of the menu it belongs to, or `null` if neither is
+ *   usable.
+ */
+function resolveOrigin(candidate: HTMLElement | undefined): HTMLElement | null {
+	let element: HTMLElement | null = candidate ?? null;
+
+	for (let hop = 0; element !== null && hop <= MENU_HOPS; hop++) {
+		if (!element.closest(MENU_CONTENT)) return isUsableOrigin(element) ? element : null;
+		element = menuTrigger(element);
+	}
+
+	return null;
 }
 
 /**
@@ -75,11 +128,14 @@ function isUsableOrigin(element: HTMLElement | undefined): element is HTMLElemen
  */
 function getFocusOrigin(): HTMLElement | null {
 	const active = document.activeElement;
-	if (active instanceof HTMLElement && isUsableOrigin(active)) return active;
+	if (active instanceof HTMLElement) {
+		const resolved = resolveOrigin(active);
+		if (resolved) return resolved;
+	}
 
 	for (let index = history.length - 1; index >= 0; index--) {
-		const candidate = history[index];
-		if (isUsableOrigin(candidate)) return candidate;
+		const resolved = resolveOrigin(history[index]);
+		if (resolved) return resolved;
 	}
 
 	return null;

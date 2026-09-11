@@ -163,7 +163,11 @@ function getPasswordChangeStep(): OnboardingStep {
 			? 'The sysop account still has the password it was created with. Change it from that account so the documented default stops working.'
 			: 'The sysop account is no longer on the password it was created with.',
 		id: 'change-sysop-password',
-		link: '/profile/personal',
+		// Account, Security. The password form used to sit on Personal Info and this link stayed
+		// behind when it moved, so the one step that makes a security claim opened a page with
+		// nothing on it to act on. `test:onboarding-password-step` resolves the destination from the
+		// frontend source and fails if the form moves again.
+		link: '/profile/security',
 		title: 'Change the default sysop password',
 	};
 }

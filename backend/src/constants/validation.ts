@@ -1,3 +1,5 @@
+import { USERNAME_MAX_LENGTH, USERNAME_MIN_LENGTH, USERNAME_PATTERN } from 'spernakit-shared';
+
 /** Default date range for time-scoped queries (days). */
 const DATE_RANGE_DEFAULT_DAYS = 30;
 
@@ -26,14 +28,11 @@ const PASSWORD_MAX_LENGTH = 128;
 /** Minimum length for new passwords (registration, reset, admin-create). */
 const PASSWORD_MIN_LENGTH = 8;
 
-/** Maximum length for username fields. */
-const USERNAME_MAX_LENGTH = 50;
-
-/** Minimum length for username fields. */
-const USERNAME_MIN_LENGTH = 2;
-
-/** Allowed characters for usernames: alphanumeric plus underscore, dot, hyphen. */
-const USERNAME_PATTERN = '^[a-zA-Z0-9_.-]+$';
+/*
+ * The username bounds and character rule are re-exported from spernakit-shared rather than
+ * restated here. The browser reads the same module, so a form cannot accept a name the schemas
+ * below would refuse.
+ */
 
 export {
 	DATE_RANGE_DEFAULT_DAYS,

@@ -19,12 +19,24 @@ const ALL_ROUTES = join('backend', 'src', 'routes');
 
 /** The guards that decide reachability and then answer for a workspace that is not there. */
 const GUARDS = /\brequireWorkspace(Access|Admin|Role)\s*\(/;
+/**
+ * The guard a route declares as a route option instead of calling.
+ *
+ * The guards moved to the transform stage, which is ahead of validation, and a route reaches them
+ * now by writing the option rather than by calling the function from its handler. A scan that only
+ * reads handlers therefore reports a route as unguarded at the exact moment it starts guarding
+ * earlier. Both forms count: what the criterion is about is whether the route reaches a guard at
+ * all, not where in the request it does so.
+ */
+const GUARD_OPTIONS =
+	/\brequire(?:SelectedWorkspace(?:IfSent)?|WorkspaceAdminParam|WorkspaceMemberParam)\s*:\s*true/;
 
 /** The existence question itself, which belongs to the guards and to nothing under `routes/`. */
 const EXISTENCE_CHECK = /\bworkspaceExists\s*\(/;
 
 /** A route registration on a path that names a workspace, and the handler it was given. */
 interface Registration {
+	call: string;
 	handler: string;
 	line: number;
 	method: string;
@@ -122,6 +134,20 @@ function afterParams(text: string, from: number): number {
 }
 
 /**
+ * The whole route registration, from its opening parenthesis to the matching close.
+ *
+ * The options object is the last argument, so reading the registration whole is what lets the scan
+ * see a guard the route declares as an option.
+ *
+ * @param text - The whole file.
+ * @param from - Index to start looking for the opening parenthesis at.
+ * @returns The registration source, or an empty string when the parentheses do not balance.
+ */
+function callSource(text: string, from: number): string {
+	const end = afterParams(text, from);
+	return end === -1 ? '' : text.slice(text.indexOf('(', from), end);
+}
+/**
  * The source of the handler a route registration was given, inline or by name.
  *
  * A registration either carries its handler as an arrow function written in place, or names a
@@ -152,6 +178,7 @@ function registrations(file: SourceFile): Registration[] {
 	for (const match of file.text.matchAll(pattern)) {
 		const index = match.index;
 		found.push({
+			call: callSource(file.text, index),
 			handler: handlerBody(file.text, index + match[0].length),
 			line: file.text.slice(0, index).split('\n').length,
 			method: (match[1] ?? '').toUpperCase(),
@@ -171,7 +198,7 @@ function routesSkippingTheGuard(repoRoot: string): string[] {
 	const skipped: string[] = [];
 	for (const file of routeSources(repoRoot)) {
 		for (const route of registrations(file)) {
-			if (GUARDS.test(route.handler)) continue;
+			if (GUARDS.test(route.handler) || GUARD_OPTIONS.test(route.call)) continue;
 			skipped.push(`${file.path}:${String(route.line)} ${route.method} ${route.path}`);
 		}
 	}

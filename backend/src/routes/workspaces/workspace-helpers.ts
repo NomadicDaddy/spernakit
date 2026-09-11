@@ -2,11 +2,10 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { MAX_BATCH_SIZE } from '../../constants/pagination.ts';
-import { assertUser, isSysop } from '../../guards/role.ts';
+import { isSysop } from '../../guards/role.ts';
 import {
 	canModifyWorkspaceRole,
 	getWorkspaceMemberRole,
-	requireWorkspaceRole,
 	type WorkspaceMemberRole,
 } from '../../guards/workspaceAccess.ts';
 import { getById } from '../../services/workspaceService.ts';
@@ -107,27 +106,11 @@ function requireMembershipOrSysop(
 	return { error: null, role: wsRole };
 }
 
-/**
- * Assert auth user and verify workspace ADMIN role in one call.
- * Returns the authenticated user or an error response to short-circuit.
- */
-function requireWorkspaceAdmin(
-	user: AuthPayload | null,
-	workspaceId: number,
-	set: SetWithStatus,
-): { authUser: AuthPayload; ok: true } | { error: unknown; ok: false } {
-	const authUser = assertUser(user);
-	const guard = requireWorkspaceRole({ set, user: authUser, workspaceId }, 'ADMIN');
-	if (guard) return { error: guard, ok: false };
-	return { authUser, ok: true };
-}
-
 export {
 	checkRoleAssignment,
 	checkTargetModifiable,
 	findWorkspaceOrThrow,
 	requireMembershipOrSysop,
-	requireWorkspaceAdmin,
 	type SetWithStatus,
 	validateBatchSize,
 };

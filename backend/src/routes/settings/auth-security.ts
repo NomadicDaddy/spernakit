@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 
 import type { AuthPayload } from '../../plugins/auth.ts';
+import type { AuthSecuritySettings } from '../../services/auth/authSecurityService.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
@@ -52,6 +53,28 @@ async function handleRotateBackupKey({
 	return dataResponse(result);
 }
 
+/**
+ * Adds the config half of the auth rate limit switch to a settings payload.
+ *
+ * `authRateLimitEnabled` is only half the answer. A deployment can turn auth limits off before
+ * boot through `rateLimit.authEnabled` in its config file, and then the stored setting stays true
+ * while nothing is throttled. The page that renders this switch used to have no way of knowing
+ * that, so it told administrators their auth endpoints were protected when they were wide open.
+ *
+ * The config half travels on its own rather than pre-combined, because the page has to weigh it
+ * against a switch the user may be in the middle of changing. A combined value would go stale as
+ * soon as they touched the toggle. It is read-only: the PUT body does not accept it, since config
+ * is set before boot and not through this API.
+ *
+ * @param settings - The stored auth security settings.
+ * @returns The same settings with the config kill-switch state alongside them.
+ */
+function withRateLimitConfigState(
+	settings: AuthSecuritySettings,
+): { authRateLimitEnabledInConfig: boolean } & AuthSecuritySettings {
+	return { ...settings, authRateLimitEnabledInConfig: getConfig().rateLimit.authEnabled };
+}
+
 const settingsAuthSecurityRoutes = new Elysia({
 	detail: { tags: ['Settings'] },
 	prefix: '/settings',
@@ -60,21 +83,26 @@ const settingsAuthSecurityRoutes = new Elysia({
 	.get(
 		'/auth-security',
 		() => {
-			const settings = getAuthSettings();
-			return dataResponse(settings);
+			return dataResponse(withRateLimitConfigState(getAuthSettings()));
 		},
 		{
 			detail: {
 				description:
 					'Retrieves authentication security settings including password policy, ' +
 					'account lockout, and password expiry rules. Returns defaults if not configured. ' +
-					'Cached for 5 minutes. Requires ADMIN role or higher.',
+					'Cached for 5 minutes. Requires ADMIN role or higher. The response also carries ' +
+					'authRateLimitEnabledInConfig, the pre-boot rateLimit.authEnabled kill-switch. ' +
+					'Auth requests are throttled only when it and authRateLimitEnabled are both true, ' +
+					'so a client showing the switch should read both. It is read-only and cannot be ' +
+					'changed through this API.',
 				responses: {
 					'200': {
 						content: {
 							'application/json': {
 								examples: {
 									success: dataExample('Auth security settings', {
+										authRateLimitEnabled: true,
+										authRateLimitEnabledInConfig: true,
 										enableAccountLocking: true,
 										lockoutDurationMinutes: 15,
 										maxLoginAttempts: 5,
@@ -99,7 +127,7 @@ const settingsAuthSecurityRoutes = new Elysia({
 		'/auth-security',
 		({ body, user }) => {
 			const authUser = assertUser(user);
-			const settings = updateAuthSettings(body, authUser.id);
+			const settings = withRateLimitConfigState(updateAuthSettings(body, authUser.id));
 			logAudit({
 				action: 'SETTINGS_UPDATE',
 				details: { changes: body, section: 'auth-security' },
@@ -129,13 +157,17 @@ const settingsAuthSecurityRoutes = new Elysia({
 					'Updates authentication security settings. Only SYSOP role can modify ' +
 					'these settings. Settings control password policy, account lockout behavior, ' +
 					'and password expiry rules. All fields are optional - partial updates supported. ' +
-					'Changes are logged in audit trail.',
+					'Changes are logged in audit trail. The response carries the same read-only ' +
+					'authRateLimitEnabledInConfig field the GET returns; it reflects config and is ' +
+					'not accepted in the request body.',
 				responses: {
 					'200': {
 						content: {
 							'application/json': {
 								examples: {
 									success: dataExample('Updated auth security settings', {
+										authRateLimitEnabled: true,
+										authRateLimitEnabledInConfig: true,
 										enableAccountLocking: true,
 										lockoutDurationMinutes: 30,
 										maxLoginAttempts: 3,

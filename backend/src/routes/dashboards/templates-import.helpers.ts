@@ -2,8 +2,7 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, isSysop } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
+import { assertUser } from '../../guards/role.ts';
 import { checkRouteLimit, createRateLimitStore } from '../../plugins/rateLimit/index.ts';
 import {
 	type DashboardExport,
@@ -46,21 +45,6 @@ function checkSharedRateLimit(request: Request): { limited: boolean; retryAfter?
 	return { limited: false };
 }
 
-function validateDashboardWriteWorkspace({
-	set,
-	user,
-	workspaceId,
-}: {
-	set: { status?: number | string };
-	user: AuthPayload;
-	workspaceId: null | number;
-}): object | undefined {
-	if (isSysop(user) && workspaceId === null) {
-		return undefined;
-	}
-	return requireWorkspaceAccess({ set, user, workspaceId });
-}
-
 function handleImportDashboard({
 	body,
 	set,
@@ -73,9 +57,6 @@ function handleImportDashboard({
 	workspaceId: null | number;
 }) {
 	const authUser = assertUser(user);
-	const workspaceGuard = validateDashboardWriteWorkspace({ set, user: authUser, workspaceId });
-	if (workspaceGuard) return workspaceGuard;
-
 	if (body.version !== 1) {
 		set.status = HTTP_STATUS.BAD_REQUEST;
 		return badRequestError(`Unsupported dashboard export version: ${body.version}`);
@@ -135,9 +116,4 @@ function enforceSharedRateLimit(request: Request): void {
 	);
 }
 
-export {
-	checkSharedRateLimit,
-	enforceSharedRateLimit,
-	handleImportDashboard,
-	validateDashboardWriteWorkspace,
-};
+export { checkSharedRateLimit, enforceSharedRateLimit, handleImportDashboard };

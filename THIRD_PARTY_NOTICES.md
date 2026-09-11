@@ -4261,7 +4261,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.43.0
+### lucide-react@1.45.0
 
 License: ISC
 
@@ -4381,7 +4381,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@10.0.1
+### nodemailer@10.0.6
 
 License: MIT-0
 
@@ -5137,7 +5137,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react@19.2.8
+### react@19.3.0
 
 License: MIT
 
@@ -5165,7 +5165,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react-dom@19.2.8
+### react-dom@19.3.0
 
 License: MIT
 
@@ -5725,7 +5725,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### scheduler@0.27.0
+### scheduler@0.28.0
 
 License: MIT
 

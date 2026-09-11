@@ -104,6 +104,20 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-override-deltas.ts',
 		],
 	},
+	'test:smoke-steps': {
+		// The test drives the real CLI against a two-tag git fixture and then against a copy of a
+		// sibling app's runbook, so the comparison library, the reporter, the fixture builder and the
+		// real-app harness are all inputs, plus repo.ts for the version and tag lookup. The sibling
+		// checkouts are not inputs: the proof reads them but asserts about this repository's code, and
+		// it skips rather than fails when no usable sibling is present.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-smoke-steps.ts',
+			'scripts/lib/smoke-steps/*.ts',
+			'scripts/lib/template/repo.ts',
+			'scripts/test-smoke-steps.ts',
+		],
+	},
 	'test:template-drift': {
 		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is
 		// an input: classification, normalization, overrides and reporting all decide the verdict.

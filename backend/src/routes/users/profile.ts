@@ -82,7 +82,15 @@ async function handleChangePassword({ body, request, set, user }: ChangePassword
 		}
 		set.status = HTTP_STATUS.BAD_REQUEST;
 		if (result.error === SERVICE_ERRORS.INVALID_CREDENTIALS) {
-			return badRequestError(result.error, AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS);
+			/*
+			 * The service reports this one as a token, which used to travel to the browser as
+			 * the literal string `invalid_credentials`. The reader is looking at three password
+			 * fields and needs to know which one is wrong.
+			 */
+			return badRequestError(
+				'Current password is incorrect',
+				AUTH_ERROR_CODES.AUTH_CURRENT_PASSWORD_INVALID,
+			);
 		}
 		return badRequestError(result.error ?? 'Password change failed');
 	}
@@ -130,10 +138,16 @@ async function handleEmailChangeRequest({ body, set, user }: EmailChangeContext)
 	const result = await requestEmailChange(authUser.id, body.currentPassword, body.newEmail);
 	if (!result.success) {
 		if (result.reason === SERVICE_ERRORS.INVALID_PASSWORD) {
-			set.status = HTTP_STATUS.UNAUTHORIZED;
+			/*
+			 * 400 rather than 401, matching the password change above. A 401 says the session
+			 * is no longer good, and the client believes it: it refreshes the token and, if
+			 * that fails, signs the user out. Nothing is wrong with the session here. One
+			 * field of this form is wrong.
+			 */
+			set.status = HTTP_STATUS.BAD_REQUEST;
 			return badRequestError(
 				'Current password is incorrect',
-				AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+				AUTH_ERROR_CODES.AUTH_CURRENT_PASSWORD_INVALID,
 			);
 		}
 		if (result.reason === SERVICE_ERRORS.EMAIL_TAKEN) {

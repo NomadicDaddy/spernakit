@@ -11,12 +11,14 @@ import {
 	notFoundExample,
 	UNAUTHORIZED_EXAMPLE,
 } from '../../constants/responseExamples.ts';
+import { assertUser } from '../../guards/role.ts';
 import {
 	canModifyWorkspaceRole,
 	validateWorkspaceRole,
 	type WorkspaceMemberRole,
 } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
+import { workspacePlugin } from '../../plugins/workspace.ts';
 import {
 	bulkAddMembers,
 	bulkRemoveMembers,
@@ -24,11 +26,7 @@ import {
 } from '../../services/workspaceService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
 import { forbiddenError } from '../../utils/errorResponse.ts';
-import {
-	requireMembershipOrSysop,
-	requireWorkspaceAdmin,
-	validateBatchSize,
-} from './workspace-helpers.ts';
+import { requireMembershipOrSysop, validateBatchSize } from './workspace-helpers.ts';
 
 interface RejectedResult {
 	error: string;
@@ -83,8 +81,7 @@ interface BulkDeleteMembersContext {
 }
 
 function handleBulkDeleteMembers({ body, params, set, user }: BulkDeleteMembersContext) {
-	const ctx = requireWorkspaceAdmin(user, params.id, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 	const id = params.id;
 
 	const batchError = validateBatchSize(body.userIds.length, set);
@@ -92,7 +89,7 @@ function handleBulkDeleteMembers({ body, params, set, user }: BulkDeleteMembersC
 
 	// SYSOP bypasses role hierarchy; others must have higher role than targets
 	const { error: membershipError, role: requesterWsRole } = requireMembershipOrSysop(
-		ctx.authUser,
+		authUser,
 		id,
 		set,
 	);
@@ -130,11 +127,11 @@ const workspaceMembersBulkRoutes = new Elysia({
 	detail: { tags: ['Workspaces'] },
 })
 	.use(authPlugin)
+	.use(workspacePlugin)
 	.post(
 		'/:id/members/bulk',
 		({ body, params, set, user }) => {
-			const ctx = requireWorkspaceAdmin(user, params.id, set);
-			if (!ctx.ok) return ctx.error;
+			const authUser = assertUser(user);
 			const id = params.id;
 
 			const batchError = validateBatchSize(body.members.length, set);
@@ -142,7 +139,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 
 			// SYSOP bypasses workspace role hierarchy; others need per-member check
 			const { error: membershipError, role: wsRole } = requireMembershipOrSysop(
-				ctx.authUser,
+				authUser,
 				id,
 				set,
 			);
@@ -218,6 +215,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 			},
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 			requireAuth: true,
+			requireWorkspaceAdminParam: true,
 		},
 	)
 	.post('/:id/members/bulk-delete', handleBulkDeleteMembers, {
@@ -265,6 +263,7 @@ const workspaceMembersBulkRoutes = new Elysia({
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireWorkspaceAdminParam: true,
 	});
 
 export { workspaceMembersBulkRoutes };

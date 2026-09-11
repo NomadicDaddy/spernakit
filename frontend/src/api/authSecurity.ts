@@ -4,6 +4,14 @@ import { apiClient } from '@/api/client';
 
 interface AuthSecuritySettings {
 	authRateLimitEnabled: boolean;
+	/**
+	 * The pre-boot rateLimit.authEnabled kill-switch, reported by the server and not editable here.
+	 *
+	 * Auth requests are throttled only when this and authRateLimitEnabled are both true. Anything
+	 * that tells a user whether brute-force protection is active has to read both, or it repeats
+	 * the stored setting back while the deployment has limiting switched off.
+	 */
+	authRateLimitEnabledInConfig: boolean;
 	authRateLimitMaxRequests: number;
 	authRateLimitWindowMinutes: number;
 	enableAccountLocking: boolean;

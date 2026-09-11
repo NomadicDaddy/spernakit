@@ -1,10 +1,15 @@
 import { Elysia } from 'elysia';
 
+import { HTTP_STATUS } from '../constants/httpStatus.ts';
+import { type WorkspaceGuardContext } from '../guards/workspaceAccess.ts';
 import {
 	authorizeSelectedWorkspace,
-	type WorkspaceGuardContext,
-} from '../guards/workspaceAccess.ts';
+	authorizeSelectedWorkspaceIfSent,
+	authorizeWorkspaceAdminParam,
+	authorizeWorkspaceMemberParam,
+} from '../guards/workspaceAuthorize.ts';
 import { invalidWorkspaceHeaderError } from '../guards/workspaceHeader.ts';
+import { PreValidationRejection } from '../utils/preValidationRejection.ts';
 import { parseWorkspaceId } from '../utils/validation.ts';
 
 /**
@@ -37,12 +42,19 @@ const workspacePlugin = new Elysia({ name: 'workspace' })
 	 *
 	 * The reply itself comes from `guards/workspaceHeader.ts`, which owns every message about
 	 * this header so a caller cannot be told two different things about the same one.
+	 *
+	 * The check runs at the transform stage for the same reason the guards below it do. A request
+	 * whose workspace header cannot be read is a request whose scope is unknown, so answering it
+	 * after the body and query have been validated meant a caller was told what was wrong with
+	 * their body before being told the route never knew which workspace they meant.
 	 */
-	.onBeforeHandle({ as: 'scoped' }, ({ set, workspaceId, workspaceIdHeader }) => {
+	.onTransform({ as: 'scoped' }, ({ set, workspaceId, workspaceIdHeader }) => {
 		if (workspaceIdHeader === null || workspaceIdHeader.trim() === '') return;
 		if (workspaceId !== null) return;
 
-		return invalidWorkspaceHeaderError(set);
+		const rejection = invalidWorkspaceHeaderError(set);
+		const status = typeof set.status === 'number' ? set.status : HTTP_STATUS.BAD_REQUEST;
+		throw new PreValidationRejection(status, rejection);
 	})
 	/**
 	 * A route option that rejects a caller with no access to the selected workspace.
@@ -70,6 +82,43 @@ const workspacePlugin = new Elysia({ name: 'workspace' })
 		requireSelectedWorkspace: (enabled: boolean) => ({
 			transform(ctx) {
 				if (enabled) authorizeSelectedWorkspace(ctx as unknown as WorkspaceGuardContext);
+			},
+		}),
+		/**
+		 * Require access to the selected workspace, but only when one was selected.
+		 *
+		 * For routes where naming a workspace is optional. Sending no header is not a
+		 * cross-workspace request here, it means the request has nothing to do with a workspace,
+		 * so there is nothing to authorize and every caller may proceed.
+		 */
+		requireSelectedWorkspaceIfSent: (enabled: boolean) => ({
+			transform(ctx) {
+				if (enabled) {
+					authorizeSelectedWorkspaceIfSent(ctx as unknown as WorkspaceGuardContext);
+				}
+			},
+		}),
+		/**
+		 * Require workspace ADMIN on the workspace named by the route's `:id` parameter.
+		 *
+		 * For routes that identify their workspace in the path rather than through the
+		 * selected-workspace header. Writing this option is what moves the check ahead of body
+		 * validation; the handler that follows can take the caller's admin rights as settled.
+		 */
+		requireWorkspaceAdminParam: (enabled: boolean) => ({
+			transform(ctx) {
+				if (enabled) authorizeWorkspaceAdminParam(ctx);
+			},
+		}),
+		/**
+		 * Require membership of the workspace named by the route's `:id` parameter.
+		 *
+		 * The read-side counterpart of `requireWorkspaceAdminParam`, for routes that read a
+		 * workspace they name in the path rather than change it.
+		 */
+		requireWorkspaceMemberParam: (enabled: boolean) => ({
+			transform(ctx) {
+				if (enabled) authorizeWorkspaceMemberParam(ctx);
 			},
 		}),
 	});

@@ -41,8 +41,9 @@ const requestEmailChangeDocs = {
 		'password for step-up re-authentication. Sends a one-time confirmation link ' +
 		'to the NEW address and an informational notification to the OLD address. ' +
 		"The user's account email is NOT changed until the confirmation link is " +
-		'clicked via POST /auth/confirm-email-change. Returns 401 if the current ' +
-		'password is incorrect, 409 if the new email is already in use.',
+		'clicked via POST /auth/confirm-email-change. Returns 400 with ' +
+		'AUTH_CURRENT_PASSWORD_INVALID if the current password is incorrect, 409 if ' +
+		'the new email is already in use.',
 	responses: {
 		'200': {
 			content: {
@@ -56,6 +57,7 @@ const requestEmailChangeDocs = {
 			},
 			description: 'Email change pending confirmation.',
 		},
+		'400': badRequestExample('Current password is incorrect'),
 		'401': UNAUTHORIZED_EXAMPLE,
 		'409': conflictExample('Email address is already in use'),
 	},
@@ -67,7 +69,8 @@ const handleChangePasswordDocs = {
 		"Changes authenticated user's password. Requires current password " +
 		'for verification. New password must be 8-128 characters. On success, all ' +
 		'existing refresh tokens are invalidated (user must re-login on other ' +
-		'devices). Returns 400 if current password is incorrect.',
+		'devices). Returns 400 with AUTH_CURRENT_PASSWORD_INVALID if the current ' +
+		'password is incorrect.',
 	responses: {
 		'200': {
 			content: {

@@ -7,6 +7,11 @@
  * dependency set is the slice of the application its request passes through, so they move when
  * the product moves rather than when the toolchain does. `dependencies.ts` merges every map into
  * the single one the cache consumes.
+ *
+ * The gates whose question needs the API standing up live here. The ones whose world is the
+ * page rather than the server live in `steps-regressions-browser.ts`, and the ones that ask
+ * about workspaces live in `steps-regressions-workspace.ts`. Both were split out when the set
+ * outgrew the 300-line modularity gate.
  */
 
 import { COMMON_EXCLUDES } from './globs.ts';
@@ -48,6 +53,27 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-auth-before-validation.ts',
 		],
 	},
+	// Sends real sign-ins through the limiter and reads the settings route back, so its world is
+	// the rate limit plugin family, the auth security service that owns the shared rule, the login
+	// and settings routes the two probes use, and the card that states the result to a reader.
+	'test:auth-rate-limit-state': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/**',
+			'backend/src/create-api-app.ts',
+			'backend/src/db/seed/**',
+			'backend/src/plugins/**',
+			'backend/src/routes/auth/**',
+			'backend/src/routes/settings/auth-security.ts',
+			'backend/src/services/auth/authSecurityService.ts',
+			'backend/src/services/authService.ts',
+			'frontend/src/api/authSecurity.ts',
+			'frontend/src/pages/settings/auth/AuthRateLimitSection.tsx',
+			'frontend/src/pages/settings/auth/AuthenticationTab.tsx',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/test-auth-rate-limit-state.ts',
+		],
+	},
 	// Sets and reads the supersede link through the real routes against a temp database, so its
 	// world is the bug routes and both services behind them, the migrations that add the column
 	// the link lives in, the plugins those requests pass through, and the seed that supplies the
@@ -82,19 +108,6 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-bug-report-whitespace.ts',
 		],
 	},
-	// Imports the frontend page tree in process and renders it, so its world is most of
-	// frontend/src rather than a named handful of files: the query client, the API client the
-	// page fetches through, the page and its child components, and the app slug the source tree
-	// reads at import time.
-	'test:dashboard-not-found': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/src/config/defaults.json',
-			'frontend/src/**',
-			'scripts/lib/frontend-render.ts',
-			'scripts/test-dashboard-not-found.ts',
-		],
-	},
 	// Drives the real API in process against a temp database, so its world is the dashboard
 	// routes and services it calls, the plugins and guards those routes stack, and the schema.
 	'test:dashboard-share-revoke': {
@@ -126,9 +139,39 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
 	},
+	// Drives the memory runner against the live process with the thresholds moved around it, reading
+	// them out of a temp SQLite file, so its world is the health services, the defaults they fall
+	// back to, the settings store the thresholds live in, and the gate itself.
+	'test:memory-health-thresholds': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/constants/health.ts',
+			'backend/src/db/**',
+			'backend/src/services/health/**',
+			'backend/src/services/settings/**',
+			'backend/src/services/settingsService.ts',
+			'scripts/test-memory-health-thresholds.ts',
+		],
+	},
+	// Seeds a day of one-minute samples into a temp SQLite file and reads the history back through
+	// the query service, so its world is that service, the route whose cap and window it answers
+	// under, the schema and migrations the seed writes through, and the gate itself.
+	'test:metrics-history-window': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/constants/pagination.ts',
+			'backend/src/db/**',
+			'backend/src/routes/system/metrics.ts',
+			'backend/src/services/metrics/**',
+			'scripts/test-metrics-history-window.ts',
+		],
+	},
 	// Seeds through the real seed path and reads the checklist over the real API, so its world is
 	// the onboarding service and route, the accounts and settings the seed writes, the password
-	// writers it drives, and the guard those requests pass through.
+	// writers it drives, and the guard those requests pass through. It also resolves the step's link
+	// against the frontend, which adds the account pages and the route table it reads them from.
 	'test:onboarding-password-step': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -140,7 +183,25 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/services/onboardingService.ts',
 			'backend/src/services/user/userPasswordAdminService.ts',
 			'backend/src/utils/auth/**',
+			'frontend/src/pages/profile/**',
+			'frontend/src/routes/lazyPages.ts',
+			'frontend/src/routes/routeGroups.tsx',
+			'scripts/lib/password-form-route.ts',
 			'scripts/test-onboarding-password-step.ts',
+		],
+	},
+	// Reads the shared page-size module in process and scans the two Selects that render from it, so
+	// its world is that module, both controls, the store that holds the size, and the server-side
+	// default the module is kept equal to.
+	'test:page-size-options': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/user/userSettingsService.ts',
+			'frontend/src/components/shared/data-table/DataTablePagination.tsx',
+			'frontend/src/lib/pageSize.ts',
+			'frontend/src/pages/profile/DisplayPreferences.tsx',
+			'frontend/src/stores/layoutStore.ts',
+			'scripts/test-page-size-options.ts',
 		],
 	},
 	// Boots the real application and sends one anonymous request per registered route, so its
@@ -165,6 +226,24 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-retention-zero.ts'],
 	},
+	// Drives the three routes that re-check a current password in process and then reads those
+	// route files back for a rejection that answers with the sign-in code, so its world is the
+	// route tree, the services behind it, the shared error codes both sides name, the module the
+	// browser keeps its sentences in, and the fixture, scan and gate themselves.
+	'test:step-up-password-message': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/routes/**',
+			'backend/src/services/auth/**',
+			'backend/src/utils/errorResponse.ts',
+			'backend/src/utils/errorResponseBuilders.ts',
+			'frontend/src/api/errorHandling.ts',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/step-up-password.ts',
+			'scripts/test-step-up-password-message.ts',
+			'shared/src/errorCodes.ts',
+		],
+	},
 	// Runs in process against the loaded configuration: what it asserts moves when the file
 	// validation service, the request-body ceiling, or the configured MIME allowlist and size
 	// limits move, so the config tree is part of its world alongside the backend source.
@@ -172,52 +251,29 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/src/**', 'config/**', 'scripts/test-upload-validation.ts'],
 	},
-	// Dispatches its own navigations at the module that holds a skipped transition's promises, and
-	// then reads the three files it cannot reach from an assertion: the stylesheet the transitions
-	// come from, the entry point that subscribes, and the crawl harness that has to stay able to
-	// fail on this noise.
-	'test:view-transition-abort': {
+	// Puts a corpus of names to the shared validator and to the real create-user route in process,
+	// and then reads both source trees for a rival copy of the rule, so its world is the frontend
+	// and backend sources, the policy module they read, the fixture that boots the API, and the
+	// scan and gate themselves.
+	'test:username-parity': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'frontend/src/lib/viewTransitions.ts',
-			'frontend/src/main.tsx',
-			'frontend/src/tailwind.css',
-			'scripts/crawltest-events.ts',
-			'scripts/crawltest-types.ts',
-			'scripts/test-view-transition-abort.ts',
-		],
-	},
-	// Drives two routes from different modules in process and then reads the whole backend and
-	// frontend source for a route that words the header its own way, so its world is both source
-	// trees plus the documents its spelling scan covers.
-	'test:workspace-header-contract': {
-		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/drizzle/**',
 			'backend/src/**',
-			'docs/**/*.md',
 			'frontend/src/**',
-			'scripts/lib/workspace-header-scan.ts',
-			'scripts/lib/workspace-header-world.ts',
-			'scripts/test-workspace-header-contract.ts',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/username-parity.ts',
+			'scripts/test-username-parity.ts',
+			'shared/src/usernamePolicy.ts',
 		],
 	},
-	// Same in-process temp-DB shape as `test:impersonation-audit`: it applies the migrations and
-	// exercises the guard module, so its world is the backend source plus the gate script itself.
-	'test:workspace-role-predicate': {
-		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-workspace-role-predicate.ts'],
-	},
-	// Drives every workspace sub-resource route in process and then scans the route tree, so its
-	// world is the backend source it sends requests through plus both halves of its own harness.
-	'test:workspace-subresource-existence': {
+	// Builds validation failures in process against the shared message formatter, so its world is
+	// that formatter and the gate itself. The route schemas it describes are covered by the gates
+	// that exercise those routes.
+	'test:validation-union-values': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'backend/drizzle/**',
-			'backend/src/**',
-			'scripts/lib/workspace-subresource-scan.ts',
-			'scripts/lib/workspace-subresource-world.ts',
-			'scripts/test-workspace-subresource-existence.ts',
+			'backend/src/utils/validationErrorMessage.ts',
+			'scripts/test-validation-union-values.ts',
 		],
 	},
 };
