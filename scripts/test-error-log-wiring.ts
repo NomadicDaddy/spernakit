@@ -25,6 +25,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { kill } from 'node:process';
 
 import { spawnBackground } from './lib/process/spawn-background.ts';
 
@@ -69,6 +70,16 @@ function stripAnsi(text: string): string {
 	return text.replaceAll(new RegExp(`${ESC}\\[[0-9;]*m`, 'g'), '');
 }
 
+/** Whether a spawned probe is still alive. Signal 0 asks without sending anything. */
+function isRunning(pid: number): boolean {
+	try {
+		kill(pid, 0);
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 async function waitFor(check: () => boolean): Promise<boolean> {
 	const deadline = Date.now() + WAIT_MS;
 	while (Date.now() < deadline) {
@@ -85,10 +96,20 @@ async function runViaDescriptors(logsDir: string, name: string, args: string[]):
 
 	const errorLog = join(logsDir, `${name}.error.log`);
 	const marker = args[1] ?? '';
-	await waitFor(() => read(errorLog).includes(`${marker} raw stderr line`));
-	// The raw line is written last but through a different stream than the logger's transport
-	// worker, so give the worker the rest of its flush window before reading.
-	await Bun.sleep(1500);
+
+	// Wait for the logged entry, not for the raw line. The raw line is a direct write to the
+	// process's own stderr; the entry travels through a transport worker that has to load its
+	// target modules before it can write anything at all, and on a cold module cache that start
+	// costs seconds. Waiting on the raw line and then settling for a fixed moment read the files
+	// while the worker was still loading, which failed the run that had just reinstalled packages
+	// and passed every run after it.
+	await waitFor(() => {
+		const text = read(errorLog);
+		return text.includes(`${marker} error entry`) && text.includes(`${marker} raw stderr line`);
+	});
+	// The probe exits once its transport has drained, so waiting for it to go also covers the
+	// targets this function does not read, such as the rotated file.
+	await waitFor(() => !isRunning(pid));
 }
 
 /** Spawn the probe the way dev-with-logs.ts does: streams piped, stripped, and written on. */
