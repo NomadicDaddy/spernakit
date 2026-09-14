@@ -18,7 +18,8 @@ Secret handling, date preferences, static delivery verification, and quality gat
   permission repair only inside a verified `/app/config` mount; smoke runs secure the host copy
   before mounting it. Operators must secure their own mounted config directory on the host.
 - Child-process output redacts secrets across output chunks, multiline values, escaped values,
-  bearer tokens, and assignments before writing logs.
+  bearer tokens, and assignments before writing logs. Detached supervisors let both log streams
+  drain before exiting, so Linux does not lose the scrubber's retained tail.
 - Audit lifecycle handling preserves request exclusions, response details, and actor attribution.
 - Date and time formatting respects the selected date order, seconds, clock format, and timezone,
   including shared dashboard timestamps.
@@ -34,7 +35,9 @@ Secret handling, date preferences, static delivery verification, and quality gat
   maintenance; the documented procedure removes it after rotation and validation.
 - QC cache status loads the cache once and shares file hashes across checks. Fast QC stops at
   the first failure; full QC continues collecting independent failures. Prettier uses a persistent
-  cache, and regression checks cover the changed security, delivery, and cache behavior.
+  cache, and the tracked-metadata format gate compares exact files through Prettier's API instead
+  of relying on platform-dependent ignore discovery. Regression checks cover the changed security,
+  delivery, and cache behavior.
 - Added exact pins for `@zxcvbn-ts/core` 4.2.0 and `@zxcvbn-ts/language-common` 4.1.3, with
   matching lockfile and license notices.
 

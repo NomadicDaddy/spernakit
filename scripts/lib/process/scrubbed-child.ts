@@ -41,7 +41,10 @@ function runScrubbedChild(argv = process.argv.slice(2)): void {
 	child.on('close', (code) => {
 		stdout.end(stdoutScrubber.finish());
 		stderr.end(stderrScrubber.finish());
-		process.exit(code ?? 1);
+		// Do not call process.exit() here. The scrubbers deliberately retain a tail so secrets split
+		// across chunks cannot leak, and WriteStream.end() may still be flushing that tail on Linux.
+		// Setting the exit code lets both streams drain before the supervisor exits naturally.
+		process.exitCode = code ?? 1;
 	});
 }
 
