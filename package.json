@@ -199,6 +199,7 @@
 		"test:lost-lines": "bun scripts/test-lost-lines.ts",
 		"test:memory-health-thresholds": "bun scripts/test-memory-health-thresholds.ts",
 		"test:metrics-history-window": "bun scripts/test-metrics-history-window.ts",
+		"test:mfa-token-transport": "bun scripts/test-mfa-token-transport.ts",
 		"test:mutation-denylist": "bun scripts/test-mutation-denylist.ts",
 		"test:nginx-security": "bun scripts/test-nginx-security.ts",
 		"test:override-deltas": "bun scripts/test-override-deltas.ts",
