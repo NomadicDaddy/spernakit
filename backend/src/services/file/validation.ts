@@ -239,6 +239,10 @@ export function normalizeMimeType(mimeType: string): string {
 	return mimeType.split(';')[0]?.trim() ?? mimeType;
 }
 
+function requiresRecognizedSignature(mimeType: string): boolean {
+	return mimeType === 'application/pdf' || mimeType.startsWith('image/');
+}
+
 /**
  * Validate a file against config constraints and verify content matches claimed type.
  *
@@ -247,7 +251,7 @@ export function normalizeMimeType(mimeType: string): string {
  * @param data - File content buffer for magic byte validation
  * @returns Error message or null if valid
  */
-export function validateFile(mimeType: string, size: number, data?: Buffer): null | string {
+export function validateFile(mimeType: string, size: number, data: Buffer): null | string {
 	const config = getConfig();
 	const normalizedMimeType = normalizeMimeType(mimeType);
 
@@ -264,24 +268,23 @@ export function validateFile(mimeType: string, size: number, data?: Buffer): nul
 		return `MIME type '${normalizedMimeType}' is not allowed`;
 	}
 
-	// Verify file content matches claimed MIME type via magic bytes
-	if (data && data.length >= MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES) {
-		const detectedMime = detectMimeType(data, MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES);
-		if (detectedMime) {
-			const compatible = COMPATIBLE_MIME_TYPES[detectedMime];
-			if (compatible && !compatible.includes(normalizedMimeType)) {
-				return `File content does not match claimed MIME type '${normalizedMimeType}'`;
-			}
+	// Images and PDFs fail closed when the body is too short or its signature is unknown.
+	const detectedMime = detectMimeType(data, MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES);
+	if (!detectedMime && requiresRecognizedSignature(normalizedMimeType)) {
+		return `File content has no recognized signature for claimed MIME type '${normalizedMimeType}'`;
+	}
+	if (detectedMime) {
+		const compatible = COMPATIBLE_MIME_TYPES[detectedMime];
+		if (compatible && !compatible.includes(normalizedMimeType)) {
+			return `File content does not match claimed MIME type '${normalizedMimeType}'`;
 		}
 	}
 
 	// Validate text-based uploads for dangerous content (HTML injection, invalid JSON).
 	// Binary bodies fall straight back out of this call: the size checks above and
 	// server.maxRequestBodySize are what bound them, not the text line-length check.
-	if (data) {
-		const textError = validateTextContent(data, normalizedMimeType);
-		if (textError) return textError;
-	}
+	const textError = validateTextContent(data, normalizedMimeType);
+	if (textError) return textError;
 
 	return null;
 }

@@ -204,7 +204,7 @@
 				},
 				{
 					"command": "bun run test:upload-validation",
-					"description": "Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
+					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},
 				{
 					"command": "bun run test:error-log-wiring",

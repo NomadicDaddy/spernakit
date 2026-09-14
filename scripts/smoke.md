@@ -188,7 +188,7 @@ Steps (in order):
 20. `bun run test:workspace-role-predicate`
     - hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it.
 21. `bun run test:upload-validation`
-    - Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize.
+    - Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize.
 22. `bun run test:error-log-wiring`
     - Application errors reach logs/<name>.error.log in every logging mode, redacted the same way, while the main log keeps every level.
 23. `bun run test:onboarding-password-step`
