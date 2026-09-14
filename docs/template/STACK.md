@@ -181,6 +181,12 @@ graph TD
 - **JWT in HTTP-only cookies** with automatic token validation
 - **Account security**: Failed login tracking, configurable account locking (via database settings), password reset flows, email verification on registration, password expiry and minimum age enforcement, optional forced password change via `requiresPasswordChange` flag, self-registration toggle
 - **JWT token revocation**: Database-backed SHA-256 blacklist with scheduled cleanup for immediate token invalidation on logout (persists across restarts)
+- **Refresh compromise**: Token reuse or an ambiguous rotation collision revokes the user's sessions
+  and clears auth cookies. Registration, reset, and password changes also reject passwords that
+  score below 3 in zxcvbn with the template's application terms.
+- **Field-encryption maintenance**: `security:rotate-field-encryption` rewrites shared-helper
+  encrypted database fields atomically. See [SECURITY.md](SECURITY.md#6-key-rotation) for the
+  current/previous key procedure and rollback requirements.
 
 #### Data Management
 
@@ -560,5 +566,5 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the deployment guide.
 
 ### Template Version
 
-**Spernakit v3.47.0** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
+**Spernakit v3.47.1** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
 release changes.
