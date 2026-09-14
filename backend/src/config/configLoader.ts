@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { registerLogSecretValues } from '../utils/logSecretRedaction.ts';
 import { configLogger } from './configLogger.ts';
 import { type AppConfig, appConfigSchema } from './configSchema.ts';
 import { replaceSecretsWithEnvVars } from './configSecrets.ts';
@@ -109,6 +110,7 @@ function initializeConfig(): AppConfig {
 	const userConfig = loadOrCreateUserConfig(configPath, configDir, defaults);
 	const merged = deepMerge(defaults, userConfig);
 	const withEnvVars = replaceSecretsWithEnvVars(merged, slug);
+	registerLogSecretValues(withEnvVars);
 	ensureFrontendOrigin(withEnvVars);
 
 	const validated = parseConfigSchema(withEnvVars);

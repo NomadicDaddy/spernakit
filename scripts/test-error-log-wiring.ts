@@ -70,6 +70,44 @@ function stripAnsi(text: string): string {
 	return text.replaceAll(new RegExp(`${ESC}\\[[0-9;]*m`, 'g'), '');
 }
 
+function assertSecretScrubbing(text: string, label: string, marker: string): void {
+	const configuredSecret = `${marker}-configured\nsecret/%`;
+	const encodedSecret = encodeURIComponent(configuredSecret);
+	const expectedLabels = [
+		`${marker}-array`,
+		`${marker}-bearer`,
+		`${marker}-error-cause`,
+		`${marker}-error-message`,
+		`${marker}-error-stack`,
+		`${marker}-escaped`,
+		`${marker}-format`,
+		`${marker}-generic`,
+		`${marker}-short`,
+		`${marker}-split`,
+		`${marker}-assignment`,
+		`${marker}-uri`,
+	];
+	const forbiddenValues = [
+		configuredSecret,
+		JSON.stringify(configuredSecret).slice(1, -1),
+		encodedSecret,
+		encodedSecret.replace(/%[0-9A-F]{2}/g, (match) => match.toLowerCase()),
+		`${marker}.bearer-token.signature`,
+		`${marker}-assignment-secret`,
+		`${marker}-split-file-value`,
+		'q7!',
+	];
+
+	assert(
+		expectedLabels.every((expected) => text.includes(expected)),
+		`${label}: every recursive string, array, Error, encoded, Bearer, and assignment fixture must reach the destination`,
+	);
+	assert(
+		forbiddenValues.every((secret) => !text.includes(secret)),
+		`${label}: configured, encoded, Bearer, or assignment secret material reached the destination`,
+	);
+}
+
 /** Whether a spawned probe is still alive. Signal 0 asks without sending anything. */
 function isRunning(pid: number): boolean {
 	try {
@@ -144,7 +182,9 @@ function assertCase(testCase: Case, logsDir: string, name: string, marker: strin
 		`${label}: the error log must carry the same redaction as the main log, censoring the secret-shaped field`,
 	);
 	assert(
-		mainLog.includes(`${marker} error entry`) && mainLog.includes(`${marker} info entry`),
+		mainLog.includes(`${marker} bootstrap entry`) &&
+			mainLog.includes(`${marker} error entry`) &&
+			mainLog.includes(`${marker} info entry`),
 		`${label}: the main log must still hold every level, so errors are copied rather than moved`,
 	);
 	assert(
@@ -159,6 +199,8 @@ function assertCase(testCase: Case, logsDir: string, name: string, marker: strin
 		!errorLog.includes(ESC),
 		`${label}: the error log is read back out of a file, so it must not carry terminal escapes`,
 	);
+	assertSecretScrubbing(mainLog, `${label} main log`, marker);
+	assertSecretScrubbing(errorLog, `${label} error log`, marker);
 }
 
 function assertRolledFile(rollPath: string, marker: string): void {
@@ -174,6 +216,7 @@ function assertRolledFile(rollPath: string, marker: string): void {
 		contents.includes(`${marker} error entry`) && contents.includes(`${marker} info entry`),
 		'prod-file: the rotated file must still receive every level, unchanged by the error target',
 	);
+	assertSecretScrubbing(contents, 'prod-file rotated log', marker);
 }
 
 const workRoot = mkdtempSync(join(tmpdir(), 'spernakit-error-log-'));
