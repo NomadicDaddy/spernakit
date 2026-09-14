@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import type { SecurityKeys } from './keys.ts';
 
+import { secureSecretPath } from '../../../backend/src/config/secretPermissions.ts';
 import { updateJsonFile } from './json-files.ts';
 
 export interface SetupSettings {
@@ -86,6 +87,7 @@ export function createJsonConfig(s: SetupSettings, keys: SecurityKeys): void {
 		fs.mkdirSync(configDir, { recursive: true });
 		console.log(`✅ Created: ${configDir}/`);
 	}
+	secureSecretPath(configDir, 'directory');
 
 	const defaults = JSON.parse(fs.readFileSync(defaultsPath, 'utf8')) as Record<string, unknown>;
 	applyBranding(defaults, s);
@@ -117,6 +119,7 @@ export function createJsonConfig(s: SetupSettings, keys: SecurityKeys): void {
 	}
 
 	fs.writeFileSync(configPath, JSON.stringify(defaults, null, '\t'), 'utf8');
+	secureSecretPath(configPath, 'file');
 	console.log(`✅ Created: ${configPath}`);
 
 	updateJsonFile(defaultsPath, (defaultsJson) => applyBranding(defaultsJson, s));

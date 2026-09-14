@@ -106,7 +106,7 @@ async function handleLogin({ body, request, set }: LoginContext) {
 
 	const csrfToken = await generateAndStoreCsrfToken(result.payload.id);
 
-	setAuthCookies(set, config.security, tokens, request);
+	setAuthCookies(set, config.security, tokens);
 
 	// Publish the identity for the audit plugin: the auth cookie goes out on the
 	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
@@ -162,7 +162,7 @@ function revokeAccessTokenFromRequest(request: Request): void {
 function handleLogout({ request, set }: LogoutContext) {
 	const config = getConfig();
 	revokeAccessTokenFromRequest(request);
-	clearAuthCookies(set, config.security, request);
+	clearAuthCookies(set, config.security);
 	setCacheHeaders(set, 'NO_CACHE');
 	return successResponse();
 }

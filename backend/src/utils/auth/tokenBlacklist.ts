@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lt } from 'drizzle-orm';
+import { and, eq, gt, gte, inArray, lt } from 'drizzle-orm';
 import { createHash } from 'node:crypto';
 
 import { MAX_CLEANUP_BATCH_SIZE } from '../../constants/scheduler.ts';
@@ -103,7 +103,7 @@ function isUserTokensRevokedAfter(userId: number, tokenIssuedAt: Date): boolean 
 			and(
 				eq(tokenBlacklist.userId, userId),
 				gt(tokenBlacklist.expiresAt, now),
-				gt(tokenBlacklist.createdAt, tokenIssuedAt),
+				gte(tokenBlacklist.createdAt, tokenIssuedAt),
 			),
 		)
 		.limit(1)

@@ -42,8 +42,10 @@ const SECTION_TO_MODE: Record<string, string> = {
 function renderSteps(steps: SmokeStep[]): string {
 	return steps
 		.map((step, index) => {
+			const ordinal = String(index + 1);
 			const description = step.description.trim().replace(/\.$/, '');
-			return `${index + 1}. \`${step.command}\`\n    - ${description}.`;
+			const nestedIndent = ' '.repeat(Math.max(4, ordinal.length + 2));
+			return `${ordinal}. \`${step.command}\`\n${nestedIndent}- ${description}.`;
 		})
 		.join('\n');
 }

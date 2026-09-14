@@ -117,7 +117,7 @@ async function handleChangePassword({ body, request, set, user }: ChangePassword
 	);
 	revokeAllUserTokens(authUser.id, new Date(Date.now() + refreshTtlMs));
 
-	clearAuthCookies(set, config.security, request);
+	clearAuthCookies(set, config.security);
 
 	return successResponse();
 }

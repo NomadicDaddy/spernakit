@@ -145,9 +145,13 @@ function validateKnownDevKeys(nodeEnv: string, security: AppConfig['security']):
 	);
 }
 
-function validateEncryptionKeyFormat(nodeEnv: string, encryptionKey: string): void {
+function validateEncryptionKeyFormat(
+	nodeEnv: string,
+	encryptionKey: string,
+	field = 'security.encryptionKey',
+): void {
 	if (nodeEnv === 'development') return;
-	const issues = checkEncryptionKeyFormat(encryptionKey);
+	const issues = checkEncryptionKeyFormat(encryptionKey, field);
 	emitSecretIssues(issues, 'Invalid encryption key format');
 }
 
@@ -186,6 +190,12 @@ function collectSecretIssues(
 		...checkMfaKeyPair(nodeEnv, security),
 		...(isDevOrTest ? [] : checkKnownDevKeys(security)),
 		...(isDev ? [] : checkEncryptionKeyFormat(security.encryptionKey)),
+		...(isDev || !security.encryptionKeyPrevious
+			? []
+			: checkEncryptionKeyFormat(
+					security.encryptionKeyPrevious,
+					'security.encryptionKeyPrevious',
+				)),
 	];
 }
 

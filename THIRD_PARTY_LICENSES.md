@@ -14,20 +14,22 @@ by license family, and it does not inventory the Alpine base system.
 
 ## Backend runtime dependencies
 
-| Package                                                              | Version | License       |
-| -------------------------------------------------------------------- | ------- | ------------- |
-| [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger) | 1.3.1   | MIT           |
-| [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox) | 0.34.52 | MIT           |
-| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.23.1  | MIT           |
-| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)             | 0.45.2  | Apache-2.0    |
-| [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.30  | MIT           |
-| [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)           | 9.0.3   | MIT           |
-| [lru-cache](https://www.npmjs.com/package/lru-cache)                 | 11.5.2  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 10.0.6  | MIT-0         |
-| [otpauth](https://www.npmjs.com/package/otpauth)                     | 9.5.2   | MIT           |
-| [pg](https://www.npmjs.com/package/pg)                               | 8.23.0  | MIT           |
-| [pino](https://www.npmjs.com/package/pino)                           | 10.3.1  | MIT           |
-| [pino-roll](https://www.npmjs.com/package/pino-roll)                 | 4.0.0   | MIT           |
+| Package                                                                                | Version | License       |
+| -------------------------------------------------------------------------------------- | ------- | ------------- |
+| [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger)                   | 1.3.1   | MIT           |
+| [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox)                   | 0.34.52 | MIT           |
+| [@types/pg](https://www.npmjs.com/package/@types/pg)                                   | 8.23.1  | MIT           |
+| [@zxcvbn-ts/core](https://www.npmjs.com/package/@zxcvbn-ts/core)                       | 4.2.0   | MIT           |
+| [@zxcvbn-ts/language-common](https://www.npmjs.com/package/@zxcvbn-ts/language-common) | 4.1.3   | MIT           |
+| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)                               | 0.45.2  | Apache-2.0    |
+| [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.30  | MIT           |
+| [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
+| [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.2  | BlueOak-1.0.0 |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.0.6  | MIT-0         |
+| [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.5.2   | MIT           |
+| [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.0  | MIT           |
+| [pino](https://www.npmjs.com/package/pino)                                             | 10.3.1  | MIT           |
+| [pino-roll](https://www.npmjs.com/package/pino-roll)                                   | 4.0.0   | MIT           |
 
 ## Frontend runtime dependencies
 
@@ -66,6 +68,16 @@ by license family, and it does not inventory the Alpine base system.
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
 | [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.2.1   | Apache-2.0 |
 | [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.15  | MIT        |
+
+## Vendored source materials
+
+### shadcn/ui
+
+- License: MIT
+- Copyright: Copyright (c) 2023 shadcn
+- Upstream revision: [`3ba91b1cc83e1bbe4ab35a422ff2a694849c5048`](https://github.com/shadcn-ui/ui/tree/3ba91b1cc83e1bbe4ab35a422ff2a694849c5048/apps/v4/registry/new-york-v4/ui)
+- Included paths: `frontend/src/components/ui/alert-dialog.tsx`, `frontend/src/components/ui/alert.tsx`, `frontend/src/components/ui/avatar.tsx`, `frontend/src/components/ui/badge.tsx`, `frontend/src/components/ui/button.tsx`, `frontend/src/components/ui/card.tsx`, `frontend/src/components/ui/checkbox.tsx`, `frontend/src/components/ui/command.tsx`, `frontend/src/components/ui/dialog.tsx`, `frontend/src/components/ui/dropdown-menu.tsx`, `frontend/src/components/ui/input.tsx`, `frontend/src/components/ui/label.tsx`, `frontend/src/components/ui/popover.tsx`, `frontend/src/components/ui/progress.tsx`, `frontend/src/components/ui/select.tsx`, `frontend/src/components/ui/separator.tsx`, `frontend/src/components/ui/sheet.tsx`, `frontend/src/components/ui/skeleton.tsx`, `frontend/src/components/ui/sonner.tsx`, `frontend/src/components/ui/switch.tsx`, `frontend/src/components/ui/table.tsx`, `frontend/src/components/ui/tabs.tsx`, `frontend/src/components/ui/textarea.tsx`, `frontend/src/components/ui/tooltip.tsx`
+- Local modifications: These copied primitives are intentionally customized. Keep the attribution record, review upstream changes manually, and add every generated primitive path before the license gate can pass.
 
 ## Required notices by license family
 
@@ -109,7 +121,7 @@ Applies to: lucide-react.
 
 ### MIT License
 
-Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
+Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, @zxcvbn-ts/core, @zxcvbn-ts/language-common, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
 
 Each MIT-licensed dependency is provided under the standard MIT License, with
 copyright held by the respective package authors as stated in that package.
@@ -156,8 +168,8 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **225**
-third-party package versions (222 unique names). It includes backend runtime
+closure follows everything they pull in transitively and covers **229**
+third-party package versions (226 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
 package-directory count in the Linux image, but it must never be smaller. Development-only
@@ -165,7 +177,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 190      |
+| MIT              | 194      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |

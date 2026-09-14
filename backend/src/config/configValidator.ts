@@ -45,6 +45,13 @@ function validateSecurityRequirements(validated: AppConfig): void {
 	validateMfaKeyPair(nodeEnv, validated.security);
 	validateKnownDevKeys(nodeEnv, validated.security);
 	validateEncryptionKeyFormat(nodeEnv, validated.security.encryptionKey);
+	if (validated.security.encryptionKeyPrevious) {
+		validateEncryptionKeyFormat(
+			nodeEnv,
+			validated.security.encryptionKeyPrevious,
+			'security.encryptionKeyPrevious',
+		);
+	}
 	validateDemoCredentials(nodeEnv, validated.testing);
 	warnDisabledRateLimit(nodeEnv, validated.rateLimit.enabled);
 	warnDisabledAuthRateLimit(nodeEnv, validated.rateLimit.authEnabled);

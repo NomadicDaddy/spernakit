@@ -30,6 +30,7 @@ import {
 	logWarning,
 	probeCompression,
 } from './lib/compression-probe.ts';
+import { testStaticDelivery } from './lib/static-delivery.ts';
 import { loadJsonConfig } from './load-json-config';
 
 /** The modes `scripts/smoke.json` invokes. Anything else is a typo, not a stricter run. */
@@ -222,6 +223,7 @@ export async function runCompression(options: CompressionOptions = {}): Promise<
 
 	const backendOk = await testBackendCompression(root, mode);
 	const build = await testFrontendBuildCompression(root);
+	const deliveryOk = await testStaticDelivery(root, mode);
 
 	// Section verdicts stay on the detail helpers rather than the status markers. A marker line
 	// per section reads as the gate's own verdict -- and the first one here carries no count,
@@ -230,12 +232,13 @@ export async function runCompression(options: CompressionOptions = {}): Promise<
 	for (const [label, ok] of [
 		['Backend compression', backendOk],
 		['Frontend build compression', build.ok],
+		['Nginx static delivery', deliveryOk],
 	] as const) {
 		if (ok) logSuccess(label);
 		else logError(label);
 	}
 
-	if (!backendOk || !build.ok) {
+	if (!backendOk || !build.ok || !deliveryOk) {
 		log(`\n[FAIL] verify-compression -- mode "${mode}", see errors above\n`, 'red');
 		return 1;
 	}

@@ -25,6 +25,7 @@ export const securitySchema = Type.Object({
 		minimum: MS_PER_HOUR,
 	}),
 	encryptionKey: Type.String({ minLength: 64 }),
+	encryptionKeyPrevious: Type.Optional(Type.String({ minLength: 64 })),
 	impersonationEnabled: Type.Boolean({
 		default: true,
 		description:

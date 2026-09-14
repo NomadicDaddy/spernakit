@@ -22,6 +22,7 @@ const SECRET_CONFIG_KEYS: Record<string, string> = {
 	backupEncryptionKeyPrevious: 'BACKUP_ENCRYPTION_KEY_PREVIOUS',
 	cookieSecret: 'COOKIE_SECRET',
 	encryptionKey: 'ENCRYPTION_KEY',
+	encryptionKeyPrevious: 'ENCRYPTION_KEY_PREVIOUS',
 	jwtPrivateKey: 'JWT_PRIVATE_KEY',
 	jwtPrivateKeyPrevious: 'JWT_PRIVATE_KEY_PREVIOUS',
 	jwtPublicKey: 'JWT_PUBLIC_KEY',

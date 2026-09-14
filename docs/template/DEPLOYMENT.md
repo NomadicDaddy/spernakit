@@ -612,7 +612,10 @@ bunx serve -s dist -l 3330
 
 ### **Nginx Configuration (Edge Reverse Proxy)**
 
-> **The container already terminates HTTP on port 3330 and applies its own CSP, rate-limit, and defense-in-depth headers** (see `docker/nginx.conf`). The edge proxy's responsibility is exclusively **TLS termination, HSTS, and HTTP→HTTPS redirect**.
+> **The container already terminates HTTP on port 3330 and applies its own CSP, rate-limit, COOP,
+> CORP, and defense-in-depth headers** (see `docker/nginx.conf`). COEP remains opt-in in application
+> configuration. The edge proxy's responsibility is exclusively **TLS termination, HSTS, and
+> HTTP→HTTPS redirect**.
 >
 > - **Proxy to `127.0.0.1:3330`** (the container's public nginx port), NEVER to `3331` (the internal Elysia backend). Targeting `3331` bypasses the in-container nginx layer and its CSP/rate-limit/security headers.
 > - **Do NOT duplicate or relax the container CSP** at the edge - `docker/nginx.conf` owns that policy. Edge CSP injection typically results in browsers seeing two CSP headers and applying the intersection, which silently breaks new features on upgrade.

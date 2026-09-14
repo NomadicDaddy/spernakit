@@ -201,16 +201,15 @@ Run `bun run generate-keys` to auto-generate all keys, or edit `config/{appname}
 
 ---
 
-## 6) Key Rotation (Air-Gapped Manual Process)
+## 6) Key Rotation
 
-**CRITICAL WARNING**: Rotating ENCRYPTION_KEY without migrating encrypted data renders that data unreadable. Plan carefully.
-
-**Air-Gapped Approach**: Manual key rotation with scheduled maintenance windows is the standard process.
+Use a scheduled maintenance window. Field encryption has an explicit two-key migration path; JWT
+and cookie key rotation has the separate effects described below.
 
 ### Key Types and Impact
 
 - **JWT Key Pairs**: Invalidates all sessions; users must re-login; no data migration required
-- **ENCRYPTION_KEY**: Requires decrypt/re-encrypt of all affected data; downtime required
+- **ENCRYPTION_KEY**: Re-encrypt with `security:rotate-field-encryption`; downtime required
 - **COOKIE_SECRET**: Invalidates in-flight OAuth login flows (state/PKCE binding); session cookies are unaffected (they carry unsigned JWTs verified against the JWT keys)
 
 ### Manual Rotation Procedure (Production)
@@ -222,32 +221,35 @@ Run `bun run generate-keys` to auto-generate all keys, or edit `config/{appname}
     - Test procedure in staging environment
     - Prepare rollback plan
 
-2. **Rotation Steps**
+2. **Field-Encryption Rotation Steps**
     - Stop application services
-    - Generate new keys: `bun run generate-keys`, or `bun run generate-keys -- --only <group>` when
-      the rotation covers one key group
-    - Keys are automatically updated in `config/{appname}.json`
-    - If ENCRYPTION_KEY changed: Run data migration script (decrypt with old key, re-encrypt with new key)
+    - Copy the current `security.encryptionKey` to `security.encryptionKeyPrevious` (or set
+      `{SLUG}_ENCRYPTION_KEY_PREVIOUS` to the old value)
+    - Generate only the new current key: `bun run generate-keys -- --only encryption-key`
+    - Run `bun run security:rotate-field-encryption`. It prints counts, never plaintext, and commits
+      every settings, OAuth-token, MFA-secret/recovery-code, and API-key-secret rewrite together.
+      A corrupt field aborts before the transaction writes anything.
     - Restart application services
 
 3. **Post-Rotation Validation**
     - Health checks pass
-    - Encrypted data loads correctly
+    - Encrypted settings, OAuth, MFA, and API-key operations load correctly
     - Users can sign in
     - Performance is stable
+    - Remove `security.encryptionKeyPrevious` and its environment override, restart, and validate
+      again. Keeping the fallback after all rows are migrated needlessly preserves the old key.
 
 4. **Rollback Plan**
     - Stop application
     - Restore database backup
-    - Restore previous `config/{appname}.json` (from backup)
+    - Restore the database backup and previous `config/{appname}.json` together. Before the
+      rotation command commits, restoring only the old key is sufficient because no rows changed;
+      after it commits, the database and config must be rolled back as a pair.
     - Restart and validate
 
-### Why Manual is Better for Air-Gapped
-
-Scheduled maintenance windows are already routine in air-gapped environments, so a manual
-procedure fits how these systems are operated. Every step is documented and visible to the
-operator, and there is no rotation automation to misfire or debug. Datasets in these
-deployments also tend to be small enough that the data migration stays manageable.
+`decrypt()` tries the current key first and the optional previous key second. `encrypt()` always
+uses the current key, so ordinary writes cannot extend the old key's lifetime during the staged
+window.
 
 **Staging-First Rule**: Always prove the procedure on staging with realistic data volume before production.
 
