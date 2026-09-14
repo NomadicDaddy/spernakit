@@ -3,6 +3,24 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.2] - 2026-09-14
+
+Patch release. Authentication no longer accepts MFA challenge tokens from query strings. Binary
+uploads and structured logs now fail closed when content cannot be safely recognized or redacted.
+
+### Fixed
+
+- MFA challenge tokens are accepted only from router state or a one-time URL fragment. Consumed
+  fragments are replaced before the verification form renders, and query-string tokens are
+  ignored.
+- Image and PDF uploads require a recognized file signature before storage. Arbitrary or
+  undersized binary bodies are rejected while valid text formats and known MIME mismatch handling
+  remain unchanged.
+- Structured logging recursively redacts configured secret values from messages, format
+  arguments, arrays, objects, errors, stacks, and causes across bootstrap, stdout, stderr, and
+  rotated-file output. Escaped, encoded, bearer-token, and assignment-shaped values are also
+  covered.
+
 ## [3.47.1] - 2026-09-14
 
 Patch release. Authentication rejects weak passwords and revokes compromised refresh sessions.
