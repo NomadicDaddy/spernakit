@@ -3,13 +3,12 @@ import type { WidgetType } from 'spernakit-shared';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
 import {
 	getWidgetMinRows,
 	WIDGET_HEIGHT_MAX,
 	WIDGET_WIDTH_MAX,
 	WIDGET_WIDTH_MIN,
-} from './widgetSize';
+} from '@/lib/widgetSize';
 
 interface WidgetSizeFieldsProps {
 	height: number;
@@ -29,7 +28,7 @@ interface WidgetSizeFieldsProps {
  *
  * Rendered as a fragment so the caller keeps ownership of the grid they sit in. The caller also
  * owns the error state and the refs, because it validates on submit and focuses the first
- * invalid field; see `widgetSize.ts` for the bounds these fields report against.
+ * invalid field; see `lib/widgetSize.ts` for the bounds these fields report against.
  */
 export function WidgetSizeFields({
 	height,

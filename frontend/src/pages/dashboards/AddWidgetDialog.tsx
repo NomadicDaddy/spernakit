@@ -20,8 +20,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { getWidgetHeightError, getWidgetMinRows, getWidgetWidthError } from '@/lib/widgetSize';
 
-import { getWidgetHeightError, getWidgetMinRows, getWidgetWidthError } from './widgetSize';
 import { WidgetSizeFields } from './WidgetSizeFields';
 
 const WIDGET_TYPE_OPTIONS: { label: string; value: WidgetType }[] = [

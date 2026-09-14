@@ -41,8 +41,8 @@ interface WidgetContentProps {
  * height to spend it, and at 24px a Line Chart widget reads at the same density as the charts on
  * /dashboard. `compact` keeps the 12px step for the single-value types, whose row floor is 2
  * (160px) and whose whole content is a title line plus a `text-2xl` value; `WIDGET_MIN_ROWS` in
- * `widgetSize.ts` derives that floor from 24px of vertical padding, so widening it there would
- * push the value back below the card edge that floor exists to prevent.
+ * `lib/widgetSize.ts` derives that floor from 24px of vertical padding, so widening it there
+ * would push the value back below the card edge that floor exists to prevent.
  */
 const ROOMY_WIDGET_TYPES = new Set(['alert_list', 'bar_chart', 'line_chart', 'table']);
 
