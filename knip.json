@@ -12,7 +12,7 @@
 	"workspaces": {
 		".": {
 			"entry": ["scripts/*.ts", "scripts/lib/process/error-log-probe.ts"],
-			"ignoreBinaries": ["icacls", "netstat"],
+			"ignoreBinaries": ["icacls", "netstat", "setfacl"],
 			"project": ["scripts/**/*.ts"]
 		},
 		"backend": {

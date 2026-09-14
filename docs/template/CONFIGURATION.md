@@ -838,6 +838,10 @@ The `docker/start.sh` script:
 1. Creates config from defaults if not present
 2. Generates secure keys automatically
 3. Sets `DOCKER_ENV=true` environment variable
+4. Leaves `/app/config` permissions to the host. The container cannot `chmod` a bind mount it
+   does not own, so the owner-only guard accepts a refused `chmod` only at that mount boundary.
+   Secure the mounted directory on the host before starting the container (see
+   [DEPLOYMENT.md, Container Security Posture](DEPLOYMENT.md#container-security-posture)).
 
 ---
 

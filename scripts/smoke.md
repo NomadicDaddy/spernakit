@@ -212,7 +212,7 @@ Steps (in order):
 32. `bun run test:prettier-cache`
     - Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content.
 33. `bun run test:secret-permissions`
-    - Synthetic config and split-secret paths are repaired to owner-only permissions on this OS.
+    - Synthetic config and split-secret paths are repaired to owner-only permissions on this OS, and only the /app/config mount boundary tolerates a refused chmod.
 34. `bun run test:smoke-cache-status`
     - QC cache status loads once, hashes each file once, preserves order, and matches serial decisions.
 35. `bun run test:smoke-failure-policy`

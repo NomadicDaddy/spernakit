@@ -252,7 +252,7 @@
 				},
 				{
 					"command": "bun run test:secret-permissions",
-					"description": "Synthetic config and split-secret paths are repaired to owner-only permissions on this OS"
+					"description": "Synthetic config and split-secret paths are repaired to owner-only permissions on this OS, and only the /app/config mount boundary tolerates a refused chmod"
 				},
 				{
 					"command": "bun run test:smoke-cache-status",
