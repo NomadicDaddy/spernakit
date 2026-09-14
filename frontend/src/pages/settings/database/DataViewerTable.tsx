@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { MoveHorizontal, Trash2 } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { ContentListSkeleton } from '@/components/shared/skeletons/ContentListSkeleton';
 import { Button } from '@/components/ui/button';
@@ -130,7 +130,7 @@ function DataViewerTable({
 	const [canScrollLeft, setCanScrollLeft] = useState(false);
 	const [canScrollRight, setCanScrollRight] = useState(false);
 
-	const updateScrollCues = useCallback(() => {
+	const updateScrollCues = () => {
 		const container = scrollRef.current;
 		if (!container) return;
 		// Same sub-pixel threshold the section tab rail uses for the same job.
@@ -139,7 +139,7 @@ function DataViewerTable({
 		setCanScrollRight(
 			container.scrollLeft + container.clientWidth < container.scrollWidth - threshold,
 		);
-	}, []);
+	};
 
 	/*
 	 * The observer is attached to the table rather than to the scroll container, because the thing
@@ -148,16 +148,13 @@ function DataViewerTable({
 	 * table mounts — which includes every switch out of the loading skeleton — so there is no
 	 * dependency array to keep in step with the data.
 	 */
-	const observeTable = useCallback(
-		(table: HTMLTableElement) => {
-			const observer = new ResizeObserver(updateScrollCues);
-			observer.observe(table);
-			const container = scrollRef.current;
-			if (container) observer.observe(container);
-			return () => observer.disconnect();
-		},
-		[updateScrollCues],
-	);
+	const observeTable = (table: HTMLTableElement) => {
+		const observer = new ResizeObserver(updateScrollCues);
+		observer.observe(table);
+		const container = scrollRef.current;
+		if (container) observer.observe(container);
+		return () => observer.disconnect();
+	};
 
 	const isOverflowing = canScrollLeft || canScrollRight;
 

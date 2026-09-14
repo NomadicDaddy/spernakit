@@ -161,6 +161,41 @@ try {
 		`Removing every shared-to-page dependency must restore a clean pass:\n${result.output}`,
 	);
 
+	const manualMemoizationFixtures = [
+		[
+			'frontend/src/components/ManualCallback.tsx',
+			"import { useCallback } from 'react';\nexport const ManualCallback = () => useCallback(() => null, []);\n",
+		],
+		[
+			'frontend/src/hooks/useManualMemo.ts',
+			"import { useMemo as cacheValue } from 'react';\nexport const useManualMemo = () => cacheValue(() => 1, []);\n",
+		],
+		[
+			'frontend/src/lib/ManualMemo.tsx',
+			"import React from 'react';\nexport const ManualMemo = React.memo(() => null);\n",
+		],
+	] as const;
+	for (const [path, source] of manualMemoizationFixtures) write(path, source);
+
+	result = runCheck();
+	assert(
+		result.exitCode !== 0 &&
+			result.output.includes('React Compiler source-contract violations:'),
+		`Unsuppressed manual memoization must fail the integration gate:\n${result.output}`,
+	);
+	for (const [path] of manualMemoizationFixtures) {
+		assert(result.output.includes(path), `The compiler-contract failure must name ${path}.`);
+	}
+
+	for (const [path, source] of manualMemoizationFixtures) {
+		write(path, `'use client';\n'use no memo';\n\n${source}`);
+	}
+	result = runCheck();
+	assert(
+		result.exitCode === 0,
+		`A file-level use-no-memo directive must permit manual memoization:\n${result.output}`,
+	);
+
 	console.log(`Feature integration regression test passed (${checks} assertions).`);
 } catch (err: unknown) {
 	console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);

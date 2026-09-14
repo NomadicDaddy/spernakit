@@ -17,6 +17,8 @@
  *       `@/components/shared/skeletons/<Name>`)
  *   4 - A shared frontend module under components/, hooks/, lib/, or stores/
  *       imports a route-owned module under pages/
+ *   5 - Application source uses manual React memoization without a file-level
+ *       'use no memo' directive
  *
  * Run: bun scripts/check-feature-integration.ts
  */
@@ -26,6 +28,7 @@ import { exit } from 'node:process';
 import { parseArgs } from 'node:util';
 
 import { checkBackendRoutes } from './lib/feature-integration/backend-routes.ts';
+import { checkCompilerMemoization } from './lib/feature-integration/compiler-memoization.ts';
 
 function readText(root: string, relPath: string): string {
 	return readFileSync(resolve(root, relPath), 'utf8');
@@ -224,6 +227,11 @@ export function runFeatureIntegration(root: string = resolve(import.meta.dir, '.
 		allErrors.push('Forbidden shared-to-page frontend dependencies:', ...sharedFrontend.errors);
 	}
 
+	const compilerMemoization = checkCompilerMemoization(root);
+	if (compilerMemoization.errors.length > 0) {
+		allErrors.push('React Compiler source-contract violations:', ...compilerMemoization.errors);
+	}
+
 	if (allErrors.length > 0) {
 		console.error('[FAIL] Feature integration check found issues:');
 		for (const line of allErrors) {
@@ -232,22 +240,28 @@ export function runFeatureIntegration(root: string = resolve(import.meta.dir, '.
 		return 1;
 	}
 
-	// Rule 5: the walks are recursive over directories that are expected to exist. A renamed
+	// Rule 6: the walks are recursive over directories that are expected to exist. A renamed
 	// `pages/` directory makes every page "registered" -- there is nothing left to be unregistered --
 	// and either import scan finds no forbidden dependency because it opened no file.
-	if (frontend.pages === 0 || skeleton.scanned === 0 || sharedFrontend.scanned === 0) {
+	if (
+		frontend.pages === 0 ||
+		skeleton.scanned === 0 ||
+		sharedFrontend.scanned === 0 ||
+		compilerMemoization.scanned === 0
+	) {
 		console.error(
 			`[FAIL] Feature integration examined too little to be a pass: ${frontend.pages} page(s) ` +
-				`under frontend/src/pages, ${skeleton.scanned} component file(s), and ` +
-				`${sharedFrontend.scanned} shared frontend file(s) scanned.`,
+				`under frontend/src/pages, ${skeleton.scanned} component file(s), ` +
+				`${sharedFrontend.scanned} shared frontend file(s), and ` +
+				`${compilerMemoization.scanned} compiler-owned source file(s) scanned.`,
 		);
 		return 1;
 	}
 
 	console.log(
 		`[OK] Feature integration check passed (${frontend.pages} page(s) registered, ` +
-			`${skeleton.scanned} component file(s), and ${sharedFrontend.scanned} shared frontend ` +
-			`file(s) scanned).`,
+			`${skeleton.scanned} component file(s), ${sharedFrontend.scanned} shared frontend ` +
+			`file(s), and ${compilerMemoization.scanned} compiler-owned source file(s) scanned).`,
 	);
 	return 0;
 }
