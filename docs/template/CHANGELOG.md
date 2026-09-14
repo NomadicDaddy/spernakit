@@ -3,6 +3,44 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.1] - 2026-09-14
+
+Patch release. Authentication rejects weak passwords and revokes compromised refresh sessions.
+Secret handling, date preferences, static delivery verification, and quality gates receive fixes.
+
+### Fixed
+
+- Refresh-token reuse and ambiguous concurrent rotation revoke the user's sessions, clear auth
+  cookies, and return a non-retryable refusal. Cookie security follows validated configuration.
+- Registration, password resets, and password changes reject common and application-derived
+  passwords using the zxcvbn estimator.
+- Configuration and split-secret files receive owner-only permissions. Containers accept a refused
+  permission repair only inside a verified `/app/config` mount; smoke runs secure the host copy
+  before mounting it. Operators must secure their own mounted config directory on the host.
+- Child-process output redacts secrets across output chunks, multiline values, escaped values,
+  bearer tokens, and assignments before writing logs. Detached supervisors let both log streams
+  drain before exiting, so Linux does not lose the scrubber's retained tail.
+- Audit lifecycle handling preserves request exclusions, response details, and actor attribution.
+- Date and time formatting respects the selected date order, seconds, clock format, and timezone,
+  including shared dashboard timestamps.
+- nginx supplies COOP and CORP headers on static responses and refuses source-map requests.
+  Delivery checks verify status, content type, cache policy, security headers, and actual
+  compression savings for HTML, JavaScript, and CSS.
+- Vendored shadcn/ui material has its MIT license and attribution included in generated notices.
+
+### Changed
+
+- Field-encryption rotation rewrites encrypted settings, OAuth tokens, MFA data, and API-key
+  secrets in one transaction. An optional previous key keeps existing ciphertext readable during
+  maintenance; the documented procedure removes it after rotation and validation.
+- QC cache status loads the cache once and shares file hashes across checks. Fast QC stops at
+  the first failure; full QC continues collecting independent failures. Prettier uses a persistent
+  cache, and the tracked-metadata format gate compares exact files through Prettier's API instead
+  of relying on platform-dependent ignore discovery. Regression checks cover the changed security,
+  delivery, and cache behavior.
+- Added exact pins for `@zxcvbn-ts/core` 4.2.0 and `@zxcvbn-ts/language-common` 4.1.3, with
+  matching lockfile and license notices.
+
 ## [3.47.0] - 2026-09-11
 
 Minor release. Derived applications now detect quality checks missing from an overridden smoke

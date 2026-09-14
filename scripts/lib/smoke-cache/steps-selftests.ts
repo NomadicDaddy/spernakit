@@ -104,6 +104,23 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-override-deltas.ts',
 		],
 	},
+	'test:smoke-cache-status': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/smoke-cache/**/*.ts',
+			'scripts/smoke-cache.ts',
+			'scripts/smoke.json',
+			'scripts/test-smoke-cache-status.ts',
+		],
+	},
+	'test:smoke-failure-policy': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/smoke/failure-policy.ts',
+			'scripts/smoke.ts',
+			'scripts/test-smoke-failure-policy.ts',
+		],
+	},
 	'test:smoke-steps': {
 		// The test drives the real CLI against a two-tag git fixture and then against a copy of a
 		// sibling app's runbook, so the comparison library, the reporter, the fixture builder and the

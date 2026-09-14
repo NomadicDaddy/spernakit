@@ -33,6 +33,7 @@ import {
 	ensureDockerTestDirs,
 	recoverDevRateLimitBackup,
 } from './lib/smoke/config-fixups.ts';
+import { shouldAggregateFailures } from './lib/smoke/failure-policy.ts';
 import { FAST_QC_COMMANDS } from './lib/smoke/fast-subset.ts';
 import {
 	assertSmokeCacheCoverage,
@@ -211,12 +212,11 @@ async function main(): Promise<void> {
 	process.on('SIGTERM', exitHandler);
 	process.on('uncaughtException', exitHandler);
 
-	// qc steps are order-independent static checks, so run them ALL and report the
-	// aggregate: fail-fast let one persistently red step (unacknowledged template
-	// drift) mask every later gate — max-lines violations accumulated unseen behind
-	// it. Server-lifecycle modes keep fail-fast; their steps genuinely depend on
-	// their predecessors.
-	const aggregateFailures = modeKey === 'qc';
+	// Full qc steps are order-independent static checks, so run them ALL and report the aggregate.
+	// The deliberately cheapest-first fast subset is the pre-commit inner loop and stops at its
+	// first actionable failure. Server-lifecycle modes also stay fail-fast because their steps
+	// genuinely depend on their predecessors.
+	const aggregateFailures = shouldAggregateFailures(modeKey, fast);
 	const failedSteps: string[] = [];
 	try {
 		const isTemplate = isSpernakitItself(projectRoot);

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 import { configLogger } from './configLogger.ts';
 import { isPlainObject, projectRoot } from './configUtils.ts';
+import { secureSecretPath } from './secretPermissions.ts';
 
 /**
  * Split-secrets file: `config/{slug}.secrets.json`.
@@ -100,6 +101,8 @@ function loadSecretsFile(
 		status = { leafCount: 0, path, present: false };
 		return status;
 	}
+	secureSecretPath(configDir, 'directory');
+	secureSecretPath(path, 'file');
 
 	let parsed: unknown;
 	try {

@@ -840,6 +840,10 @@
 					"minLength": 64,
 					"type": "string"
 				},
+				"encryptionKeyPrevious": {
+					"minLength": 64,
+					"type": "string"
+				},
 				"impersonationEnabled": {
 					"default": true,
 					"description": "Kill-switch for `POST /users/:id/impersonate`. When false the route answers 403 for every caller, SYSOP included; `/users/impersonate/stop` stays available so a session that was already impersonating can still return. Audit rows written under impersonation carry `impersonatedBy` regardless of this flag.",

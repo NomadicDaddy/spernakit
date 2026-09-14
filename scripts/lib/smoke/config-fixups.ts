@@ -16,6 +16,8 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 
+import { secureConfigMount } from './config-mount.ts';
+
 /**
  * Disable `rateLimit.enabled` and `rateLimit.authEnabled` in the config at `configPath`.
  * Used by both docker-prod (on the mount copy) and dev-mode crawl (on the real file,
@@ -126,8 +128,13 @@ export function ensureDockerTestDirs(
 
 	if (!appSlug || !appdataRoot) return;
 
+	// The config mount is secured separately (secureConfigMount below) and never world-writable.
+	const configDir = join(appdataRoot, appSlug, 'config');
+	if (!existsSync(configDir)) {
+		mkdirSync(configDir, { recursive: true });
+	}
+
 	const dirs = [
-		join(appdataRoot, appSlug, 'config'),
 		join(appdataRoot, appSlug, 'data'),
 		join(appdataRoot, appSlug, 'logs'),
 		// docker-compose.test.yml mounts ${APPDATA_ROOT}/${APP_SLUG}/backups; production uses
@@ -170,22 +177,25 @@ export function ensureDockerTestDirs(
 			for (const entry of readdirSync(srcConfigDir)) {
 				if (!entry.endsWith('.json') || entry === 'example.json') continue;
 				const src = join(srcConfigDir, entry);
-				const dest = join(appdataRoot, appSlug, 'config', entry);
+				const dest = join(configDir, entry);
 				copyFileSync(src, dest);
 				if (entry === mainConfig) {
 					writeDockerConfigOverrides(dest, mode);
 				}
 			}
 		}
+		// The container cannot restrict /app/config (its guard trusts that mount boundary), so the
+		// host locks the copy down before compose mounts it.
+		secureConfigMount(configDir);
 	} else {
 		console.log(`   Staging mount detected at ${appdataRoot} — skipping config sync`);
 		// On a fresh STG wipe (no config yet) leave a marker so docker/start.sh applies
 		// the staging-specific CORS overrides (cors.inheritFrontendUrl=true,
 		// cors.frontendDevOrigins=[]) when it creates the initial config from defaults.
 		// Real production should set allowedOrigins explicitly and not need the marker.
-		const stgConfigPath = join(appdataRoot, appSlug, 'config', `${appSlug}.json`);
+		const stgConfigPath = join(configDir, `${appSlug}.json`);
 		if (!existsSync(stgConfigPath)) {
-			const markerPath = join(appdataRoot, appSlug, 'config', '.stg-bootstrap');
+			const markerPath = join(configDir, '.stg-bootstrap');
 			writeFileSync(markerPath, 'STG bootstrap marker — consumed by docker/start.sh\n');
 			console.log(`   Fresh STG config — wrote bootstrap marker`);
 		}

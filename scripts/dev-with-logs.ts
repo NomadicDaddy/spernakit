@@ -17,6 +17,11 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStream, type RotatingFileStream } from 'rotating-file-stream';
 
+import {
+	collectConfiguredSecrets,
+	redactText,
+	SecretScrubber,
+} from './lib/process/secret-scrubber.ts';
 import { loadJsonConfig } from './load-json-config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,7 +35,8 @@ if (!existsSync(logsDir)) {
 }
 
 // Populate environment from JSON config for child processes
-loadJsonConfig(rootDir);
+const { config } = loadJsonConfig(rootDir);
+const configuredSecrets = collectConfiguredSecrets(rootDir, config);
 
 // ANSI color codes
 const colors: Record<string, string> = {
@@ -166,6 +172,8 @@ function startServer(name: string, command: string, args: string[], color: strin
 	// Create rotating log streams
 	const logStream = createRotatingStream(`${name}.log`);
 	const errorStream = createRotatingStream(`${name}.error.log`);
+	const stdoutScrubber = new SecretScrubber(configuredSecrets);
+	const stderrScrubber = new SecretScrubber(configuredSecrets);
 
 	// Spawn the process
 	// Note: shell: false is more secure when passing args as array
@@ -179,7 +187,8 @@ function startServer(name: string, command: string, args: string[], color: strin
 
 	// Handle stdout
 	proc.stdout?.on('data', (data: Buffer) => {
-		const message = data.toString();
+		const message = stdoutScrubber.push(data);
+		if (!message) return;
 		log(name, message, color);
 
 		// Strip ANSI codes before writing to file
@@ -189,7 +198,8 @@ function startServer(name: string, command: string, args: string[], color: strin
 
 	// Handle stderr
 	proc.stderr?.on('data', (data: Buffer) => {
-		const message = data.toString();
+		const message = stderrScrubber.push(data);
+		if (!message) return;
 		log(name, message, colors['red'] ?? '');
 
 		// Strip ANSI codes before writing to file
@@ -199,6 +209,10 @@ function startServer(name: string, command: string, args: string[], color: strin
 
 	// Handle process exit
 	proc.on('close', (code: null | number) => {
+		const stdoutTail = stdoutScrubber.finish();
+		const stderrTail = stderrScrubber.finish();
+		if (stdoutTail) logStream.write(processLogLines(stripAnsi(stdoutTail)));
+		if (stderrTail) errorStream.write(processLogLines(stripAnsi(stderrTail)));
 		const exitColor = code === 0 ? colors['green'] : colors['red'];
 		log(name, `Process exited with code ${code}`, exitColor ?? '');
 		logStream.end();
@@ -209,7 +223,9 @@ function startServer(name: string, command: string, args: string[], color: strin
 	proc.on('error', (error: Error) => {
 		log(name, `Process error: ${error.message}`, colors['red'] ?? '');
 		// Add timestamp for process errors since they don't come from Winston
-		errorStream.write(`[${new Date().toISOString()}] ERROR: ${error.message}\n`);
+		errorStream.write(
+			`[${new Date().toISOString()}] ERROR: ${redactText(error.message, configuredSecrets)}\n`,
+		);
 	});
 
 	return proc;

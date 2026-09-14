@@ -77,6 +77,13 @@ The test environment runs the production Docker image locally for smoke testing.
 └── ...
 ```
 
+The smoke run locks this config copy down before the container mounts it
+(`scripts/lib/smoke/config-mount.ts`): owner-only on the host (a Windows ACL, or POSIX `0700` and
+`0600`), plus a read-only ACL entry for uid 1000 (the image's `bun` user) on a Linux host whose
+own user is a different uid, which needs `setfacl` from the `acl` package. Inside the container,
+`/app/config` is the one path where the owner-only guard accepts a refused `chmod`; see
+[Container Security Posture](#container-security-posture).
+
 ### Staging
 
 Staging mirrors the production layout on the development workstation. All apps share one staging root, set via `APPDATA_ROOT` — on Windows this defaults to `%ProgramData%\appdata\staging\`:
@@ -428,6 +435,7 @@ What `docker-compose.production.yml` actually ships, and why each directive matt
 
 - `ports: 127.0.0.1:…` - loopback-only port binding. The container is unreachable from other host interfaces; all external traffic must come through the edge reverse proxy (see [Reverse Proxy and TLS](#ssl-https-setup)). This narrows the attack surface from "every host NIC" to "localhost only."
 - `read_only: true` + `tmpfs:` - the container rootfs is immutable; only the listed tmpfs mounts (and volume mounts) are writable. The tmpfs mounts are `/tmp`, `/var/log/nginx`, `/var/log/supervisor`, `/run/nginx`, and `/var/lib/nginx` (all `uid=1000,gid=1000`). This stops persistent tampering if an attacker gets RCE inside the container.
+- `/app/config` bind mount - the trusted mount boundary for secret files. `secureSecretPath` (`backend/src/config/secretPermissions.ts`) repairs every config and split-secret path to owner-only before reading it, and inside the container that `chmod` is refused: a Windows Docker Desktop mount is a 9p/drvfs filesystem that answers `EPERM`, and a Linux host directory owned by another uid does the same. The guard accepts that refusal only for paths under `/app/config` and only while `/app/config` is an actual mount point in the container's mount table; a bare `/app/config` inside the image and every other path still abort startup with a path-only diagnostic. The host therefore secures the directory before mounting it: owner-only, readable by uid 1000 (the image's `bun` user) and nobody else.
 - `security_opt: [no-new-privileges:true]` + `cap_drop: [ALL]` - the process cannot gain privileges via setuid binaries and starts with zero Linux capabilities. This shrinks the kernel-privilege blast radius.
 - `stop_grace_period: 30s` - gives supervisord/nginx/Elysia time to drain in-flight requests and close the SQLite file cleanly before Docker sends SIGKILL.
 - `healthcheck:` - probes `http://127.0.0.1:${FRONTEND_PORT}/api/v1/health` (unauthenticated, minimal payload) every 30s. supervisord restarts failed processes inside the container, but Docker/Compose only restart an unhealthy container when a healthcheck is declared. Without it, a wedged-but-running container is invisible to orchestrators.
@@ -612,7 +620,10 @@ bunx serve -s dist -l 3330
 
 ### **Nginx Configuration (Edge Reverse Proxy)**
 
-> **The container already terminates HTTP on port 3330 and applies its own CSP, rate-limit, and defense-in-depth headers** (see `docker/nginx.conf`). The edge proxy's responsibility is exclusively **TLS termination, HSTS, and HTTP→HTTPS redirect**.
+> **The container already terminates HTTP on port 3330 and applies its own CSP, rate-limit, COOP,
+> CORP, and defense-in-depth headers** (see `docker/nginx.conf`). COEP remains opt-in in application
+> configuration. The edge proxy's responsibility is exclusively **TLS termination, HSTS, and
+> HTTP→HTTPS redirect**.
 >
 > - **Proxy to `127.0.0.1:3330`** (the container's public nginx port), NEVER to `3331` (the internal Elysia backend). Targeting `3331` bypasses the in-container nginx layer and its CSP/rate-limit/security headers.
 > - **Do NOT duplicate or relax the container CSP** at the edge - `docker/nginx.conf` owns that policy. Edge CSP injection typically results in browsers seeing two CSP headers and applying the intersection, which silently breaks new features on upgrade.

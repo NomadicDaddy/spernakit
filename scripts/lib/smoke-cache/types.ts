@@ -19,3 +19,45 @@ export interface StepDependencies {
 	globs: string[];
 	outputs?: string[];
 }
+
+export interface StepCacheEntry {
+	duration: number;
+	hash: string;
+	lastRun: string;
+	result: 'fail' | 'pass';
+}
+
+export interface SmokeCache {
+	lastRun: string;
+	steps: Record<string, StepCacheEntry>;
+	version: number;
+}
+
+export interface CacheCheckResult {
+	reason: string;
+	skip: boolean;
+}
+
+export interface CacheStatus {
+	cacheable: boolean;
+	cached: boolean;
+	lastResult: 'fail' | 'pass' | undefined;
+	lastRun: string | undefined;
+	reason: string;
+	step: string;
+}
+
+export interface SmokeCacheDiagnostics {
+	cacheLoads: number;
+	fileReads: Map<string, number>;
+	peakHashConcurrency: number;
+}
+
+export interface HashContext {
+	activeHashes: number;
+	collections: Map<string, Promise<string[]>>;
+	diagnostics?: SmokeCacheDiagnostics;
+	directories: Map<string, Promise<string[]>>;
+	fileHashes: Map<string, Promise<string>>;
+	hashQueue: (() => void)[];
+}

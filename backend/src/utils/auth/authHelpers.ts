@@ -81,18 +81,15 @@ export function clearCsrfToken(userId: number): void {
 		.run();
 }
 
-type RequestWithHeaders = { headers: { get: (name: string) => null | string } };
-
 /**
  * Determine whether cookies should have the Secure flag set.
  * Returns the `security.cookieSecure` config value directly.
  * The config validator (configValidator-server.ts) already blocks startup
  * when cookieSecure=false in production, so no heuristic fallback is needed.
  *
- * @param _request - Unused, kept for call-site compatibility
  * @returns True if the Secure flag should be set
  */
-export function isSecureCookie(_request?: RequestWithHeaders): boolean {
+export function isSecureCookie(): boolean {
 	return getConfig().security.cookieSecure;
 }
 
@@ -102,9 +99,6 @@ export function isSecureCookie(_request?: RequestWithHeaders): boolean {
  * @param name
  * @param value
  * @param maxAge
- * @param request - Optional Elysia request object for host-based secure detection
- * @param request.headers
- * @param request.headers.get
  * @param cookiePath - Cookie path scope (default: '/')
  * @returns Set-Cookie header value
  */
@@ -112,10 +106,9 @@ export function buildCookieHeader(
 	name: string,
 	value: string,
 	maxAge: number,
-	request?: RequestWithHeaders,
 	cookiePath = '/',
 ): string {
-	const secure = isSecureCookie(request) ? '; Secure' : '';
+	const secure = isSecureCookie() ? '; Secure' : '';
 	return `${name}=${encodeURIComponent(value)}; HttpOnly; SameSite=Strict; Path=${cookiePath}; Max-Age=${Math.floor(maxAge / 1000)}${secure}`;
 }
 
@@ -123,18 +116,11 @@ export function buildCookieHeader(
  * Build a Set-Cookie header that clears (expires) a cookie.
  *
  * @param name
- * @param request - Optional Elysia request object for host-based secure detection
- * @param request.headers
- * @param request.headers.get
  * @param cookiePath - Cookie path scope (must match the path used when setting, default: '/')
  * @returns Set-Cookie header value that clears cookie
  */
-export function buildClearCookieHeader(
-	name: string,
-	request?: RequestWithHeaders,
-	cookiePath = '/',
-): string {
-	const secure = isSecureCookie(request) ? '; Secure' : '';
+export function buildClearCookieHeader(name: string, cookiePath = '/'): string {
+	const secure = isSecureCookie() ? '; Secure' : '';
 	return `${name}=; HttpOnly; SameSite=Strict; Path=${cookiePath}; Max-Age=0${secure}`;
 }
 
@@ -164,23 +150,20 @@ function setMultipleCookies(set: SetWithHeaders, cookies: string[]): void {
  * @param set - Elysia set object with headers
  * @param config - Security config with cookie names and max age
  * @param tokens - Access and refresh token pair
- * @param request - Request object for secure cookie detection
  */
 export function setAuthCookies(
 	set: SetWithHeaders,
 	config: SecurityConfig,
 	tokens: TokenPair,
-	request?: RequestWithHeaders,
 ): void {
 	const appConfig = getConfig();
 	const refreshMaxAgeMs = parseDurationMs(appConfig.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY);
 	setMultipleCookies(set, [
-		buildCookieHeader(config.authCookieName, tokens.accessToken, config.cookieMaxAge, request),
+		buildCookieHeader(config.authCookieName, tokens.accessToken, config.cookieMaxAge),
 		buildCookieHeader(
 			config.refreshCookieName,
 			tokens.refreshToken,
 			refreshMaxAgeMs,
-			request,
 			REFRESH_COOKIE_PATH,
 		),
 	]);
@@ -191,15 +174,10 @@ export function setAuthCookies(
  *
  * @param set - Elysia set object with headers
  * @param config - Security config with cookie names
- * @param request - Request object for secure cookie detection
  */
-export function clearAuthCookies(
-	set: SetWithHeaders,
-	config: SecurityConfig,
-	request?: RequestWithHeaders,
-): void {
+export function clearAuthCookies(set: SetWithHeaders, config: SecurityConfig): void {
 	setMultipleCookies(set, [
-		buildClearCookieHeader(config.authCookieName, request),
-		buildClearCookieHeader(config.refreshCookieName, request, REFRESH_COOKIE_PATH),
+		buildClearCookieHeader(config.authCookieName),
+		buildClearCookieHeader(config.refreshCookieName, REFRESH_COOKIE_PATH),
 	]);
 }

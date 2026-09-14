@@ -4,10 +4,10 @@
  * Extracted from scripts/start.ts.
  */
 import { spawn } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { writePidFile } from './pid-files.ts';
+import { scrubbedChildPath } from './scrubbed-child.ts';
 
 const CHILD_ENV_KEYS = [
 	'APP_SLUG',
@@ -56,15 +56,7 @@ function createChildEnv(): NodeJS.ProcessEnv {
 }
 
 /**
- * Open a log file descriptor for appending.
- */
-function openLogFd(logsDir: string, filename: string): number {
-	const logPath = path.join(logsDir, filename);
-	return fs.openSync(logPath, 'a');
-}
-
-/**
- * Spawn a detached background process with output redirected to log files.
+ * Spawn a detached supervisor that scrubs child output before appending it to log files.
  */
 export function spawnBackground(
 	logsDir: string,
@@ -73,30 +65,22 @@ export function spawnBackground(
 	args: string[],
 	cwd: string,
 ): null | number {
-	const stdoutFd = openLogFd(logsDir, `${name}.log`);
-	const stderrFd = openLogFd(logsDir, `${name}.error.log`);
-
-	const proc = spawn(command, args, {
+	const repoRoot = path.resolve(import.meta.dirname, '../../..');
+	const proc = spawn('bun', [scrubbedChildPath, repoRoot, logsDir, name, cwd, command, ...args], {
 		cwd,
 		detached: true,
 		env: createChildEnv(),
-		stdio: ['ignore', stdoutFd, stderrFd],
+		stdio: 'ignore',
 		windowsHide: true,
 	});
 
 	if (!proc.pid) {
 		console.error(`   ❌ Failed to start ${name}`);
-		fs.closeSync(stdoutFd);
-		fs.closeSync(stderrFd);
 		return null;
 	}
 
 	// Detach from parent — parent can exit without killing children
 	proc.unref();
-
-	// Close FDs in parent after handing off to child
-	fs.closeSync(stdoutFd);
-	fs.closeSync(stderrFd);
 
 	writePidFile(logsDir, name, proc.pid);
 

@@ -2,6 +2,10 @@
 
 Primitive UI components from [shadcn/ui](https://ui.shadcn.com/) (New York style). These are accessible, composable building blocks based on Radix UI primitives and styled with Tailwind CSS.
 
+Their immutable upstream revision, MIT notice, included-path inventory, and local-modification
+policy live in [`licenses/vendored-materials.json`](../../../../licenses/vendored-materials.json).
+The license gate fails when a generated primitive has not been added to that record.
+
 ## Available Components
 
 | Component        | File                | Based On              |

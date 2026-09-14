@@ -9,12 +9,10 @@ const SALT_LENGTH = 16;
  * Derive a crypto key from the encryption key in config.
  * Uses HKDF with SHA-256 for key derivation.
  *
+ * @param encryptionKey - Hex-encoded master field-encryption key
  * @returns A CryptoKey for HKDF key derivation
  */
-async function getCryptoKey(): Promise<CryptoKey> {
-	const config = getConfig();
-	const encryptionKey = config.security.encryptionKey;
-
+async function getCryptoKey(encryptionKey: string): Promise<CryptoKey> {
 	const keyData = Buffer.from(encryptionKey, 'hex');
 
 	return await crypto.subtle.importKey('raw', keyData, 'HKDF', false, [
@@ -27,10 +25,14 @@ async function getCryptoKey(): Promise<CryptoKey> {
  * Derive an AES-GCM key using HKDF with a per-encryption random salt.
  *
  * @param salt - Random salt bytes (must be SALT_LENGTH bytes)
+ * @param encryptionKey - Hex-encoded master field-encryption key
  * @returns A CryptoKey for AES-GCM encryption/decryption
  */
-async function deriveAesGcmKey(salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
-	const baseKey = await getCryptoKey();
+async function deriveAesGcmKey(
+	salt: Uint8Array<ArrayBuffer>,
+	encryptionKey: string,
+): Promise<CryptoKey> {
+	const baseKey = await getCryptoKey(encryptionKey);
 
 	return await crypto.subtle.deriveKey(
 		{
@@ -51,15 +53,16 @@ async function deriveAesGcmKey(salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey
  * Returns a base64-encoded string containing salt + IV + ciphertext.
  *
  * @param plaintext - The string to encrypt
+ * @param encryptionKey - Hex-encoded master field-encryption key
  * @returns Base64-encoded salt + IV + ciphertext
  */
-export async function encrypt(plaintext: string): Promise<string> {
+async function encryptWithKey(plaintext: string, encryptionKey: string): Promise<string> {
 	if (!plaintext) {
 		return '';
 	}
 
 	const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-	const key = await deriveAesGcmKey(salt);
+	const key = await deriveAesGcmKey(salt, encryptionKey);
 	const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
 	const encoder = new TextEncoder();
 	const data = encoder.encode(plaintext);
@@ -75,15 +78,20 @@ export async function encrypt(plaintext: string): Promise<string> {
 	return Buffer.from(combined).toString('base64');
 }
 
+export async function encrypt(plaintext: string): Promise<string> {
+	return encryptWithKey(plaintext, getConfig().security.encryptionKey);
+}
+
 /**
  * Decrypt a base64-encoded string containing salt + IV + ciphertext.
  * Returns the original plaintext value.
  *
  * @param encrypted - Base64-encoded salt + IV + ciphertext
+ * @param encryptionKey - Hex-encoded master field-encryption key
  * @returns The decrypted plaintext string
  * @throws Error if decryption fails (invalid or corrupted data)
  */
-export async function decrypt(encrypted: string): Promise<string> {
+async function decryptWithKey(encrypted: string, encryptionKey: string): Promise<string> {
 	if (!encrypted) {
 		return '';
 	}
@@ -101,7 +109,7 @@ export async function decrypt(encrypted: string): Promise<string> {
 		const iv = combined.slice(SALT_LENGTH, SALT_LENGTH + IV_LENGTH);
 		const ciphertext = combined.slice(SALT_LENGTH + IV_LENGTH);
 
-		const key = await deriveAesGcmKey(salt);
+		const key = await deriveAesGcmKey(salt, encryptionKey);
 
 		const decrypted = await crypto.subtle.decrypt(
 			{ iv, name: ENCRYPTION_ALGORITHM },
@@ -118,3 +126,29 @@ export async function decrypt(encrypted: string): Promise<string> {
 		);
 	}
 }
+
+async function decryptWithKeys(
+	encrypted: string,
+	encryptionKeys: readonly string[],
+): Promise<string> {
+	let lastError: unknown;
+	for (const encryptionKey of encryptionKeys) {
+		try {
+			return await decryptWithKey(encrypted, encryptionKey);
+		} catch (err) {
+			lastError = err;
+		}
+	}
+	throw new Error('Decryption failed with current and previous field-encryption keys', {
+		cause: lastError,
+	});
+}
+
+export async function decrypt(encrypted: string): Promise<string> {
+	if (!encrypted) return '';
+	const { encryptionKey, encryptionKeyPrevious } = getConfig().security;
+	const keys = encryptionKeyPrevious ? [encryptionKey, encryptionKeyPrevious] : [encryptionKey];
+	return decryptWithKeys(encrypted, keys);
+}
+
+export { decryptWithKeys, encryptWithKey };

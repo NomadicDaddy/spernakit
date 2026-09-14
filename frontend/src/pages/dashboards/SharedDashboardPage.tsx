@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useFormatters } from '@/hooks/useFormatters';
 
 import { DashboardWidgetRenderer } from './dashboard-widgets/DashboardWidgetRenderer';
 import { DashboardCardSkeleton } from './DashboardCardSkeleton';
@@ -66,6 +67,7 @@ function SharedDashboardChrome({ children }: { children: React.ReactNode }) {
 /** Read-only view of a shared dashboard, resolved by a public share token. */
 function SharedDashboardPage() {
 	const { token } = useParams<{ token: string }>();
+	const { formatDateTime } = useFormatters();
 
 	const { data, dataUpdatedAt, error, isError, isLoading } = useQuery({
 		enabled: !!token,
@@ -140,7 +142,7 @@ function SharedDashboardPage() {
 			 * neither of those was stated anywhere on the page.
 			 */}
 			<PageHeader
-				description={`Live from ${__APP_NAME__} · Updated ${new Date(dataUpdatedAt).toLocaleString()}`}
+				description={`Live from ${__APP_NAME__} · Updated ${formatDateTime(new Date(dataUpdatedAt).toISOString())}`}
 				title={dashboard.name}
 			/>
 

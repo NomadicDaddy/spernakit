@@ -108,6 +108,15 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-bug-report-whitespace.ts',
 		],
 	},
+	'test:cookie-headers': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/config/**',
+			'backend/src/constants/auth.ts',
+			'backend/src/utils/auth/authHelpers.ts',
+			'scripts/test-cookie-headers.ts',
+		],
+	},
 	// Drives the real API in process against a temp database, so its world is the dashboard
 	// routes and services it calls, the plugins and guards those routes stack, and the schema.
 	'test:dashboard-share-revoke': {
@@ -202,6 +211,16 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'frontend/src/pages/profile/DisplayPreferences.tsx',
 			'frontend/src/stores/layoutStore.ts',
 			'scripts/test-page-size-options.ts',
+		],
+	},
+	'test:password-policy': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/routes/auth/password-reset.ts',
+			'backend/src/routes/auth/register.ts',
+			'backend/src/routes/users/profile.ts',
+			'backend/src/utils/auth/passwordValidation.ts',
+			'scripts/test-password-policy.ts',
 		],
 	},
 	// Boots the real application and sends one anonymous request per registered route, so its

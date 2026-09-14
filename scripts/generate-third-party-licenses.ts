@@ -28,6 +28,7 @@ import { renderNotices } from './lib/third-party-licenses/notices-doc.ts';
 import { FLAGGED_ANALYSIS } from './lib/third-party-licenses/notices.ts';
 import { formatMarkdown, render, unreviewedLicenses } from './lib/third-party-licenses/render.ts';
 import { assertRuntimeLicenseFiles } from './lib/third-party-licenses/runtime-materials.ts';
+import { collectVendoredMaterials } from './lib/third-party-licenses/vendored.ts';
 
 const WORKSPACES = ['backend', 'frontend', 'shared'];
 const OUTPUT = 'THIRD_PARTY_LICENSES.md';
@@ -113,6 +114,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 	const appLicense = identity.license ?? 'UNKNOWN';
 
 	const graph = summarizeClosure(closure);
+	const vendoredMaterials = await collectVendoredMaterials(root);
 	const summary = render({
 		dependencies,
 		flaggedNote: flaggedNoteFor(graph.flagged),
@@ -121,6 +123,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 		intro: intro(appName, appLicense),
 		scopeSections: scopeSections(await pinnedBunVersion(root), appName, appLicense),
 		title: 'Third-Party Licenses',
+		vendoredMaterials,
 	});
 
 	const notices = renderNotices({
@@ -128,6 +131,7 @@ export async function generate(root: string): Promise<GeneratedDocuments> {
 		elsewhere,
 		intro: NOTICES_INTRO,
 		title: 'Third-Party Notices',
+		vendoredMaterials,
 	});
 
 	return {

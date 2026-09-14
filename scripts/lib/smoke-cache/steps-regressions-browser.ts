@@ -37,6 +37,16 @@ export const BROWSER_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependenci
 			'scripts/test-dashboard-not-found.ts',
 		],
 	},
+	'test:date-format-preferences': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/hooks/useFormatters.ts',
+			'frontend/src/lib/dateTimePreferences.ts',
+			'frontend/src/pages/dashboards/SharedDashboardPage.tsx',
+			'frontend/src/pages/profile/DisplayPreferences.tsx',
+			'scripts/test-date-format-preferences.ts',
+		],
+	},
 	// Runs the focus-origin rule against the stand-in document and then reads the two overlay
 	// components that call it, so its world is the rule, the stand-in, and the pair of components
 	// that must keep reading the origin on open and re-checking it on close.

@@ -219,6 +219,62 @@
 					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
 				},
 				{
+					"command": "bun run test:audit-plugin-lifecycle",
+					"description": "Extracted audit lifecycle phases preserve exclusions, response details, and actor attribution"
+				},
+				{
+					"command": "bun run test:child-output-redaction",
+					"description": "Child stdout and stderr redact chunked, multiline, escaped, bearer, and assignment-shaped secrets"
+				},
+				{
+					"command": "bun run test:cookie-headers",
+					"description": "Auth cookie set and clear headers derive Secure only from validated configuration"
+				},
+				{
+					"command": "bun run test:date-format-preferences",
+					"description": "Every date, time, seconds, and timezone preference reaches shared and dashboard timestamps"
+				},
+				{
+					"command": "bun run test:field-encryption-rotation",
+					"description": "Every shared-helper encrypted database field rotates atomically with previous-key fallback"
+				},
+				{
+					"command": "bun run test:lockout-refresh",
+					"description": "Refresh replay and ambiguous rotation collisions clear cookies and revoke every session token"
+				},
+				{
+					"command": "bun run test:password-policy",
+					"description": "Common and application-derived passwords are rejected at registration, reset, and profile boundaries"
+				},
+				{
+					"command": "bun run test:prettier-cache",
+					"description": "Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content"
+				},
+				{
+					"command": "bun run test:secret-permissions",
+					"description": "Synthetic config and split-secret paths are repaired to owner-only permissions on this OS, and only the /app/config mount boundary tolerates a refused chmod"
+				},
+				{
+					"command": "bun run test:smoke-cache-status",
+					"description": "QC cache status loads once, hashes each file once, preserves order, and matches serial decisions"
+				},
+				{
+					"command": "bun run test:smoke-failure-policy",
+					"description": "Fast QC stops after the first failure while full QC aggregates independent failures"
+				},
+				{
+					"command": "bun run test:static-delivery-probe",
+					"description": "Binary gzip and Brotli bodies plus every nginx delivery policy branch fail closed"
+				},
+				{
+					"command": "bun run test:vendored-licenses",
+					"description": "Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files"
+				},
+				{
+					"command": "bun run test:nginx-security",
+					"description": "Nginx security policy regression catches missing COOP or CORP and forced COEP"
+				},
+				{
 					"command": "bun run test:auth-before-validation",
 					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
 				},
@@ -297,6 +353,10 @@
 				{
 					"command": "bun run check:secrets-shape",
 					"description": "Secrets file shape parity"
+				},
+				{
+					"command": "bun run check:nginx-security",
+					"description": "Every nginx frontend response block retains COOP and CORP while COEP remains opt-in"
 				},
 				{
 					"command": "bun run check:leak-guard",

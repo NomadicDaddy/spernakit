@@ -12,6 +12,7 @@ import { licenseIdentifiers, reviewLicenseExpression } from '../license-core/exp
 import { byCodepoint } from '../license-core/order.ts';
 import { type DirectDependency, type GraphSummary } from './collect.ts';
 import { NOTICES } from './notices.ts';
+import { type VendoredMaterial } from './vendored.ts';
 
 /**
  * Formats generated markdown with the repo's own prettier config.
@@ -41,6 +42,7 @@ export interface RenderOptions {
 	 */
 	scopeSections: { body: string; heading: string }[];
 	title: string;
+	vendoredMaterials: VendoredMaterial[];
 }
 
 function table(dependencies: DirectDependency[]): string {
@@ -66,7 +68,16 @@ export function unreviewedLicenses(packages: { license: string }[]): string[] {
 }
 
 export function render(options: RenderOptions): string {
-	const { dependencies, flaggedNote, graph, groups, intro, scopeSections, title } = options;
+	const {
+		dependencies,
+		flaggedNote,
+		graph,
+		groups,
+		intro,
+		scopeSections,
+		title,
+		vendoredMaterials,
+	} = options;
 	const sections: string[] = [`# ${title}`, '', intro.trim(), ''];
 
 	for (const group of groups) {
@@ -78,6 +89,20 @@ export function render(options: RenderOptions): string {
 			.sort((a, b) => byCodepoint(a.name, b.name));
 		if (inGroup.length === 0) continue;
 		sections.push(`## ${group.title}`, '', table(inGroup), '');
+	}
+
+	sections.push('## Vendored source materials', '');
+	for (const material of vendoredMaterials) {
+		sections.push(
+			`### ${material.name}`,
+			'',
+			`- License: ${material.spdx}`,
+			`- Copyright: ${material.copyright}`,
+			`- Upstream revision: [\`${material.upstreamRevision}\`](${material.sourceUrl})`,
+			`- Included paths: ${material.includedPaths.map((path) => `\`${path}\``).join(', ')}`,
+			`- Local modifications: ${material.localModificationPolicy}`,
+			'',
+		);
 	}
 
 	// Notices: one section per reviewed license family whose obligations apply to a direct

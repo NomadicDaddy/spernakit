@@ -32,7 +32,7 @@ async function issueAuthTokensForUser(
 	storeRefreshTokenHash(userId, tokens.refreshToken);
 
 	const csrfToken = await generateAndStoreCsrfToken(userId);
-	setAuthCookies(set, config.security, tokens, request);
+	setAuthCookies(set, config.security, tokens);
 
 	// Publish the identity for the audit plugin: the auth cookie goes out on the
 	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
