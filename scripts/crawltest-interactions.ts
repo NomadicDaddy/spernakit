@@ -125,6 +125,14 @@ export async function testInteractiveElements(
 		// Verify button still exists in DOM (view/tab changes may unmount it)
 		if (element.type === 'button' && !(await buttonExistsInDom(page, element.text))) {
 			if (!recovered.has(dedupKey)) {
+				if (recovered.size >= 8) {
+					results.addError(
+						'INTERACTION_ERROR',
+						`Too many stale button reloads at ${pageUrl}`,
+					);
+					console.log('   ❌ Too many stale button reloads');
+					return;
+				}
 				// First encounter — reload page to reset view state, then re-discover
 				recovered.add(dedupKey);
 				tested.delete(dedupKey);
@@ -202,6 +210,6 @@ async function buttonExistsInDom(page: Page, text: string): Promise<boolean> {
 				return role !== 'switch' && role !== 'combobox';
 			},
 		);
-		return buttons.some((b) => b.textContent?.trim() === t);
+		return buttons.some((b) => b.textContent?.trim().substring(0, 50) === t);
 	}, text);
 }

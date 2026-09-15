@@ -20,28 +20,21 @@ export async function discoverRoutes(
 	onFlushRateLimits?: () => void,
 ): Promise<string[]> {
 	const discovered = new Set<string>();
+	const shapes = new Set<string>();
 	const toVisit: string[] = [];
 
 	console.log('🔍 Discovering routes...');
 
 	for (const route of seedRoutes) {
 		const url = `${opts.baseUrl}${route}`;
-		if (!discovered.has(url)) {
-			discovered.add(url);
-			toVisit.push(url);
-		}
+		addNewLinks([url], discovered, shapes, toVisit);
 	}
 	if (seedRoutes.length > 0) {
-		console.log(`   Seed routes: added ${seedRoutes.length} configured routes`);
+		console.log(`   Seed routes: added ${discovered.size} representative configured routes`);
 	}
 
 	const initialLinks = await scrapeInternalLinks(page, opts.baseUrl);
-	for (const href of initialLinks) {
-		if (!discovered.has(href)) {
-			discovered.add(href);
-			toVisit.push(href);
-		}
-	}
+	addNewLinks(initialLinks, discovered, shapes, toVisit);
 	console.log(`   Pass 1 (dashboard): found ${discovered.size} routes`);
 
 	let pass = 2;
@@ -63,7 +56,7 @@ export async function discoverRoutes(
 				await waitForContent(page, opts.pageSettleDelay);
 
 				let links = await scrapeInternalLinks(page, opts.baseUrl);
-				let newCount = addNewLinks(links, discovered, toVisit);
+				let newCount = addNewLinks(links, discovered, shapes, toVisit);
 
 				// React.lazy TabLayout components may not have rendered yet.
 				// If the page has links (sidebar rendered) but no NEW links,
@@ -71,7 +64,7 @@ export async function discoverRoutes(
 				if (links.length > 0 && newCount === 0) {
 					await Bun.sleep(2000);
 					links = await scrapeInternalLinks(page, opts.baseUrl);
-					newCount = addNewLinks(links, discovered, toVisit);
+					newCount = addNewLinks(links, discovered, shapes, toVisit);
 				}
 			} catch {
 				// Discovery failure is non-fatal
@@ -84,10 +77,38 @@ export async function discoverRoutes(
 	return Array.from(discovered).sort();
 }
 
-function addNewLinks(links: string[], discovered: Set<string>, toVisit: string[]): number {
+/** A route and its filter shape need one real example, not one visit per source record. */
+export function representativeRouteShape(href: string): string {
+	const url = new URL(href);
+	const path = url.pathname.replace(
+		/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+		':id',
+	);
+	const filters = [...url.searchParams.entries()]
+		.map(([key, value]) => {
+			const representative =
+				key === 'id' || key.endsWith('Id') || /^\d{4}-\d\d-\d\d(?:T|$)/.test(value)
+					? ':value'
+					: /^(?:page|pageSize|offset|limit)$/i.test(key) && /^\d+$/.test(value)
+						? ':number'
+						: value;
+			return [key, representative] as const;
+		})
+		.sort(([a, av], [b, bv]) => a.localeCompare(b) || av.localeCompare(bv));
+	return JSON.stringify([path, filters]);
+}
+
+function addNewLinks(
+	links: string[],
+	discovered: Set<string>,
+	shapes: Set<string>,
+	toVisit: string[],
+): number {
 	let count = 0;
 	for (const href of links) {
-		if (!discovered.has(href)) {
+		const shape = representativeRouteShape(href);
+		if (!shapes.has(shape)) {
+			shapes.add(shape);
 			discovered.add(href);
 			toVisit.push(href);
 			count++;
