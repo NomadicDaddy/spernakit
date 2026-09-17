@@ -1,4 +1,4 @@
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 
@@ -13,11 +13,8 @@ import { CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/useAuth';
+import { readMfaTokenTransport } from '@/lib/mfaTokenTransport';
 import { getFormString } from '@/lib/utils';
-
-interface NavState {
-	mfaToken?: string;
-}
 
 type VerifyState = { error: null | string };
 
@@ -27,18 +24,8 @@ function MfaVerifyPage() {
 	const { completeMfaLogin, isAuthenticated } = useAuth();
 	const [useRecovery, setUseRecovery] = useState(false);
 
-	const stateToken = (location.state as NavState | null)?.mfaToken ?? '';
-	// The OAuth flow delivers the token in the URL fragment so it never reaches
-	// server logs. Query-param reading is kept as a fallback for one release.
-	const hashToken = new URLSearchParams(location.hash.replace(/^#/, '')).get('mfaToken') ?? '';
-	const queryToken = new URLSearchParams(location.search).get('mfaToken') ?? '';
-	const urlToken = hashToken || queryToken;
-	const mfaToken = stateToken || urlToken;
-
-	useEffect(() => {
-		if (!urlToken) return;
-		void navigate('/mfa-verify', { replace: true, state: { mfaToken: urlToken } });
-	}, [navigate, urlToken]);
+	const { fragmentToken, stateToken } = readMfaTokenTransport(location);
+	const mfaToken = stateToken;
 
 	const [state, submitAction, isPending] = useActionState<VerifyState, FormData>(
 		async (_prev, formData) => {
@@ -66,6 +53,9 @@ function MfaVerifyPage() {
 
 	if (isAuthenticated) {
 		return <Navigate replace to="/dashboard" />;
+	}
+	if (fragmentToken) {
+		return <Navigate replace state={{ mfaToken: fragmentToken }} to="/mfa-verify" />;
 	}
 	if (!mfaToken) {
 		return <Navigate replace to="/login" />;

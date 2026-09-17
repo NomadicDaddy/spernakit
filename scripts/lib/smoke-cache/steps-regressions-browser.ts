@@ -71,6 +71,16 @@ export const BROWSER_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependenci
 			'scripts/test-dialog-form-survival.ts',
 		],
 	},
+	// Drives the route-neutral token reader in process, then reads the MFA page to prove the
+	// fragment migration, verification calls and expired-token redirect remain wired to it.
+	'test:mfa-token-transport': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'frontend/src/lib/mfaTokenTransport.ts',
+			'frontend/src/pages/auth/MfaVerifyPage.tsx',
+			'scripts/test-mfa-token-transport.ts',
+		],
+	},
 	// Reads the frontend source tree for a component that adjusts state during render, and drives
 	// the scan itself over synthetic fixtures, so its world is the whole frontend source plus the
 	// scan and the gate that runs it.

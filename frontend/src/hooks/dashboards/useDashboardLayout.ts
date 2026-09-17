@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 
 import type { DashboardWidget, DashboardWithWidgets } from '@/api/dashboards';
 
-import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from '@/pages/dashboards/widgetSize';
+import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from '@/lib/widgetSize';
 
 export const DASHBOARD_ROW_HEIGHT = 80;
 export const DASHBOARD_COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };

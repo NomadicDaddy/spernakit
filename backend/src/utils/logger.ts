@@ -6,6 +6,7 @@ import type { AppConfig } from '../config/configSchema.ts';
 import { getConfig } from '../config/configLoader.ts';
 import { configLogger } from '../config/configLogger.ts';
 import { LogCategory, type LogCategoryType } from './logCategories.ts';
+import { LOG_SECRET_REDACTION_HOOKS, registerLogSecretValues } from './logSecretRedaction.ts';
 
 type LogLevel = 'debug' | 'error' | 'info' | 'warn';
 
@@ -153,10 +154,12 @@ function buildFileTarget(config: AppConfig): pino.TransportTargetOptions | undef
  * @returns Configured pino logger instance
  */
 function createLoggerForConfig(config: AppConfig | undefined): pino.Logger {
+	registerLogSecretValues(config);
 	const nodeEnv = config?.server.nodeEnv ?? 'development';
 
 	if (nodeEnv === 'development') {
 		return pino({
+			hooks: LOG_SECRET_REDACTION_HOOKS,
 			level: 'debug',
 			redact: REDACT_PATHS,
 			transport: {
@@ -187,7 +190,12 @@ function createLoggerForConfig(config: AppConfig | undefined): pino.Logger {
 		targets.push(fileTarget);
 	}
 
-	return pino({ level, redact: REDACT_PATHS, transport: { targets } });
+	return pino({
+		hooks: LOG_SECRET_REDACTION_HOOKS,
+		level,
+		redact: REDACT_PATHS,
+		transport: { targets },
+	});
 }
 
 /**
