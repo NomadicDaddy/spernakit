@@ -9,10 +9,10 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFormatters } from '@/hooks/useFormatters';
+import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from '@/lib/widgetSize';
 
 import { DashboardWidgetRenderer } from './dashboard-widgets/DashboardWidgetRenderer';
 import { DashboardCardSkeleton } from './DashboardCardSkeleton';
-import { getWidgetMinRows, WIDGET_HEIGHT_MAX } from './widgetSize';
 
 /**
  * The chrome the public page has instead of the app shell.

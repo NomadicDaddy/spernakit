@@ -1,6 +1,6 @@
 import type { RefCallback } from 'react';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 
 interface ContainerSize {
 	height: number;
@@ -43,7 +43,7 @@ const ZERO_SIZE: ContainerSize = { height: 0, width: 0 };
 function useContainerSize(): [RefCallback<HTMLDivElement>, ContainerSize] {
 	const [size, setSize] = useState<ContainerSize>(ZERO_SIZE);
 
-	const ref = useCallback((element: HTMLDivElement | null) => {
+	const ref = (element: HTMLDivElement | null) => {
 		if (!element) return;
 
 		let rafId: null | number = null;
@@ -83,7 +83,7 @@ function useContainerSize(): [RefCallback<HTMLDivElement>, ContainerSize] {
 			observer.disconnect();
 			if (rafId !== null) cancelAnimationFrame(rafId);
 		};
-	}, []);
+	};
 
 	return [ref, size];
 }

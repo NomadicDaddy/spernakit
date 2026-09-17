@@ -204,7 +204,7 @@
 				},
 				{
 					"command": "bun run test:upload-validation",
-					"description": "Binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
+					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},
 				{
 					"command": "bun run test:error-log-wiring",
@@ -241,6 +241,10 @@
 				{
 					"command": "bun run test:lockout-refresh",
 					"description": "Refresh replay and ambiguous rotation collisions clear cookies and revoke every session token"
+				},
+				{
+					"command": "bun run test:mfa-token-transport",
+					"description": "MFA challenge tokens use router state or a one-time URL fragment, the fragment is replaced before the form renders, and query-string tokens are ignored"
 				},
 				{
 					"command": "bun run test:password-policy",

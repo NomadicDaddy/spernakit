@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /**
- * Regression test for flat backend route-module mount detection.
+ * Regression test for route mounting and frontend dependency boundaries.
  *
  * The fixture drives the real package command against an isolated project. A flat Elysia route
- * must fail when unmounted, including when only an unmounted barrel references it, while a mounted
- * barrel chain and non-route helpers must pass.
+ * must fail when unmounted, including when only an unmounted barrel references it. Shared frontend
+ * modules must also fail when they import route-owned pages by alias or relative path.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -59,6 +59,9 @@ try {
 	);
 	mkdirSync(join(fixtureRoot, 'frontend/src/pages'), { recursive: true });
 	mkdirSync(join(fixtureRoot, 'frontend/src/components'), { recursive: true });
+	mkdirSync(join(fixtureRoot, 'frontend/src/hooks'), { recursive: true });
+	mkdirSync(join(fixtureRoot, 'frontend/src/lib'), { recursive: true });
+	mkdirSync(join(fixtureRoot, 'frontend/src/stores'), { recursive: true });
 	write(
 		'frontend/src/pages/HomePage.tsx',
 		'export default function HomePage() {\n\treturn null;\n}\n',
@@ -118,7 +121,82 @@ try {
 		`The passing fixture must print the success marker and what it examined:\n${result.output}`,
 	);
 
-	console.log(`Feature integration route-mount test passed (${checks} assertions).`);
+	const pageDependencyFixtures = [
+		[
+			'frontend/src/components/PageLeak.tsx',
+			"import { HomePage } from '@/pages/HomePage';\nexport const PageLeak = HomePage;\n",
+		],
+		[
+			'frontend/src/hooks/usePageLeak.ts',
+			"import { HomePage } from '../pages/HomePage';\nexport const usePageLeak = HomePage;\n",
+		],
+		[
+			'frontend/src/lib/pageLeak.ts',
+			"import '@/pages/HomePage';\nexport const pageLeak = true;\n",
+		],
+		[
+			'frontend/src/stores/pageLeak.ts',
+			"export const loadPage = () => import('../pages/HomePage');\n",
+		],
+	] as const;
+	for (const [path, source] of pageDependencyFixtures) write(path, source);
+
+	result = runCheck();
+	assert(
+		result.exitCode !== 0 &&
+			result.output.includes('Forbidden shared-to-page frontend dependencies:'),
+		`Shared-to-page imports must fail the integration gate:\n${result.output}`,
+	);
+	for (const [path] of pageDependencyFixtures) {
+		assert(
+			result.output.includes(path),
+			`The shared-to-page failure must name ${path}:\n${result.output}`,
+		);
+		rmSync(join(fixtureRoot, path), { force: true });
+	}
+
+	result = runCheck();
+	assert(
+		result.exitCode === 0,
+		`Removing every shared-to-page dependency must restore a clean pass:\n${result.output}`,
+	);
+
+	const manualMemoizationFixtures = [
+		[
+			'frontend/src/components/ManualCallback.tsx',
+			"import { useCallback } from 'react';\nexport const ManualCallback = () => useCallback(() => null, []);\n",
+		],
+		[
+			'frontend/src/hooks/useManualMemo.ts',
+			"import { useMemo as cacheValue } from 'react';\nexport const useManualMemo = () => cacheValue(() => 1, []);\n",
+		],
+		[
+			'frontend/src/lib/ManualMemo.tsx',
+			"import React from 'react';\nexport const ManualMemo = React.memo(() => null);\n",
+		],
+	] as const;
+	for (const [path, source] of manualMemoizationFixtures) write(path, source);
+
+	result = runCheck();
+	assert(
+		result.exitCode !== 0 &&
+			result.output.includes('React Compiler source-contract violations:'),
+		`Unsuppressed manual memoization must fail the integration gate:\n${result.output}`,
+	);
+	for (const [path] of manualMemoizationFixtures) {
+		assert(result.output.includes(path), `The compiler-contract failure must name ${path}.`);
+	}
+
+	for (const [path, source] of manualMemoizationFixtures) {
+		write(path, `'use client';\n'use no memo';\n\n${source}`);
+	}
+	result = runCheck();
+	assert(
+		result.exitCode === 0,
+		`A file-level use-no-memo directive must permit manual memoization:\n${result.output}`,
+	);
+
+	console.log(`Feature integration regression test passed (${checks} assertions).`);
 } catch (err: unknown) {
 	console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
 	exit(1);

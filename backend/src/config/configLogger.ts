@@ -1,5 +1,7 @@
 import pino from 'pino';
 
+import { LOG_SECRET_REDACTION_HOOKS } from '../utils/logSecretRedaction.ts';
+
 // Bootstrap-only process.env read; see configSecrets.ts policy comment for the full exception rationale.
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -43,6 +45,7 @@ const REDACT_PATHS = [
  * so it reads NODE_ENV directly from the environment.
  */
 export const configLogger = pino({
+	hooks: LOG_SECRET_REDACTION_HOOKS,
 	level: 'debug',
 	redact: REDACT_PATHS,
 	...(isProduction

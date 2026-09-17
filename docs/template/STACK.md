@@ -566,5 +566,5 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the deployment guide.
 
 ### Template Version
 
-**Spernakit v3.47.1** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
+**Spernakit v3.47.2** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
 release changes.

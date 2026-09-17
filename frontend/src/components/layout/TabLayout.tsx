@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 
 import type { Breadcrumb } from '@/components/shared/PageHeader';
@@ -23,6 +23,41 @@ interface TabLayoutProps {
 	onTabClick?: (tab: TabItem) => void;
 	tabs: TabItem[];
 	title: string;
+}
+
+/*
+ * Writes the rail's own `scrollLeft`. It used to call `activeTab.scrollIntoView({ block:
+ * 'nearest', inline: 'center' })`, and `scrollIntoView` cannot be scoped: it scrolls EVERY
+ * scrollable ancestor until the element is visible in all of them, and `block`/`inline` choose
+ * the alignment within each one rather than which ones take part. `main` is one of those
+ * ancestors on every page, so arriving at /profile/security scrolled the page title out from
+ * under the user — main.scrollTop 66 at 390 and 110 at 360, with the h1 behind the fixed header
+ * before they had touched anything. The only way to move one container is to compute the offset
+ * against it and write it, which is what this does.
+ *
+ * The early return is the other half. `nearest` still moves when a tab is clipped by a fraction
+ * of a pixel, and the common case — the active tab already fully inside the rail — needs no
+ * scroll at all. Bringing a genuinely off-screen tab into view is kept: the rail overflows 4.8x
+ * at mobile, so that part earns its place.
+ */
+function scrollActiveTabIntoView(
+	nav: HTMLElement | null,
+	activeTab: HTMLAnchorElement | undefined,
+	behavior: ScrollBehavior,
+): void {
+	if (!nav || !activeTab) return;
+
+	const navRect = nav.getBoundingClientRect();
+	const tabRect = activeTab.getBoundingClientRect();
+	if (tabRect.left >= navRect.left && tabRect.right <= navRect.right) return;
+
+	// Rect-relative rather than `offsetLeft`, which is measured against the nearest
+	// positioned ancestor — here the wrapper that carries the gradient fades, not the rail.
+	const offsetWithinRail = tabRect.left - navRect.left + nav.scrollLeft;
+	nav.scrollTo({
+		behavior,
+		left: offsetWithinRail - (nav.clientWidth - tabRect.width) / 2,
+	});
 }
 
 function TabLayout({
@@ -60,48 +95,12 @@ function TabLayout({
 		});
 	};
 
-	/*
-	 * Writes the rail's own `scrollLeft`. It used to call `activeTab.scrollIntoView({ block:
-	 * 'nearest', inline: 'center' })`, and `scrollIntoView` cannot be scoped: it scrolls EVERY
-	 * scrollable ancestor until the element is visible in all of them, and `block`/`inline` choose
-	 * the alignment within each one rather than which ones take part. `main` is one of those
-	 * ancestors on every page, so arriving at /profile/security scrolled the page title out from
-	 * under the user — main.scrollTop 66 at 390 and 110 at 360, with the h1 behind the fixed header
-	 * before they had touched anything. The only way to move one container is to compute the offset
-	 * against it and write it, which is what this does.
-	 *
-	 * The early return is the other half. `nearest` still moves when a tab is clipped by a fraction
-	 * of a pixel, and the common case — the active tab already fully inside the rail — needs no
-	 * scroll at all. Bringing a genuinely off-screen tab into view is kept: the rail overflows 4.8x
-	 * at mobile, so that part earns its place.
-	 */
-	const scrollActiveTabIntoView = useCallback(
-		(behavior: ScrollBehavior) => {
-			const nav = navRef.current;
-			const activeTab = tabRefs.current.get(location.pathname);
-			if (!nav || !activeTab) return;
-
-			const navRect = nav.getBoundingClientRect();
-			const tabRect = activeTab.getBoundingClientRect();
-			if (tabRect.left >= navRect.left && tabRect.right <= navRect.right) return;
-
-			// Rect-relative rather than `offsetLeft`, which is measured against the nearest
-			// positioned ancestor — here the wrapper that carries the gradient fades, not the rail.
-			const offsetWithinRail = tabRect.left - navRect.left + nav.scrollLeft;
-			nav.scrollTo({
-				behavior,
-				left: offsetWithinRail - (nav.clientWidth - tabRect.width) / 2,
-			});
-		},
-		[location.pathname],
-	);
-
 	// Scroll active tab into view on mount and route change
 	useEffect(() => {
-		scrollActiveTabIntoView('smooth');
+		scrollActiveTabIntoView(navRef.current, tabRefs.current.get(location.pathname), 'smooth');
 		// Also update scroll indicators after route change
 		requestAnimationFrame(updateScrollIndicators);
-	}, [location.pathname, scrollActiveTabIntoView]);
+	}, [location.pathname]);
 
 	// Update indicators on mount and resize
 	useEffect(() => {
@@ -110,12 +109,12 @@ function TabLayout({
 		if (!nav) return;
 
 		const observer = new ResizeObserver(() => {
-			scrollActiveTabIntoView('auto');
+			scrollActiveTabIntoView(nav, tabRefs.current.get(location.pathname), 'auto');
 			updateScrollIndicators();
 		});
 		observer.observe(nav);
 		return () => observer.disconnect();
-	}, [scrollActiveTabIntoView]);
+	}, [location.pathname]);
 
 	return (
 		<div className="space-y-6 p-6">

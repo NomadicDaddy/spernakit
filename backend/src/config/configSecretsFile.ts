@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { registerLogSecretValues } from '../utils/logSecretRedaction.ts';
 import { configLogger } from './configLogger.ts';
 import { isPlainObject, projectRoot } from './configUtils.ts';
 import { secureSecretPath } from './secretPermissions.ts';
@@ -118,6 +119,7 @@ function loadSecretsFile(
 	}
 
 	namespace = deepFreeze(parsed);
+	registerLogSecretValues(namespace, { includeEveryString: true });
 	const leafCount = collectLeafPaths(namespace).length;
 	status = { leafCount, path, present: true };
 	configLogger.info({ leafCount, path }, 'Secrets file loaded');

@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SECRET_KEY = /(?:api[_-]?key|credential|password|private[_-]?key|secret|token)/i;
+const SECRET_KEY =
+	/(?:api[_-]?key|credential|encryption[_-]?key|password|private[_-]?key|secret|token)/i;
 const ASSIGNMENT =
 	/((?:api[_-]?key|authorization|credential|password|secret|token)\s*[:=]\s*["']?)([^\s,"']+)/gi;
 const BEARER = /(bearer\s+)[A-Za-z0-9._~+/=-]+/gi;

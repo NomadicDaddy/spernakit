@@ -3,6 +3,55 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.2] - 2026-09-17
+
+Patch release. Authentication no longer accepts MFA challenge tokens from query strings. Binary
+uploads and structured logs fail closed when content cannot be safely recognized or redacted.
+Widget sizing moves out of the page layer, the crawler samples equivalent routes instead of
+walking one per record, and dependencies move to current versions.
+
+### Fixed
+
+- MFA challenge tokens are accepted only from router state or a one-time URL fragment. Consumed
+  fragments are replaced before the verification form renders, and query-string tokens are
+  ignored.
+- Image and PDF uploads require a recognized file signature before storage. Arbitrary or
+  undersized binary bodies are rejected while valid text formats and known MIME mismatch handling
+  remain unchanged.
+- Structured logging recursively redacts configured secret values from messages, format
+  arguments, arrays, objects, errors, stacks, and causes across bootstrap, stdout, stderr, and
+  rotated-file output. Escaped, encoded, bearer-token, and assignment-shaped values are also
+  covered.
+- Child-process output redaction also covers configured encryption keys. The key pattern the
+  scrubber matches on now includes `encryption_key` and `encryptionKey` alongside the existing
+  password, secret, token, credential, and private-key forms.
+- Route discovery visits one example of each route shape rather than every record behind it.
+  Identifier path segments, id-valued and date-valued query parameters, and paging parameters are
+  folded together, so a list of a hundred records contributes one crawl target instead of a
+  hundred.
+- Button matching compares the first fifty characters, which is what discovery records, so a
+  button whose label is longer than that is still found after the DOM changes. The recorded index
+  is preferred while it still identifies the same button.
+- A page that keeps unmounting the button under test stops after eight reloads and reports an
+  interaction error, instead of reloading until the crawl times out.
+
+### Changed
+
+- Widget sizing constants and validators live in `frontend/src/lib/widgetSize.ts` rather than in
+  the dashboards page directory, so the shared dashboard layout hook no longer imports from a
+  page. Sizing behavior is unchanged. `check:feature-integration` rejects a shared component,
+  hook, library, or store that imports page-owned code.
+- Manual `useCallback` wrappers are removed from the tab layout, the container-width hook, the
+  data viewer table, and the ERD panel, leaving memoization to the React compiler. Ref and
+  observer cleanup is kept as it was. `check:feature-integration` enforces the compiler contract
+  across frontend source.
+- Production and development dependencies move to current versions: `nodemailer` 10.0.10,
+  `@tanstack/react-query` 5.103.1, `@tanstack/react-virtual` 3.14.13, `lucide-react` 1.47.0,
+  `react-router` 8.4.0, `tailwind-merge` 3.7.0, `web-vitals` 6.2.2, `eslint-plugin-jsdoc` 64.5.2,
+  `eslint-plugin-perfectionist` 5.11.1, `eslint-plugin-react-refresh` 0.5.7, `knip` 6.36.0,
+  `prettier` 3.9.7, and `puppeteer` 25.11.0, with the lockfile and license notices updated to
+  match.
+
 ## [3.47.1] - 2026-09-14
 
 Patch release. Authentication rejects weak passwords and revokes compromised refresh sessions.

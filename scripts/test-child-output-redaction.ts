@@ -1,5 +1,11 @@
 #!/usr/bin/env bun
-import { redactText, SecretScrubber } from './lib/process/secret-scrubber.ts';
+import { resolve } from 'node:path';
+
+import {
+	collectConfiguredSecrets,
+	redactText,
+	SecretScrubber,
+} from './lib/process/secret-scrubber.ts';
 
 const secret = 'line-one\nline-two/token=value';
 const escaped = JSON.stringify(secret).slice(1, -1);
@@ -22,9 +28,21 @@ if ((output.match(/\[REDACTED\]/g) ?? []).length < 4) {
 const assignment = redactText('token = split-token-value', []);
 if (assignment.includes('split-token-value')) failures.push('token assignment was not redacted');
 
+const encryptionKey = 'e'.repeat(64);
+const backupEncryptionKey = 'b'.repeat(64);
+const collected = collectConfiguredSecrets(resolve(import.meta.dir, '..'), {
+	security: { backupEncryptionKey, encryptionKey },
+});
+if (!collected.includes(encryptionKey)) failures.push('encryptionKey was not collected');
+if (!collected.includes(backupEncryptionKey)) {
+	failures.push('backupEncryptionKey was not collected');
+}
+
 if (failures.length > 0) {
 	console.error('[FAIL] child-output-redaction');
 	for (const failure of failures) console.error(` - ${failure}`);
 	process.exit(1);
 }
-console.log('[OK] chunked, multiline, escaped, bearer, and assignment secrets are redacted');
+console.log(
+	'[OK] chunked, multiline, escaped, bearer, assignment, and encryption-key secrets are redacted',
+);
