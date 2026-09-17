@@ -4,7 +4,7 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { hasMinimumRole, isSysop } from '../../guards/role.ts';
+import { assertUser, hasMinimumRole, isSysop } from '../../guards/role.ts';
 import {
 	download,
 	FileValidationError,
@@ -16,7 +16,6 @@ import { broadcastCrudToUser, broadcastCrudToWorkspace } from '../../services/we
 import { dataResponse, paginatedResponse, successResponse } from '../../utils/apiResponse.ts';
 import { badRequestError, internalError, notFoundError } from '../../utils/errorResponse.ts';
 import {
-	assertFileContext,
 	resolveFileWithAccess,
 	scopedWorkspaceId,
 	trackUploadEvent,
@@ -38,8 +37,7 @@ async function handleUploadFile({
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const ctx = assertFileContext(user, workspaceId, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 
 	const fileError = validateUploadedFile(body.file, set);
 	if (fileError) return fileError;
@@ -55,16 +53,16 @@ async function handleUploadFile({
 			mimeType: file.type,
 			originalName: file.name,
 			size: file.size,
-			uploadedBy: ctx.authUser.id,
+			uploadedBy: authUser.id,
 			...(workspaceId ? { workspaceId } : {}),
 		});
 
-		trackUploadEvent(file, ctx.authUser.id, workspaceId);
+		trackUploadEvent(file, authUser.id, workspaceId);
 
 		if (workspaceId) {
 			broadcastCrudToWorkspace(workspaceId, WS_CRUD_EVENTS.FILE_CREATED, { id: record.id });
 		} else {
-			broadcastCrudToUser(ctx.authUser.id, WS_CRUD_EVENTS.FILE_CREATED, { id: record.id });
+			broadcastCrudToUser(authUser.id, WS_CRUD_EVENTS.FILE_CREATED, { id: record.id });
 		}
 
 		set.status = HTTP_STATUS.CREATED;
@@ -90,13 +88,12 @@ async function handleDownloadFile({
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const ctx = assertFileContext(user, workspaceId, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 
 	const resolved = resolveFileWithAccess({
 		fileId: params.id,
 		set,
-		user: ctx.authUser,
+		user: authUser,
 		workspaceId,
 	});
 	if (resolved.error) return resolved.response;
@@ -129,13 +126,12 @@ function handleGetFileInfo({
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const ctx = assertFileContext(user, workspaceId, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 
 	const resolved = resolveFileWithAccess({
 		fileId: params.id,
 		set,
-		user: ctx.authUser,
+		user: authUser,
 		workspaceId,
 	});
 	if (resolved.error) return resolved.response;
@@ -145,26 +141,23 @@ function handleGetFileInfo({
 
 function handleListFiles({
 	query,
-	set,
 	user,
 	workspaceId,
 }: {
 	query: { limit?: number; page?: number };
-	set: { status?: number | string };
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const ctx = assertFileContext(user, workspaceId, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 	const limit = query.limit;
 	const page = query.page;
 
-	const isPrivileged = isSysop(ctx.authUser) || hasMinimumRole(ctx.authUser.role, 'ADMIN');
+	const isPrivileged = isSysop(authUser) || hasMinimumRole(authUser.role, 'ADMIN');
 
 	const result = list({
 		limit,
 		page,
-		uploadedBy: isPrivileged ? undefined : ctx.authUser.id,
+		uploadedBy: isPrivileged ? undefined : authUser.id,
 		workspaceId: scopedWorkspaceId(workspaceId),
 	});
 
@@ -182,23 +175,22 @@ function handleDeleteFile({
 	user: AuthPayload | null;
 	workspaceId: null | number;
 }) {
-	const ctx = assertFileContext(user, workspaceId, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 
 	const resolved = resolveFileWithAccess({
 		fileId: params.id,
 		set,
-		user: ctx.authUser,
+		user: authUser,
 		workspaceId,
 	});
 	if (resolved.error) return resolved.response;
 
-	softDelete(params.id, ctx.authUser.id, scopedWorkspaceId(workspaceId));
+	softDelete(params.id, authUser.id, scopedWorkspaceId(workspaceId));
 
 	if (workspaceId) {
 		broadcastCrudToWorkspace(workspaceId, WS_CRUD_EVENTS.FILE_DELETED, { id: params.id });
 	} else {
-		broadcastCrudToUser(ctx.authUser.id, WS_CRUD_EVENTS.FILE_DELETED, { id: params.id });
+		broadcastCrudToUser(authUser.id, WS_CRUD_EVENTS.FILE_DELETED, { id: params.id });
 	}
 
 	return successResponse();

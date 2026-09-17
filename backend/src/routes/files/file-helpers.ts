@@ -3,9 +3,7 @@ import type { AuthPayload } from '../../plugins/auth.ts';
 import { getConfig } from '../../config/configLoader.ts';
 import { BYTES_PER_MB } from '../../constants/files.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { assertUser, hasMinimumRole, isSysop } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
-import { missingWorkspaceHeaderError } from '../../guards/workspaceHeader.ts';
+import { hasMinimumRole, isSysop } from '../../guards/role.ts';
 import { getById } from '../../services/fileService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import {
@@ -18,31 +16,6 @@ import {
 /* ------------------------------------------------------------------ */
 /*  Workspace scope validation helper                                  */
 /* ------------------------------------------------------------------ */
-
-type WorkspaceGuardResult = { error: true; response: object } | null;
-
-function validateWorkspaceScope({
-	set,
-	user,
-	workspaceId,
-}: {
-	set: { status?: number | string };
-	user: AuthPayload;
-	workspaceId: null | number;
-}): WorkspaceGuardResult {
-	const userIsSysop = isSysop(user);
-
-	if (!userIsSysop && !workspaceId) {
-		return { error: true, response: missingWorkspaceHeaderError(set) };
-	}
-
-	if (workspaceId) {
-		const guard = requireWorkspaceAccess({ set, user, workspaceId });
-		if (guard) return { error: true, response: guard };
-	}
-
-	return null;
-}
 
 /**
  * The workspace a file lookup is scoped to, or undefined for a lookup across every workspace.
@@ -151,27 +124,5 @@ function resolveFileWithAccess({
 	return { error: false, file };
 }
 
-/**
- * Assert auth user and validate workspace scope in one call.
- * Combines assertUser + validateWorkspaceScope to reduce handler boilerplate.
- */
-function assertFileContext(
-	user: AuthPayload | null,
-	workspaceId: null | number,
-	set: { status?: number | string },
-): { authUser: AuthPayload; ok: true } | { error: object; ok: false } {
-	const authUser = assertUser(user);
-	const scopeCheck = validateWorkspaceScope({ set, user: authUser, workspaceId });
-	if (scopeCheck) return { error: scopeCheck.response, ok: false };
-	return { authUser, ok: true };
-}
-
-export {
-	assertFileContext,
-	resolveFileWithAccess,
-	scopedWorkspaceId,
-	trackUploadEvent,
-	validateUploadedFile,
-	validateWorkspaceScope,
-};
+export { resolveFileWithAccess, scopedWorkspaceId, trackUploadEvent, validateUploadedFile };
 export type { FileRecord };

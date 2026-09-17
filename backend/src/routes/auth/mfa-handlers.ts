@@ -27,6 +27,7 @@ import { dataResponse, successResponse } from '../../utils/apiResponse.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import {
 	AUTH_ERROR_CODES,
+	badRequestError,
 	conflictError,
 	internalError,
 	isMfaAlreadyEnabledError,
@@ -59,10 +60,16 @@ async function handleMfaSetup({ body, set, user }: AuthCtx<{ currentPassword: st
 	const passwordHash = getUserPasswordHash(authedUser.id);
 	if (!passwordHash || !(await verifyPassword(body.currentPassword, passwordHash))) {
 		logAuth('warn', 'MFA setup denied: invalid password', { userId: authedUser.id });
-		set.status = HTTP_STATUS.UNAUTHORIZED;
-		return unauthorizedError(
+		/*
+		 * 400 rather than 401, matching the other two step-up surfaces. A 401 says the
+		 * session is no longer good, and the client answers one by refreshing the token or
+		 * signing the user out. The session is fine; the password typed into this dialog is
+		 * not.
+		 */
+		set.status = HTTP_STATUS.BAD_REQUEST;
+		return badRequestError(
 			'Current password is incorrect.',
-			AUTH_ERROR_CODES.AUTH_INVALID_CREDENTIALS,
+			AUTH_ERROR_CODES.AUTH_CURRENT_PASSWORD_INVALID,
 		);
 	}
 

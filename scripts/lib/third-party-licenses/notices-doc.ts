@@ -9,6 +9,7 @@
  */
 
 import { type ClosurePackage, packagesWithoutLicenseText } from './closure.ts';
+import { type VendoredMaterial } from './vendored.ts';
 
 export interface NoticesOptions {
 	closure: ClosurePackage[];
@@ -16,6 +17,7 @@ export interface NoticesOptions {
 	elsewhere: string[];
 	intro: string;
 	title: string;
+	vendoredMaterials: VendoredMaterial[];
 }
 
 /** Fences license text so a stray heading or table inside it cannot break the document. */
@@ -29,7 +31,7 @@ function fence(text: string): string {
 }
 
 export function renderNotices(options: NoticesOptions): string {
-	const { closure, elsewhere, intro, title } = options;
+	const { closure, elsewhere, intro, title, vendoredMaterials } = options;
 	const missing = packagesWithoutLicenseText(closure);
 
 	const sections: string[] = [
@@ -65,6 +67,18 @@ export function renderNotices(options: NoticesOptions): string {
 			'file, and `bun run check:image-licenses` verifies that against the built image.',
 			'',
 			...elsewhere.map((entry) => `- \`${entry}\``),
+			'',
+		);
+	}
+
+	sections.push('## Vendored source notices', '');
+	for (const material of vendoredMaterials) {
+		sections.push(
+			`### ${material.name} at ${material.upstreamRevision}`,
+			'',
+			`License: ${material.spdx}`,
+			'',
+			fence(material.licenseText.trim()),
 			'',
 		);
 	}

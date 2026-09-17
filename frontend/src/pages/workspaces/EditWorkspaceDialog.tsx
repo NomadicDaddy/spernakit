@@ -40,12 +40,28 @@ export function EditWorkspaceDialog({
 		name: '',
 	});
 
-	// Reset form when workspace changes
-	if (workspace && form.name !== workspace.name) {
-		setForm({
-			description: workspace.description ?? '',
-			name: workspace.name,
-		});
+	/*
+	 * Seed the form for the workspace the dialog was opened for, once per opening.
+	 *
+	 * This used to read `if (workspace && form.name !== workspace.name)`, which is a guard that
+	 * can never let go: `form.name` is the field being edited, so the first keystroke made the two
+	 * differ and this block immediately typed the old name back. The Name input could not hold any
+	 * value other than the workspace's current one, and Save then sent that unchanged name, which
+	 * is why the save reported success and nothing appeared to happen. Description was not in the
+	 * condition, so it accepted input, and the create dialog has no sync block at all, so its Name
+	 * field worked. Four applications reported one or another face of this.
+	 *
+	 * The guard now compares against what it last seeded for, which is state nothing else writes,
+	 * so typing cannot invalidate it. Closing records `null` without clearing the fields, so the
+	 * dialog does not visibly blank out during its close animation, and reopening seeds again.
+	 */
+	const openFor = isOpen && workspace ? workspace.id : null;
+	const [seededFor, setSeededFor] = useState<null | number>(null);
+	if (openFor !== seededFor) {
+		setSeededFor(openFor);
+		if (workspace && openFor !== null) {
+			setForm({ description: workspace.description ?? '', name: workspace.name });
+		}
 	}
 
 	const handleUpdate = () => {

@@ -9,6 +9,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { DEFAULT_ITEMS_PER_PAGE, pageSizeOptions } from '@/lib/pageSize';
 
 function DisplayPreferences({
 	disabled,
@@ -135,15 +136,18 @@ function DisplayPreferences({
 						<Select
 							disabled={disabled}
 							onValueChange={(value) => onChange('itemsPerPage', Number(value))}
-							value={String(uiSettings?.itemsPerPage ?? 25)}>
+							value={String(uiSettings?.itemsPerPage ?? DEFAULT_ITEMS_PER_PAGE)}>
 							<SelectTrigger className="w-full" id="itemsPerPage">
 								<SelectValue placeholder="Select items per page…" />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="10">10</SelectItem>
-								<SelectItem value="25">25</SelectItem>
-								<SelectItem value="50">50</SelectItem>
-								<SelectItem value="100">100</SelectItem>
+								{pageSizeOptions(
+									uiSettings?.itemsPerPage ?? DEFAULT_ITEMS_PER_PAGE,
+								).map((size) => (
+									<SelectItem key={size} value={String(size)}>
+										{size}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>

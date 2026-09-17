@@ -1,22 +1,4 @@
 #!/usr/bin/env bun
-/**
- * Regression coverage for the audit log's outcome filter
- * (`.aidd/features/remediation-20260827-audit-log-cannot-surface-failed-attempts`).
- *
- * The defect this gate was written for: the audit log recorded every rejected request and offered
- * no way to ask for them. A failed sign-in was written with no user attached, so it rendered as
- * `System` alongside routine unattributed activity, and the status that made it a failure was
- * buried in the row's details. The one question an audit log exists to answer, whether anyone has
- * been failing to get in, could only be answered by opening rows one at a time.
- *
- * The property under test is that the outcome is both filterable and readable. The gate provokes
- * one failed and one successful sign-in through the real login route, then asserts that
- * `outcome=failed` returns exactly the rejected one, `outcome=succeeded` exactly the accepted one,
- * and the unfiltered listing still returns both. The failed row must name the account the request
- * tried to use, or it is still indistinguishable from System activity.
- *
- * Runs in process against a throwaway temp-file SQLite database.
- */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -28,12 +10,12 @@ import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
 import { users } from '../backend/src/db/schema/users.ts';
+import { workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-/** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
 const SEED_ROUNDS = 4;
 const WRONG_PASSWORD = 'not-the-password-9!';
 const LOGIN_PATH = '/api/v1/auth/login';
@@ -45,7 +27,6 @@ function assert(condition: boolean, message: string): void {
 
 type App = ReturnType<typeof createApiApp>;
 
-/** The shape the listing returns for the fields this gate reads. */
 interface AuditRow {
 	action: string;
 	id: number;
@@ -54,12 +35,6 @@ interface AuditRow {
 	username: null | string;
 }
 
-/**
- * The seed's own SYSOP account and its development password.
- *
- * Read out of SEED_USERS rather than written down here, so a derived app that renames its SYSOP
- * account moves this gate with it instead of signing in as a row that no longer exists.
- */
 function sysopSeed(): { password: string; username: string } {
 	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === 'SYSOP');
 	if (!seed) throw new Error('SEED_USERS carries no SYSOP account');
@@ -91,8 +66,7 @@ function attemptLogin(app: App, password: string): Promise<Response> {
 	);
 }
 
-/** One listing request, as a signed-in SYSOP with no workspace header (global scope). */
-function request(app: App, query: string): Promise<Response> {
+function request(app: App, query: string, workspaceId?: number): Promise<Response> {
 	const config = getConfig();
 	const token = signAccessToken({ id: sysopId(), role: 'SYSOP' });
 	return app.handle(
@@ -100,15 +74,19 @@ function request(app: App, query: string): Promise<Response> {
 			headers: {
 				cookie: `${config.security.authCookieName}=${token}`,
 				origin: config.server.frontendUrl,
+				...(workspaceId === undefined ? {} : { 'x-workspace-id': String(workspaceId) }),
 			},
 			method: 'GET',
 		}),
 	);
 }
 
-/** The same request, read as a listing that has to have succeeded. */
-async function list(app: App, query: string): Promise<{ data: AuditRow[]; total: number }> {
-	const response = await request(app, query);
+async function list(
+	app: App,
+	query: string,
+	workspaceId?: number,
+): Promise<{ data: AuditRow[]; total: number }> {
+	const response = await request(app, query, workspaceId);
 	const payload = (await response.json()) as {
 		data?: AuditRow[];
 		total?: number;
@@ -134,7 +112,6 @@ async function awaitAuditRows(expected: number): Promise<number> {
 	return getDb().select().from(auditLogs).all().length;
 }
 
-/** Provoke one rejected and one accepted sign-in, in that order. */
 async function provokeLogins(app: App): Promise<void> {
 	const rejected = await attemptLogin(app, WRONG_PASSWORD);
 	assert(
@@ -155,7 +132,6 @@ async function provokeLogins(app: App): Promise<void> {
 	);
 }
 
-/** The outcome is filterable, and each half returns exactly its own row. */
 async function outcomeFilter(app: App): Promise<void> {
 	const all = await list(app, 'limit=50');
 	assert(
@@ -190,7 +166,6 @@ async function outcomeFilter(app: App): Promise<void> {
 	assert(succeeded.data[0]?.id !== failedRow?.id, 'the two halves must not return the same row');
 }
 
-/** A rejected sign-in has no user attached, so the account it named is all that identifies it. */
 async function attemptedIdentity(app: App): Promise<void> {
 	const failed = await list(app, 'limit=50&outcome=failed');
 	const row = failed.data[0];
@@ -238,12 +213,42 @@ async function composesWithExistingFilters(app: App): Promise<void> {
 	);
 }
 
-/** An outcome the filter does not know must be refused, not silently ignored. */
 async function rejectsUnknownOutcome(app: App): Promise<void> {
 	const response = await request(app, 'outcome=maybe');
 	assert(
 		response.status >= 400,
 		`an unrecognised outcome must be refused rather than ignored, got ${String(response.status)}`,
+	);
+}
+
+/** Workspace scope and date validation still reach the extracted normalizer. */
+async function workspaceAndDateRegressions(app: App): Promise<void> {
+	getDb()
+		.insert(workspaces)
+		.values([
+			{ id: 41, name: 'Audit Scope 41', ownerId: sysopId(), slug: 'audit-scope-41' },
+			{ id: 42, name: 'Audit Scope 42', ownerId: sysopId(), slug: 'audit-scope-42' },
+		])
+		.run();
+	getDb()
+		.insert(auditLogs)
+		.values([
+			{ action: 'workspace.scope.probe', workspaceId: 41 },
+			{ action: 'workspace.scope.probe', workspaceId: 42 },
+		])
+		.run();
+	const scoped = await list(app, 'action=workspace.scope.probe', 41);
+	assert(scoped.total === 1, `workspace scope must survive normalization, got ${scoped.total}`);
+
+	const invalid = await request(app, 'dateFrom=not-a-date');
+	assert(invalid.status === 400, `invalid dates must still be rejected, got ${invalid.status}`);
+	const reversed = await request(
+		app,
+		'dateFrom=2026-02-02T00%3A00%3A00Z&dateTo=2026-02-01T00%3A00%3A00Z',
+	);
+	assert(
+		reversed.status === 400,
+		`reversed ranges must still be rejected, got ${reversed.status}`,
 	);
 }
 
@@ -269,6 +274,7 @@ async function run(): Promise<void> {
 	await attemptedIdentity(app);
 	await composesWithExistingFilters(app);
 	await rejectsUnknownOutcome(app);
+	await workspaceAndDateRegressions(app);
 
 	await closeDatabase();
 	try {

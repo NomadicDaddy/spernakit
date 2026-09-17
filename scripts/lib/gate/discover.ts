@@ -7,14 +7,14 @@
  * a list goes stale the first time somebody adds a task and forgets it.
  *
  * The second half exists because the first half was measured and found short. `check*` is a naming
- * convention, and four tasks across the two repositories that run this file assert about their
+ * convention, and tasks across the two repositories that run this file assert about their
  * repository and fail the build without obeying it: `verify-compression`, `verify-minification`
- * and `config:validate` in spernakit, `release:check` and `verify-minification` in aidd. The
- * meta-gate reported `35 gates examined` and the number was true and
- * incomplete, which is rule 5's own defect one level up -- a pass over the wrong population rather
- * than over the wrong items. Widening the regex would only move the boundary to a different set of
- * words; the declaration is a map of task name to reason in the allowlist, held honest the same way
- * every other entry there is, by a staleness finding when it stops describing anything.
+ * and `config:validate` in spernakit, `verify-minification` in aidd. The meta-gate reported
+ * `35 gates examined` and the number was true and incomplete, which is rule 5's own defect one
+ * level up -- a pass over the wrong population rather than over the wrong items. Widening the
+ * regex would only move the boundary to a different set of words; the declaration is a map of
+ * task name to reason in the allowlist, held honest the same way every other entry there is, by
+ * a staleness finding when it stops describing anything.
  *
  * Composite tasks are followed one reference at a time, so `check:licenses`, which runs
  * `bun run check:license-core && bun scripts/generate-third-party-licenses.ts --check`, contributes

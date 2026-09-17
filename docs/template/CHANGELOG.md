@@ -3,6 +3,225 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.2] - 2026-09-17
+
+Patch release. Authentication no longer accepts MFA challenge tokens from query strings. Binary
+uploads and structured logs fail closed when content cannot be safely recognized or redacted.
+Widget sizing moves out of the page layer, the crawler samples equivalent routes instead of
+walking one per record, and dependencies move to current versions.
+
+### Fixed
+
+- MFA challenge tokens are accepted only from router state or a one-time URL fragment. Consumed
+  fragments are replaced before the verification form renders, and query-string tokens are
+  ignored.
+- Image and PDF uploads require a recognized file signature before storage. Arbitrary or
+  undersized binary bodies are rejected while valid text formats and known MIME mismatch handling
+  remain unchanged.
+- Structured logging recursively redacts configured secret values from messages, format
+  arguments, arrays, objects, errors, stacks, and causes across bootstrap, stdout, stderr, and
+  rotated-file output. Escaped, encoded, bearer-token, and assignment-shaped values are also
+  covered.
+- Child-process output redaction also covers configured encryption keys. The key pattern the
+  scrubber matches on now includes `encryption_key` and `encryptionKey` alongside the existing
+  password, secret, token, credential, and private-key forms.
+- Route discovery visits one example of each route shape rather than every record behind it.
+  Identifier path segments, id-valued and date-valued query parameters, and paging parameters are
+  folded together, so a list of a hundred records contributes one crawl target instead of a
+  hundred.
+- Button matching compares the first fifty characters, which is what discovery records, so a
+  button whose label is longer than that is still found after the DOM changes. The recorded index
+  is preferred while it still identifies the same button.
+- A page that keeps unmounting the button under test stops after eight reloads and reports an
+  interaction error, instead of reloading until the crawl times out.
+
+### Changed
+
+- Widget sizing constants and validators live in `frontend/src/lib/widgetSize.ts` rather than in
+  the dashboards page directory, so the shared dashboard layout hook no longer imports from a
+  page. Sizing behavior is unchanged. `check:feature-integration` rejects a shared component,
+  hook, library, or store that imports page-owned code.
+- Manual `useCallback` wrappers are removed from the tab layout, the container-width hook, the
+  data viewer table, and the ERD panel, leaving memoization to the React compiler. Ref and
+  observer cleanup is kept as it was. `check:feature-integration` enforces the compiler contract
+  across frontend source.
+- Production and development dependencies move to current versions: `nodemailer` 10.0.10,
+  `@tanstack/react-query` 5.103.1, `@tanstack/react-virtual` 3.14.13, `lucide-react` 1.47.0,
+  `react-router` 8.4.0, `tailwind-merge` 3.7.0, `web-vitals` 6.2.2, `eslint-plugin-jsdoc` 64.5.2,
+  `eslint-plugin-perfectionist` 5.11.1, `eslint-plugin-react-refresh` 0.5.7, `knip` 6.36.0,
+  `prettier` 3.9.7, and `puppeteer` 25.11.0, with the lockfile and license notices updated to
+  match.
+
+## [3.47.1] - 2026-09-14
+
+Patch release. Authentication rejects weak passwords and revokes compromised refresh sessions.
+Secret handling, date preferences, static delivery verification, and quality gates receive fixes.
+
+### Fixed
+
+- Refresh-token reuse and ambiguous concurrent rotation revoke the user's sessions, clear auth
+  cookies, and return a non-retryable refusal. Cookie security follows validated configuration.
+- Registration, password resets, and password changes reject common and application-derived
+  passwords using the zxcvbn estimator.
+- Configuration and split-secret files receive owner-only permissions. Containers accept a refused
+  permission repair only inside a verified `/app/config` mount; smoke runs secure the host copy
+  before mounting it. Operators must secure their own mounted config directory on the host.
+- Child-process output redacts secrets across output chunks, multiline values, escaped values,
+  bearer tokens, and assignments before writing logs. Detached supervisors let both log streams
+  drain before exiting, so Linux does not lose the scrubber's retained tail.
+- Audit lifecycle handling preserves request exclusions, response details, and actor attribution.
+- Date and time formatting respects the selected date order, seconds, clock format, and timezone,
+  including shared dashboard timestamps.
+- nginx supplies COOP and CORP headers on static responses and refuses source-map requests.
+  Delivery checks verify status, content type, cache policy, security headers, and actual
+  compression savings for HTML, JavaScript, and CSS.
+- Vendored shadcn/ui material has its MIT license and attribution included in generated notices.
+
+### Changed
+
+- Field-encryption rotation rewrites encrypted settings, OAuth tokens, MFA data, and API-key
+  secrets in one transaction. An optional previous key keeps existing ciphertext readable during
+  maintenance; the documented procedure removes it after rotation and validation.
+- QC cache status loads the cache once and shares file hashes across checks. Fast QC stops at
+  the first failure; full QC continues collecting independent failures. Prettier uses a persistent
+  cache, and the tracked-metadata format gate compares exact files through Prettier's API instead
+  of relying on platform-dependent ignore discovery. Regression checks cover the changed security,
+  delivery, and cache behavior.
+- Added exact pins for `@zxcvbn-ts/core` 4.2.0 and `@zxcvbn-ts/language-common` 4.1.3, with
+  matching lockfile and license notices.
+
+## [3.47.0] - 2026-09-11
+
+Minor release. Derived applications now detect quality checks missing from an overridden smoke
+runbook. The fleet testing fixes cover authorization ordering, workspace errors, form state,
+keyboard focus, validation messages, metrics, and health reporting.
+
+### Added
+
+- `check:smoke-steps` compares each application's smoke commands with its declared template
+  version, including overridden runbooks. It reports missing template steps and commands with no
+  package script. The check runs without caching so fetching a previously missing template tag
+  makes the comparison take effect immediately.
+
+### Fixed
+
+- Every authorization guard runs before body validation, including workspace membership and role
+  checks. Requests that should be refused no longer receive schema details first.
+- Workspace listings return 404 for an unknown workspace, and adding a member returns 404 for an
+  unknown user. Unauthorized callers continue to receive the same refusal regardless of existence.
+- Editing a workspace preserves typed names. Dialog forms remain mounted while a submission is
+  pending, and closing a dialog opened from a table row returns focus to that row's menu button.
+- Rejected URL filters leave the page usable with an error message and are not retried.
+- Username validation agrees between the browser and API. Password rechecks identify the current
+  password as the one refused, and union validation names the accepted values without echoing input.
+- Authentication settings display the pre-boot rate-limit kill-switch alongside the editable
+  setting. Tables display their actual page size, and onboarding links to the password form's page.
+- Dashboard history spans the requested interval. Memory health checks use the process's available
+  memory limit and configured thresholds.
+- The create-user dialog has a complete description. The stylesheet no longer opts into
+  cross-document view transitions.
+- The Vite proxy connects to the address family the backend binds instead of relying on localhost.
+- Documentation checks reject links to gitignored files, which are unavailable in a fresh clone.
+- Error-log verification waits for the logging transport to flush and the probe to finish within
+  its existing timeout, fixing failures on a cold dependency cache.
+- The current-password regression check provisions its own temporary MFA keys, so it exercises
+  password rejection in a fresh checkout as well as on a configured workstation.
+- Container license inventories record package names and licenses without pinning live Alpine
+  package versions. Each built image retains and verifies its exact installed-version inventory.
+
+### Changed
+
+- Updated React and React DOM to 19.3.0, Vite to 8.3.0, lucide-react to 1.45.0, nodemailer to
+  10.0.6, the React type packages to 19.3.0, and eslint-plugin-jsdoc to 64.3.9. The lockfile and
+  generated license notices follow those versions.
+- Regenerated frontend size budgets from the React 19.3 production build. A controlled comparison
+  with the prior React runtime measured 29,324 additional JavaScript bytes, 7,161 additional
+  first-load Brotli bytes, and 7,899 additional first-load JavaScript gzip bytes. The critical-path
+  budget retains its 2 KB allowance; React preload and import-waterfall checks remain enforced.
+
+## [3.46.0] - 2026-09-09
+
+Minor release. A release screenshot capture becomes evidence rather than a folder of images: the
+production build identifies the source it came from and the bytes it emitted, the crawl records what
+it actually visited, and the pre-push guard verifies that chain against the tagged tree before a
+version tag can be published. The rest of the release is the Bun 1.4.2 pin, a production image that
+builds again, and the dependency refresh that came with it.
+
+### Added
+
+- A release capture now proves what it photographed. The production build writes
+  `release-build.json` beside its assets, recording the commit and tree it was built from, whether
+  that checkout was clean, and a SHA-256 for every emitted file. The crawl fetches each of those
+  assets back from the running server and stops if a single byte differs from what was built, so a
+  capture can no longer be taken against a stale bundle or a dev server that happens to be listening.
+- `.screenshot-capture` carries the capture contract. It used to be a comment explaining that the
+  repository captures screenshots; it is now the route list and the 2250x1309 viewport a full
+  capture has to cover, and the crawl seeds itself from those routes rather than hoping the link
+  graph reaches them. Repositories that do not capture still opt out by not having the file.
+- Each capture keeps its own run. Images, the crawl report and the verdict land in
+  `screenshots/v<version>/runs/<id>/`, and only a full attempt at the contract viewport with 404
+  checking enabled writes `release-run.json` to name the authoritative run. A narrow diagnostic crawl
+  can be taken at any time without displacing the capture a release depends on.
+- `bun scripts/start.ts --preview` serves the built frontend through `vite preview` instead of the
+  dev server, which is how `smoke:screenshots` now gets a production frontend to photograph.
+
+### Changed
+
+- The pre-push screenshot guard verifies the capture instead of counting PNG files. It reads the
+  contract out of the tagged commit, requires the tag to match that commit's `package.json` version,
+  and checks the recorded run end to end: a clean candidate matching the tag, a production build
+  identity, the analyzer verdict, the crawl report digest, every contract route visited, and every
+  listed image present with the recorded hash and the contract's pixel dimensions. A tagged tree with
+  no `.screenshot-capture` still needs no capture. What is gone is the `--no-verify` escape hatch for
+  a tag that should have carried one.
+- `smoke:screenshots` builds and serves the production frontend before crawling, replacing the dev
+  smoke run it used to be.
+- The crawl analyzer fails on a missing or failed report rather than exiting zero, and takes
+  `--report <path>` so a capture can be analyzed in place. Web Vitals from a dev build stay
+  informational.
+- A failed screenshot is recorded as a crawl error rather than a line of console output, and a
+  sub-tab the crawler cannot select fails the run instead of being skipped.
+- Bun is pinned to 1.4.2 across the root, backend and frontend manifests, with `engines.bun` at
+  `>=1.4.2` and all three Dockerfile stages on the matching multi-architecture base image digest.
+  1.4.1 is skipped because it shipped an Elysia build regression.
+- nodemailer moves to 10.0.1. Version 10 rejects option values that are `undefined`, so the SMTP
+  transport now always passes an auth object and includes the HTML and text bodies only when they are
+  set. The rest of the runtime and tooling dependencies were refreshed with it and the generated
+  license documents follow.
+
+### Fixed
+
+- The production image builds again. Three separate things stopped it. `minimumReleaseAge` in
+  `bunfig.toml` applied to resolution rather than only to lockfile updates, so any environment
+  without a package cache, which is exactly what a container and CI are, re-resolved the existing
+  pins and failed on whichever ones had been published that week; the key is removed, since which
+  versions enter the repository is decided when a pin is chosen and reviewed. The frontend builder
+  stage never copied `scripts/lib/release-build.ts`, which the Vite release plugin imports, so the
+  stage could not resolve it. And `licenses/base-image-packages.md` followed the new base image,
+  where libexpat moved to 2.8.4-r0.
+- Audit report filenames are validated against the UTC date. They are generated from UTC at runtime
+  but were compared against the local date, so a machine ahead of UTC saw its own reports as
+  future-dated. Headings and date fields still read local time.
+- Every screenshot is now recorded against the route it came from. `/settings/database` and its
+  three `?panel=` views all wrote `settings-database.png` and overwrote each other, so the archive
+  kept one image for four routes; file names carry the query string now. The 404 page and the bug
+  report dialog wrote their files straight to disk without registering them anywhere, and the
+  sign-in page was walked through on the way to a session but never photographed. All three go
+  through the same inventory the capture is checked against.
+- Precompressed assets no longer fail the production asset check. A `.br` or `.gz` file cannot be
+  verified by fetching its own path: the server answers with `Content-Encoding` set and every
+  client decodes the body before it can be read, so the bytes that come back are the original file.
+  They are compared on disk against the build attestation instead, and the file the server
+  negotiates out of them is still fetched and compared.
+- `check:image-licenses` no longer fails CI when Alpine ships a patch release. The packages the
+  production stage adds on top of the pinned base image come from the live Alpine repository, which
+  replaces old versions rather than keeping them, so the version column in
+  `licenses/base-image-packages.md` went stale on its own and failed a tree nobody had touched.
+  That file now lists package names and licenses only, and changes only when a package is added,
+  removed or relicensed. Exact versions are written into each image at build time, in
+  `/app/licenses/base-image-versions.txt`, and the check confirms that record matches the image's
+  apk database.
+
 ## [3.45.0] - 2026-08-28
 
 Minor release. It carries the findings the v3.44.3 fleet sweep produced across all ten derived

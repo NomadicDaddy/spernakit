@@ -148,6 +148,7 @@ export interface AppConfig {
 		cookieSecure?: boolean;
 		csrfTokenTtlMs?: number;
 		encryptionKey?: string;
+		encryptionKeyPrevious?: string;
 		jwtExpiresIn?: string;
 		jwtPrivateKey?: string;
 		jwtPublicKey?: string;

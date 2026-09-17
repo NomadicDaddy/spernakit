@@ -178,12 +178,15 @@ function checkKnownDevKeys(security: AppConfig['security']): ValidationIssue[] {
 	}));
 }
 
-function checkEncryptionKeyFormat(encryptionKey: string): ValidationIssue[] {
+function checkEncryptionKeyFormat(
+	encryptionKey: string,
+	field = 'security.encryptionKey',
+): ValidationIssue[] {
 	if (!encryptionKey) return [];
 	if (!HEX_PATTERN.test(encryptionKey)) {
 		return [
 			{
-				field: 'security.encryptionKey',
+				field,
 				level: 'error',
 				message: 'contains non-hex characters - must be a 64-character hex string',
 			},
@@ -192,7 +195,7 @@ function checkEncryptionKeyFormat(encryptionKey: string): ValidationIssue[] {
 	if (encryptionKey.length !== 64) {
 		return [
 			{
-				field: 'security.encryptionKey',
+				field,
 				level: 'error',
 				message: `must be exactly 64 hex characters (got ${encryptionKey.length})`,
 			},

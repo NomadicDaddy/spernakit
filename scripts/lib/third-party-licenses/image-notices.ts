@@ -20,6 +20,7 @@ export const REQUIRED_IN_IMAGE = [
 	'/app/licenses/BUN-LICENSE.md',
 	'/app/licenses/CONTAINER-DISTRIBUTION.md',
 	'/app/licenses/base-image-packages.md',
+	'/app/licenses/base-image-versions.txt',
 ];
 
 export async function verifyNoticesPresent(image: string): Promise<boolean> {

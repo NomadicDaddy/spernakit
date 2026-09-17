@@ -8,7 +8,7 @@ This file is the canonical tech stack and architecture reference for the Spernak
 
 ## Prerequisites
 
-- **Bun 1.4.0+** - Required runtime and package manager ([Install Bun](https://bun.sh))
+- **Bun 1.4.2+** - Required runtime and package manager ([Install Bun](https://bun.sh))
 - **Node.js** - Optional; only for npm-based tooling compatibility (no version pinned)
 
 ## Core Development Commands
@@ -181,6 +181,12 @@ graph TD
 - **JWT in HTTP-only cookies** with automatic token validation
 - **Account security**: Failed login tracking, configurable account locking (via database settings), password reset flows, email verification on registration, password expiry and minimum age enforcement, optional forced password change via `requiresPasswordChange` flag, self-registration toggle
 - **JWT token revocation**: Database-backed SHA-256 blacklist with scheduled cleanup for immediate token invalidation on logout (persists across restarts)
+- **Refresh compromise**: Token reuse or an ambiguous rotation collision revokes the user's sessions
+  and clears auth cookies. Registration, reset, and password changes also reject passwords that
+  score below 3 in zxcvbn with the template's application terms.
+- **Field-encryption maintenance**: `security:rotate-field-encryption` rewrites shared-helper
+  encrypted database fields atomically. See [SECURITY.md](SECURITY.md#6-key-rotation) for the
+  current/previous key procedure and rollback requirements.
 
 #### Data Management
 
@@ -202,7 +208,7 @@ graph TD
 - **Service layer pattern**: Business logic separated from route handlers
 - **Handler extraction**: Complex route handlers (>30 lines) extracted as named functions co-located in the route file
 - **Service organization**: Hybrid flat + subdirectory - simple services are flat files, complex services get a subdirectory with a facade file (see DEVELOPMENT.md for details)
-- **Plugin pipeline**: Client IP → Request ID → Logger → CORS → Security Headers → Auth → Password Change Guard → CSRF → Rate Limit → Auth Rate Limit → Workspace → Audit (note: `apiKey` is a per-route guard, not a plugin)
+- **Plugin pipeline**: Client IP → Request ID → Logger → CORS → Security Headers → Auth → Password Change Guard → CSRF → Rate Limit → Auth Rate Limit → Workspace → Audit. The scoped `authPlugin` resolves JWT-cookie and `X-API-Key` identities; its route authorization macros use the shared role guard, which caps API-key access at the key scope and the owner's current database role.
 - **Session correlation**: `X-Request-ID` (session-scoped counter) + `X-Session-ID` (per-browser-session UUID) for full request traceability
 - **Configuration**: JSON-driven config via `config/spernakit.json` (Bun is configured with `env = false`, so `.env` files are not auto-loaded)
 - **Security**: CSP headers, rate limiting, input validation, SQL injection prevention
@@ -241,7 +247,7 @@ graph TD
 
 #### Frontend Hooks & Stores
 
-**Hook organization**: All hooks live under `frontend/src/hooks/` (never colocated under `pages/*/hooks/`). Keep a hook flat at `hooks/{name}.ts` unless a single domain has **3 or more** related hooks - then group them under `hooks/{domain}/{name}.ts` (e.g., `hooks/dashboards/`, `hooks/notifications/`, `hooks/layout/`). Do not nest more than one level deep.
+**Hook organization**: All hooks live under `frontend/src/hooks/` (never colocated under `pages/*/hooks/`). Keep a hook flat at `hooks/{name}.ts` unless a single domain has **2 or more** related hooks - then group them under `hooks/{domain}/{name}.ts` (e.g., `hooks/dashboards/`, `hooks/notifications/`, `hooks/layout/`). Do not nest more than one level deep.
 
 - **useAuth** (`hooks/useAuth.ts`): Authentication state, user info, login/logout methods
 - **useAuthorization** (`hooks/useAuthorization.ts`): Hierarchical role-based permission checking (`hasMinRole()`, `hasRole()`, `can()`, `isSysop`, `isAdmin`)
@@ -560,5 +566,5 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the deployment guide.
 
 ### Template Version
 
-**Spernakit v3.45.0** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
+**Spernakit v3.47.2** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
 release changes.

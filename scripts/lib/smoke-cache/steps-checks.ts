@@ -151,6 +151,9 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'THIRD_PARTY_LICENSES.md',
 			'THIRD_PARTY_NOTICES.md',
+			'licenses/shadcn-ui-MIT.txt',
+			'licenses/vendored-materials.json',
+			'frontend/src/components/ui/**/*.tsx',
 			'backend/package.json',
 			'bun.lock',
 			'frontend/package.json',
@@ -165,6 +168,15 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'check:max-lines': {
 		excludes: COMMON_EXCLUDES,
 		globs: [...SOURCE_GLOBS, 'scripts/**/*.ts'],
+	},
+	'check:nginx-security': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/plugins/securityHeaders.ts',
+			'docker/nginx.conf',
+			'scripts/check-nginx-security.ts',
+			'scripts/lib/nginx-security.ts',
+		],
 	},
 	'check:no-inline-references': {
 		excludes: COMMON_EXCLUDES,

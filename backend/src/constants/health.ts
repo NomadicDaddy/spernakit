@@ -1,7 +1,11 @@
-/** Heap usage percentage threshold above which memory status is 'unhealthy' */
+/**
+ * Fraction of the memory limit in use above which memory status is 'unhealthy'. The setting keys
+ * these defaults feed are still named memoryHeap...; see services/health/memoryUsage.ts for why the
+ * measurement moved off the heap and the names did not.
+ */
 const MEMORY_HEAP_UNHEALTHY_THRESHOLD = 0.95;
 
-/** Heap usage percentage threshold above which memory status is 'degraded' */
+/** Fraction of the memory limit in use above which memory status is 'degraded'. */
 const MEMORY_HEAP_DEGRADED_THRESHOLD = 0.85;
 
 /** Free disk space percentage threshold below which disk status is 'unhealthy' */

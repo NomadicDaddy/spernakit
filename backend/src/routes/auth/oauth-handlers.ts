@@ -96,7 +96,6 @@ async function processOAuthCallbackResult(
 	(set.headers as Record<string, string | string[]>)['set-cookie'] = buildOAuthLoginCookies(
 		tokens,
 		csrfToken,
-		request,
 	);
 
 	// Redirect to password change if required
@@ -166,11 +165,9 @@ async function handleOAuthCallback({
 /** Handle GET /oauth/:provider — initiate OAuth flow with session binding cookie. */
 async function handleOAuthRedirect({
 	params,
-	request,
 	set,
 }: {
 	params: { provider: OAuthProvider };
-	request: Request;
 	set: { headers: Record<string, number | string>; redirect?: string; status?: number | string };
 }) {
 	const result = await getAuthorizationUrl(params.provider);
@@ -180,7 +177,7 @@ async function handleOAuthRedirect({
 		return notFoundError('OAuth provider', RESOURCE_ERROR_CODES.RESOURCE_NOT_FOUND);
 	}
 
-	set.headers['set-cookie'] = buildOAuthBindCookie(result.state, request);
+	set.headers['set-cookie'] = buildOAuthBindCookie(result.state);
 	set.redirect = result.url;
 	return dataResponse({ url: result.url });
 }

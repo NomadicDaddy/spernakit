@@ -15,6 +15,13 @@ import { SettingsToggleRow } from '../SettingsToggleRow';
 /** Typed state for the auth rate limit section. */
 interface AuthRateLimitState {
 	authRateLimitEnabled: boolean;
+	/**
+	 * Whether the deployment's config leaves auth limiting available, straight from the server.
+	 *
+	 * Not part of the form. The switch beside it is editable and may hold unsaved local state,
+	 * while this is set before boot and can only be changed by editing config and restarting.
+	 */
+	authRateLimitEnabledInConfig: boolean;
 	authRateLimitMaxRequests: string;
 	authRateLimitWindowMinutes: string;
 }
@@ -28,14 +35,36 @@ interface AuthRateLimitActions {
 
 type AuthRateLimitSectionProps = AuthRateLimitActions & AuthRateLimitState;
 
+/**
+ * Says what the two switches add up to, in the words the reader needs.
+ *
+ * @param enabled - The editable setting, including any unsaved change.
+ * @param enabledInConfig - The pre-boot kill-switch.
+ * @returns The line shown under the toggle.
+ */
+function describeState(enabled: boolean, enabledInConfig: boolean): string {
+	if (!enabled) return 'Auth requests are unthrottled, however many one IP sends.';
+	if (!enabledInConfig) {
+		return 'This switch has no effect: rateLimit.authEnabled is false in the deployment config, so auth requests are unthrottled until that is changed and the app restarted.';
+	}
+	return 'Repeated auth requests from one IP are throttled.';
+}
+
 function AuthRateLimitSection({
 	authRateLimitEnabled,
+	authRateLimitEnabledInConfig,
 	authRateLimitMaxRequests,
 	authRateLimitWindowMinutes,
 	onAuthRateLimitEnabledChange,
 	onAuthRateLimitMaxRequestsChange,
 	onAuthRateLimitWindowMinutesChange,
 }: AuthRateLimitSectionProps) {
+	// Both switches have to agree before anything is throttled, which is the same rule the
+	// backend plugin applies. Reading only the editable one told administrators their auth
+	// endpoints were protected while every request went through, and the Runtime Config page
+	// next door said the opposite.
+	const inEffect = authRateLimitEnabled && authRateLimitEnabledInConfig;
+
 	return (
 		<Card>
 			<CardHeader>
@@ -46,10 +75,14 @@ function AuthRateLimitSection({
 				</CardDescription>
 				{/* SecurityHealthSection's own risk marker, on the card whose off state is the
 				    risk. See AccountLockoutSection for the reasoning. */}
-				{!authRateLimitEnabled && (
+				{!inEffect && (
 					<CardAction>
 						<ShieldAlert
-							aria-label="Auth rate limiting is off"
+							aria-label={
+								authRateLimitEnabled
+									? 'Auth rate limiting is switched on but disabled in config'
+									: 'Auth rate limiting is off'
+							}
 							className="size-5 text-warning"
 						/>
 					</CardAction>
@@ -62,11 +95,7 @@ function AuthRateLimitSection({
 				    stops reading as a peer of the fields it governs. */}
 				<SettingsToggleRow
 					checked={authRateLimitEnabled}
-					description={
-						authRateLimitEnabled
-							? 'Repeated auth requests from one IP are throttled.'
-							: 'Auth requests are unthrottled, however many one IP sends.'
-					}
+					description={describeState(authRateLimitEnabled, authRateLimitEnabledInConfig)}
 					id="authRateLimitEnabled"
 					label="Enable auth rate limiting"
 					onCheckedChange={onAuthRateLimitEnabledChange}
@@ -97,7 +126,8 @@ function AuthRateLimitSection({
 
 						<p className="text-xs text-muted-foreground">
 							Enforced by the backend auth rate limit plugin. Changes take effect on
-							the next auth request.
+							the next auth request, as long as rateLimit.authEnabled is true in the
+							deployment config.
 						</p>
 					</>
 				)}

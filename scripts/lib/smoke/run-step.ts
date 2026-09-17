@@ -118,9 +118,8 @@ export async function runCommand(
 		if (useCache) {
 			await recordStepResult(projectRoot, stepKey, 'fail', duration);
 		}
-		// Order-independent modes (qc) collect every failure instead of dying on the
-		// first one: a persistently red early step (e.g. unacknowledged template drift)
-		// otherwise masks every later gate, letting violations accumulate unseen.
+		// Full qc collects every failure. Other modes, including the cheapest-first fast qc subset
+		// used by pre-commit, stop here so later work cannot hide the first actionable failure.
 		if (continueOnFailure) return exitCode;
 		process.exit(exitCode);
 	}

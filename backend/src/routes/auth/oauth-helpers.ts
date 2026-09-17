@@ -160,10 +160,9 @@ function checkOAuthCallbackRateLimit(ip: string): {
 function buildOAuthLoginCookies(
 	tokens: { accessToken: string; refreshToken: string },
 	csrfToken: string,
-	request: Request,
 ): string[] {
 	const config = getConfig();
-	const secure = isSecureCookie(request);
+	const secure = isSecureCookie();
 
 	const csrfCookieFlags = [
 		`Path=/`,
@@ -180,13 +179,11 @@ function buildOAuthLoginCookies(
 			config.security.authCookieName,
 			tokens.accessToken,
 			config.security.cookieMaxAge,
-			request,
 		),
 		buildCookieHeader(
 			config.security.refreshCookieName,
 			tokens.refreshToken,
 			parseDurationMs(config.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY),
-			request,
 			REFRESH_COOKIE_PATH,
 		),
 		csrfCookie,
@@ -197,9 +194,9 @@ function buildOAuthLoginCookies(
 /**
  * Build binding cookie header for OAuth redirect.
  */
-function buildOAuthBindCookie(state: string, request: Request): string {
+function buildOAuthBindCookie(state: string): string {
 	const bindHash = generateOAuthBindingHash(state);
-	const secure = isSecureCookie(request);
+	const secure = isSecureCookie();
 	const bindCookieFlags = [
 		`Path=/`,
 		`Max-Age=${OAUTH_BIND_MAX_AGE_SECONDS}`,

@@ -68,6 +68,7 @@ function CustomDashboardPage() {
 		dashboardName: dashboard?.name || '',
 		layoutMap,
 		onAddWidgetSuccess: closeDialog,
+		onRenameSuccess: closeDialog,
 		onSaveSuccess: () => {
 			// What was edited is now what is stored, so nothing is pending for the next mutation to
 			// carry — a rename after a save must not re-send the geometry a second time.

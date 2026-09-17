@@ -254,13 +254,23 @@ export async function testBugReport(
 			}
 		}
 
-		// Screenshot (if enabled)
+		// Screenshot (if enabled). The dialog is a state of the page it opened from rather than a
+		// route of its own, so it keeps its own file name instead of going through screenshotPage,
+		// which would overwrite that page's image. It still has to be recorded against the route it
+		// was taken on: a release capture reads the directory and the inventory against each other,
+		// and a file written straight to disk appears in one and not the other.
 		const dirBug = await ensureScreenshotDir(opts, state, rootDir);
 		if (dirBug) {
-			const filepath = path.join(dirBug, 'bug-report.png');
+			const filename = 'bug-report.png';
+			const filepath = path.join(dirBug, filename);
 			try {
 				await page.screenshot({ path: filepath });
 				results.screenshotsTaken++;
+				const captured = new URL(page.url());
+				results.screenshotImages.push({
+					file: filename,
+					route: captured.pathname + captured.search,
+				});
 				console.log(`   📸 Screenshot: ${filepath}`);
 			} catch {
 				console.log('   ⚠️  Screenshot failed for bug report test');

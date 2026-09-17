@@ -32,6 +32,20 @@ const OWNED_MESSAGES = [/Missing X-Workspace/, /header is required for file oper
 /** The one module allowed to write those messages. */
 const MESSAGE_OWNER = 'backend/src/guards/workspaceHeader.ts';
 
+/** The route options that settle the workspace a request named before the handler runs. */
+const WORKSPACE_MACROS = [
+	'requireSelectedWorkspace:',
+	'requireSelectedWorkspaceIfSent:',
+	'requireWorkspaceAdminParam:',
+	'requireWorkspaceMemberParam:',
+];
+
+/** How a route registration opens, at the start of its own line. */
+const ROUTE_STARTS = ['.get(', '.post(', '.put(', '.patch(', '.delete('];
+
+/** A handler taking the derived workspace id out of its context. */
+const READS_WORKSPACE_ID = /[({,]\s*workspaceId\s*[,})]/;
+
 /** A file the scans read, carrying the repository-relative path used to report a hit. */
 interface SourceFile {
 	path: string;
@@ -152,4 +166,44 @@ function findUnownedHeaderMessages(repoRoot: string): string[] {
 	).sort((a, b) => a.localeCompare(b));
 }
 
-export { findDiscardedWorkspaceIds, findUnownedHeaderMessages, findWrongHeaderSpellings };
+/**
+ * Every route that reads the workspace the caller named without ever authorizing it.
+ *
+ * The header is derived for every route on the workspace plugin, so a handler can destructure
+ * `workspaceId` and pass it to a service as a filter without any guard having looked at it. That
+ * reads as scoping and is not: an id naming a workspace that was never created narrows the query to
+ * nothing and comes back 200 with an empty page, which says the workspace is empty rather than
+ * absent, while the routes next door answer 404 for the same id. Carrying one of the workspace
+ * macros is what turns the id into something the route has decided about.
+ *
+ * The scan reads route registrations, which is how every route in this repository is written, so a
+ * handler extracted into its own function is outside what it can see. Those routes are covered by
+ * the requests the gate sends instead.
+ *
+ * @param repoRoot - Absolute path to the repository root.
+ * @returns `path:line` locations, empty when every route reading the header also authorizes it.
+ */
+function findUnguardedWorkspaceReaders(repoRoot: string): string[] {
+	const hits: string[] = [];
+	for (const file of readTree(repoRoot, join('backend', 'src', 'routes'), ['.ts'])) {
+		if (file.path.endsWith('.docs.ts')) continue;
+		const lines = file.text.split('\n');
+		const starts = lines.flatMap((line, index) =>
+			ROUTE_STARTS.some((verb) => line.trimStart().startsWith(verb)) ? [index] : [],
+		);
+		for (const [nth, start] of starts.entries()) {
+			const block = lines.slice(start, starts[nth + 1] ?? lines.length).join('\n');
+			if (!READS_WORKSPACE_ID.test(block)) continue;
+			if (WORKSPACE_MACROS.some((macro) => block.includes(macro))) continue;
+			hits.push(`${file.path}:${String(start + 1)}`);
+		}
+	}
+	return hits;
+}
+
+export {
+	findDiscardedWorkspaceIds,
+	findUnguardedWorkspaceReaders,
+	findUnownedHeaderMessages,
+	findWrongHeaderSpellings,
+};

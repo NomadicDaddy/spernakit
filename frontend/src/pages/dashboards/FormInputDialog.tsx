@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFreshOnOpen } from '@/hooks/useFreshOnOpen';
 
 interface FormInputDialogProps {
 	description?: string;
@@ -41,11 +42,16 @@ function FormInputDialog({
 	const [value, setValue] = useState(initialValue);
 	const [fieldError, setFieldError] = useState<null | string>(null);
 
-	const handleOpenChange = (open: boolean) => {
+	/*
+	 * Opening is the only moment the field is put back. It used to be put back on the way out of
+	 * handleSubmit, which also closed the dialog, so a name the server refused was gone from the
+	 * screen before the error toast arrived. The dialog now stays open until the caller closes it,
+	 * which the caller does when the request succeeds.
+	 */
+	useFreshOnOpen(isOpen, () => {
 		setValue(initialValue);
 		setFieldError(null);
-		onOpenChange(open);
-	};
+	});
 
 	const handleSubmit = () => {
 		if (isPending) return;
@@ -57,15 +63,13 @@ function FormInputDialog({
 		}
 		setFieldError(null);
 		onSubmit(trimmedValue);
-		setValue(initialValue);
-		onOpenChange(false);
 	};
 
 	const fieldId = `form-input-${title.toLowerCase().replace(/\s+/g, '-')}`;
 	const fieldErrorId = `${fieldId}-error`;
 
 	return (
-		<Dialog onOpenChange={handleOpenChange} open={isOpen}>
+		<Dialog onOpenChange={onOpenChange} open={isOpen}>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
@@ -105,7 +109,7 @@ function FormInputDialog({
 					)}
 				</div>
 				<DialogFooter>
-					<Button onClick={() => handleOpenChange(false)} variant="outline">
+					<Button onClick={() => onOpenChange(false)} variant="outline">
 						Cancel
 					</Button>
 					<Button disabled={isPending} onClick={handleSubmit}>

@@ -2,9 +2,19 @@
  * Shared password strength validation.
  * Used by registration, password reset, and password change endpoints.
  */
+import { ZxcvbnFactory } from '@zxcvbn-ts/core';
+import * as commonPasswords from '@zxcvbn-ts/language-common';
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 128;
+const APPLICATION_TERMS = ['nomadicdaddy', 'spernakit'];
+const passwordEstimator = new ZxcvbnFactory({
+	...commonPasswords,
+	dictionary: {
+		...commonPasswords.dictionary,
+		application: APPLICATION_TERMS,
+	},
+});
 
 interface PasswordValidationOptions {
 	requireSpecialCharacter?: boolean;
@@ -43,6 +53,9 @@ function validatePasswordStrength(
 		!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password)
 	) {
 		return 'Password must contain at least one special character';
+	}
+	if (passwordEstimator.check(password, APPLICATION_TERMS).score < 3) {
+		return 'Password is too common or easy to guess';
 	}
 	return null;
 }

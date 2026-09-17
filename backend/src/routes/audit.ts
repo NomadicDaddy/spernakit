@@ -25,53 +25,38 @@ import {
 } from '../utils/fieldSelection.ts';
 import { isValidDateString } from '../utils/validation.ts';
 
-function handleListAuditLogs({
-	query: params,
-	set,
-	user,
-	workspaceId,
-}: {
-	query: {
-		action?: string;
-		dateFrom?: string;
-		dateTo?: string;
-		fields?: string;
-		limit?: number;
-		outcome?: 'failed' | 'succeeded';
-		page?: number;
-		search?: string;
-		sortBy?: string;
-		sortDir?: string;
-		userId?: number;
-	};
-	set: { status?: number | string };
-	user: AuthPayload | null;
-	workspaceId: null | number;
-}) {
-	// Kept for its throw, not its value: the handler reads no account of its own any more, but a
-	// request that reached here without one is a wiring fault rather than an empty listing.
-	assertUser(user);
+interface AuditListParams {
+	action?: string;
+	dateFrom?: string;
+	dateTo?: string;
+	fields?: string;
+	limit?: number;
+	outcome?: 'failed' | 'succeeded';
+	page?: number;
+	search?: string;
+	sortBy?: string;
+	sortDir?: string;
+	userId?: number;
+}
+
+function validateDateRange(params: AuditListParams): null | string {
 	if (params.dateFrom && !isValidDateString(params.dateFrom)) {
-		set.status = HTTP_STATUS.BAD_REQUEST;
-		return badRequestError('Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)');
+		return 'Invalid dateFrom format. Use ISO 8601 (e.g. 2026-01-01T00:00:00Z)';
 	}
 	if (params.dateTo && !isValidDateString(params.dateTo)) {
-		set.status = HTTP_STATUS.BAD_REQUEST;
-		return badRequestError('Invalid dateTo format. Use ISO 8601 (e.g. 2026-01-31T23:59:59Z)');
+		return 'Invalid dateTo format. Use ISO 8601 (e.g. 2026-01-31T23:59:59Z)';
 	}
-	if (params.dateFrom && params.dateTo) {
-		const from = new Date(params.dateFrom);
-		const to = new Date(params.dateTo);
-		if (to < from) {
-			set.status = HTTP_STATUS.BAD_REQUEST;
-			return badRequestError('dateTo must be after or equal to dateFrom');
-		}
+	if (params.dateFrom && params.dateTo && new Date(params.dateTo) < new Date(params.dateFrom)) {
+		return 'dateTo must be after or equal to dateFrom';
 	}
+	return null;
+}
 
-	// The listing follows the header, whoever sent it; only its absence opens the cross-workspace
-	// view, and requireSelectedWorkspaceAccess has already decided who may ask for one. See
-	// backend/src/guards/workspaceHeader.ts.
-	const result = query({
+function normalizeAuditQuery(
+	params: AuditListParams,
+	workspaceId: null | number,
+): Parameters<typeof query>[0] {
+	return {
 		limit: params.limit ?? DEFAULT_PAGE_LIMIT,
 		page: params.page ?? DEFAULT_PAGE,
 		...(params.action ? { action: params.action } : {}),
@@ -79,20 +64,42 @@ function handleListAuditLogs({
 		...(params.dateTo ? { dateTo: params.dateTo } : {}),
 		...(params.outcome ? { outcome: params.outcome } : {}),
 		...(params.search ? { search: params.search } : {}),
-		/*
-		 * Passed through unvalidated on purpose: the service owns the allowlist, and validating
-		 * here as well would mean two lists of sortable columns that can disagree. An unknown key
-		 * is not an error — see `resolveSort` — so rejecting it at the edge would turn a stale
-		 * bookmark into a 400 the reader cannot act on.
-		 */
 		...(params.sortBy ? { sortBy: params.sortBy } : {}),
 		...(params.sortDir ? { sortDir: params.sortDir } : {}),
 		...(params.userId ? { userId: params.userId } : {}),
 		...(workspaceId ? { workspaceId } : {}),
-	});
+	};
+}
 
-	const fields = validateFields(parseFields(params.fields), AUDIT_LIST_FIELDS);
+function mapAuditResponse(result: ReturnType<typeof query>, fieldsParam?: string) {
+	const fields = validateFields(parseFields(fieldsParam), AUDIT_LIST_FIELDS);
 	return paginatedResponse(result, projectFields(result.data, fields));
+}
+
+function handleListAuditLogs({
+	query: params,
+	set,
+	user,
+	workspaceId,
+}: {
+	query: AuditListParams;
+	set: { status?: number | string };
+	user: AuthPayload | null;
+	workspaceId: null | number;
+}) {
+	// Kept for its throw, not its value: the handler reads no account of its own any more, but a
+	// request that reached here without one is a wiring fault rather than an empty listing.
+	assertUser(user);
+	const dateError = validateDateRange(params);
+	if (dateError) {
+		set.status = HTTP_STATUS.BAD_REQUEST;
+		return badRequestError(dateError);
+	}
+
+	// The listing follows the header, whoever sent it; only its absence opens the cross-workspace
+	// view, and requireSelectedWorkspaceAccess has already decided who may ask for one. See
+	// backend/src/guards/workspaceHeader.ts.
+	return mapAuditResponse(query(normalizeAuditQuery(params, workspaceId)), params.fields);
 }
 
 const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-logs' })
@@ -240,4 +247,4 @@ const auditRoutes = new Elysia({ detail: { tags: ['Audit'] }, prefix: '/audit-lo
 		requireSelectedWorkspace: true,
 	});
 
-export { auditRoutes };
+export { auditRoutes, mapAuditResponse, normalizeAuditQuery, validateDateRange };

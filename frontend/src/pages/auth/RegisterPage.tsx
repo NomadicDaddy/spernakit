@@ -19,8 +19,8 @@ import { getFormString } from '@/lib/utils';
 import {
 	isValidEmail,
 	USERNAME_MAX_LENGTH,
-	USERNAME_MIN_LENGTH,
 	validatePasswordComplexity,
+	validateUsername,
 } from '@/lib/validation';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -35,22 +35,6 @@ type RegisterState = {
 	error: null | string;
 	fieldErrors: FieldErrors;
 };
-
-const USERNAME_PATTERN = /^[a-zA-Z0-9_.-]+$/;
-
-function validateUsername(value: string): string | undefined {
-	if (value.length === 0) return 'Username is required';
-	if (value.length < USERNAME_MIN_LENGTH) {
-		return `Username must be at least ${USERNAME_MIN_LENGTH} characters`;
-	}
-	if (value.length > USERNAME_MAX_LENGTH) {
-		return `Username must be at most ${USERNAME_MAX_LENGTH} characters`;
-	}
-	if (!USERNAME_PATTERN.test(value)) {
-		return 'Only letters, numbers, underscores, dots, and hyphens are allowed';
-	}
-	return undefined;
-}
 
 function validateEmail(value: string): string | undefined {
 	if (value.length === 0) return 'Email is required';

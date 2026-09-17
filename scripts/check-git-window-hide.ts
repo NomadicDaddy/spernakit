@@ -16,10 +16,9 @@
  *
  * This file is delivered by `sync-shared-core.ts`, so `SCAN_ROOTS` is the union across carriers and
  * a root that does not exist here is skipped rather than failed. The union is load-bearing rather
- * than tidy: this rule was previously enforced twice, once here and once as a hand-rolled bun:test
- * in another repository, and the two copies had drifted to different root lists. The gap that
- * opened was a whole top-level directory (`skills/`) holding a real unhidden spawn that neither
- * copy's own root list covered. Widen this list rather than narrowing it.
+ * than tidy: a single carrier's own root list can miss a whole top-level directory (`skills/`,
+ * say) holding a real unhidden spawn, and two hand-kept lists drift apart. Widen this list rather
+ * than narrowing it.
  *
  * Usage:
  *   bun scripts/check-git-window-hide.ts

@@ -9,6 +9,7 @@ import path from 'node:path';
 
 import type { AppConfig, LoadedConfig } from './lib/app-config-types.ts';
 
+import { secureSecretPath } from '../backend/src/config/secretPermissions.ts';
 import { generateEcKeyPair, generateHexKey, generateSecureKey } from './lib/crypto-keys.ts';
 
 export type { AppConfig, LoadedConfig } from './lib/app-config-types.ts';
@@ -85,7 +86,9 @@ function createConfigFromDefaults(repoRoot: string, configDir: string, configPat
 		if (!fs.existsSync(configDir)) {
 			fs.mkdirSync(configDir, { recursive: true });
 		}
+		secureSecretPath(configDir, 'directory');
 		fs.writeFileSync(configPath, JSON.stringify(newConfig, null, '\t'), 'utf8');
+		secureSecretPath(configPath, 'file');
 		console.log(`⚠️  JSON config not found. Created ${configPath} from defaults.json.`);
 	} catch (err: unknown) {
 		console.error(
@@ -150,6 +153,8 @@ export function loadJsonConfig(rootDir?: string): LoadedConfig {
 	if (!fs.existsSync(configPath)) {
 		createConfigFromDefaults(repoRoot, configDir, configPath);
 	}
+	secureSecretPath(configDir, 'directory');
+	secureSecretPath(configPath, 'file');
 	try {
 		const config: AppConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 		mergeTestCredentials(config, configDir);

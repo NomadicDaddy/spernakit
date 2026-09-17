@@ -181,8 +181,8 @@ try {
 	// itself. `counting` wraps its success line across two concatenated fragments with the count
 	// in the second, which is how most of them are written under the 100-column limit and which
 	// an unmerged reading calls countless. `quoted` puts an apostrophe in an earlier argument,
-	// which used to make the scan pair that quote with the next one, swallow the real backtick
-	// success line, and report a line number from the middle of unrelated code.
+	// which a naive scan pairs with the next quote, swallowing the real backtick success line
+	// and reporting a line number from the middle of unrelated code.
 	writeAllowlist({ excluded: {}, waivers: {} });
 	write('scripts/check-vacuous.ts', discovering('Vacuous', ["console.log('[OK] vacuous.');"]));
 	write(

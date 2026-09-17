@@ -18,27 +18,23 @@
  *
  * Runs in process against a throwaway temp-file SQLite database.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { UserRole } from '../backend/src/types/roles.ts';
+import type { App, Claim } from './lib/auth-ordering-fixture.ts';
 
-import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
-import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
-import { users } from '../backend/src/db/schema/users.ts';
-import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
+import { getConfig } from '../backend/src/config/configLoader.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
+import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { createWorkspaceDocs } from '../backend/src/routes/workspaces/crud.docs.ts';
-import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
-import { declaredStatuses, findBeforeHandleGuards } from './lib/auth-ordering.ts';
+import { post, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import {
+	declaredStatuses,
+	findBeforeHandleGuards,
+	findInHandlerGuards,
+} from './lib/auth-ordering.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-/** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
-const SEED_ROUNDS = 4;
 /** The representative protected route: ADMIN or higher, with a body schema to be skipped. */
 const CREATE_WORKSPACE = '/api/v1/workspaces';
 /** A body the route's schema rejects: `name` and `slug` are both required strings. */
@@ -50,68 +46,58 @@ function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
 }
 
-type App = ReturnType<typeof createApiApp>;
-type Claim = { id: number; role: UserRole };
-
-/** The id of a seeded account, looked up by the role the seed gave it. */
-function seedUserId(role: UserRole): number {
-	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === role);
-	if (!seed) throw new Error(`SEED_USERS carries no ${role} account`);
-	const row = getDb()
-		.select()
-		.from(users)
-		.all()
-		.find((user) => user.username === seed.username);
-	if (!row) throw new Error(`the seed produced no ${seed.username} account`);
-	return row.id;
-}
-
-/**
- * One request to the representative route.
- *
- * `claim` is what the caller's token says about them, which is deliberately not always the truth:
- * the freshness check below signs a stale role to prove the guard reads the database rather than
- * the token.
- */
-function post(app: App, path: string, body: unknown, claim?: Claim): Promise<Response> {
-	const config = getConfig();
-	const headers: Record<string, string> = {
-		'content-type': 'application/json',
-		origin: config.server.frontendUrl,
-	};
-	if (claim) {
-		headers.cookie = `${config.security.authCookieName}=${signAccessToken(claim)}`;
-	}
-	return app.handle(
-		new Request(`http://localhost${path}`, {
-			body: JSON.stringify(body),
-			headers,
-			method: 'POST',
-		}),
-	);
-}
-
 /**
  * The ordering, stated as the sequence the spec asks for.
  *
  * Anonymous is answered 401 whether the body is valid or not, an under-privileged caller 403 the
- * same way, and only a caller the route would actually admit ever hears about the schema. If any
- * of the first four came back 400, validation had run for someone the route rejects.
+ * same way, a caller carrying no CSRF token is answered 403 whatever their role, and only a caller
+ * the route would actually admit ever hears about the schema. If any of the refusals came back
+ * 400, validation had run for someone the route rejects.
+ *
+ * Being signed in as ADMIN is not on its own enough to reach validation: a state-changing request
+ * still has to carry a CSRF token, and that check runs at the transform stage too. The admitted
+ * case therefore sends a real token, and the two cases above it prove a missing one is refused
+ * ahead of validation rather than after it.
  */
 async function orderingSequence(app: App): Promise<Response> {
 	const viewer: Claim = { id: seedUserId('VIEWER'), role: 'VIEWER' };
 	const admin: Claim = { id: seedUserId('ADMIN'), role: 'ADMIN' };
-	const cases: { body: unknown; claim?: Claim; expected: number; label: string }[] = [
+	const adminCsrf = await generateAndStoreCsrfToken(admin.id);
+	const cases: {
+		body: unknown;
+		claim?: Claim;
+		csrf?: string;
+		expected: number;
+		label: string;
+	}[] = [
 		{ body: INVALID_BODY, expected: 401, label: 'anonymous with an invalid body' },
 		{ body: VALID_BODY, expected: 401, label: 'anonymous with a valid body' },
 		{ body: INVALID_BODY, claim: viewer, expected: 403, label: 'VIEWER with an invalid body' },
 		{ body: VALID_BODY, claim: viewer, expected: 403, label: 'VIEWER with a valid body' },
-		{ body: INVALID_BODY, claim: admin, expected: 400, label: 'ADMIN with an invalid body' },
+		{
+			body: INVALID_BODY,
+			claim: admin,
+			expected: 403,
+			label: 'ADMIN with no CSRF token and an invalid body',
+		},
+		{
+			body: VALID_BODY,
+			claim: admin,
+			expected: 403,
+			label: 'ADMIN with no CSRF token and a valid body',
+		},
+		{
+			body: INVALID_BODY,
+			claim: admin,
+			csrf: adminCsrf,
+			expected: 400,
+			label: 'ADMIN with a CSRF token and an invalid body',
+		},
 	];
 
 	let anonymousInvalid: Response | undefined;
 	for (const item of cases) {
-		const response = await post(app, CREATE_WORKSPACE, item.body, item.claim);
+		const response = await post(app, CREATE_WORKSPACE, item.body, item.claim, item.csrf);
 		assert(
 			response.status === item.expected,
 			`${item.label} must be answered ${String(item.expected)}, got ${String(response.status)}`,
@@ -147,10 +133,19 @@ async function carriesNoSchemaDetail(response: Response): Promise<void> {
  * would not fail any of the assertions above, because those only exercise one route.
  */
 function orderingIsStructural(): void {
-	const offenders = findBeforeHandleGuards(repoRoot);
+	const lateHooks = findBeforeHandleGuards(repoRoot);
 	assert(
-		offenders.length === 0,
-		`authorization must not run from beforeHandle, where validation precedes it: ${offenders.join(', ')}`,
+		lateHooks.length === 0,
+		`authorization must not run from beforeHandle, where validation precedes it: ${lateHooks.join(', ')}`,
+	);
+
+	// The other way to be late, and the more common one. A guard called from inside a handler has
+	// let validation run just as surely as one in beforeHandle, and says nothing that would make a
+	// beforeHandle pattern notice.
+	const inHandler = findInHandlerGuards(repoRoot);
+	assert(
+		inHandler.length === 0,
+		`authorization must not run inside a body-carrying handler, where validation precedes it: ${inHandler.join(', ')}`,
 	);
 }
 
@@ -253,22 +248,8 @@ async function limiterCountsRejectedRequests(app: App): Promise<void> {
 }
 
 async function run(): Promise<void> {
-	initializeConfig();
-	const config = getConfig();
-	config.rateLimit.enabled = false;
-	config.rateLimit.authEnabled = false;
+	const { app, dispose } = await startFixture(repoRoot);
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-auth-ordering-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
-	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
-	// The seed may require a password change on first login, which its guard enforces from
-	// beforeHandle: left set, every assertion past the transform stage would be a 403 for an
-	// unrelated reason.
-	getDb().update(users).set({ requiresPasswordChange: false }).run();
-
-	const app = createApiApp();
 	const anonymousInvalid = await orderingSequence(app);
 	await carriesNoSchemaDetail(anonymousInvalid);
 	orderingIsStructural();
@@ -277,12 +258,7 @@ async function run(): Promise<void> {
 	await freshRoleReachesHandler(app);
 	await limiterCountsRejectedRequests(app);
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log('[OK] auth-before-validation: a rejected caller never reaches the schema');

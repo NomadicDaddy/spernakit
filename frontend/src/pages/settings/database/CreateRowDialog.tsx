@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFreshOnOpen } from '@/hooks/useFreshOnOpen';
 
 function CreateRowDialog({
 	columns,
@@ -29,6 +30,11 @@ function CreateRowDialog({
 }) {
 	const [values, setValues] = useState<Record<string, string>>({});
 
+	// Opening is the only moment the fields are cleared. They used to be cleared on the way out of
+	// handleSubmit, before the insert had been answered, so a row the database refused for a bad
+	// value took every other column's value with it.
+	useFreshOnOpen(open, () => setValues({}));
+
 	// Filter out auto-generated columns
 	const editableColumns = columns.filter((c) => !c.isPrimaryKey && c.name !== 'id');
 
@@ -41,16 +47,12 @@ function CreateRowDialog({
 			}
 		}
 		onSubmit(cleanValues);
-		setValues({});
 	}
 
 	return (
 		<Dialog
 			onOpenChange={(isOpen) => {
-				if (!isOpen) {
-					setValues({});
-					onClose();
-				}
+				if (!isOpen) onClose();
 			}}
 			open={open}>
 			<DialogContent className="max-h-[80vh] overflow-y-auto">

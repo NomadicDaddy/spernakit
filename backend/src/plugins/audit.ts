@@ -54,6 +54,23 @@ interface AuditActor {
 	userId?: number | undefined;
 }
 
+interface AuditEntryInput extends AuditActor {
+	action: string;
+	details?: Record<string, unknown> | undefined;
+	entityId?: string | undefined;
+	entityType?: string | undefined;
+	ipAddress?: string | undefined;
+	workspaceId?: number | undefined;
+}
+
+interface AuditExclusionInput {
+	auditEnabled: boolean;
+	ipAddress: string | undefined;
+	ipWhitelist: string[];
+	method: string;
+	path: string;
+}
+
 /**
  * Who to attribute the request to. `userId` is the session the request ran as — under impersonation
  * that is the impersonated account, which is what authorization saw — and `impersonatedBy` names the
@@ -109,6 +126,53 @@ function extractEntityFieldsFromBody(body: unknown): Record<string, string> | un
 	return Object.keys(entries).length > 0 ? entries : undefined;
 }
 
+function shouldExcludeAuditRequest(input: AuditExclusionInput): boolean {
+	return (
+		!input.auditEnabled ||
+		!MUTATING_METHODS.has(input.method) ||
+		EXCLUDED_PATHS.has(input.path) ||
+		(input.ipAddress !== undefined && input.ipWhitelist.includes(input.ipAddress))
+	);
+}
+
+function buildResponseDetails(
+	body: unknown,
+	requestId: string | undefined,
+	sessionId: string | undefined,
+	status: number,
+): Record<string, unknown> | undefined {
+	const details: Record<string, unknown> = {};
+	if (requestId) details.requestId = requestId;
+	if (sessionId) details.sessionId = sessionId;
+	if (status >= 400) details.status = status;
+	const bodyFields = extractEntityFieldsFromBody(body);
+	if (bodyFields) details.entity = bodyFields;
+	return Object.keys(details).length > 0 ? details : undefined;
+}
+
+function buildAuditEntry(input: AuditEntryInput): Parameters<typeof log>[0] {
+	return {
+		action: input.action,
+		...(input.details ? { details: input.details } : {}),
+		...(input.entityId !== undefined ? { entityId: input.entityId } : {}),
+		...(input.entityType !== undefined ? { entityType: input.entityType } : {}),
+		...(input.impersonatedBy !== undefined ? { impersonatedBy: input.impersonatedBy } : {}),
+		...(input.ipAddress !== undefined ? { ipAddress: input.ipAddress } : {}),
+		...(input.userId !== undefined ? { userId: input.userId } : {}),
+		...(input.workspaceId !== undefined ? { workspaceId: input.workspaceId } : {}),
+	};
+}
+
+function persistAuditEntry(auditEntry: Parameters<typeof log>[0]): void {
+	try {
+		log(auditEntry);
+	} catch (err) {
+		// Never let an audit-write failure break the response path; log the full payload so the
+		// record is recoverable from application logs.
+		logger.error({ auditEntry, err }, 'Failed to write audit log entry');
+	}
+}
+
 /**
  * Elysia plugin that auto-logs mutating HTTP requests (POST, PUT, PATCH, DELETE)
  * to the audit_logs table.
@@ -123,64 +187,41 @@ const auditPlugin = new Elysia({ name: 'audit' })
 	.use(requestIdPlugin)
 	.onAfterResponse({ as: 'global' }, ({ body, request, requestId, sessionId, set }) => {
 		const config = getConfig();
-		if (!config.audit.enabled) return;
-
 		const method = request.method;
-		if (!MUTATING_METHODS.has(method)) return;
-
-		const url = new URL(request.url);
-		const path = url.pathname;
-
-		if (EXCLUDED_PATHS.has(path)) return;
-
-		const status = typeof set.status === 'number' ? set.status : 200;
-
-		const { impersonatedBy, userId } = resolveActorFromRequest(request);
+		const path = new URL(request.url).pathname;
 		// getClientIp() transparently reads the WeakMap populated by
 		// clientIpPlugin's onRequest hook — by this lifecycle stage,
 		// server.requestIP(request) returns null and would otherwise fall
 		// through to the '0.0.0.0' sentinel.
 		const ipAddress = getClientIp(request);
+		if (
+			shouldExcludeAuditRequest({
+				auditEnabled: config.audit.enabled,
+				ipAddress,
+				ipWhitelist: config.audit.ipWhitelist,
+				method,
+				path,
+			})
+		)
+			return;
 
-		// NOTE: 127.0.0.1/::1 must NEVER be auto-excluded from audit logging.
-		// They are only dropped when explicitly listed in config.audit.ipWhitelist.
-		// Local development traffic (SYSOP from localhost) is the primary audit signal.
-		if (ipAddress && config.audit.ipWhitelist.includes(ipAddress)) return;
-
-		const action = `${method} ${path}`;
+		const status = typeof set.status === 'number' ? set.status : 200;
+		const { impersonatedBy, userId } = resolveActorFromRequest(request);
 		const { entityId, entityType } = extractEntityFromPath(path);
-		const details: Record<string, unknown> = {};
-		if (requestId) details.requestId = requestId;
-		if (sessionId) details.sessionId = sessionId;
-		if (status >= 400) details.status = status;
-
-		// Capture entity-identifier fields from the request body so audit-log
-		// search can match on user-facing names (e.g., backup target name) in
-		// addition to the bare entity type/id. REDACT_PATHS excludes secrets.
-		const bodyFields = extractEntityFieldsFromBody(body);
-		if (bodyFields) details.entity = bodyFields;
-
 		const wsHeader = request.headers.get('x-workspace-id');
 		const workspaceId = parseWorkspaceId(wsHeader ?? undefined) ?? undefined;
-
-		const auditEntry = {
-			action,
-			...(Object.keys(details).length > 0 ? { details } : {}),
-			...(entityId !== undefined ? { entityId } : {}),
-			...(entityType !== undefined ? { entityType } : {}),
-			...(impersonatedBy !== undefined ? { impersonatedBy } : {}),
-			...(ipAddress !== undefined ? { ipAddress } : {}),
-			...(userId !== undefined ? { userId } : {}),
-			...(workspaceId !== undefined ? { workspaceId } : {}),
-		};
-
-		try {
-			log(auditEntry);
-		} catch (err) {
-			// Never let an audit-write failure break the response path; log the
-			// full payload so the record is recoverable from application logs.
-			logger.error({ auditEntry, err }, 'Failed to write audit log entry');
-		}
+		persistAuditEntry(
+			buildAuditEntry({
+				action: `${method} ${path}`,
+				details: buildResponseDetails(body, requestId, sessionId, status),
+				entityId,
+				entityType,
+				impersonatedBy,
+				ipAddress,
+				userId,
+				workspaceId,
+			}),
+		);
 	});
 
-export { auditPlugin };
+export { auditPlugin, buildAuditEntry, buildResponseDetails, shouldExcludeAuditRequest };

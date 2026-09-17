@@ -56,28 +56,40 @@ function getMembers(workspaceId: number): MemberRecord[] {
 	}));
 }
 
+/**
+ * What a member add did, rather than whether it worked.
+ *
+ * A single boolean cannot carry this: a refusal because the user is already in the workspace and a
+ * refusal because there is no such user are different answers, and a caller that collapses them
+ * reports one of them wrongly. The bulk path has always distinguished them.
+ */
+type AddMemberOutcome = 'added' | 'already-member' | 'no-such-user';
+
 function addMember(
 	workspaceId: number,
 	userId: number,
 	role: 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'VIEWER',
 	performedBy?: number,
-): boolean {
+): AddMemberOutcome {
 	const db = getDb();
 
-	if (findMembership(workspaceId, userId)) return false;
-
+	// The user is looked at before the membership, in the order `bulkAddMembers` looks at them: a
+	// membership row for an account that is not there is not a state this table can reach, so
+	// asking about the account first is what keeps the two paths saying the same thing.
 	const targetUser = db
 		.select({ isDeleted: users.isDeleted })
 		.from(users)
 		.where(eq(users.id, userId))
 		.get();
-	if (!targetUser || targetUser.isDeleted) return false;
+	if (!targetUser || targetUser.isDeleted) return 'no-such-user';
+
+	if (findMembership(workspaceId, userId)) return 'already-member';
 
 	db.insert(workspaceMembers)
 		.values({ ...(performedBy ? { createdBy: performedBy } : {}), role, userId, workspaceId })
 		.run();
 
-	return true;
+	return 'added';
 }
 
 function removeMember(workspaceId: number, userId: number): boolean {
@@ -167,4 +179,4 @@ export {
 	removeMember,
 	updateMemberRole,
 };
-export type { MemberRecord };
+export type { AddMemberOutcome, MemberRecord };

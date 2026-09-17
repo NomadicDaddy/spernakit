@@ -10,7 +10,7 @@
 # --------------------------------------------------------------------------
 # Stage 1: Base builder - install dependencies
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb AS base-builder
+FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS base-builder
 
 # Install build dependencies for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++
@@ -45,7 +45,7 @@ RUN bun install --frozen-lockfile
 # Keep build and development tooling out of the runtime image. This reduces the
 # image size and keeps its license inventory aligned with the distributed files.
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb AS prod-deps
+FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS prod-deps
 
 WORKDIR /app
 
@@ -82,6 +82,10 @@ COPY shared/ shared/
 COPY frontend/ frontend/
 # vite.config.ts reads app name from defaults.json and version from root package.json
 COPY backend/src/config/defaults.json backend/src/config/defaults.json
+# releaseBuildPlugin.ts imports this to stamp dist/release-build.json. There is no
+# Git checkout in the image, so the plugin records no source attestation and the
+# build proceeds; only the file itself has to be present to resolve the import.
+COPY scripts/lib/release-build.ts scripts/lib/release-build.ts
 
 WORKDIR /app/frontend
 RUN bunx tsc -p tsconfig.build.json && bunx vite build
@@ -89,7 +93,7 @@ RUN bunx tsc -p tsconfig.build.json && bunx vite build
 # --------------------------------------------------------------------------
 # Stage 4: Production image
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.0-alpine@sha256:07235578f79ef8c6f97d94aee7938e76f5cdba5f21ae5dbfdd3d3d38058437eb AS production
+FROM oven/bun:1.4.2-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270fb93c0dd5cef6f AS production
 
 # Install runtime dependencies (pinned to minor version for reproducible builds).
 # Also upgrade the OpenSSL libs past the base image's pinned digest to pick up
@@ -107,6 +111,13 @@ COPY --from=backend-builder /app/shared/ shared/
 # files in any image they choose to distribute and supply their own corresponding source.
 COPY LICENSE THIRD_PARTY_LICENSES.md THIRD_PARTY_NOTICES.md ./
 COPY licenses/ licenses/
+
+# The exact version of every apk package in this image, read from its own database after the last
+# package change above. licenses/base-image-packages.md lists names and licenses only, because the
+# packages added above float with Alpine's patch releases; this record is the one that matches the
+# image digest. "bun run check:image-licenses" confirms it describes the image it is in.
+RUN awk -F: '/^P:/{p=$2} /^V:/{v=$2} /^L:/{print p "@" v " " $2}' /lib/apk/db/installed \
+    | sort > licenses/base-image-versions.txt
 
 # Copy backend
 COPY --from=backend-builder /app/backend/ backend/

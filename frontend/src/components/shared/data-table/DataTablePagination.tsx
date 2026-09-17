@@ -8,6 +8,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select';
+import { pageSizeOptions } from '@/lib/pageSize';
 
 import type { DataTableFeatures } from './features';
 import type { DataTablePagination } from './types';
@@ -99,7 +100,13 @@ export function DataTablePagination<TData extends RowData>({
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>
-					{[10, 20, 30, 50].map((size) => (
+					{/*
+					 * The size in force is always on this list, even when it came from a saved
+					 * preference or a server limit that is not one of the standard choices. A Select
+					 * bound to a value none of its items carries renders nothing at all, which is
+					 * what every table did at the default of 25 while this list read 10, 20, 30, 50.
+					 */}
+					{pageSizeOptions(pageSize).map((size) => (
 						<SelectItem key={size} value={String(size)}>
 							{size} rows
 						</SelectItem>

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getUserUiSettings } from '@/api/userSettings';
+import { dateOptionsFor, formatDateByPreference, timeOptionsFor } from '@/lib/dateTimePreferences';
 import { useAuthStore } from '@/stores/authStore';
 
 interface Formatters {
@@ -69,22 +70,6 @@ function resolveLocale(language?: string): string {
 	return 'en-US';
 }
 
-/** Map user timeFormat preference to Intl options. */
-function timeOptionsFor(
-	timeFormat: string,
-	timezone: string | undefined,
-): Intl.DateTimeFormatOptions {
-	const hour12 = timeFormat.includes('AM/PM');
-	const showSeconds = timeFormat.includes(':ss');
-	return {
-		hour: '2-digit',
-		hour12,
-		minute: '2-digit',
-		...(showSeconds ? { second: '2-digit' } : {}),
-		...(timezone ? { timeZone: timezone } : {}),
-	};
-}
-
 /**
  * Hook that returns date/time formatting functions bound to the
  * current user's display preferences (language, timezone, timeFormat).
@@ -109,24 +94,20 @@ function useFormatters(): Formatters {
 	const settings = data?.data;
 
 	const timezone = settings?.timezone || undefined;
+	const dateFormat = settings?.dateFormat || 'MM/DD/YYYY';
 	const timeFormat = settings?.timeFormat || 'HH:mm';
 
 	// Language controls locale for all Intl formatters (date, time, relative time, currency).
 	// Falls back to browser language when no preference is stored.
 	const locale = resolveLocale(settings?.language);
-	const dateOpts: Intl.DateTimeFormatOptions = {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
-		...(timezone ? { timeZone: timezone } : {}),
-	};
+	const dateOpts = dateOptionsFor(timezone);
 	const timeOpts = timeOptionsFor(timeFormat, timezone);
 
 	const dateFmt = getDateFormatter(locale, dateOpts);
 	const timeFmt = getTimeFormatter(locale, timeOpts);
 
 	function formatDate(ts: string): string {
-		return dateFmt.format(new Date(ts));
+		return formatDateByPreference(dateFmt, new Date(ts), dateFormat);
 	}
 
 	function formatTime(ts: string): string {

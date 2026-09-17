@@ -3,7 +3,6 @@ import { Elysia, t } from 'elysia';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { DEFAULT_PAGE, DEFAULT_PAGE_LIMIT } from '../../constants/pagination.ts';
 import { assertUser } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { authPlugin } from '../../plugins/auth.ts';
 import { workspacePlugin } from '../../plugins/workspace.ts';
 import { NotificationReadStatusSchema, NotificationTypeSchema } from '../../schemas/domain.ts';
@@ -42,10 +41,14 @@ const notificationCrudRoutes = new Elysia({
 		({ query, user, workspaceId }) => {
 			const authUser = assertUser(user);
 			// The listing follows the header, whoever sent it, and its absence widens rather than
-			// narrows. Unlike the statistics and unread-count routes next door, this one carries no
-			// workspace guard, so the header is not checked against membership; every row is already
-			// scoped to userId below, so naming a workspace the caller is not in narrows the result
-			// to nothing rather than reaching anyone else's notifications.
+			// narrows. Every row is scoped to userId below, so the guard on this route is not what
+			// keeps one caller out of another's notifications. What it does is answer for the
+			// workspace the header names: without it, a workspace that was never created narrowed
+			// the query to nothing and came back as an empty page, which tells the caller they have
+			// no notifications there rather than that there is no such workspace. The statistics and
+			// unread-count routes next door require a workspace outright, and this listing is
+			// readable without one, so it takes the option that checks a header only when one was
+			// sent.
 			const result = list({
 				limit: query.limit ?? DEFAULT_PAGE_LIMIT,
 				page: query.page ?? DEFAULT_PAGE,
@@ -90,6 +93,7 @@ const notificationCrudRoutes = new Elysia({
 				type: t.Optional(NotificationTypeSchema),
 			}),
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	.get(
@@ -113,10 +117,6 @@ const notificationCrudRoutes = new Elysia({
 		'/',
 		({ body, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			if (workspaceId) {
-				const guard = requireWorkspaceAccess({ set, user: authUser, workspaceId });
-				if (guard) return guard;
-			}
 			const notification = create({
 				message: body.message,
 				metadata: body.metadata ?? null,
@@ -142,6 +142,7 @@ const notificationCrudRoutes = new Elysia({
 			}),
 			detail: createNotificationDocs,
 			requireAuth: true,
+			requireSelectedWorkspaceIfSent: true,
 		},
 	)
 	.delete(

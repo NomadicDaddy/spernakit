@@ -50,22 +50,5 @@ function isRateLimitBypassed(): boolean {
 	return !config.rateLimit.enabled;
 }
 
-/**
- * Returns true when auth-endpoint rate limiting should be skipped (disabled via config).
- * Independent of the general `rateLimit.enabled` flag so production can keep auth limits
- * enabled even if a deployment opts out of general request throttling, and dev can
- * disable auth limits to avoid lockouts during scripted multi-role test runs.
- */
-function isAuthRateLimitBypassed(): boolean {
-	const config = getConfig();
-	return !config.rateLimit.authEnabled;
-}
-
-export {
-	checkLimit,
-	checkRouteLimit,
-	getRateLimitKeys,
-	isAuthRateLimitBypassed,
-	isRateLimitBypassed,
-};
+export { checkLimit, checkRouteLimit, getRateLimitKeys, isRateLimitBypassed };
 export type { RateLimitBackend };

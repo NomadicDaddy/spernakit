@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 
 import { useSaveSetting, useSettings } from '@/hooks/settings/useSettingsHooks';
 
-import { FEATURE_TOGGLES, FeatureFlagsSection } from './FeatureFlagsSection';
+import { FeatureFlagsSection } from './FeatureFlagsSection';
+import { FEATURE_TOGGLES } from './featureToggles';
 import { LayoutDefaultsSection } from './LayoutDefaultsSection';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

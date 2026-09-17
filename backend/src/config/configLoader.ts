@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { registerLogSecretValues } from '../utils/logSecretRedaction.ts';
 import { configLogger } from './configLogger.ts';
 import { type AppConfig, appConfigSchema } from './configSchema.ts';
 import { replaceSecretsWithEnvVars } from './configSecrets.ts';
@@ -13,6 +14,7 @@ import {
 	projectRoot,
 } from './configUtils.ts';
 import { validateSecurityRequirements } from './configValidator.ts';
+import { secureSecretPath } from './secretPermissions.ts';
 
 let config: AppConfig | null = null;
 
@@ -30,6 +32,8 @@ function loadOrCreateUserConfig(
 	defaults: Record<string, unknown>,
 ): Record<string, unknown> {
 	if (existsSync(configPath)) {
+		secureSecretPath(configDir, 'directory');
+		secureSecretPath(configPath, 'file');
 		try {
 			return JSON.parse(readFileSync(configPath, 'utf8')) as Record<string, unknown>;
 		} catch (err) {
@@ -42,6 +46,7 @@ function loadOrCreateUserConfig(
 	if (!existsSync(configDir)) {
 		mkdirSync(configDir, { mode: 0o700, recursive: true });
 	}
+	secureSecretPath(configDir, 'directory');
 	// 0o600: the config file holds plaintext secret material (jwtPrivateKey,
 	// cookieSecret, encryptionKey). Restrict to owner read/write so other local
 	// OS users cannot read master key material (matches backupEncryptionService).
@@ -49,6 +54,7 @@ function loadOrCreateUserConfig(
 		encoding: 'utf8',
 		mode: 0o600,
 	});
+	secureSecretPath(configPath, 'file');
 	configLogger.warn(
 		{ configPath },
 		'Config auto-created from defaults with placeholder secrets. ' +
@@ -104,6 +110,7 @@ function initializeConfig(): AppConfig {
 	const userConfig = loadOrCreateUserConfig(configPath, configDir, defaults);
 	const merged = deepMerge(defaults, userConfig);
 	const withEnvVars = replaceSecretsWithEnvVars(merged, slug);
+	registerLogSecretValues(withEnvVars);
 	ensureFrontendOrigin(withEnvVars);
 
 	const validated = parseConfigSchema(withEnvVars);

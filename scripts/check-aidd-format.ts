@@ -12,8 +12,9 @@
  * as well, because both are default ignore paths. That is right for `bun run format`, but it makes
  * the obvious targeted invocation useless: a `prettier --check` aimed at the feature-metadata glob
  * matches zero files and prints "All matched files use Prettier code style!". A gate built on that
- * proves nothing. This script points Prettier at `scripts/aidd-prettierignore` — a tracked file
- * that ignores nothing — so the metadata is actually examined.
+ * proves nothing. This script enumerates the exact metadata files and formats their contents
+ * through Prettier's API, so ignore discovery cannot silently remove them from the comparison.
+ * A tracked empty ignore file remains as an independent `getFileInfo` vacuity guard.
  *
  * Two shapes are in circulation for the same data: the repository's Prettier output (tabs, keys
  * sorted by `prettier-plugin-sort-json`) and the aidd runtime's own 2-space, id-first serializer.
@@ -26,7 +27,7 @@
  */
 
 import { existsSync } from 'node:fs';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { argv, cwd, exit } from 'node:process';
 
@@ -121,35 +122,23 @@ async function findUnexaminedFiles(files: string[]): Promise<string[]> {
 	return unexamined;
 }
 
-async function runPrettier(
-	args: string[],
-): Promise<{ code: number; stderr: string; stdout: string }> {
-	const proc = Bun.spawn(['bunx', 'prettier', '--ignore-path', IGNORE_PATH, ...args], {
-		cwd: scriptRoot(),
-		stderr: 'pipe',
-		stdout: 'pipe',
-	});
-	const [stdout, stderr, code] = await Promise.all([
-		new Response(proc.stdout).text(),
-		new Response(proc.stderr).text(),
-		proc.exited,
-	]);
-	return { code, stderr, stdout };
+/** Format one exact metadata file without allowing Prettier's Git ignore discovery to hide it. */
+async function formatFile(file: string): Promise<string> {
+	const { format, resolveConfig } = await import('prettier');
+	const config = await resolveConfig(file);
+	if (!config) {
+		throw new Error(`Prettier could not resolve the repository config for ${file}.`);
+	}
+	return format(await readFile(file, 'utf8'), { ...config, filepath: file });
 }
 
-/** Exit 1 means "some files differ"; anything above that is a real Prettier failure. */
 async function listDifferent(projectRoot: string, files: string[]): Promise<string[]> {
-	const { code, stderr, stdout } = await runPrettier(['--list-different', ...files]);
-	if (code > 1) {
-		throw new Error(
-			`Prettier failed on ${AIDD_DIR} metadata (exit ${code}):\n${stderr.trim()}`,
-		);
+	const changed: string[] = [];
+	for (const file of files) {
+		const current = await readFile(file, 'utf8');
+		if ((await formatFile(file)) !== current) changed.push(displayPath(projectRoot, file));
 	}
-	return stdout
-		.split(/\r?\n/)
-		.map((line) => line.trim())
-		.filter((line) => line !== '')
-		.map((line) => displayPath(projectRoot, join(scriptRoot(), line)));
+	return changed;
 }
 
 function reportSkip(label: string, reason: string): AiddFormatResult {
@@ -199,16 +188,10 @@ export async function runAiddFormat(
 
 	if (options.write) {
 		if (changed.length > 0) {
-			const { code, stderr } = await runPrettier([
-				'--write',
-				'--log-level',
-				'warn',
-				...examined,
-			]);
-			if (code !== 0) {
-				throw new Error(
-					`Prettier failed to rewrite ${AIDD_DIR} metadata:\n${stderr.trim()}`,
-				);
+			for (const file of examined) {
+				if (changed.includes(displayPath(projectRoot, file))) {
+					await writeFile(file, await formatFile(file), 'utf8');
+				}
 			}
 		}
 		console.log(

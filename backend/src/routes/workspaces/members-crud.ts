@@ -3,8 +3,8 @@ import { WS_CRUD_EVENTS } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { assertUser } from '../../guards/role.ts';
-import { requireWorkspaceAccess } from '../../guards/workspaceAccess.ts';
 import { type AuthPayload, authPlugin } from '../../plugins/auth.ts';
+import { workspacePlugin } from '../../plugins/workspace.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { broadcastCrudToWorkspace } from '../../services/websocketService.ts';
 import {
@@ -21,11 +21,7 @@ import {
 	removeWorkspaceMemberDocs,
 	updateWorkspaceMemberRoleDocs,
 } from './members-crud.docs.ts';
-import {
-	checkRoleAssignment,
-	checkTargetModifiable,
-	requireWorkspaceAdmin,
-} from './workspace-helpers.ts';
+import { checkRoleAssignment, checkTargetModifiable } from './workspace-helpers.ts';
 
 function handleUpdateMemberRole({
 	body,
@@ -38,17 +34,16 @@ function handleUpdateMemberRole({
 	set: { headers: Record<string, number | string>; status?: number | string };
 	user: AuthPayload | null;
 }) {
-	const ctx = requireWorkspaceAdmin(user, params.id, set);
-	if (!ctx.ok) return ctx.error;
+	const authUser = assertUser(user);
 	const id = params.id;
 	const userId = params.userId;
 
-	const roleErr = checkRoleAssignment(ctx.authUser, id, body.role, set);
+	const roleErr = checkRoleAssignment(authUser, id, body.role, set);
 	if (roleErr) return roleErr;
-	const targetErr = checkTargetModifiable(ctx.authUser, id, userId, set);
+	const targetErr = checkTargetModifiable(authUser, id, userId, set);
 	if (targetErr) return targetErr;
 
-	const updated = updateMemberRole(id, userId, body.role, ctx.authUser.id);
+	const updated = updateMemberRole(id, userId, body.role, authUser.id);
 	if (!updated) {
 		set.status = HTTP_STATUS.NOT_FOUND;
 		return notFoundError('Member');
@@ -59,7 +54,7 @@ function handleUpdateMemberRole({
 		details: { memberUserId: userId, role: body.role },
 		entityId: String(userId),
 		entityType: 'workspace-member',
-		...actorFields(ctx.authUser),
+		...actorFields(authUser),
 		workspaceId: id,
 	});
 	broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_UPDATED, {
@@ -73,35 +68,37 @@ const workspaceMembersCrudRoutes = new Elysia({
 	detail: { tags: ['Workspaces'] },
 })
 	.use(authPlugin)
+	.use(workspacePlugin)
 	.get(
 		'/:id/members',
-		({ params, set, user }) => {
-			const authUser = assertUser(user);
+		({ params }) => {
 			const id = params.id;
-
-			const guard = requireWorkspaceAccess({ set, user: authUser, workspaceId: id });
-			if (guard) return guard;
-
 			return dataResponse(getMembers(id));
 		},
 		{
 			detail: listWorkspaceMembersDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 			requireAuth: true,
+			requireWorkspaceMemberParam: true,
 		},
 	)
 	.post(
 		'/:id/members',
 		({ body, params, set, user }) => {
-			const ctx = requireWorkspaceAdmin(user, params.id, set);
-			if (!ctx.ok) return ctx.error;
+			const authUser = assertUser(user);
 			const id = params.id;
 
-			const roleErr = checkRoleAssignment(ctx.authUser, id, body.role, set);
+			const roleErr = checkRoleAssignment(authUser, id, body.role, set);
 			if (roleErr) return roleErr;
 
-			const added = addMember(id, body.userId, body.role, ctx.authUser.id);
-			if (!added) {
+			const outcome = addMember(id, body.userId, body.role, authUser.id);
+			if (outcome === 'no-such-user') {
+				// Only a workspace ADMIN or a SYSOP reaches this line, and the bulk route beside it
+				// has always told them the same thing, so saying so here discloses nothing new.
+				set.status = HTTP_STATUS.NOT_FOUND;
+				return notFoundError('User');
+			}
+			if (outcome === 'already-member') {
 				set.status = HTTP_STATUS.CONFLICT;
 				return conflictError('User is already a member');
 			}
@@ -111,7 +108,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 				details: { memberUserId: body.userId, role: body.role },
 				entityId: String(body.userId),
 				entityType: 'workspace-member',
-				...actorFields(ctx.authUser),
+				...actorFields(authUser),
 				workspaceId: id,
 			});
 			broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_CREATED, {
@@ -133,17 +130,17 @@ const workspaceMembersCrudRoutes = new Elysia({
 			detail: addWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 			requireAuth: true,
+			requireWorkspaceAdminParam: true,
 		},
 	)
 	.delete(
 		'/:id/members/:userId',
 		({ params, set, user }) => {
-			const ctx = requireWorkspaceAdmin(user, params.id, set);
-			if (!ctx.ok) return ctx.error;
+			const authUser = assertUser(user);
 			const id = params.id;
 			const userId = params.userId;
 
-			const targetErr = checkTargetModifiable(ctx.authUser, id, userId, set);
+			const targetErr = checkTargetModifiable(authUser, id, userId, set);
 			if (targetErr) return targetErr;
 
 			const removed = removeMember(id, userId);
@@ -157,7 +154,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 				details: { memberUserId: userId },
 				entityId: String(userId),
 				entityType: 'workspace-member',
-				...actorFields(ctx.authUser),
+				...actorFields(authUser),
 				workspaceId: id,
 			});
 			broadcastCrudToWorkspace(id, WS_CRUD_EVENTS.WORKSPACE_MEMBER_DELETED, { userId });
@@ -167,6 +164,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 			detail: removeWorkspaceMemberDocs,
 			params: t.Object({ id: t.Numeric({ minimum: 1 }), userId: t.Numeric({ minimum: 1 }) }),
 			requireAuth: true,
+			requireWorkspaceAdminParam: true,
 		},
 	)
 	.put('/:id/members/:userId/role', handleUpdateMemberRole, {
@@ -181,6 +179,7 @@ const workspaceMembersCrudRoutes = new Elysia({
 		detail: updateWorkspaceMemberRoleDocs,
 		params: t.Object({ id: t.Numeric({ minimum: 1 }), userId: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireWorkspaceAdminParam: true,
 	});
 
 export { workspaceMembersCrudRoutes };

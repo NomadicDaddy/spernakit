@@ -7,41 +7,25 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import type {
+	CacheCheckResult,
+	CacheStatus,
+	HashContext,
+	SmokeCache,
+	SmokeCacheDiagnostics,
+} from './lib/smoke-cache/types.ts';
+
 import { collectDependencyFiles, collectDirectories, hashFile } from './lib/smoke-cache/collect.ts';
 import {
 	isCacheableStep,
 	STEP_DEPENDENCIES,
 	UNCACHEABLE_STEPS,
 } from './lib/smoke-cache/dependencies.ts';
+import { MAX_HASH_CONCURRENCY, scheduleHash } from './lib/smoke-cache/hash-scheduler.ts';
+
+export type { CacheStatus, SmokeCacheDiagnostics } from './lib/smoke-cache/types.ts';
 
 // ===== TYPE DEFINITIONS =====
-
-interface StepCacheEntry {
-	duration: number;
-	hash: string;
-	lastRun: string;
-	result: 'fail' | 'pass';
-}
-
-interface SmokeCache {
-	lastRun: string;
-	steps: Record<string, StepCacheEntry>;
-	version: number;
-}
-
-interface CacheCheckResult {
-	reason: string;
-	skip: boolean;
-}
-
-interface CacheStatus {
-	cacheable: boolean;
-	cached: boolean;
-	lastResult: 'fail' | 'pass' | undefined;
-	lastRun: string | undefined;
-	reason: string;
-	step: string;
-}
 
 // ===== CONSTANTS =====
 
@@ -54,7 +38,8 @@ function getCachePath(projectRoot: string): string {
 	return join(projectRoot, 'scripts', CACHE_FILENAME);
 }
 
-function loadCache(projectRoot: string): SmokeCache {
+function loadCache(projectRoot: string, diagnostics?: SmokeCacheDiagnostics): SmokeCache {
+	if (diagnostics) diagnostics.cacheLoads++;
 	const cachePath = getCachePath(projectRoot);
 
 	if (!existsSync(cachePath)) {
@@ -90,24 +75,81 @@ function saveCache(projectRoot: string, cache: SmokeCache): void {
 	writeFileSync(cachePath, JSON.stringify(cache, null, '\t'), 'utf-8');
 }
 
-async function computeStepHash(projectRoot: string, stepName: string): Promise<string> {
+function createHashContext(diagnostics?: SmokeCacheDiagnostics): HashContext {
+	return {
+		activeHashes: 0,
+		collections: new Map(),
+		...(diagnostics ? { diagnostics } : {}),
+		directories: new Map(),
+		fileHashes: new Map(),
+		hashQueue: [],
+	};
+}
+
+function dependencyKey(kind: 'directories' | 'files', value: unknown): string {
+	return `${kind}:${JSON.stringify(value)}`;
+}
+
+async function computeStepHash(
+	projectRoot: string,
+	stepName: string,
+	context: HashContext,
+): Promise<string> {
 	const deps = STEP_DEPENDENCIES[stepName];
 
 	if (!deps) {
 		throw new Error(`No cache dependency map exists for step '${stepName}'.`);
 	}
 
-	const files = await collectDependencyFiles(projectRoot, deps);
-	const directories = deps.directoryGlobs
-		? await collectDirectories(projectRoot, deps.directoryGlobs, deps.excludes)
-		: [];
+	const filesKey = dependencyKey('files', {
+		collector: deps.collector,
+		dot: deps.dot,
+		excludes: deps.excludes,
+		globs: deps.globs,
+	});
+	let filesPromise = context.collections.get(filesKey);
+	if (!filesPromise) {
+		filesPromise = collectDependencyFiles(projectRoot, deps);
+		context.collections.set(filesKey, filesPromise);
+	}
+	const files = await filesPromise;
 
-	const BATCH_SIZE = 100;
+	let directories: string[] = [];
+	if (deps.directoryGlobs) {
+		const directoriesKey = dependencyKey('directories', {
+			excludes: deps.excludes,
+			globs: deps.directoryGlobs,
+		});
+		let directoriesPromise = context.directories.get(directoriesKey);
+		if (!directoriesPromise) {
+			directoriesPromise = collectDirectories(
+				projectRoot,
+				deps.directoryGlobs,
+				deps.excludes,
+			);
+			context.directories.set(directoriesKey, directoriesPromise);
+		}
+		directories = await directoriesPromise;
+	}
+
 	const fileHashes: string[] = [];
 
-	for (let i = 0; i < files.length; i += BATCH_SIZE) {
-		const batch = files.slice(i, i + BATCH_SIZE);
-		const batchHashes = await Promise.all(batch.map((f) => hashFile(projectRoot, f)));
+	for (let i = 0; i < files.length; i += MAX_HASH_CONCURRENCY) {
+		const batch = files.slice(i, i + MAX_HASH_CONCURRENCY);
+		const batchHashes = await Promise.all(
+			batch.map((file) => {
+				let hashPromise = context.fileHashes.get(file);
+				if (!hashPromise) {
+					if (context.diagnostics) {
+						const previous = context.diagnostics.fileReads.get(file) ?? 0;
+						context.diagnostics.fileReads.set(file, previous + 1);
+					}
+					hashPromise = scheduleHash(context, () => hashFile(projectRoot, file));
+					context.fileHashes.set(file, hashPromise);
+				}
+				return hashPromise;
+			}),
+		);
 		fileHashes.push(...batchHashes);
 	}
 
@@ -152,6 +194,20 @@ export async function canSkipStep(
 	projectRoot: string,
 	stepName: string,
 ): Promise<CacheCheckResult> {
+	return checkStepAgainstCache(
+		projectRoot,
+		stepName,
+		loadCache(projectRoot),
+		createHashContext(),
+	);
+}
+
+async function checkStepAgainstCache(
+	projectRoot: string,
+	stepName: string,
+	cache: SmokeCache,
+	context: HashContext,
+): Promise<CacheCheckResult> {
 	if (!isCacheableStep(stepName)) {
 		const reason = UNCACHEABLE_STEPS.has(stepName)
 			? 'Intentionally uncacheable'
@@ -159,7 +215,6 @@ export async function canSkipStep(
 		return { reason, skip: false };
 	}
 
-	const cache = loadCache(projectRoot);
 	const cached = cache.steps[stepName];
 
 	if (!cached) {
@@ -174,7 +229,7 @@ export async function canSkipStep(
 		return { reason: 'Outputs missing', skip: false };
 	}
 
-	const currentHash = await computeStepHash(projectRoot, stepName);
+	const currentHash = await computeStepHash(projectRoot, stepName, context);
 
 	if (currentHash !== cached.hash) {
 		return { reason: 'Files changed', skip: false };
@@ -195,7 +250,7 @@ export async function recordStepResult(
 	if (!isCacheableStep(stepName)) return;
 
 	const cache = loadCache(projectRoot);
-	const hash = await computeStepHash(projectRoot, stepName);
+	const hash = await computeStepHash(projectRoot, stepName, createHashContext());
 
 	cache.steps[stepName] = {
 		duration,
@@ -209,23 +264,37 @@ export async function recordStepResult(
 	saveCache(projectRoot, cache);
 }
 
-export async function getCacheStatus(projectRoot: string, steps: string[]): Promise<CacheStatus[]> {
-	const statuses: CacheStatus[] = [];
+export async function getCacheStatus(
+	projectRoot: string,
+	steps: string[],
+	diagnostics?: SmokeCacheDiagnostics,
+): Promise<CacheStatus[]> {
+	const cache = loadCache(projectRoot, diagnostics);
+	const context = createHashContext(diagnostics);
+	const statuses: (CacheStatus | undefined)[] = new Array(steps.length);
+	let nextIndex = 0;
+	const workerCount = Math.min(8, steps.length);
+	const workers = Array.from({ length: workerCount }, async () => {
+		while (nextIndex < steps.length) {
+			const index = nextIndex++;
+			const step = steps[index];
+			if (step === undefined) continue;
+			const { reason, skip } = await checkStepAgainstCache(projectRoot, step, cache, context);
+			const cached = cache.steps[step];
+			statuses[index] = {
+				cacheable: isCacheableStep(step),
+				cached: skip,
+				lastResult: cached?.result,
+				lastRun: cached?.lastRun,
+				reason,
+				step,
+			};
+		}
+	});
+	await Promise.all(workers);
 
-	for (const step of steps) {
-		const { reason, skip } = await canSkipStep(projectRoot, step);
-		const cache = loadCache(projectRoot);
-		const cached = cache.steps[step];
-
-		statuses.push({
-			cacheable: isCacheableStep(step),
-			cached: skip,
-			lastResult: cached?.result,
-			lastRun: cached?.lastRun,
-			reason,
-			step,
-		});
-	}
-
-	return statuses;
+	return statuses.map((status, index) => {
+		if (!status) throw new Error(`Cache status worker omitted step at index ${String(index)}.`);
+		return status;
+	});
 }

@@ -152,9 +152,12 @@ const runHealthCheckDocs = {
 						memory: dataExample('Memory check degraded', {
 							checkType: 'memory',
 							details: {
-								heapPercentage: 87,
 								heapTotal: 536870912,
 								heapUsed: 466071600,
+								memoryLimitBytes: 629145600,
+								memoryLimitSource: 'cgroup',
+								memoryPercentage: 88.3,
+								memoryUsedBytes: 555732992,
 								rss: 555732992,
 							},
 							durationMs: 2,

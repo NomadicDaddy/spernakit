@@ -7,7 +7,7 @@
  * validated. A binary body has no newline for long stretches, so a 50 KB PDF was rejected with
  * "Line 1 exceeds maximum length of 10000 characters" -- a constraint that does not apply to the
  * format the uploader sent. The check now runs only for a MIME type listed in the one map that
- * decides what counts as text, and this gate holds four properties:
+ * decides what counts as text, and this gate holds five properties:
  *
  *  1. A binary upload of an allowed type is accepted whatever its size up to storage.maxFileSize,
  *     and is never rejected for a line-length reason.
@@ -18,6 +18,8 @@
  *     either side moves both together: line-length rejection happens exactly for a text type.
  *  4. The transport ceiling leaves room above storage.maxFileSize, so an oversize upload is
  *     answered by the route with a described 400 instead of the connection closing mid-body.
+ *  5. Every allowed image and PDF body has a recognized signature; arbitrary bytes and bodies
+ *     too short for reliable detection fail closed while valid text remains unaffected.
  *
  * The magic-byte check is exercised alongside them, because the fix narrows what the text path
  * inspects and the content-vs-claimed-type check is the one that must still reject a mislabelled
@@ -27,7 +29,7 @@ import { exit } from 'node:process';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { resolveMaxRequestBodySize } from '../backend/src/config/requestBodyLimit.ts';
-import { BYTES_PER_MB } from '../backend/src/constants/files.ts';
+import { BYTES_PER_MB, MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES } from '../backend/src/constants/files.ts';
 import { TEXT_CONTENT_MIME_TYPES, validateFile } from '../backend/src/services/file/validation.ts';
 import { MAX_LINE_LENGTH } from '../backend/src/services/file/validationPatterns.ts';
 
@@ -38,6 +40,17 @@ const LONG_LINE_BYTES = 5 * MAX_LINE_LENGTH;
 const REQUIRED_TEXT_TYPES = ['application/json', 'text/csv', 'text/plain'] as const;
 
 const PDF_MAGIC = Buffer.from('%PDF-1.7');
+
+const BINARY_SIGNATURE_CASES = [
+	{ mime: 'application/pdf', prefix: Buffer.from('%PDF') },
+	{ mime: 'image/gif', prefix: Buffer.from('GIF8') },
+	{ mime: 'image/jpeg', prefix: Buffer.from([0xff, 0xd8, 0xff]) },
+	{ mime: 'image/png', prefix: Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]) },
+	{
+		mime: 'image/webp',
+		prefix: Buffer.from([0x52, 0x49, 0x46, 0x46, 0, 0, 0, 0, 0x57, 0x45, 0x42, 0x50]),
+	},
+] as const;
 
 const failures: string[] = [];
 let checks = 0;
@@ -125,6 +138,47 @@ function checkMagicByteMismatchStillRejected(): void {
 	);
 }
 
+function checkRecognizedBinarySignaturesAreRequired(): void {
+	for (const { mime, prefix } of BINARY_SIGNATURE_CASES) {
+		const validBody = unbrokenBody(MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES, prefix);
+		const validResult = validateFile(mime, validBody.length, validBody);
+		assert(
+			validResult === null,
+			`Valid ${mime} signature must be accepted, was ${describe(validResult)}`,
+		);
+
+		const arbitraryBody = Buffer.alloc(MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES, 0x61);
+		const arbitraryResult = validateFile(mime, arbitraryBody.length, arbitraryBody);
+		assert(
+			(arbitraryResult ?? '').includes('recognized signature'),
+			`Arbitrary bytes declared as ${mime} must fail closed, were ${describe(arbitraryResult)}`,
+		);
+
+		const undersizedBody = prefix.subarray(
+			0,
+			Math.min(prefix.length, MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES - 1),
+		);
+		const undersizedResult = validateFile(mime, undersizedBody.length, undersizedBody);
+		assert(
+			(undersizedResult ?? '').includes('recognized signature'),
+			`An undersized ${mime} body must fail closed, was ${describe(undersizedResult)}`,
+		);
+	}
+}
+
+function checkValidTextStillAccepted(): void {
+	const cases = [
+		{ body: Buffer.from('{"valid":true}\n'), mime: 'application/json' },
+		{ body: Buffer.from('name,value\nfirst,1\n'), mime: 'text/csv' },
+		{ body: Buffer.from('ordinary text\n'), mime: 'text/plain' },
+	] as const;
+
+	for (const { body, mime } of cases) {
+		const result = validateFile(mime, body.length, body);
+		assert(result === null, `Valid ${mime} must remain accepted, was ${describe(result)}`);
+	}
+}
+
 /**
  * The property, quantified over the configured list rather than a hand-kept one: for every MIME
  * type this deployment allows, a body that is one long unbroken run of bytes is rejected for its
@@ -180,12 +234,13 @@ function checkSizeLimitsAnswerRatherThanDrop(): void {
 	);
 
 	// The application limit is the one that produces a described answer.
-	const atLimit = validateFile('application/pdf', storage.maxFileSize, undefined);
+	const validPdfBody = unbrokenBody(MIN_BUFFER_LENGTH_FOR_MAGIC_BYTES, PDF_MAGIC);
+	const atLimit = validateFile('application/pdf', storage.maxFileSize, validPdfBody);
 	assert(
 		atLimit === null,
 		`A file at exactly storage.maxFileSize must pass the size check, was ${describe(atLimit)}`,
 	);
-	const overLimit = validateFile('application/pdf', storage.maxFileSize + 1, undefined);
+	const overLimit = validateFile('application/pdf', storage.maxFileSize + 1, validPdfBody);
 	assert(
 		overLimit !== null && overLimit.includes('exceeds maximum size'),
 		`A file one byte over storage.maxFileSize must be rejected naming the limit, was ${describe(overLimit)}`,
@@ -197,6 +252,8 @@ checkBinaryUploadIsAccepted();
 checkTextLineLengthStillApplies();
 checkFormatValidatorsStillRun();
 checkMagicByteMismatchStillRejected();
+checkRecognizedBinarySignaturesAreRequired();
+checkValidTextStillAccepted();
 checkTextDecisionIsMadeOnce();
 checkSizeLimitsAnswerRatherThanDrop();
 

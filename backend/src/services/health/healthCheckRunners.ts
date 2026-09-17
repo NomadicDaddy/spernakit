@@ -18,6 +18,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { getDb } from '../../db/index.ts';
 import { healthCheckLogs } from '../../db/schema/healthChecks.ts';
 import { getThresholds } from './healthConfigService.ts';
+import { getMemoryUsage, memoryStatusFor } from './memoryUsage.ts';
 
 interface CheckResult {
 	checkType: string;
@@ -81,42 +82,30 @@ function checkDatabase(): CheckResult {
 /**
  * Run memory usage check.
  *
- * Bun/JSC reports heapTotal as the current *committed* heap size — a lazily-grown
- * working set, not a saturation ceiling. A 96% heapUsed/heapTotal ratio on a 40 MB
- * committed heap is routine, not memory pressure. The ratio is therefore unreliable
- * on Bun regardless of whether heapUsed <= heapTotal at this instant. Skip the
- * heap-based threshold comparison entirely under Bun to avoid false-positive
- * unhealthy alerts.
+ * Measures the resident set against the memory the process is allowed, which is the number a
+ * container limit is enforced against and the one the OOM killer reads. See ./memoryUsage.ts for
+ * why the heap ratio this used to compare is not that number.
  *
  * @returns Check result for memory
  */
 function checkMemory(): CheckResult {
 	const start = performance.now();
 	const mem = process.memoryUsage();
+	const usage = getMemoryUsage(mem.rss);
+	const status = memoryStatusFor(usage.ratio, getThresholds());
 	const durationMs = Math.round(performance.now() - start);
-
-	const thresholds = getThresholds();
-	let status: HealthStatus = 'healthy';
-
-	const isBun = typeof (globalThis as { Bun?: unknown }).Bun !== 'undefined';
-	const heapRatioReliable = !isBun && mem.heapTotal > 0 && mem.heapUsed <= mem.heapTotal;
-	const heapPercentage = heapRatioReliable ? mem.heapUsed / mem.heapTotal : 0;
-
-	if (heapRatioReliable) {
-		if (heapPercentage > thresholds.memoryHeapUnhealthyThreshold) {
-			status = 'unhealthy';
-		} else if (heapPercentage > thresholds.memoryHeapDegradedThreshold) {
-			status = 'degraded';
-		}
-	}
 
 	return {
 		checkType: 'memory',
 		details: {
-			heapPercentage: Math.round(heapPercentage * 100),
-			heapRatioReliable,
 			heapTotal: mem.heapTotal,
 			heapUsed: mem.heapUsed,
+			memoryLimitBytes: usage.limitBytes,
+			memoryLimitSource: usage.limitSource,
+			// One decimal place: on a host with a lot of memory a healthy process rounds to a whole 0,
+			// which reads as a measurement that was never taken.
+			memoryPercentage: Math.round(usage.ratio * 1000) / 10,
+			memoryUsedBytes: usage.usedBytes,
 			rss: mem.rss,
 		},
 		durationMs,

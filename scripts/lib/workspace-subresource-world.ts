@@ -1,8 +1,8 @@
 /**
  * The world `scripts/test-workspace-subresource-existence.ts` sends its requests into.
  *
- * That gate asks one question of every workspace sub-resource route: what does it answer for a
- * workspace that is not there. Answering it needs a workspace that exists and holds members, one
+ * That gate asks one question of every workspace sub-resource route: what does it answer for a name
+ * that points at nothing, whether that name is the workspace in the path or the user in the body. Answering it needs a workspace that exists and holds members, one
  * that exists and holds none, one that was soft-deleted, and an id that was never a workspace at
  * all, plus an account that can reach all of them and an account that can reach none. All of that
  * setup lives here so the gate reads as the list of claims rather than as a fixture script.
@@ -37,6 +37,9 @@ const SEED_ROUNDS = 4;
 
 /** An id no workspace was ever given, so naming it in a path names something that is not there. */
 const ABSENT_WORKSPACE = 999_999;
+
+/** An id no account was ever given, so naming it in a body names somebody who is not there. */
+const ABSENT_USER = 999_999;
 
 type App = ReturnType<typeof createApiApp>;
 
@@ -205,4 +208,4 @@ async function startWorld(repoRoot: string): Promise<Harness> {
 }
 
 export type { Actor, App, World };
-export { ABSENT_WORKSPACE, call, listed, startWorld };
+export { ABSENT_USER, ABSENT_WORKSPACE, call, listed, startWorld };

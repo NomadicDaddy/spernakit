@@ -63,9 +63,12 @@ const systemMetricsRoutes = new Elysia({
 				description:
 					'Returns current system metrics plus historical data. Includes CPU ' +
 					'usage, memory usage/free/total, active connections, and request count. ' +
-					'The `hours` parameter controls how far back history extends (1-720, ' +
-					'default 6). The `limit` parameter caps the number of history entries ' +
-					'(1-100). Cached for 30s. Requires OPERATOR role or higher.',
+					'The `hours` parameter controls how far back history extends (1-168, ' +
+					'default 24). The `limit` parameter caps the number of history entries ' +
+					'(1-100); a window holding more samples than that is thinned evenly across ' +
+					'the whole window rather than cut off at its newest end, so the points ' +
+					'returned always span the range that was asked for. Cached for 30s. ' +
+					'Requires OPERATOR role or higher.',
 				responses: {
 					'200': {
 						content: {

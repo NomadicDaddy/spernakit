@@ -17,11 +17,7 @@ import {
 import { dataResponse } from '../../utils/apiResponse.ts';
 import { badRequestError, extractErrorMessage, notFoundError } from '../../utils/errorResponse.ts';
 import { guardDashboardsEnabled, widgetSchema } from './schemas.ts';
-import {
-	enforceSharedRateLimit,
-	handleImportDashboard,
-	validateDashboardWriteWorkspace,
-} from './templates-import.helpers.ts';
+import { enforceSharedRateLimit, handleImportDashboard } from './templates-import.helpers.ts';
 
 const dashboardTemplatesRoutes = new Elysia({
 	detail: { tags: ['Dashboards'] },
@@ -124,13 +120,6 @@ const dashboardTemplatesRoutes = new Elysia({
 		'/from-template',
 		({ body, set, user, workspaceId }) => {
 			const authUser = assertUser(user);
-			const workspaceGuard = validateDashboardWriteWorkspace({
-				set,
-				user: authUser,
-				workspaceId,
-			});
-			if (workspaceGuard) return workspaceGuard;
-
 			try {
 				const dashboard = createFromTemplate(authUser.id, body.templateId, workspaceId);
 				if (!dashboard) {
@@ -175,6 +164,7 @@ const dashboardTemplatesRoutes = new Elysia({
 				summary: 'Create dashboard from template',
 			},
 			requireRole: 'OPERATOR',
+			requireSelectedWorkspace: true,
 		},
 	)
 	/* ------------------------------------------------------------------ */
@@ -210,6 +200,7 @@ const dashboardTemplatesRoutes = new Elysia({
 			summary: 'Import dashboard',
 		},
 		requireRole: 'OPERATOR',
+		requireSelectedWorkspace: true,
 	});
 
 export { dashboardTemplatesRoutes };

@@ -62,6 +62,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			summary: 'Upload a file',
 		},
 		requireAuth: true,
+		requireSelectedWorkspace: true,
 		type: 'multipart',
 	})
 	.get('/:id', handleDownloadFile, {
@@ -86,6 +87,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireSelectedWorkspace: true,
 	})
 	.get('/:id/info', handleGetFileInfo, {
 		detail: {
@@ -125,6 +127,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireSelectedWorkspace: true,
 	})
 	.get('/', handleListFiles, {
 		detail: {
@@ -177,6 +180,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 			page: pageParam(),
 		}),
 		requireAuth: true,
+		requireSelectedWorkspace: true,
 	})
 	.delete('/:id', handleDeleteFile, {
 		detail: {
@@ -204,6 +208,7 @@ const fileRoutes = new Elysia({ detail: { tags: ['Files'] }, prefix: '/files' })
 		},
 		params: t.Object({ id: t.Numeric({ minimum: 1 }) }),
 		requireAuth: true,
+		requireSelectedWorkspace: true,
 	});
 
 export { fileRoutes };

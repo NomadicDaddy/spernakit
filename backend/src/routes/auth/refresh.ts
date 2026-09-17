@@ -2,19 +2,23 @@ import { Elysia } from 'elysia';
 import { timingSafeEqual } from 'node:crypto';
 
 import { getConfig } from '../../config/configLoader.ts';
+import { parseDurationMs } from '../../constants/auth.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { SUCCESS_EXAMPLE } from '../../constants/responseExamples.ts';
+import { MS_PER_DAY } from '../../constants/scheduler.ts';
 import { authPlugin, parseCookies, signTokenPair, verifyRefreshToken } from '../../plugins/auth.ts';
 import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserRefreshInfo } from '../../services/userService.ts';
 import { successResponse } from '../../utils/apiResponse.ts';
 import {
+	clearAuthCookies,
 	clearRefreshTokenHash,
 	hashRefreshToken,
 	rotateRefreshTokenHash,
 	setAuthCookies,
 } from '../../utils/auth/authHelpers.ts';
+import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import { AUTH_ERROR_CODES, unauthorizedError } from '../../utils/errorResponse.ts';
 import { logger } from '../../utils/logger.ts';
@@ -48,12 +52,29 @@ function validateRefreshTokenReuse(
 		dbUser.refreshTokenHash.length !== presentedHash.length ||
 		!timingSafeEqual(Buffer.from(dbUser.refreshTokenHash), Buffer.from(presentedHash))
 	) {
-		clearRefreshTokenHash(userId);
-		logger.warn({ userId }, 'Refresh token reuse detected, revoking tokens');
-		set.status = HTTP_STATUS.UNAUTHORIZED;
-		return unauthorizedError('Refresh token revoked', AUTH_ERROR_CODES.AUTH_TOKEN_REVOKED);
+		return compromiseTokenFamily(userId, set, 'reuse');
 	}
 	return null;
+}
+
+function compromiseTokenFamily(
+	userId: number,
+	set: RefreshContext['set'],
+	reason: 'reuse' | 'rotation-collision',
+) {
+	const config = getConfig();
+	const refreshTtlMs = parseDurationMs(config.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY);
+	clearRefreshTokenHash(userId);
+	revokeAllUserTokens(userId, new Date(Date.now() + refreshTtlMs));
+	clearAuthCookies(set, config.security);
+	setCacheHeaders(set, 'NO_CACHE');
+	logger.warn({ reason, userId }, 'Refresh token family compromised, revoking sessions');
+	set.status = HTTP_STATUS.UNAUTHORIZED;
+	return unauthorizedError('Refresh token revoked', AUTH_ERROR_CODES.AUTH_TOKEN_REVOKED);
+}
+
+function handleRotationCollision(rotated: boolean, userId: number, set: RefreshContext['set']) {
+	return rotated ? null : compromiseTokenFamily(userId, set, 'rotation-collision');
 }
 
 async function handleTokenRefresh({ request, set }: RefreshContext) {
@@ -112,16 +133,10 @@ async function handleTokenRefresh({ request, set }: RefreshContext) {
 		dbUser.refreshTokenHash!,
 		tokens.refreshToken,
 	);
-	if (!rotated) {
-		set.status = HTTP_STATUS.CONFLICT;
-		return {
-			code: AUTH_ERROR_CODES.AUTH_TOKEN_INVALID,
-			error: 'Conflict',
-			message: 'Concurrent refresh detected, please retry',
-		};
-	}
+	const collisionError = handleRotationCollision(rotated, payload.id, set);
+	if (collisionError) return collisionError;
 
-	setAuthCookies(set, config.security, tokens, request);
+	setAuthCookies(set, config.security, tokens);
 
 	// Publish the identity for the audit plugin: the auth cookie goes out on the
 	// RESPONSE, so onAfterResponse has nothing on the request to resolve.
@@ -142,6 +157,7 @@ const authRefreshRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/aut
 				'Rotates access/refresh token pair using refresh cookie. Issues new ' +
 				'tokens and updates cookies. Implements refresh-token rotation - reuse of a ' +
 				'previously rotated token revokes all sessions for user (AUTH_TOKEN_REVOKED). ' +
+				'An ambiguous concurrent rotation is treated as the same non-retryable compromise. ' +
 				'Also returns AUTH_ACCOUNT_DELETED if account was removed. Account lockout from ' +
 				'failed password logins is intentionally NOT enforced here, so an attacker cannot ' +
 				"kill a victim's active session by tripping the lock.",
@@ -187,26 +203,9 @@ const authRefreshRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/aut
 					},
 					description: 'Refresh token missing, invalid, revoked, or account deleted.',
 				},
-				'409': {
-					content: {
-						'application/json': {
-							examples: {
-								concurrentRefresh: {
-									summary: 'Concurrent refresh from another tab/device',
-									value: {
-										code: 'AUTH_TOKEN_INVALID',
-										error: 'Conflict',
-										message: 'Concurrent refresh detected, please retry',
-									},
-								},
-							},
-						},
-					},
-					description: 'Concurrent refresh detected - retry the request.',
-				},
 			},
 			summary: 'Refresh access token using refresh cookie',
 		},
 	});
 
-export { authRefreshRoutes };
+export { authRefreshRoutes, handleRotationCollision };

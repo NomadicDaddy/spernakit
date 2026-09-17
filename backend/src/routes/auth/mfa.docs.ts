@@ -52,15 +52,15 @@ const mfaSetupDocs = {
 			},
 			description: 'MFA setup initiated. Scan QR code with authenticator app.',
 		},
-		'401': {
+		'400': {
 			content: {
 				'application/json': {
 					examples: {
 						invalidPassword: {
 							summary: 'Current password incorrect',
 							value: {
-								code: 'AUTH_INVALID_CREDENTIALS',
-								error: 'Unauthorized',
+								code: 'AUTH_CURRENT_PASSWORD_INVALID',
+								error: 'Bad Request',
 								message: 'Current password is incorrect.',
 							},
 						},

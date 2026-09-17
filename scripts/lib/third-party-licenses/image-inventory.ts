@@ -100,13 +100,33 @@ export function storeDirName(entry: string): string {
 	return entry.replace('/', '+');
 }
 
-export function renderInventory(packages: string[]): string {
-	const rows = packages.map((entry) => {
-		const [name, version, license] = entry.split('|');
-		return `| ${name} | ${version} | ${license || 'UNKNOWN'} |`;
-	});
+/**
+ * Where the production image records the exact version of every apk package it contains. The
+ * Dockerfile writes it from the image's own apk database after the last package change, one
+ * `<name>@<version> <license>` line per package.
+ */
+export const IMAGE_VERSIONS = '/app/licenses/base-image-versions.txt';
 
-	const copyleft = packages.filter((entry) => /GPL/i.test(entry.split('|')[2] ?? ''));
+/** A `name|version|license` entry in the line format of the image's version record. */
+export function versionLine(entry: string): string {
+	const [name, version, license] = entry.split('|');
+	return `${name}@${version} ${license ?? ''}`.trimEnd();
+}
+
+/**
+ * Names and licenses only. Versions stay out of the committed file on purpose: the packages the
+ * production stage adds on top of the pinned base come from the live Alpine repository, which
+ * replaces a patch release rather than keeping it, so a committed version list went stale whenever
+ * Alpine shipped one and failed CI on a tree nobody had touched. The set of packages and their
+ * licenses changes only when the Dockerfile or the base image does, which is when this file should
+ * need review. Exact versions travel in the image itself, at IMAGE_VERSIONS.
+ */
+export function renderInventory(packages: string[]): string {
+	const fields = packages.map((entry) => {
+		const [name, , license] = entry.split('|');
+		return { license: license || 'UNKNOWN', name: name ?? '' };
+	});
+	const copyleft = fields.filter((pkg) => /GPL/i.test(pkg.license));
 
 	return [
 		'# Base image packages',
@@ -121,22 +141,25 @@ export function renderInventory(packages: string[]): string {
 		'[`CONTAINER-DISTRIBUTION.md`](./CONTAINER-DISTRIBUTION.md). Alpine publishes source at',
 		'<https://gitlab.alpinelinux.org/alpine/aports>.',
 		'',
+		'Versions are deliberately not listed here. The packages added on top of the pinned base image',
+		'come from the live Alpine repository, which replaces a patch release rather than keeping it, so',
+		'a committed version list goes stale on its own. Each built image records the exact version of',
+		`every package in \`${IMAGE_VERSIONS}\`, written from its apk database at`,
+		'build time; identify an image by its digest and read its versions from that file.',
+		'',
 		'## Copyleft packages in the image',
 		'',
 		`**${copyleft.length}** of them carry a GPL-family license (busybox and friends are the`,
 		'usual ones). They are separate programs in the same image, not libraries linked into the',
 		'application. Their licenses apply to those components rather than the application code.',
 		'',
-		...copyleft.map((entry) => {
-			const [name, version, license] = entry.split('|');
-			return `- \`${name}@${version}\` (${license})`;
-		}),
+		...copyleft.map((pkg) => `- \`${pkg.name}\` (${pkg.license})`),
 		'',
 		'## All base image packages',
 		'',
-		'| Package | Version | License |',
-		'| ------- | ------- | ------- |',
-		...rows,
+		'| Package | License |',
+		'| ------- | ------- |',
+		...fields.map((pkg) => `| ${pkg.name} | ${pkg.license} |`),
 		'',
 	].join('\n');
 }

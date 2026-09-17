@@ -25,7 +25,8 @@ provide any recipient, and anyone who possesses a copy of the corresponding imag
 materials:
 
 - the complete corresponding source and build scripts for every GPL- or LGPL-licensed Alpine
-  package identified in the accompanying `base-image-packages.md`;
+  package identified in the accompanying `base-image-packages.md`, at the exact version recorded
+  in the image's `base-image-versions.txt`;
 - the complete source tree for the exact Bun version identified in the image, including its
   pinned submodules and the patched WebKit/JavaScriptCore and TinyCC sources; and
 - the source, build scripts, and other machine-readable materials needed to rebuild Bun with a

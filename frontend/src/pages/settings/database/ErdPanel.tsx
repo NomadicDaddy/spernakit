@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Minus, Plus, Scan } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { TableMetadata } from '@/api/databaseAdmin';
 
@@ -112,17 +112,14 @@ function ErdPanel({ onSelectTable }: ErdPanelProps) {
 	 * ref, so the ref object is populated alongside it rather than competing for the `ref` prop.
 	 * Returning a cleanup is what tells React 19 not to call this back with `null` on unmount.
 	 */
-	const attachViewport = useCallback(
-		(element: HTMLDivElement) => {
-			graphViewportRef.current = element;
-			const stopMeasuring = measureViewport(element);
-			return () => {
-				if (typeof stopMeasuring === 'function') stopMeasuring();
-				graphViewportRef.current = null;
-			};
-		},
-		[measureViewport],
-	);
+	const attachViewport = (element: HTMLDivElement) => {
+		graphViewportRef.current = element;
+		const stopMeasuring = measureViewport(element);
+		return () => {
+			if (typeof stopMeasuring === 'function') stopMeasuring();
+			graphViewportRef.current = null;
+		};
+	};
 
 	const { data: schemaResponse, isLoading: isLoadingSchema } = useQuery({
 		queryFn: getSchema,

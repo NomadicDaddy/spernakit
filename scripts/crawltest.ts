@@ -50,8 +50,13 @@ import {
 } from './crawltest-config';
 import { WebCrawler } from './crawltest-crawler';
 import { getVersionedScreenshotDir, printReport } from './crawltest-reporting';
-import { writeCrawlResult } from './crawltest-screenshots';
 import { flushRateLimits } from './crawltest-session';
+import {
+	beginReleaseCapture,
+	captureReleaseBuild,
+	finishReleaseCapture,
+	RELEASE_VIEWPORT,
+} from './lib/release-capture.ts';
 import { getFrontendUrl, loadJsonConfig } from './load-json-config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -71,6 +76,16 @@ async function run(): Promise<void> {
 	const startFrom = parseStartFrom(args);
 	const test404 = parseTest404(args);
 	const testBug = parseTestBug(args);
+	const capture = rawScreenshotDir
+		? beginReleaseCapture(ROOT_DIR, getVersionedScreenshotDir(rawScreenshotDir, ROOT_DIR), {
+				check404: test404,
+				page: singlePage,
+				startFrom,
+				viewport: RELEASE_VIEWPORT,
+			})
+		: null;
+	const screenshotDir = capture?.directory ?? null;
+	let buildBefore: Awaited<ReturnType<typeof captureReleaseBuild>> | null = null;
 
 	// Validate mutual exclusivity
 	if (singlePage && startFrom) {
@@ -81,10 +96,8 @@ async function run(): Promise<void> {
 	// Load JSON config
 	const { appSlug, config } = loadJsonConfig(ROOT_DIR);
 
-	// Resolve the login before anything else runs. An unauthenticated crawl does not fail loudly —
-	// it reports a shallow public site, which reads as a successful test run — so an unresolvable
-	// login has to stop the run here, before the screenshot directory is stamped `started` and
-	// before a browser is launched.
+	// Resolve login before opening the browser: an anonymous crawl could report a shallow pass.
+	// A full capture is already marked started, so failed login cannot leave an earlier pass current.
 	//
 	// The dev-seed fallback is only trustworthy against a development seed: a production seed gives
 	// the same account a random password, so offer nothing there and let the keys report as unset.
@@ -116,17 +129,6 @@ async function run(): Promise<void> {
 			`ℹ️  Resolved ${fromSeed.join(' and ')} from the SYSOP development-seed account; ` +
 				`crawling as ${login.email}`,
 		);
-	}
-
-	// Compute versioned screenshot directory
-	const screenshotDir = rawScreenshotDir
-		? getVersionedScreenshotDir(rawScreenshotDir, ROOT_DIR)
-		: null;
-
-	// The versioned directory is the release artifact, so its verdict is stamped before the crawl
-	// starts: a run that dies partway leaves `started` behind and the pre-push guard refuses it.
-	if (screenshotDir) {
-		await writeCrawlResult(screenshotDir, { status: 'started', success: false });
 	}
 
 	// Get configuration values
@@ -164,7 +166,12 @@ async function run(): Promise<void> {
 	const interactionDelay = config.testing?.crawlInteractionDelay ?? 400;
 	const pageSettleDelay = config.testing?.crawlPageSettleDelay ?? 500;
 	const contentMinLength = config.testing?.crawlContentMinLength ?? 50;
-	const seedRoutes = config.testing?.crawlSeedRoutes ?? [];
+	const seedRoutes = [
+		...new Set([
+			...(config.testing?.crawlSeedRoutes ?? []),
+			...(capture?.contract.routes.filter((route) => /^\/[\w/-]*$/.test(route)) ?? []),
+		]),
+	];
 
 	logCrawlConfig({
 		baseUrl,
@@ -199,6 +206,13 @@ async function run(): Promise<void> {
 
 	try {
 		await crawler.init();
+		if (capture?.release) {
+			try {
+				buildBefore = await captureReleaseBuild(ROOT_DIR, baseUrl);
+			} catch (err) {
+				console.error(`[release capture] ${String(err)}`);
+			}
+		}
 		// Skipped entirely on a read-only crawl; see flushRateLimits for why it takes the flag.
 		flushRateLimits(readOnly);
 		await crawler.screenshotPreLoginPages();
@@ -208,6 +222,7 @@ async function run(): Promise<void> {
 		console.log('\n✅ Crawl completed!');
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));
+		crawler.getResults().addError('CRAWL', typedErr.message);
 		console.error('\n❌ Crawl failed:', typedErr.message);
 	} finally {
 		await crawler.close();
@@ -220,12 +235,31 @@ async function run(): Promise<void> {
 		const reportPath = path.join(__dirname, '../logs/crawltest.json');
 		await Bun.write(reportPath, JSON.stringify(report, null, 2));
 		// Before printReport — it ends the process, so anything after it never runs.
-		if (screenshotDir) {
-			await writeCrawlResult(screenshotDir, {
-				screenshots: report.summary.screenshotsTaken,
-				status: report.summary.success ? 'passed' : 'failed',
-				success: report.summary.success,
-			});
+		if (capture) {
+			const captureReport = path.join(capture.directory, 'report.json');
+			await Bun.write(captureReport, `${JSON.stringify(report, null, '\t')}\n`);
+			const analyzer = Bun.spawnSync(
+				[
+					process.execPath,
+					'scripts/crawltest-analyze.ts',
+					'--report',
+					path.resolve(captureReport),
+				],
+				{ cwd: ROOT_DIR, stderr: 'inherit', stdout: 'inherit', windowsHide: true },
+			);
+			const failures = analyzer.exitCode === 0 ? [] : ['Crawl analyzer failed.'];
+			if (
+				!(await finishReleaseCapture(
+					ROOT_DIR,
+					baseUrl,
+					capture,
+					report,
+					failures,
+					crawler.getResults().screenshotImages,
+					buildBefore,
+				))
+			)
+				report.summary.success = false;
 		}
 		printReport(report, reportPath);
 	}

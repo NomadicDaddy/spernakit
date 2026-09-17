@@ -12,6 +12,7 @@
  * - No unauthorized .db files outside data/
  * - No rogue data/ or backup/ folders outside root (architectural constraint)
  * - No .env files in repository root (JSON-only config policy)
+ * - The dev and preview proxies dial the address the backend binds
  */
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
@@ -19,6 +20,7 @@ import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { checkCspHashConsistency } from './lib/check-application/csp-hash.ts';
+import { checkDevProxyTarget } from './lib/check-application/dev-proxy.ts';
 import { findDbFiles, findRogueFolders } from './lib/check-application/fs-scans.ts';
 import {
 	assertDefined,
@@ -237,6 +239,9 @@ export async function runApplication(): Promise<number> {
 		console.log('');
 
 		checkCspHashConsistency(repoRoot);
+		console.log('');
+
+		checkDevProxyTarget(repoRoot);
 		console.log('');
 
 		console.log(`[OK] Application checks passed (${examined} repository entries examined).`);

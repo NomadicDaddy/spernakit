@@ -14,6 +14,7 @@ import type { CrawlerOpts, CrawlerState } from './crawltest-types';
 import { screenshotPage } from './crawltest-screenshots';
 import { waitForContent } from './crawltest-types';
 import { BUG_REPORT_WRITE, installWriteGuard } from './crawltest-writeguard';
+import { RELEASE_VIEWPORT } from './lib/release-capture.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,7 +78,9 @@ export async function launchSession(
 		protocolTimeout: 120_000,
 	});
 	session.page = await session.browser.newPage();
-	await session.page.setViewport({ height: 1080, width: 1920 });
+	await session.page.setViewport(
+		opts.screenshotDir ? RELEASE_VIEWPORT : { height: 1080, width: 1920 },
+	);
 	// Before `attach`, and before anything navigates: request interception has to be in place from
 	// the page's first request, and this is the only place a page is made — including the replacement
 	// `recycleBrowser` builds mid-crawl, which is why the guard needs no second call site.
@@ -99,7 +102,10 @@ export async function screenshotPreLoginPages(
 ): Promise<void> {
 	if (!session.page || !opts.screenshotDir) return;
 
-	const preLoginRoutes = ['/register'];
+	// /login is added to visitedUrls by loginSession below, and a release capture requires an image
+	// for every route it visited, so the sign-in page has to be photographed here rather than only
+	// walked through on the way to a session.
+	const preLoginRoutes = ['/login', '/register'];
 	console.log('📷 Screenshotting pre-login pages...');
 
 	for (const route of preLoginRoutes) {
@@ -113,6 +119,7 @@ export async function screenshotPreLoginPages(
 			const ssPath = await screenshotPage(session.page, results, opts, state, ROOT_DIR, url);
 			if (ssPath) console.log(`   📸 Screenshot: ${ssPath}`);
 		} catch {
+			results.addError('SCREENSHOT', `Failed to capture required pre-login page ${route}`);
 			console.log(`   ⚠️  Failed to screenshot ${route}`);
 		}
 	}

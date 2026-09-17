@@ -9,12 +9,25 @@ import { getCsrfSecret, setCsrfSecret } from '../services/userService.ts';
 import { unauthorizedError } from '../utils/errorResponse.ts';
 import { logger } from '../utils/logger.ts';
 import { isOriginAllowed } from '../utils/originValidation.ts';
+import { PreValidationRejection } from '../utils/preValidationRejection.ts';
 import {
 	deriveCsrfToken,
 	generateCsrfSecret,
 	isCsrfTokenExpired,
 	verifyCsrfSignature,
 } from './csrf-tokens.ts';
+
+/**
+ * The slice of the request context CSRF validation reads.
+ *
+ * Declared structurally rather than taken from Elysia's inferred context because the plugin is
+ * registered against every route instance; only these three members are touched.
+ */
+type CsrfContext = {
+	request: Request;
+	set: { status?: number | string };
+	user?: AuthPayload | null;
+};
 
 /**
  * Ensure a user has a CSRF signing secret stored. If not, generate and store one.
@@ -169,9 +182,15 @@ const CSRF_EXEMPT_PATHS = new Set([
 ]);
 
 /**
- * Elysia plugin that validates CSRF tokens on state-changing requests.
+ * Decide whether a request fails CSRF validation.
+ *
+ * Returns the error body to answer with, or `undefined` when the request may proceed. The
+ * decision is kept separate from raising it so the policy reads the same way it did in
+ * `beforeHandle`, and so the status it chooses stays on `set` for the caller to read.
  */
-const csrfPlugin = new Elysia({ name: 'csrf' }).onBeforeHandle({ as: 'scoped' }, async (ctx) => {
+async function evaluateCsrf(
+	ctx: CsrfContext,
+): Promise<ReturnType<typeof unauthorizedError> | undefined> {
 	const { request, set } = ctx;
 	const method = request.method.toUpperCase();
 
@@ -205,6 +224,27 @@ const csrfPlugin = new Elysia({ name: 'csrf' }).onBeforeHandle({ as: 'scoped' },
 	}
 
 	return undefined;
+}
+
+/**
+ * Elysia plugin that validates CSRF tokens on state-changing requests.
+ *
+ * The check runs at the transform stage, before Elysia validates the request against the route's
+ * schema. That ordering is the point, and it is the same reason the auth and selected-workspace
+ * guards already live there. While this ran in `beforeHandle` it fired *after* the body had been
+ * checked, so a request carrying no CSRF token and a malformed body was answered with a 400
+ * describing the schema instead of the 403 it was owed. Rejecting first also means a forged
+ * cross-origin request is turned away without its body being parsed at all.
+ *
+ * A transform hook cannot short-circuit by returning, so the rejection is thrown; the `onError`
+ * handler in create-api-app.ts turns it back into the same envelope this produced before.
+ */
+const csrfPlugin = new Elysia({ name: 'csrf' }).onTransform({ as: 'scoped' }, async (ctx) => {
+	const rejection = await evaluateCsrf(ctx as CsrfContext);
+	if (!rejection) return;
+
+	const status = typeof ctx.set.status === 'number' ? ctx.set.status : HTTP_STATUS.FORBIDDEN;
+	throw new PreValidationRejection(status, rejection);
 });
 
 export { csrfPlugin, generateAndStoreCsrfToken };

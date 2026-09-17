@@ -7,7 +7,9 @@ import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, type PluginOption } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 
+import { releaseBuildPlugin } from './releaseBuildPlugin.ts';
 import { lucideDirectImportsPlugin } from './vite-plugins/lucideDirectImports.ts';
+import { backendProxyAuthority } from './vite-plugins/proxyTarget.ts';
 import { stripCssFallbacksPlugin } from './vite-plugins/stripCssFallbacks.ts';
 
 const analyze = process.env.ANALYZE === 'true';
@@ -30,6 +32,7 @@ function getDefaultsMeta(): {
 	appName: string;
 	appSlug: string;
 	appVersion: string;
+	backendHost: string;
 	backendPort: number;
 	csrfCookieName: string;
 	frontendPort: number;
@@ -39,7 +42,7 @@ function getDefaultsMeta(): {
 		const defaults = JSON.parse(readFileSync(defaultsPath, 'utf8')) as {
 			app?: { name?: string; slug?: string };
 			security?: { csrfCookieName?: string };
-			server?: { backendPort?: number; frontendPort?: number };
+			server?: { backendPort?: number; frontendPort?: number; host?: string };
 		};
 		const packagePath = resolve(configDir, '..', 'package.json');
 		const pkg = JSON.parse(readFileSync(packagePath, 'utf8')) as { version?: string };
@@ -48,6 +51,7 @@ function getDefaultsMeta(): {
 			appName: defaults.app?.name ?? 'Application',
 			appSlug: slug,
 			appVersion: pkg.version ?? '0.0.0',
+			backendHost: defaults.server?.host ?? '127.0.0.1',
 			backendPort: defaults.server?.backendPort ?? 3331,
 			csrfCookieName: defaults.security?.csrfCookieName ?? `${slug}_csrf`,
 			frontendPort: defaults.server?.frontendPort ?? 3330,
@@ -57,6 +61,7 @@ function getDefaultsMeta(): {
 			appName: 'Application',
 			appSlug: 'app',
 			appVersion: '0.0.0',
+			backendHost: '127.0.0.1',
 			backendPort: 3331,
 			csrfCookieName: 'app_csrf',
 			frontendPort: 3330,
@@ -64,8 +69,14 @@ function getDefaultsMeta(): {
 	}
 }
 
-const { appName, appSlug, appVersion, backendPort, csrfCookieName, frontendPort } =
+const { appName, appSlug, appVersion, backendHost, backendPort, csrfCookieName, frontendPort } =
 	getDefaultsMeta();
+
+/*
+ * Dialled by both proxy blocks below. See vite-plugins/proxyTarget.ts for why this is not
+ * `localhost`: the backend binds one address family and `localhost` can resolve to the other.
+ */
+const backendAuthority = backendProxyAuthority(backendHost, backendPort);
 
 // https://vite.dev/config/
 // eslint-disable-next-line import/no-default-export
@@ -197,6 +208,7 @@ export default defineConfig({
 		include: ['react-grid-layout'],
 	},
 	plugins: [
+		releaseBuildPlugin(resolve(configDir, '..')),
 		lucideDirectImportsPlugin(),
 		react({
 			babel: {
@@ -227,10 +239,10 @@ export default defineConfig({
 		proxy: {
 			'/api': {
 				changeOrigin: true,
-				target: `http://localhost:${backendPort}`,
+				target: `http://${backendAuthority}`,
 			},
 			'/ws': {
-				target: `ws://localhost:${backendPort}`,
+				target: `ws://${backendAuthority}`,
 				ws: true,
 			},
 		},
@@ -246,10 +258,10 @@ export default defineConfig({
 		proxy: {
 			'/api': {
 				changeOrigin: true,
-				target: `http://localhost:${backendPort}`,
+				target: `http://${backendAuthority}`,
 			},
 			'/ws': {
-				target: `ws://localhost:${backendPort}`,
+				target: `ws://${backendAuthority}`,
 				ws: true,
 			},
 		},

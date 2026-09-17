@@ -14,20 +14,22 @@ by license family, and it does not inventory the Alpine base system.
 
 ## Backend runtime dependencies
 
-| Package                                                              | Version | License       |
-| -------------------------------------------------------------------- | ------- | ------------- |
-| [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger) | 1.3.1   | MIT           |
-| [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox) | 0.34.52 | MIT           |
-| [@types/pg](https://www.npmjs.com/package/@types/pg)                 | 8.21.0  | MIT           |
-| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)             | 0.45.2  | Apache-2.0    |
-| [elysia](https://www.npmjs.com/package/elysia)                       | 1.4.29  | MIT           |
-| [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)           | 9.0.3   | MIT           |
-| [lru-cache](https://www.npmjs.com/package/lru-cache)                 | 11.5.2  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)               | 9.0.5   | MIT-0         |
-| [otpauth](https://www.npmjs.com/package/otpauth)                     | 9.5.1   | MIT           |
-| [pg](https://www.npmjs.com/package/pg)                               | 8.23.0  | MIT           |
-| [pino](https://www.npmjs.com/package/pino)                           | 10.3.1  | MIT           |
-| [pino-roll](https://www.npmjs.com/package/pino-roll)                 | 4.0.0   | MIT           |
+| Package                                                                                | Version | License       |
+| -------------------------------------------------------------------------------------- | ------- | ------------- |
+| [@elysiajs/swagger](https://www.npmjs.com/package/@elysiajs/swagger)                   | 1.3.1   | MIT           |
+| [@sinclair/typebox](https://www.npmjs.com/package/@sinclair/typebox)                   | 0.34.52 | MIT           |
+| [@types/pg](https://www.npmjs.com/package/@types/pg)                                   | 8.23.1  | MIT           |
+| [@zxcvbn-ts/core](https://www.npmjs.com/package/@zxcvbn-ts/core)                       | 4.2.0   | MIT           |
+| [@zxcvbn-ts/language-common](https://www.npmjs.com/package/@zxcvbn-ts/language-common) | 4.1.3   | MIT           |
+| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)                               | 0.45.2  | Apache-2.0    |
+| [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.30  | MIT           |
+| [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
+| [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.2  | BlueOak-1.0.0 |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.0.10 | MIT-0         |
+| [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.5.2   | MIT           |
+| [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.0  | MIT           |
+| [pino](https://www.npmjs.com/package/pino)                                             | 10.3.1  | MIT           |
+| [pino-roll](https://www.npmjs.com/package/pino-roll)                                   | 4.0.0   | MIT           |
 
 ## Frontend runtime dependencies
 
@@ -38,7 +40,7 @@ by license family, and it does not inventory the Alpine base system.
 | [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog)   | 1.1.23  | MIT        |
 | [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar)               | 1.2.6   | MIT        |
 | [@radix-ui/react-checkbox](https://www.npmjs.com/package/@radix-ui/react-checkbox)           | 1.3.11  | MIT        |
-| [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog)               | 1.1.20  | MIT        |
+| [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog)               | 1.1.23  | MIT        |
 | [@radix-ui/react-dropdown-menu](https://www.npmjs.com/package/@radix-ui/react-dropdown-menu) | 2.1.24  | MIT        |
 | [@radix-ui/react-label](https://www.npmjs.com/package/@radix-ui/react-label)                 | 2.1.15  | MIT        |
 | [@radix-ui/react-popover](https://www.npmjs.com/package/@radix-ui/react-popover)             | 1.1.23  | MIT        |
@@ -49,23 +51,33 @@ by license family, and it does not inventory the Alpine base system.
 | [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.3.7   | MIT        |
 | [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.21  | MIT        |
 | [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.16  | MIT        |
-| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.101.4 | MIT        |
-| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.1.2   | MIT        |
-| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.9  | MIT        |
+| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.103.1 | MIT        |
+| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.2.4   | MIT        |
+| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.13 | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.31.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.47.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
-| [react](https://www.npmjs.com/package/react)                                                 | 19.2.8  | MIT        |
-| [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.2.8  | MIT        |
+| [react](https://www.npmjs.com/package/react)                                                 | 19.3.0  | MIT        |
+| [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.3.0  | MIT        |
 | [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.4   | MIT        |
-| [react-router](https://www.npmjs.com/package/react-router)                                   | 8.3.0   | MIT        |
+| [react-router](https://www.npmjs.com/package/react-router)                                   | 8.4.0   | MIT        |
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
 | [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.8   | MIT        |
-| [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.6.0   | MIT        |
-| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.1.1   | Apache-2.0 |
+| [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.7.0   | MIT        |
+| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.2.2   | Apache-2.0 |
 | [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.15  | MIT        |
+
+## Vendored source materials
+
+### shadcn/ui
+
+- License: MIT
+- Copyright: Copyright (c) 2023 shadcn
+- Upstream revision: [`3ba91b1cc83e1bbe4ab35a422ff2a694849c5048`](https://github.com/shadcn-ui/ui/tree/3ba91b1cc83e1bbe4ab35a422ff2a694849c5048/apps/v4/registry/new-york-v4/ui)
+- Included paths: `frontend/src/components/ui/alert-dialog.tsx`, `frontend/src/components/ui/alert.tsx`, `frontend/src/components/ui/avatar.tsx`, `frontend/src/components/ui/badge.tsx`, `frontend/src/components/ui/button.tsx`, `frontend/src/components/ui/card.tsx`, `frontend/src/components/ui/checkbox.tsx`, `frontend/src/components/ui/command.tsx`, `frontend/src/components/ui/dialog.tsx`, `frontend/src/components/ui/dropdown-menu.tsx`, `frontend/src/components/ui/input.tsx`, `frontend/src/components/ui/label.tsx`, `frontend/src/components/ui/popover.tsx`, `frontend/src/components/ui/progress.tsx`, `frontend/src/components/ui/select.tsx`, `frontend/src/components/ui/separator.tsx`, `frontend/src/components/ui/sheet.tsx`, `frontend/src/components/ui/skeleton.tsx`, `frontend/src/components/ui/sonner.tsx`, `frontend/src/components/ui/switch.tsx`, `frontend/src/components/ui/table.tsx`, `frontend/src/components/ui/tabs.tsx`, `frontend/src/components/ui/textarea.tsx`, `frontend/src/components/ui/tooltip.tsx`
+- Local modifications: These copied primitives are intentionally customized. Keep the attribution record, review upstream changes manually, and add every generated primitive path before the license gate can pass.
 
 ## Required notices by license family
 
@@ -109,7 +121,7 @@ Applies to: lucide-react.
 
 ### MIT License
 
-Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
+Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, @zxcvbn-ts/core, @zxcvbn-ts/language-common, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
 
 Each MIT-licensed dependency is provided under the standard MIT License, with
 copyright held by the respective package authors as stated in that package.
@@ -156,8 +168,8 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **240**
-third-party package versions (222 unique names). It includes backend runtime
+closure follows everything they pull in transitively and covers **230**
+third-party package versions (227 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
 package-directory count in the Linux image, but it must never be smaller. Development-only
@@ -165,7 +177,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 205      |
+| MIT              | 195      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
@@ -182,7 +194,7 @@ it is not distributed, so it is not inventoried here.
 
 ## Bundled runtime: Bun and its LGPL components
 
-The local verification image is built on `oven/bun:1.4.0-alpine`, so it contains the Bun
+The local verification image is built on `oven/bun:1.4.2-alpine`, so it contains the Bun
 runtime, and Bun statically links libraries under the LGPL. This section records what a derived
 project must consider before distributing that image. Bun's own license text is reproduced in
 [`licenses/BUN-LICENSE.md`](./licenses/BUN-LICENSE.md); that file, this file, and the root
@@ -208,7 +220,7 @@ licenses in `licenses/BUN-LICENSE.md`.
 
 - The patched WebKit/JavaScriptCore that Bun links is published at
   <https://github.com/oven-sh/webkit>.
-- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.0`.
+- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.2`.
 - TinyCC is at <https://github.com/tinycc/tinycc>.
 
 **How to modify the LGPL library and relink**
@@ -245,17 +257,20 @@ What the local verification image actually contains is checked against the built
   are reproduced in [`THIRD_PARTY_NOTICES.md`](./THIRD_PARTY_NOTICES.md).
 - `bun run check:image-licenses` opens the built image and fails if any npm package inside it
   is missing from that appendix, or if the notices are not present in the image.
-- The operating-system packages are inventoried in
+- The operating-system packages and their licenses are inventoried in
   [`licenses/base-image-packages.md`](./licenses/base-image-packages.md), read from the image's
-  own apk database.
+  own apk database. Their versions follow Alpine's patch releases, so each image records its own
+  exact versions in `licenses/base-image-versions.txt` when it is built, and the check confirms
+  that record matches the image.
 
-Both files are present inside the image, alongside `LICENSE` and this document.
+These files are present inside the image, alongside `LICENSE` and this document.
 
 The base image contains GPL-licensed programs (busybox, apk-tools, gettext and others). They
 are unmodified operating-system components alongside the application, not libraries
-linked into it. Their exact package versions are recorded in the base-image inventory. GPL and
-LGPL license texts plus downstream guidance are included in `licenses/`; Alpine's upstream
-source is published at <https://gitlab.alpinelinux.org/alpine/aports>.
+linked into it. Their exact package versions are recorded in each image's
+`licenses/base-image-versions.txt`. GPL and LGPL license texts plus downstream guidance are
+included in `licenses/`; Alpine's upstream source is published at
+<https://gitlab.alpinelinux.org/alpine/aports>.
 
 ## Regenerating this file
 

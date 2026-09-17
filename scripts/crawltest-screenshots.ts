@@ -3,46 +3,12 @@
  */
 import type { Page } from 'puppeteer';
 
-import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
 import type { TestResults } from './crawltest-results';
 import type { CrawlerOpts, CrawlerState } from './crawltest-types';
 
 import { SKIP_PATTERNS } from './crawltest-types';
-
-// ---------------------------------------------------------------------------
-// Crawl result stamp — read by .githooks/screenshot-guard.sh
-// ---------------------------------------------------------------------------
-
-export const CRAWL_RESULT_FILE = 'crawl-result.json';
-
-export interface CrawlResultStamp {
-	/** Only set once the crawl finishes. */
-	screenshots?: number;
-	/** Human-readable phase: `started` until the report lands, then `passed` or `failed`. */
-	status: string;
-	success: boolean;
-}
-
-/**
- * Records the crawl's verdict beside its screenshots so the pre-push guard can tell a real capture
- * from the wreckage of a failed one — PNG count alone cannot, since a crawl that fails on the last
- * page leaves a directory that looks complete.
- *
- * Written twice: `started` before the crawl begins, so a run that dies mid-crawl leaves the
- * directory marked unusable rather than silently passing, then the real verdict once the report is
- * in. The guard treats a missing file as a capture that predates this stamp and falls back to the
- * PNG count, so directories from earlier releases keep working.
- */
-export async function writeCrawlResult(directory: string, stamp: CrawlResultStamp): Promise<void> {
-	await mkdir(directory, { recursive: true });
-	const payload = { ...stamp, timestamp: new Date().toISOString() };
-	await Bun.write(
-		path.join(directory, CRAWL_RESULT_FILE),
-		`${JSON.stringify(payload, null, '\t')}\n`,
-	);
-}
 
 // ---------------------------------------------------------------------------
 // Screenshot directory management
@@ -66,6 +32,25 @@ export async function ensureScreenshotDir(
 }
 
 // ---------------------------------------------------------------------------
+// Route slugs
+// ---------------------------------------------------------------------------
+
+/**
+ * Name a screenshot after the whole route rather than its pathname alone.
+ *
+ * `/settings/database` and its `?panel=data`, `?panel=erd` and `?panel=sql` views are four routes
+ * the crawl visits and photographs separately, and all four used to write `settings-database.png`
+ * and overwrite each other. The run then claimed four routes behind a single image, which a release
+ * capture reads as an incomplete inventory. The query string is part of what makes the page
+ * different, so it belongs in the name.
+ */
+export function routeSlug(url: URL): string {
+	const pathSlug = url.pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
+	const querySlug = url.search.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+	return querySlug ? `${pathSlug}-${querySlug}` : pathSlug;
+}
+
+// ---------------------------------------------------------------------------
 // Page screenshot
 // ---------------------------------------------------------------------------
 
@@ -80,8 +65,8 @@ export async function screenshotPage(
 	const dir = await ensureScreenshotDir(opts, state, rootDir);
 	if (!dir) return null;
 
-	const urlPath = new URL(url).pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
-	const filename = `${urlPath}.png`;
+	const captured = new URL(url);
+	const filename = `${routeSlug(captured)}.png`;
 	const filepath = path.join(dir, filename);
 
 	const SCREENSHOT_TIMEOUT = 15_000;
@@ -98,6 +83,10 @@ export async function screenshotPage(
 			});
 			await Promise.race([screenshotPromise, timeoutPromise]);
 			results.screenshotsTaken++;
+			results.screenshotImages.push({
+				file: filename,
+				route: captured.pathname + captured.search,
+			});
 			state.consecutiveScreenshotFailures = 0;
 			return filepath;
 		} catch (err) {
@@ -116,6 +105,7 @@ export async function screenshotPage(
 				continue;
 			}
 			console.log(`   ⚠️  Screenshot failed for ${url}: ${msg}`);
+			results.addError('SCREENSHOT', `Failed to capture ${url}: ${msg}`);
 			state.consecutiveScreenshotFailures++;
 			return null;
 		}
@@ -213,7 +203,7 @@ export async function screenshotSubTabs(
 	);
 	if (groups.length === 0) return 0;
 
-	const urlSlug = new URL(pageUrl).pathname.replace(/^\//, '').replace(/\//g, '-') || 'root';
+	const urlSlug = routeSlug(new URL(pageUrl));
 	const dir = path.resolve(rootDir, opts.screenshotDir);
 	let subTabNavCount = 0;
 
@@ -241,7 +231,7 @@ export async function screenshotSubTabs(
 					return false;
 				}, tab.text);
 
-				if (!clicked) continue;
+				if (!clicked) throw new Error(`Could not select screenshot tab ${tab.text}`);
 				subTabNavCount++;
 
 				// Wait for in-page tab content to render
@@ -259,12 +249,21 @@ export async function screenshotSubTabs(
 						path: filepath,
 					});
 					results.screenshotsTaken++;
+					const captured = new URL(pageUrl);
+					results.screenshotImages.push({
+						file: filename,
+						route: captured.pathname + captured.search,
+					});
 					console.log(`   📸 Sub-tab: ${filepath}`);
 				} catch {
+					results.addError(
+						'SCREENSHOT',
+						`Failed to capture sub-tab ${tab.text} at ${pageUrl}`,
+					);
 					console.log(`   ⚠️  Sub-tab screenshot failed for ${tab.text}`);
 				}
 			} catch {
-				// Non-fatal — skip this tab
+				results.addError('SCREENSHOT', `Failed to visit sub-tab ${tab.text} at ${pageUrl}`);
 			}
 		}
 

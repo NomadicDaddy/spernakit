@@ -3,12 +3,10 @@
  */
 import type { Page } from 'puppeteer';
 
-import path from 'node:path';
-
 import type { TestResults } from './crawltest-results';
 import type { CrawlerOpts, CrawlerState } from './crawltest-types';
 
-import { ensureScreenshotDir } from './crawltest-screenshots';
+import { screenshotPage } from './crawltest-screenshots';
 import { waitForContent } from './crawltest-types';
 
 export { testBugReport } from './crawltest-bugreport';
@@ -171,18 +169,13 @@ export async function test404Page(
 			console.log(`   ✓ 404 page OK (${result.textLength} chars, no error boundary)`);
 		}
 
-		// Screenshot (if enabled)
-		const dir404 = await ensureScreenshotDir(opts, state, rootDir);
-		if (dir404) {
-			const filepath = path.join(dir404, '404.png');
-			try {
-				await page.screenshot({ path: filepath });
-				results.screenshotsTaken++;
-				console.log(`   📸 Screenshot: ${filepath}`);
-			} catch {
-				console.log('   ⚠️  Screenshot failed for 404 page');
-			}
-		}
+		// Screenshot through the shared helper rather than writing a file directly. It is what
+		// records the image against the route it came from, and a release capture is checked both
+		// ways: every visited route needs an image, and every image in the directory needs to be in
+		// the inventory. A hand-written 404.png satisfied neither.
+		const shot404 = await screenshotPage(page, results, opts, state, rootDir, finalUrl);
+		if (shot404) console.log(`   📸 Screenshot: ${shot404}`);
+		else if (opts.screenshotDir) console.log('   ⚠️  Screenshot failed for 404 page');
 	} catch (err: unknown) {
 		const typedErr = err instanceof Error ? err : new Error(String(err));
 		results.addError('VISIT_ERROR', `404 test failed: ${typedErr.message}`);

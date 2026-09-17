@@ -92,6 +92,8 @@ export const APPLICATION_CHECK_FILE_GLOBS = [
 	'docker/nginx.conf',
 	'frontend/index.html',
 	'frontend/package.json',
+	'frontend/vite-plugins/proxyTarget.ts',
+	'frontend/vite.config.ts',
 	'package.json',
 	'scripts/check-application.ts',
 	'scripts/lib/app-config-types.ts',

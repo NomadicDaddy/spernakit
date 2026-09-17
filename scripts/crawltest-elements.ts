@@ -38,11 +38,11 @@ export async function testButton(
 					return role !== 'switch' && role !== 'combobox';
 				},
 			);
-			// Try exact text match first
-			let btn = buttons.find((b) => b.textContent?.trim() === text);
-			// Fall back to index if text match fails
-			if (!btn && buttons[idx]) {
-				btn = buttons[idx];
+			// Discovery records the first 50 characters. Prefer its original index when
+			// it still identifies that button, then find the same label after DOM changes.
+			let btn = buttons[idx];
+			if (btn?.textContent?.trim().substring(0, 50) !== text) {
+				btn = buttons.find((b) => b.textContent?.trim().substring(0, 50) === text);
 			}
 			if (btn) {
 				(btn as HTMLElement).click();

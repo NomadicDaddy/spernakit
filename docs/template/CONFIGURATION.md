@@ -354,11 +354,8 @@ for groups that already hold a real value.
 
 ### Key Rotation
 
-**WARNING: Key rotation invalidates existing data!**
-
-- All user sessions will be logged out
-- Encrypted data becomes unreadable
-- Requires application restart
+Rotate one key group at a time. JWT rotation invalidates sessions, while field encryption uses a
+current/previous migration window so database ciphertext remains readable throughout maintenance.
 
 **Production Key Rotation:**
 
@@ -366,18 +363,25 @@ for groups that already hold a real value.
 # 1. Backup current config
 cp config/myapp.json config/myapp.json.backup
 
-# 2. Export/backup encrypted data (if any)
+# 2. Put the old security.encryptionKey in security.encryptionKeyPrevious
 
-# 3. Generate new keys (requires FORCE_KEY_GENERATION=true in production)
-FORCE_KEY_GENERATION=true bun run generate-keys
+# 3. Generate only a new current field-encryption key
+FORCE_KEY_GENERATION=true bun run generate-keys -- --only encryption-key
 
-# 4. Restart application
+# 4. With the app stopped, atomically re-encrypt every shared-helper database field
+bun run security:rotate-field-encryption
+
+# 5. Start and validate, then remove encryptionKeyPrevious and restart
 ```
 
 Scope the rotation with `--only` when the reason for rotating covers one key group. Rotating
 `cookie-secret` alone leaves encrypted data readable and keeps sessions alive, but OAuth logins
 already in flight fail, because the state and PKCE binding derived from the old secret no longer
 verifies.
+
+If the field rotation command fails, it changes no rows: restore the old key as current and remove
+the new key. After a successful rotation, rollback requires restoring the database backup and old
+config together. The command reports row counts only and never prints plaintext or key material.
 
 ## Secrets File (split pattern)
 
@@ -682,7 +686,7 @@ either file-based value.
 }
 ```
 
-Threshold values for `auth`, `db`, and `fs` are response-time limits in milliseconds; `memory` thresholds are heap-usage percentages.
+Threshold values for `auth`, `db`, and `fs` are response-time limits in milliseconds. The `memory` thresholds are fractions of the memory the process is allowed: resident set against the container limit when there is one, against the host total otherwise. Their setting keys are still named `memoryHeapDegradedThreshold` and `memoryHeapUnhealthyThreshold`, which is what they were called when the check compared heap sizes.
 
 ### Alerting (`alerting`)
 
@@ -834,6 +838,10 @@ The `docker/start.sh` script:
 1. Creates config from defaults if not present
 2. Generates secure keys automatically
 3. Sets `DOCKER_ENV=true` environment variable
+4. Leaves `/app/config` permissions to the host. The container cannot `chmod` a bind mount it
+   does not own, so the owner-only guard accepts a refused `chmod` only at that mount boundary.
+   Secure the mounted directory on the host before starting the container (see
+   [DEPLOYMENT.md, Container Security Posture](DEPLOYMENT.md#container-security-posture)).
 
 ---
 
