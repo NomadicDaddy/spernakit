@@ -17,6 +17,39 @@ interface NotificationData {
 	type: string;
 }
 
+/** Message type the backend uses for a delivered notification on the user channel. */
+const NOTIFICATION_MESSAGE_TYPE = 'notification';
+
+/**
+ * Narrow a user-channel message to a delivered notification. The same channel also carries
+ * user-scoped CRUD events (dashboards, files) and the subscribe acknowledgement, which must not
+ * reach the unread count or the recent list.
+ *
+ * @param message - Raw message from the WebSocket dispatcher
+ * @returns The notification payload, or null when the message is anything else
+ */
+function toNotificationData(message: unknown): NotificationData | null {
+	if (typeof message !== 'object' || message === null) return null;
+	if (!('type' in message) || message.type !== NOTIFICATION_MESSAGE_TYPE) return null;
+	if (!('data' in message) || typeof message.data !== 'object' || message.data === null) {
+		return null;
+	}
+	const { data } = message;
+	if (
+		!('id' in data) ||
+		typeof data.id !== 'number' ||
+		!('message' in data) ||
+		typeof data.message !== 'string' ||
+		!('title' in data) ||
+		typeof data.title !== 'string' ||
+		!('type' in data) ||
+		typeof data.type !== 'string'
+	) {
+		return null;
+	}
+	return { id: data.id, message: data.message, title: data.title, type: data.type };
+}
+
 /**
  * Listens for real-time notification messages on the user's WebSocket channel.
  * Handles optimistic cache updates (unread count, recent list), statistics
@@ -39,8 +72,9 @@ function useNotificationSocket(): void {
 
 		const channel = `user:${userId}`;
 
-		const handler: WsMessageHandler = (data) => {
-			const notification = data as NotificationData;
+		const handler: WsMessageHandler = (message) => {
+			const notification = toNotificationData(message);
+			if (!notification) return;
 
 			// Optimistically increment unread count
 			queryClient.setQueryData<DataResponse<{ count: number }>>(
