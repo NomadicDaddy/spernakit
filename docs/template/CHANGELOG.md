@@ -3,6 +3,45 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.3] - 2026-09-26
+
+Patch release. The commit-time leak guard reads its private pattern file from the Windows
+user-level setting when the environment does not carry it, and it now stops a commit when a
+configured pattern file is missing or unreadable instead of passing with a warning. Dependencies
+move to current versions and the formatting configuration converges with the fleet standard.
+
+### Fixed
+
+- The leak guard resolves `LEAK_GUARD_PATTERNS` from `HKCU\Environment` when the variable is not
+  set, before falling back to `~/.config/leak-guard/patterns`. A process started from a parent that
+  predates the user-level variable never inherits it, and such a session previously committed with
+  the private tier silently off. The seeder resolves the path the same way, so it cannot seed a
+  second file at the default location.
+- A configured private pattern file that is missing or unreadable now stops the commit. Readability
+  is judged by grep's exit status on the actual read, because a permission check can report a file
+  readable when Windows access control denies the open. `LEAK_GUARD_ALLOW_NO_PRIVATE=1` lets a
+  single commit through deliberately. A machine with no pattern file configured at all still warns
+  and runs the generic checks, so a freshly scaffolded project can make its first commit.
+- The hit message no longer suggests `git commit --no-verify`; a confirmed false positive is the
+  user's call.
+- The scaffold copies of `leak-guard.sh` and `leak-guard-setup.sh` match the root copies again.
+
+### Changed
+
+- Production and development dependencies move to current versions: `drizzle-orm` 0.45.3,
+  `drizzle-kit` 0.31.11, `lru-cache` 11.5.3, `@tanstack/react-query` 5.104.0, `lucide-react`
+  1.48.0, `@types/node` 26.6.3, `vite` 8.3.1, `eslint` 10.11.0, `eslint-plugin-jsdoc` 64.5.4,
+  `eslint-plugin-perfectionist` 5.12.1, `knip` 6.38.0, `puppeteer` 25.12.0, `typescript-eslint`
+  8.70.1, and `prettier` 3.9.9, with the lockfile and license notices updated to match.
+  `eslint` 10.11.0 matches aidd again.
+- The GitHub Actions workflows use `actions/deploy-pages` 5.0.1 and the current
+  `github/codeql-action/upload-sarif`.
+- Line endings, indentation, width, and trailing commas agree across `.editorconfig`,
+  `.prettierrc`, and `.gitattributes`. The `*.ps1`/`*.psm1`/`*.psd1` CRLF exception, which
+  contradicted the LF settings and was never in effect, is removed, five duplicated
+  `.gitattributes` rules are dropped, and `*.svg` is treated as text so it diffs. Formatting output
+  is unchanged.
+
 ## [3.47.2] - 2026-09-17
 
 Patch release. Authentication no longer accepts MFA challenge tokens from query strings. Binary
