@@ -22,7 +22,7 @@ copyright line to reproduce. Their terms are the standard text of the declared l
 reproduced in the summary document; the copyright holder is the package author.
 
 - `@scalar/openapi-types@0.2.0` (MIT)
-- `drizzle-orm@0.45.2` (Apache-2.0)
+- `drizzle-orm@0.45.3` (Apache-2.0)
 - `emoji-regex@8.0.0` (MIT)
 - `pg-types@2.2.0` (MIT)
 - `pgpass@1.0.5` (MIT)
@@ -1846,7 +1846,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/query-core@5.103.1
+### @tanstack/query-core@5.104.0
 
 License: MIT
 
@@ -1874,7 +1874,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-query@5.103.1
+### @tanstack/react-query@5.104.0
 
 License: MIT
 
@@ -2322,7 +2322,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/node@26.5.0
+### @types/node@26.6.3
 
 License: MIT
 
@@ -3383,7 +3383,7 @@ THE SOFTWARE.
 ```
 ````
 
-### drizzle-orm@0.45.2
+### drizzle-orm@0.45.3
 
 License: Apache-2.0
 
@@ -4369,7 +4369,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-### lru-cache@11.5.2
+### lru-cache@11.5.3
 
 License: BlueOak-1.0.0
 
@@ -4431,7 +4431,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.47.0
+### lucide-react@1.48.0
 
 License: ISC
 

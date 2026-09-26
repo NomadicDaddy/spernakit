@@ -1,11 +1,6 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto eol=lf
 
-# PowerShell files should use CRLF on Windows
-*.ps1 text eol=crlf
-*.psm1 text eol=crlf
-*.psd1 text eol=crlf
-
 # Markdown files
 *.md text eol=lf
 
@@ -33,12 +28,10 @@
 *.config text eol=lf
 *.conf text eol=lf
 *.ini text eol=lf
-*.json text eol=lf
 
 # Text files
 *.txt text eol=lf
 *.log text eol=lf
-*.md text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 
@@ -49,8 +42,6 @@
 *.xml text eol=lf
 
 # YAML files
-*.yml text eol=lf
-*.yaml text eol=lf
 
 # Shell scripts (if any)
 *.sh text eol=lf
@@ -75,7 +66,7 @@ Dockerfile text eol=lf
 *.jpeg binary
 *.gif binary
 *.ico binary
-*.svg binary
+*.svg text eol=lf
 *.woff binary
 *.woff2 binary
 *.ttf binary
@@ -87,7 +78,6 @@ Dockerfile text eol=lf
 
 # Archive files
 *.rar binary
-*.zip binary
 
 # Ignore files
 .gitignore text eol=lf
