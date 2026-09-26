@@ -5,6 +5,7 @@ import { Bug, Database, Key, Settings, Shield, User } from 'lucide-react';
 import type { UserRole } from '@/types/roles';
 
 import { settingsTabs } from '@/pages/settings/settingsTabs';
+import { SETTINGS_AREA_MIN_ROLE } from '@/routes/settingsArea';
 
 interface CommandPaletteRoute {
 	icon: ReactNode;
@@ -12,12 +13,6 @@ interface CommandPaletteRoute {
 	minRole?: UserRole;
 	path: string;
 }
-
-/**
- * The settings area is guarded at ADMIN (the `/settings` route and its nav entry), so a tab that
- * names no role of its own is reachable from ADMIN up.
- */
-const SETTINGS_AREA_MIN_ROLE: UserRole = 'ADMIN';
 
 /** Tabs that read better with their own icon; every other tab, an app's own included, gets Settings. */
 const settingsTabIcons: Record<string, ReactNode> = {
