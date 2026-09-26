@@ -37,6 +37,11 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-lockout-refresh.ts',
 		],
 	},
+	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
+	'test:logout-audit-attribution': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-logout-audit-attribution.ts'],
+	},
 	'test:nginx-security': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

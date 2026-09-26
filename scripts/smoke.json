@@ -243,6 +243,10 @@
 					"description": "Refresh replay and ambiguous rotation collisions clear cookies and revoke every session token"
 				},
 				{
+					"command": "bun run test:logout-audit-attribution",
+					"description": "A sign-out audit row names the user who signed out, not System"
+				},
+				{
 					"command": "bun run test:mfa-token-transport",
 					"description": "MFA challenge tokens use router state or a one-time URL fragment, the fragment is replaced before the form renders, and query-string tokens are ignored"
 				},
