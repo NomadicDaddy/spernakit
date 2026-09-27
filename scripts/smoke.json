@@ -351,6 +351,10 @@
 					"description": "Docker readiness failures print bounded container log diagnostics"
 				},
 				{
+					"command": "bun run test:wait-for-port",
+					"description": "bun run start tells a crashed service from a slow one and never gives up before the runbook's own readiness wait"
+				},
+				{
 					"command": "bun run check:db-location",
 					"description": "Database location guard (ASSERT-010: DB files only under data/)"
 				},

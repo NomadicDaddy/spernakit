@@ -54,17 +54,36 @@ export function findPidOnPortUnix(port: number): null | string {
 	}
 }
 
-export const PORT_CHECK_TIMEOUT_MS = 10_000;
+/**
+ * How long a service that is still running may take to start listening. A cold backend start
+ * (right after an install or build, on a loaded machine) spends well over ten seconds loading
+ * modules before it writes its first log line; the smoke runbook's own readiness waits allow 30.
+ */
+export const PORT_CHECK_TIMEOUT_MS = 30_000;
 export const PORT_CHECK_INTERVAL_MS = 500;
 
+/** Why a readiness wait ended. `exited` means the watched process died before it listened. */
+export type PortWaitResult = 'exited' | 'listening' | 'timeout';
+
+export interface WaitForPortOptions {
+	/** Returns false once the watched process has exited, so a crash fails fast instead of waiting out the deadline. */
+	isAlive?: () => boolean;
+	timeoutMs?: number;
+}
+
 /**
- * Wait for a port to become available (TCP connection succeeds).
- * Returns true if port is available within timeout, false otherwise.
+ * Wait for a port to accept a TCP connection. A slow start is not a failure while the process is
+ * alive; a process that exits before listening is reported at once as `exited`.
  */
-export async function waitForPort(port: number, serviceName: string): Promise<boolean> {
-	const deadline = Date.now() + PORT_CHECK_TIMEOUT_MS;
+export async function waitForPort(
+	port: number,
+	serviceName: string,
+	options: WaitForPortOptions = {},
+): Promise<PortWaitResult> {
+	const deadline = Date.now() + (options.timeoutMs ?? PORT_CHECK_TIMEOUT_MS);
 
 	while (Date.now() < deadline) {
+		if (options.isAlive && !options.isAlive()) return 'exited';
 		const socket = new net.Socket();
 		const available = await new Promise<boolean>((resolve) => {
 			socket.setTimeout(PORT_CHECK_INTERVAL_MS);
@@ -85,9 +104,12 @@ export async function waitForPort(port: number, serviceName: string): Promise<bo
 
 		if (available) {
 			console.log(`   ✓ ${serviceName} listening on port ${port}`);
-			return true;
+			return 'listening';
 		}
+		// A refused connection returns at once; pause so the wait does not spin on the CPU the
+		// starting service needs.
+		await new Promise((done) => setTimeout(done, PORT_CHECK_INTERVAL_MS));
 	}
 
-	return false;
+	return 'timeout';
 }
