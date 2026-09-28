@@ -179,6 +179,12 @@ async function main(): Promise<void> {
 	}
 	if (modeKey === 'qc') assertSmokeCacheCoverage(modeConfig.steps);
 	const selectedSteps = fast ? selectFastQcSteps(modeConfig.steps) : modeConfig.steps;
+	// A fast run must never end with the sentence a full run ends with: that line is what people and
+	// tools read as proof the whole gate passed, and the subset skips drift, tests and every other check.
+	const modeLabel = fast
+		? `${mode} (fast subset: ${String(selectedSteps.length)} of ${String(modeConfig.steps.length)} steps, not a full smoke:qc)`
+		: mode;
+	if (fast) console.log(`Scope: ${modeLabel}`);
 
 	ensureLogsDirectory();
 	recoverDevRateLimitBackup(projectRoot);
@@ -249,12 +255,12 @@ async function main(): Promise<void> {
 	}
 
 	if (failedSteps.length > 0) {
-		console.error(`\n${failedSteps.length} step(s) failed for mode '${mode}':`);
+		console.error(`\n${failedSteps.length} step(s) failed for mode '${modeLabel}':`);
 		for (const description of failedSteps) console.error(`  [FAIL] ${description}`);
 		process.exit(1);
 	}
 
-	console.log(`\nAll smoke tests for mode '${mode}' completed successfully.`);
+	console.log(`\nAll smoke tests for mode '${modeLabel}' completed successfully.`);
 }
 
 main().catch((err: unknown) => {

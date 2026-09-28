@@ -3,8 +3,8 @@ import { create } from 'zustand';
 /** Current state of the WebSocket connection lifecycle. */
 type WsConnectionState = 'connected' | 'connecting' | 'disconnected';
 
-/** Callback invoked when a message arrives on a subscribed channel. */
-type WsMessageHandler = (data: unknown) => void;
+/** Callback invoked with the whole message (`{ type, channel, data }`) on a subscribed channel. */
+type WsMessageHandler = (message: unknown) => void;
 
 /**
  * Global WebSocket state store.

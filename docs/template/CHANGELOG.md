@@ -3,6 +3,38 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.4] - 2026-09-28
+
+Patch release. The notification bell shows only notifications, sign-out audit rows name the user
+who signed out, the command palette builds its settings and profile entries from the same tab lists
+the pages use, and the launcher waits for a slow backend instead of calling it a failure. The leak
+guard gains a per-repository list of private names a public site may publish.
+
+### Fixed
+
+- The notification bell no longer fills with dashboard and file events. The WebSocket dispatcher
+  now hands each channel handler the full message, and the bell acts only on messages of type
+  `notification`.
+- Sign-out audit rows are attributed to the user who signed out. The session is resolved before its
+  tokens are revoked, where previously the row was written after revocation and carried no user.
+- The command palette builds its settings entries from `settingsTabs` and its profile entries from
+  `profileTabs`, so a derived app that swaps a tab no longer gets a palette entry for a route it
+  removed and none for the one it added. The demo account buttons keep their labels on one line.
+- `bun run start` waits up to 30 seconds for each server, tells a process that exited apart from
+  one still starting, and reports the actual failure. A cold backend start that took longer than
+  the old 10-second limit was killed and reported as a failed start.
+- The fast `qc` subset that runs at commit time now says it ran 4 of the qc steps, so its success
+  line no longer reads like a full `smoke:qc` pass.
+
+### Changed
+
+- The settings area's minimum role is one exported constant, `SETTINGS_AREA_MIN_ROLE`, read by the
+  route guard and the command palette alike.
+- The commit-time leak guard reads an optional, tracked `.githooks/leak-guard-publishes` listing
+  private names this repository is cleared to publish. The list is read from the staged index, an
+  entry must match a private pattern in full, it never exempts the secret-format or home-path
+  checks, and each use is announced. The template lists no names, so its behavior is unchanged.
+
 ## [3.47.3] - 2026-09-26
 
 Patch release. The commit-time leak guard reads its private pattern file from the Windows

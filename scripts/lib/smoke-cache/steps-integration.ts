@@ -57,4 +57,13 @@ export const INTEGRATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/wait-for-http.ts',
 		],
 	},
+	'test:wait-for-port': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/process/pid-files.ts',
+			'scripts/lib/process/ports.ts',
+			'scripts/smoke.json',
+			'scripts/test-wait-for-port.ts',
+		],
+	},
 };

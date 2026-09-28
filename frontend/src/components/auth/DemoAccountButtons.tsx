@@ -27,7 +27,7 @@ function DemoAccountButtons({
 		<>
 			<div className="relative my-4">
 				<Separator />
-				<span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+				<span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs whitespace-nowrap text-muted-foreground">
 					Demo Accounts (Dev Only)
 				</span>
 			</div>

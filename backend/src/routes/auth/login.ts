@@ -7,7 +7,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { PASSWORD_MAX_LENGTH } from '../../constants/validation.ts';
 import { authPlugin, parseCookies, signTokenPair, verifyAccessToken } from '../../plugins/auth.ts';
-import { publishResolvedUser } from '../../plugins/authRequest.ts';
+import { publishResolvedUser, resolveUserFromRequest } from '../../plugins/authRequest.ts';
 import { csrfPlugin, generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import {
 	getMfaStatus,
@@ -161,6 +161,12 @@ function revokeAccessTokenFromRequest(request: Request): void {
 
 function handleLogout({ request, set }: LogoutContext) {
 	const config = getConfig();
+	// Publish the identity for the audit plugin before the token is revoked: onAfterResponse
+	// resolves the actor from the cookie, which rejects a revoked token, so without this the
+	// sign-out row lands attributed to no one. Resolved with the same revocation-aware check the
+	// plugin uses, so replaying an already-revoked token credits nobody.
+	const actor = resolveUserFromRequest(request);
+	if (actor) publishResolvedUser(request, actor);
 	revokeAccessTokenFromRequest(request);
 	clearAuthCookies(set, config.security);
 	setCacheHeaders(set, 'NO_CACHE');

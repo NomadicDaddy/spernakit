@@ -16,7 +16,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { isProcessAlive, killProcessByPidFile, readPidFile } from './lib/process/pid-files.ts';
-import { PORT_CHECK_TIMEOUT_MS, waitForPort } from './lib/process/ports.ts';
+import { PORT_CHECK_TIMEOUT_MS, type PortWaitResult, waitForPort } from './lib/process/ports.ts';
 import { spawnBackground } from './lib/process/spawn-background.ts';
 import { loadJsonConfig } from './load-json-config.ts';
 
@@ -76,6 +76,29 @@ if (stopResult.exitCode !== 0) {
 console.log(`\n🚀 Starting ${appSlug} in background mode...`);
 console.log(`   Logs directory: ${logsDir}`);
 
+/**
+ * Explain why a service never listened. A crash and a slow start used to share one message, and
+ * the slow case killed a healthy process before it had written a log line, so its empty logs
+ * pointed nowhere.
+ */
+function reportStartFailure(
+	serviceName: string,
+	result: Exclude<PortWaitResult, 'listening'>,
+	errorLog: string,
+): void {
+	if (result === 'exited') {
+		console.error(`   ❌ ${serviceName} exited before it started listening`);
+	} else {
+		console.error(
+			`   ❌ ${serviceName} was still starting after ${String(PORT_CHECK_TIMEOUT_MS / 1000)}s and has been stopped`,
+		);
+		console.error(
+			'   (Its logs can be empty: nothing is written until its modules finish loading.)',
+		);
+	}
+	console.error(`   Check logs at ${errorLog}`);
+}
+
 // Start backend
 const backendPid = spawnBackground(
 	logsDir,
@@ -93,10 +116,11 @@ if (!backendPid) {
 console.log(`   ✓ Backend spawned (PID: ${backendPid}, port: ${backendPort})`);
 console.log(`   Waiting for backend to be ready...`);
 
-const backendReady = await waitForPort(backendPort, 'Backend');
-if (!backendReady) {
-	console.error(`   ❌ Backend failed to start within ${PORT_CHECK_TIMEOUT_MS / 1000}s`);
-	console.error(`   Check logs at ${logsDir}/backend.error.log`);
+const backendWait = await waitForPort(backendPort, 'Backend', {
+	isAlive: () => isProcessAlive(backendPid),
+});
+if (backendWait !== 'listening') {
+	reportStartFailure('Backend', backendWait, `${logsDir}/backend.error.log`);
 	killProcessByPidFile(logsDir, 'backend');
 	process.exit(1);
 }
@@ -121,10 +145,11 @@ if (!frontendPid) {
 console.log(`   ✓ Frontend spawned (PID: ${frontendPid}, port: ${frontendPort})`);
 console.log(`   Waiting for frontend to be ready...`);
 
-const frontendReady = await waitForPort(frontendPort, 'Frontend');
-if (!frontendReady) {
-	console.error(`   ❌ Frontend failed to start within ${PORT_CHECK_TIMEOUT_MS / 1000}s`);
-	console.error(`   Check logs at ${logsDir}/frontend.error.log`);
+const frontendWait = await waitForPort(frontendPort, 'Frontend', {
+	isAlive: () => isProcessAlive(frontendPid),
+});
+if (frontendWait !== 'listening') {
+	reportStartFailure('Frontend', frontendWait, `${logsDir}/frontend.error.log`);
 	killProcessByPidFile(logsDir, 'frontend');
 	killProcessByPidFile(logsDir, 'backend');
 	process.exit(1);

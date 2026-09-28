@@ -14,11 +14,10 @@ import {
 	CommandList,
 	CommandSeparator,
 } from '@/components/ui/command';
+import { commandPaletteRoutes } from '@/routes/commandPaletteRoutes';
 import { useCommandStore } from '@/stores/commandStore';
 import { useSidebarStore } from '@/stores/sidebarStore';
 import { useThemeStore } from '@/stores/themeStore';
-
-import { commandPaletteRoutes } from './commandPaletteRoutes';
 
 /** Resize a navConfig icon element for command palette display. */
 function resizeIcon(icon: React.ReactNode): React.ReactNode {

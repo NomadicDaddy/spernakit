@@ -12,6 +12,8 @@ import {
 import type { AppFeatures } from '@/api/appFeatures';
 import type { UserRole } from '@/types/roles';
 
+import { SETTINGS_AREA_MIN_ROLE } from '@/routes/settingsArea';
+
 /** Extract only the boolean keys from AppFeatures for use as feature flags. */
 type BooleanAppFeatureKey = {
 	[K in keyof AppFeatures]: AppFeatures[K] extends boolean ? K : never;
@@ -68,7 +70,7 @@ const navEntries: NavEntry[] = [
 	{
 		icon: <Settings aria-hidden="true" className="size-5" />,
 		label: 'Settings',
-		minRole: 'ADMIN',
+		minRole: SETTINGS_AREA_MIN_ROLE,
 		to: '/settings',
 	},
 	{

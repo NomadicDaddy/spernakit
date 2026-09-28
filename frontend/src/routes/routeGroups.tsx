@@ -33,6 +33,7 @@ import {
 	WorkspaceSettingsPage,
 } from '@/routes/lazyPages';
 import { PUBLIC_PATHS } from '@/routes/publicPaths';
+import { SETTINGS_AREA_MIN_ROLE } from '@/routes/settingsArea';
 import { settingsRoutes } from '@/routes/settingsRoutes';
 
 /**
@@ -197,7 +198,7 @@ export const protectedAppRoutes: RouteObject[] = [
 				element: <LazyPage Component={SettingsLayout} />,
 			},
 		],
-		element: <ProtectedRoute requiredRole="ADMIN" />,
+		element: <ProtectedRoute requiredRole={SETTINGS_AREA_MIN_ROLE} />,
 		path: '/settings',
 	},
 ];
