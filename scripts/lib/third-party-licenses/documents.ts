@@ -86,9 +86,10 @@ Bun is not statically linked into the application here: it is the interpreter th
 supplied by the base image and dynamically replaceable. A downstream recipient who wants a modified
 JavaScriptCore can build a modified Bun (\`git submodule update --init --recursive\`,
 \`make jsc\`, \`zig build\`, per Bun's LICENSE.md), install it over the runtime in the image, or
-rebuild the image with a base image containing it. ${APP}'s own terms (${LICENSE}) cover only its own
-source, so nothing here restricts that. A downstream distributor must preserve exact corresponding source rather
-than rely on these upstream locations remaining unchanged.
+rebuild the image with a base image containing it. ${APP}'s own terms (${LICENSE}) govern only
+${APP}'s source, not the Bun runtime, so they do not restrict replacing or relinking it. A
+downstream distributor must preserve exact corresponding source rather than rely on these upstream
+locations remaining unchanged.
 `,
 		heading: 'Bundled runtime: Bun and its LGPL components',
 	},
