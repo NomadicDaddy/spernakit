@@ -36,12 +36,15 @@ upgrade-review/
 # migrate (the runner drift-checks journal vs .sql and refuses to start otherwise).
 backups/
 data/.seeded
-data/*.bak
-data/*.db
-data/*.db-journal
-data/*.db-shm
-data/*.db-wal
-data/*.db.lock
+# Depth globs, not data/*.db: a test fixture that writes into a data/ subdirectory (deeper's
+# collector fixtures write test.db plus a fixture.secrets.json) was stageable for its whole life.
+data/**/*.bak
+data/**/*.db
+data/**/*.db-journal
+data/**/*.db-shm
+data/**/*.db-wal
+data/**/*.db.lock
+data/**/*.secrets.json
 data/coordinator/
 data/exports/
 data/migration-history.json
