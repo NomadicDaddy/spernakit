@@ -362,6 +362,15 @@
 				gap: 14px;
 				margin-top: 34px;
 			}
+			.fit-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 14px;
+				margin: 26px 0 34px;
+			}
+			.fit-grid .stack-card {
+				min-height: 0;
+			}
 			.card-grid {
 				grid-template-columns: repeat(4, minmax(0, 1fr));
 			}
@@ -639,6 +648,9 @@
 				}
 			}
 			@media (max-width: 680px) {
+				.fit-grid {
+					grid-template-columns: minmax(0, 1fr);
+				}
 				.site-header {
 					position: relative;
 					background: var(--night);
@@ -687,7 +699,11 @@
 					grid-template-columns: 1fr;
 				}
 				.signal-grid {
-					display: none;
+					grid-template-columns: minmax(0, 1fr);
+				}
+				.signal-grid div + div {
+					border-top: 1px solid rgba(255, 255, 255, 0.13);
+					border-left: 0;
 				}
 				.signal-grid div + div {
 					border-top: 1px solid rgba(255, 255, 255, 0.13);
@@ -808,6 +824,30 @@
 						SaaS-style admin surfaces where the baseline should already include
 						security, configuration, observability, and deployment structure.
 					</p>
+					<div class="fit-grid">
+						<article class="stack-card">
+							<span class="trust-label">Use Spernakit when</span>
+							<h3>You want auth, roles, audit logs and deployment already wired.</h3>
+							<p>
+								You are starting an internal tool, a homelab app or a small admin
+								surface, and you would rather spend the first week on the product
+								than on the parts every one of them needs.
+							</p>
+						</article>
+						<article class="stack-card">
+							<span class="trust-label">Skip Spernakit when</span>
+							<h3>
+								You want a public marketing site, a different stack, or a starter
+								you can strip to nothing.
+							</h3>
+							<p>
+								Spernakit is an opinionated admin baseline on Bun, Elysia, Drizzle
+								and React, with a template contract its gates keep checking. If you
+								do not want those choices or that contract, it is weight rather than
+								a head start.
+							</p>
+						</article>
+					</div>
 					<div class="card-grid">
 						<article class="stack-card">
 							<span class="card-index">01</span>
