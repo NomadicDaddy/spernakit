@@ -24,8 +24,13 @@ What the **baseline** keeps, in your own database, so you know what you are inhe
 - **Uploads** - whatever your users upload, wherever you configured it to live.
 - **Health and operational records** - checks, scheduled task results, and their history.
 
-All of it lives in the database you configure and is readable by anyone with access to it. The
-template does not encrypt these at rest; that is a property of your deployment.
+Most of it lives in the database you configure and is readable by anyone with access to it.
+Uploads are the exception: they go through the configured storage adapter, which is local disk or
+S3 rather than the database. Session cookies live in the reader's browser.
+
+Selected secrets ARE encrypted by the template, including MFA material and OAuth tokens. There is
+no blanket database or disk encryption; that is a property of your deployment rather than something
+the template provides.
 
 ## What you have to decide
 
