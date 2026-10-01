@@ -11,9 +11,10 @@
  * (Carl, 2026-09-30, whose Deeper check this is).
  *
  * A script that genuinely cannot run in any smoke mode is excused in `scripts/smoke.json` under
- * `excusedTests`, by name and with a reason. The list lives there rather than here because
- * `smoke.json` is the application's own file, so an application can excuse its own script without
- * editing a template-managed one. Three rules keep the list from becoming the hole:
+ * `excusedTests`, by name and with a reason. The list lives there rather than here because an
+ * application with its own test scripts already keeps its own `smoke.json` (a `KEEP` in
+ * `.templateoverrides`) to register their steps, so an excuse costs it no further override. A list
+ * in this file would force a second one. Three rules keep the list from becoming the hole:
  *
  * - An excuse needs a reason. A bare name cannot be told apart from a gate somebody gave up on.
  * - An excuse for a script that no longer exists fails, as does one for a script that is wired.
