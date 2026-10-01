@@ -54,7 +54,9 @@ config.security.backupEncryptionKey = crypto.randomBytes(32).toString('hex');
 config.security.cookieSecret = crypto.randomBytes(32).toString('hex');
 config.security.applicationApiKey = crypto.randomBytes(48).toString('base64url');
 config.server.trustProxy = true;
-config.server.trustedProxies = ['172.16.0.0/12', '10.0.0.0/8', '192.168.0.0/16'];
+// Loopback comes first: nginx in this container reaches the backend over 127.0.0.1, so without it
+// the forwarded headers are ignored and every client is rate-limited and logged as 127.0.0.1.
+config.server.trustedProxies = ['127.0.0.0/8', '::1/128', '172.16.0.0/12', '10.0.0.0/8', '192.168.0.0/16'];
 config.server.nodeEnv = process.env.NODE_ENV || 'production';
 const stgMarker = '/app/config/.stg-bootstrap';
 if (fs.existsSync(stgMarker)) {
