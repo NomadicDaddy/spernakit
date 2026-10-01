@@ -48,6 +48,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	'check:template-features',
 	'test:aidd-format',
 	'test:fleet-manifest',
+	// It imports the release-notes and sync-plan tools whole and reads the release workflow, so its
+	// inputs are most of `scripts/`. It runs in a fraction of a second; a cache would save nothing.
+	'test:fresh-release',
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {

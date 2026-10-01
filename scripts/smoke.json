@@ -132,6 +132,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run test:fresh-release",
+					"description": "The fresh-release validator rejects stale baseline content, and the release workflow and sync-plan floor still match the baseline version",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:feature-id-directory",
 					"description": "Feature id matches its directory"
 				},
