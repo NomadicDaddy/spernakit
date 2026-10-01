@@ -43,6 +43,8 @@ interface Case {
 	globalRole: 'ADMIN' | 'OPERATOR' | 'SYSOP';
 	label: string;
 	userId: number;
+	/** True when the caller authenticated with an API key rather than a session. */
+	viaApiKey?: true;
 	why: string;
 }
 
@@ -88,6 +90,14 @@ const CASES: Case[] = [
 	},
 	{
 		expected: false,
+		globalRole: 'SYSOP',
+		label: 'sysop-api-key-non-member',
+		userId: 17,
+		viaApiKey: true,
+		why: "an API key never takes its owner's SYSOP bypass",
+	},
+	{
+		expected: false,
 		globalRole: 'ADMIN',
 		label: 'global-admin-non-member',
 		userId: 15,
@@ -115,6 +125,11 @@ const MEMBERSHIPS: { role: 'ADMIN' | 'MANAGER' | 'VIEWER'; userId: number }[] = 
 	{ role: 'ADMIN', userId: 13 },
 	{ role: 'ADMIN', userId: 16 },
 ];
+
+/** The caller a case describes, as the guard and the predicate both receive it. */
+function callerFor(testCase: Case): { id: number; isApiKey?: true } {
+	return testCase.viaApiKey ? { id: testCase.userId, isApiKey: true } : { id: testCase.userId };
+}
 
 const failures: string[] = [];
 let checks = 0;
@@ -166,7 +181,7 @@ function seed(): void {
 /** Criteria 1 and 2: the decision matrix, and guard/predicate agreement on every row of it. */
 function checkDecisionsAgree(): void {
 	for (const testCase of CASES) {
-		const answer = hasWorkspaceRole(testCase.userId, WORKSPACE_ID, MINIMUM);
+		const answer = hasWorkspaceRole(callerFor(testCase), WORKSPACE_ID, MINIMUM);
 		assert(
 			answer === testCase.expected,
 			`hasWorkspaceRole for ${testCase.label} must be ${String(testCase.expected)} because ${testCase.why}, got ${String(answer)}`,
@@ -176,7 +191,7 @@ function checkDecisionsAgree(): void {
 		const guard = requireWorkspaceRole(
 			{
 				set,
-				user: { id: testCase.userId, role: testCase.globalRole },
+				user: { ...callerFor(testCase), role: testCase.globalRole },
 				workspaceId: WORKSPACE_ID,
 			},
 			MINIMUM,
@@ -199,7 +214,7 @@ function checkPredicateIsSideEffectFree(): void {
 	const usersBefore = JSON.stringify(db.select().from(users).all());
 	const membersBefore = JSON.stringify(db.select().from(workspaceMembers).all());
 
-	for (const testCase of CASES) hasWorkspaceRole(testCase.userId, WORKSPACE_ID, MINIMUM);
+	for (const testCase of CASES) hasWorkspaceRole(callerFor(testCase), WORKSPACE_ID, MINIMUM);
 
 	// The predicate is handed no guard context at all, which is the point: its signature gives a
 	// future side effect nothing to reach. A fourth parameter would be the first sign of one.

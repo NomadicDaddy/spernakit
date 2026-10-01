@@ -5,7 +5,7 @@ import type { AuthPayload } from '../plugins/auth.ts';
 import { HTTP_STATUS } from '../constants/httpStatus.ts';
 import { getUserAuthStatus } from '../services/userService.ts';
 import { getMembershipRole, isWorkspaceMember } from '../services/workspaceService.ts';
-import { ROLE_HIERARCHY } from '../types/roles.ts';
+import { ROLE_HIERARCHY, type UserRole } from '../types/roles.ts';
 import { type ErrorResponse, forbiddenError, unauthorizedError } from '../utils/errorResponse.ts';
 import {
 	missingWorkspaceHeaderError,
@@ -67,8 +67,23 @@ function validateAuthAndWorkspace(ctx: WorkspaceGuardContext): AuthWorkspaceVali
 		};
 	}
 
-	const bypassRoleCheck = ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP;
+	const bypassRoleCheck = holdsSysopBypass(ctx.user, freshStatus.role);
 	return { authUser: ctx.user, bypassRoleCheck, ok: true, workspaceId: ctx.workspaceId };
+}
+
+/**
+ * Whether a caller may skip the workspace membership and role checks.
+ *
+ * Only a SYSOP's own session may. An API key never does, whatever its owner's role: a key's widest
+ * scope is admin, below SYSOP, and reading the stored role alone let a SYSOP's read-scoped key
+ * delete a workspace it had no membership in. A key reaches a workspace the way any member does.
+ *
+ * @param caller - The authenticated caller
+ * @param storedRole - The role read fresh from the database for the caller's account
+ * @returns True when the workspace-level checks may be skipped
+ */
+function holdsSysopBypass(caller: Pick<AuthPayload, 'isApiKey'>, storedRole: UserRole): boolean {
+	return !caller.isApiKey && ROLE_HIERARCHY[storedRole] >= ROLE_HIERARCHY.SYSOP;
 }
 
 /**
@@ -131,7 +146,7 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
 		return unauthorizedError('Account has been deleted or not found');
 	}
 
-	const userIsSysop = ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP;
+	const userIsSysop = holdsSysopBypass(ctx.user, freshStatus.role);
 	/*
 	 * As above, a null id means no header was sent, which is the cross-workspace request this
 	 * guard exists to allow a SYSOP to make. A header that could not be read never reaches here.
@@ -170,23 +185,23 @@ function requireSelectedWorkspaceAccess(ctx: WorkspaceGuardContext): ErrorRespon
  * database rather than from JWT claims, a missing or deleted account is denied, a global SYSOP is
  * granted without workspace membership, and a non-member is denied.
  *
- * @param userId - The user whose access is in question
+ * @param caller - The caller whose access is in question, and whether they came in on an API key
  * @param workspaceId - The workspace being asked about
  * @param minimumRole - Minimum workspace role required (e.g. 'ADMIN', 'MANAGER')
  * @returns True when the user holds at least the minimum workspace role
  */
 function hasWorkspaceRole(
-	userId: number,
+	caller: Pick<AuthPayload, 'id' | 'isApiKey'>,
 	workspaceId: number,
 	minimumRole: WorkspaceMemberRole,
 ): boolean {
 	// Verify role from DB to prevent stale JWT claims from granting workspace access after
-	// demotion. SYSOP bypasses workspace-level checks.
-	const freshStatus = getUserAuthStatus(userId);
+	// demotion. A SYSOP session bypasses workspace-level checks.
+	const freshStatus = getUserAuthStatus(caller.id);
 	if (!freshStatus || freshStatus.isDeleted) return false;
-	if (ROLE_HIERARCHY[freshStatus.role] >= ROLE_HIERARCHY.SYSOP) return true;
+	if (holdsSysopBypass(caller, freshStatus.role)) return true;
 
-	const memberRole = getMembershipRole(workspaceId, userId);
+	const memberRole = getMembershipRole(workspaceId, caller.id);
 	if (!memberRole) return false;
 
 	// validateWorkspaceRole throws on a role the hierarchy does not know. That is a data-integrity
@@ -216,7 +231,7 @@ function requireWorkspaceRole(
 
 	if (
 		result.bypassRoleCheck ||
-		hasWorkspaceRole(result.authUser.id, result.workspaceId, minimumRole)
+		hasWorkspaceRole(result.authUser, result.workspaceId, minimumRole)
 	) {
 		return requireWorkspacePresent(ctx, result.workspaceId);
 	}
