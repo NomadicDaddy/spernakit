@@ -122,6 +122,10 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/lib/gate/**/*.ts',
 		],
 	},
+	'check:gates-wired': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['package.json', 'scripts/check-gates-wired.ts', 'scripts/smoke.json'],
+	},
 	'check:git-window-hide': {
 		excludes: COMMON_EXCLUDES,
 		globs: [...SOURCE_GLOBS, 'scripts/**/*.ts'],

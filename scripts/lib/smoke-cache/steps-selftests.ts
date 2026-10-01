@@ -82,6 +82,10 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-gate-conventions.ts',
 		],
 	},
+	'test:gates-wired': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['scripts/check-gates-wired.ts', 'scripts/test-gates-wired.ts'],
+	},
 	'test:lost-lines': {
 		// The test drives the real CLI against a purpose-built template/app pair of git repos, so the
 		// whole drift library is an input: the audit reaches classify.ts for scaffold mapping and
