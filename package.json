@@ -61,6 +61,7 @@
 		"check:api-types": "bun scripts/check-api-types.ts",
 		"check:audit-artifact-hygiene": "bun scripts/check-audit-artifact-hygiene.ts",
 		"check:config": "bun scripts/check-config-invariants.ts",
+		"check:crawl-route-coverage": "bun scripts/check-crawl-route-coverage.ts",
 		"check:critical-path": "bun scripts/check-critical-path.ts",
 		"check-deps": "bun scripts/check-deps.ts",
 		"check:db-location": "bun scripts/check-db-location.ts",

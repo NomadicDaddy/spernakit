@@ -505,6 +505,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run check:crawl-route-coverage",
+					"description": "Every page the router registers is one the crawl is required to visit, or is exempt with a reason",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:smoke-docs",
 					"description": "Smoke runbook matches scripts/smoke.json"
 				},

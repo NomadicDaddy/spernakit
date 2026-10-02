@@ -53,6 +53,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/check-config-invariants.ts',
 		],
 	},
+	// Reads the two route tables as source and compares them with the capture contract.
+	'check:crawl-route-coverage': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'.screenshot-capture',
+			'frontend/src/routes/**',
+			'scripts/check-crawl-route-coverage.ts',
+			'scripts/lib/router-paths.ts',
+		],
+	},
 	'check:critical-path': {
 		excludes: GENERATED_OUTPUT_EXCLUDES,
 		globs: [

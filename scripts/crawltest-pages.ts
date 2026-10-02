@@ -15,8 +15,40 @@ export { testBugReport } from './crawltest-bugreport';
 // Test data management
 // ---------------------------------------------------------------------------
 
+/** The tabs registered under `/workspaces/:id/settings` in frontend/src/routes/routeGroups.tsx. */
+const WORKSPACE_SETTINGS_TABS = ['general', 'branding', 'dashboard'];
+
 /**
- * Make sure `/dashboard/:id` has a record to resolve against.
+ * The workspace settings routes for the first workspace the signed-in user can see.
+ *
+ * Route discovery follows anchors, and these pages are entered only by a button that calls
+ * `navigate()`, so no crawl ever reached them. They are resolved here and seeded instead. A user
+ * with no workspace gets none, and the release capture then reports them as missing.
+ */
+export async function workspaceSettingsRoutes(page: Page): Promise<string[]> {
+	const workspaceId = await page.evaluate(async () => {
+		try {
+			const res = await fetch('/api/v1/workspaces', {
+				credentials: 'include',
+				method: 'GET',
+			});
+			const data = (await res.json()) as { data?: { id: number }[] };
+			return data.data?.[0]?.id ?? null;
+		} catch {
+			return null;
+		}
+	});
+	if (workspaceId === null) {
+		console.log('   No workspace is visible, so /workspaces/:id/settings will be skipped.');
+		return [];
+	}
+	return WORKSPACE_SETTINGS_TABS.map(
+		(tab) => `/workspaces/${String(workspaceId)}/settings/${tab}`,
+	);
+}
+
+/**
+ * Make sure `/dashboards/:id` has a record to resolve against.
  *
  * Reading first is not just an optimisation: in read-only mode it is the whole strategy. An existing
  * dashboard is used as-is, and when there is none the parameterized route simply goes uncovered —
@@ -49,7 +81,7 @@ export async function ensureTestDashboard(
 	if (readOnly) {
 		console.log(
 			'   No dashboard exists and the read-only guard forbids creating one — ' +
-				'/dashboard/:id will be skipped. Re-run with --allow-writes to cover it.',
+				'/dashboards/:id will be skipped. Re-run with --allow-writes to cover it.',
 		);
 		return;
 	}

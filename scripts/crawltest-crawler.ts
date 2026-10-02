@@ -18,6 +18,7 @@ import {
 	ensureTestDashboard,
 	test404Page,
 	testBugReport,
+	workspaceSettingsRoutes,
 } from './crawltest-pages';
 import { TestResults } from './crawltest-results';
 import {
@@ -184,6 +185,7 @@ export class WebCrawler {
 		// Phase 0: Ensure test data exists for parameterized routes (only when logged in)
 		if (this.session.isLoggedIn) {
 			await ensureTestDashboard(this.session.page, this.state, this.readOnly);
+			this.seedRoutes.push(...(await workspaceSettingsRoutes(this.session.page)));
 		}
 
 		let routes: string[];
