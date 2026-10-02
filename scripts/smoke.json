@@ -216,6 +216,10 @@
 					"description": "hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it"
 				},
 				{
+					"command": "bun run test:oauth-secret-update",
+					"description": "An OAuth provider's client secret still decrypts to itself after settings updates that do not carry it, and an empty secret clears it"
+				},
+				{
 					"command": "bun run test:upload-validation",
 					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},

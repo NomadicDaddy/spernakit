@@ -50,6 +50,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-nginx-security.ts',
 		],
 	},
+	// In-process temp-DB gate: it applies the migrations and drives the settings service, so its
+	// world is the backend source plus the gate script itself.
+	'test:oauth-secret-update': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-oauth-secret-update.ts'],
+	},
 	'test:prettier-cache': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['.prettierrc', 'package.json', 'scripts/test-prettier-cache.ts'],

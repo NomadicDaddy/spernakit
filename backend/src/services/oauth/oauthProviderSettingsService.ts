@@ -78,18 +78,24 @@ async function updateOAuthProviderSettings(
 	payload: UpdateOAuthProviderPayload,
 	updatedBy: number,
 ): Promise<void> {
-	const existing = getStoredSettings(provider);
+	const stored = readStoredSettings(provider);
+	const existing = stored?.settings;
 
 	const clientId = payload.clientId ?? existing?.clientId ?? '';
-	let clientSecret = payload.clientSecret ?? existing?.clientSecret ?? '';
 	const enabled = payload.enabled ?? existing?.enabled ?? false;
 	const callbackUrlOverride =
 		payload.callbackUrlOverride !== undefined
 			? payload.callbackUrlOverride
 			: (existing?.callbackUrlOverride ?? null);
 
-	// Encrypt the clientSecret before storing
-	if (clientSecret) {
+	// Only a secret supplied by this request, or one stored before rows were encrypted, is
+	// plaintext. A stored secret carried over from an encrypted row is already ciphertext, and
+	// encrypting it again left a value that decrypts to ciphertext: the provider stopped working
+	// the first time an admin changed any other field.
+	let clientSecret = existing?.clientSecret ?? '';
+	if (payload.clientSecret !== undefined) {
+		clientSecret = payload.clientSecret === '' ? '' : await encrypt(payload.clientSecret);
+	} else if (clientSecret !== '' && stored?.isEncrypted !== true) {
 		clientSecret = await encrypt(clientSecret);
 	}
 
