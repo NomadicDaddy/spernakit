@@ -93,4 +93,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-vendored-licenses.ts',
 		],
 	},
+	'test:webhook-tls-name': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/notification/alertWebhook.ts',
+			'backend/src/utils/urlValidator.ts',
+			'scripts/test-webhook-tls-name.ts',
+		],
+	},
 };

@@ -228,6 +228,7 @@
 		"test:vendored-licenses": "bun scripts/test-vendored-licenses.ts",
 		"test:view-transition-abort": "bun scripts/test-view-transition-abort.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
+		"test:webhook-tls-name": "bun scripts/test-webhook-tls-name.ts",
 		"test:wait-for-port": "bun scripts/test-wait-for-port.ts",
 		"test:workspace-header-contract": "bun scripts/test-workspace-header-contract.ts",
 		"test:workspace-subresource-existence": "bun scripts/test-workspace-subresource-existence.ts",

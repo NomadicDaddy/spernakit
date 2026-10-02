@@ -228,6 +228,10 @@
 					"description": "The application logger is replaced by the configured one once configuration loads, in every entry point that loads it"
 				},
 				{
+					"command": "bun run test:webhook-tls-name",
+					"description": "An alert webhook pinned to a resolved IP verifies its certificate against the configured hostname"
+				},
+				{
 					"command": "bun run test:upload-validation",
 					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},
