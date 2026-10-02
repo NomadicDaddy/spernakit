@@ -12,7 +12,7 @@
  * classifier must call each state, and what the writer must and must not then do with it.
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
@@ -265,6 +265,15 @@ function run(): void {
 			'every clean target is now current',
 			after.findings.filter((f) => f.kind === 'uncovered').length,
 			0,
+		);
+
+		// serialtcp, 2026-10-01: core.autocrlf checked LF hooks out as CRLF and each read as drifted.
+		const guard = join(fleet, 'absent-everything', '.githooks', 'guard.sh');
+		writeFileSync(guard, readFileSync(guard, 'utf8').replaceAll('\n', '\r\n'));
+		equal(
+			'a file differing only in line endings is not drift',
+			checkGroup(group, fleet, owner).findings.filter((f) => f.kind === 'drift').length,
+			2,
 		);
 
 		assertHookChainRule(group, owner);
