@@ -33,7 +33,7 @@ import {
 	RESOURCE_ERROR_CODES,
 	SERVER_ERROR_CODES,
 } from './utils/errorResponse.ts';
-import { logger } from './utils/logger.ts';
+import { configureLogger, logger } from './utils/logger.ts';
 
 // Process-level error handlers - installed early to catch startup errors.
 // Both fatal handlers flush the pino logger before exit so stack traces reach
@@ -58,6 +58,7 @@ let app!: { server: { stop: () => Promise<void> | void } | null };
 async function createApp(): Promise<{ server: { stop: () => Promise<void> | void } | null }> {
 	// Initialize config
 	const config = initializeConfig();
+	configureLogger(config);
 	validateWsMaxPayload();
 
 	// Initialize database

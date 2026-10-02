@@ -17,13 +17,14 @@ import {
 	getSeedUsersWithPasswords,
 	resolveCrawlEmail,
 } from '../utils/auth/passwordGenerator.ts';
-import { logDatabase } from '../utils/logger.ts';
+import { configureLogger, logDatabase } from '../utils/logger.ts';
 import { closeDatabase, initializeDatabase } from './index.ts';
 import { users } from './schema/users.ts';
 import { workspaceMembers } from './schema/workspaces.ts';
 import { executeSeedOrchestration } from './seed/orchestration.ts';
 
 const config = initializeConfig();
+configureLogger(config);
 const bcryptRounds = config.security.bcryptRounds;
 
 // Initialize database

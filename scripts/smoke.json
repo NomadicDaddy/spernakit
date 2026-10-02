@@ -224,6 +224,10 @@
 					"description": "An administrator's reset email is actually sent with the generated token, and a server that cannot send refuses without marking the account"
 				},
 				{
+					"command": "bun run test:logger-configured",
+					"description": "The application logger is replaced by the configured one once configuration loads, in every entry point that loads it"
+				},
+				{
 					"command": "bun run test:upload-validation",
 					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},

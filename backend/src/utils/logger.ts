@@ -6,48 +6,10 @@ import type { AppConfig } from '../config/configSchema.ts';
 import { getConfig } from '../config/configLoader.ts';
 import { configLogger } from '../config/configLogger.ts';
 import { LogCategory, type LogCategoryType } from './logCategories.ts';
+import { REDACT_PATHS } from './logRedactPaths.ts';
 import { LOG_SECRET_REDACTION_HOOKS, registerLogSecretValues } from './logSecretRedaction.ts';
 
 type LogLevel = 'debug' | 'error' | 'info' | 'warn';
-
-/** Paths to redact from log output to prevent accidental secret leakage. */
-const REDACT_PATHS = [
-	'accessToken',
-	'apiKey',
-	'authorization',
-	'connectionPassword',
-	'email',
-	'keySecret',
-	'password',
-	'refreshToken',
-	'secret',
-	'smtpPassword',
-	'token',
-	'usernameOrEmail',
-	'*.accessToken',
-	'*.apiKey',
-	'*.authorization',
-	'*.email',
-	'*.password',
-	'*.refreshToken',
-	'*.secret',
-	'*.token',
-	'*.usernameOrEmail',
-	// Deep nested paths (e.g., config.oauth.github.clientSecret)
-	'**.accessToken',
-	'**.apiKey',
-	'**.authorization',
-	'**.clientSecret',
-	'**.connectionPassword',
-	'**.email',
-	'**.keySecret',
-	'**.password',
-	'**.refreshToken',
-	'**.secret',
-	'**.smtpPassword',
-	'**.token',
-	'**.usernameOrEmail',
-];
 
 /**
  * Resolve a transport module to an absolute path.
@@ -208,14 +170,25 @@ function createLogger(): pino.Logger {
 	try {
 		config = getConfig();
 	} catch {
-		// ESM dependencies load before app initialization; use the bootstrap logger.
+		// ESM dependencies load before app initialization; configureLogger() replaces this.
 		return configLogger;
 	}
 
 	return createLoggerForConfig(config);
 }
 
-const logger = createLogger();
+let logger = createLogger();
+
+/**
+ * Replace the bootstrap logger once configuration has loaded. Every module imports `logger` before
+ * configuration exists, so without this call the process kept the bootstrap logger for its whole
+ * life: `logging.level`, the rotated file, the stderr error copy and email redaction never applied.
+ * Importers see the replacement through the module's live binding.
+ * @param config - The loaded application configuration
+ */
+function configureLogger(config: AppConfig): void {
+	logger = createLoggerForConfig(config);
+}
 
 /**
  * Log a message with a structured category.
@@ -287,4 +260,13 @@ function logScheduler(level: LogLevel, message: string, meta?: Record<string, un
 	logWithCategory(level, LogCategory.SCHEDULER, message, meta);
 }
 
-export { createLoggerForConfig, logApi, logAuth, logDatabase, logger, logScheduler, REDACT_PATHS };
+export {
+	configureLogger,
+	createLoggerForConfig,
+	logApi,
+	logAuth,
+	logDatabase,
+	logger,
+	logScheduler,
+	REDACT_PATHS,
+};
