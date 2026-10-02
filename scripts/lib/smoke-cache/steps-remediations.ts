@@ -3,6 +3,11 @@ import { COMMON_EXCLUDES } from './globs.ts';
 import { type StepDependencies } from './types.ts';
 
 export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
+	// In-process temp-DB gate over the admin password service, with the mail sender substituted.
+	'test:admin-reset-email': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-admin-reset-email.ts'],
+	},
 	'test:audit-plugin-lifecycle': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/src/plugins/audit.ts', 'scripts/test-audit-plugin-lifecycle.ts'],

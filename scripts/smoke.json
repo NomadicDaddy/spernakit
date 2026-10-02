@@ -220,6 +220,10 @@
 					"description": "An OAuth provider's client secret still decrypts to itself after settings updates that do not carry it, and an empty secret clears it"
 				},
 				{
+					"command": "bun run test:admin-reset-email",
+					"description": "An administrator's reset email is actually sent with the generated token, and a server that cannot send refuses without marking the account"
+				},
+				{
 					"command": "bun run test:upload-validation",
 					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},

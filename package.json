@@ -163,6 +163,7 @@
 		"supertest": "bun run smoke:reset && bun run smoke:docker-prod && bun run smoke:screenshots",
 		"template:sync-features": "bun scripts/sync-template-features.ts",
 		"template:sync-plan": "bun scripts/template-sync-plan.ts",
+		"test:admin-reset-email": "bun scripts/test-admin-reset-email.ts",
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
 		"test:audit-outcome-filter": "bun scripts/test-audit-outcome-filter.ts",
 		"test:audit-plugin-lifecycle": "bun scripts/test-audit-plugin-lifecycle.ts",
