@@ -31,12 +31,18 @@ if (!isSpernakitItself(root)) {
 	exit(1);
 }
 
-// --check maps to --check; everything else means "do the sync". That second reading is the one
-// defect of the original this delegate cannot fix without changing what callers get, and it is
-// exactly why sync-shared-core.ts rejects unknown arguments instead: an argument this script does
-// not recognize, --help included, has always fallen through to the write path. Callers that want
-// argument checking should invoke sync-shared-core.ts directly.
-const mode = argv.slice(2).includes('--check') ? '--check' : '--write';
+// No argument writes and --check checks; those are the only two things a caller has ever meant.
+// Anything else is refused. The original treated every argument it did not recognize as "do the
+// sync", so --help ran the fleet-wide write into every target repository. Exit 2 matches
+// sync-shared-core.ts, which keeps bad arguments distinct from drift's exit 1.
+const args = argv.slice(2);
+if (args.length > 1 || (args.length === 1 && args[0] !== '--check')) {
+	console.error(`Unrecognized arguments: ${args.join(' ')}`);
+	console.error('Usage: bun scripts/sync-license-core.ts [--check]');
+	console.error('With no argument this WRITES license core into every target repository.');
+	exit(2);
+}
+const mode = args.length === 1 ? '--check' : '--write';
 
 console.log(`licenses:sync-core is now sync-shared-core.ts --group license-core ${mode}.`);
 
