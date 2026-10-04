@@ -29,8 +29,7 @@ import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OPERATOR_ID = 1;
 const USER_ID = 7;
-/** A separate account for case 4: logout sets a per-user revocation watermark on USER_ID, and a
- * token issued inside the same second (JWT iat granularity) would read as revoked. */
+/** A separate account for case 4, so its tokens are independent of the revocations cases 1-3 make. */
 const IMPERSONATED_ID = 8;
 const LOGOUT_ACTION = 'POST /api/v1/auth/logout';
 

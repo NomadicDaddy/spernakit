@@ -1,4 +1,13 @@
-import { foreignKey, index, integer, pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+import {
+	boolean,
+	foreignKey,
+	index,
+	integer,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+} from 'drizzle-orm/pg-core';
 
 import { users } from './users.ts';
 
@@ -24,6 +33,7 @@ export const tokenBlacklist = pgTable(
 			.$defaultFn(() => new Date()),
 		expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
 		id: serial('id').primaryKey(),
+		revokesAll: boolean('revokes_all').notNull().default(true),
 		tokenHash: text('token_hash').notNull().unique(),
 		userId: integer('user_id').notNull(),
 	},

@@ -9,8 +9,9 @@ import { users } from './users.ts';
  * refresh rotates within it by marking the presented row `rotatedAt` and inserting its successor.
  * A user therefore holds one family per signed-in browser, and a second sign-in no longer
  * overwrites the first. Presenting a row that was already rotated is a replay and ends only that
- * family. Access tokens carry the family id, and an access token is honoured only while its family
- * still has an unrotated, unexpired row, so ending a family signs that session out immediately.
+ * family. Access tokens carry the family id as `sid` so logout knows which family to end; they are
+ * not checked against this table on each request. Ending a family stops it refreshing, and the
+ * caller revokes access tokens separately where that matters (the theft path does).
  *
  * Rotated rows are kept until they expire so a replay can still be recognised.
  *

@@ -306,6 +306,7 @@ erDiagram
     token_blacklist {
         int id PK
         text tokenHash
+        int revokesAll "1 = account-wide sentinel, 0 = one token"
         int userId FK
         int createdAt
         int expiresAt

@@ -1,0 +1,1 @@
+ALTER TABLE `token_blacklist` ADD `revokes_all` integer DEFAULT true NOT NULL;

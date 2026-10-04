@@ -10,8 +10,9 @@
  *  1. Two sign-ins by the same user can both refresh, the earlier one included.
  *  2. Replaying a rotated token ends that sign-in only: the other sign-in still refreshes, and the
  *     ended sign-in's current token is answered AUTH_TOKEN_INVALID rather than revoking again.
- *  3. Logging out of one sign-in leaves the other able to refresh, and its CSRF token still
- *     validates, because logout no longer wipes the user's shared CSRF secret.
+ *  3. Logging out of one sign-in leaves the other working at once, in the same second: its access
+ *     token is still accepted (a logout revokes its own token, not the account), it can refresh,
+ *     and its CSRF token still validates because logout no longer wipes the shared CSRF secret.
  *  4. A password change ends every sign-in the user has.
  *  5. Token cleanup deletes only expired rows. It used to clear the refresh credential of anyone
  *     whose last password sign-in was 30 days old, cutting off sessions kept alive by refresh
@@ -36,9 +37,9 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PASSWORD = 'C0rrectHorse!9';
 const NEW_PASSWORD = 'Batt3ryStaple!7';
 /**
- * One account per case. A theft response and a logout each leave a per-user revocation watermark
- * with one-second resolution, so a later case on the same account would see its fresh tokens
- * revoked for reasons that belong to an earlier case.
+ * One account per case. A theft response leaves an account-wide revocation with one-second
+ * resolution, so a later case on the same account would see its fresh tokens revoked for reasons
+ * that belong to an earlier case.
  */
 const ACCOUNTS = ['two-browsers', 'replay', 'logout', 'password', 'cleanup'] as const;
 
@@ -150,16 +151,25 @@ async function run(): Promise<void> {
 	});
 	assert(loggedOut.status === 200, `logout must be 200, got ${String(loggedOut.status)}`);
 	assert((await refresh(leaving)).status === 401, 'the signed-out sign-in must not refresh');
-	// The logout's own revocation watermark covers tokens issued within the same second.
-	await Bun.sleep(1100);
-	const stayed = await refreshed(staying);
+	// No delay: these run in the same second as the logout, which is when a logout that revoked the
+	// whole account would show.
+	const me = await app.handle(
+		new Request('http://localhost/api/v1/auth/me', {
+			headers: { cookie: `${accessName}=${staying.access}` },
+		}),
+	);
+	assert(
+		me.status === 200,
+		`the other sign-in's access token must survive, got ${String(me.status)}`,
+	);
+	const stayed = await refresh(staying);
 	assert(
 		stayed.status === 200,
 		`the other sign-in must still refresh, got ${String(stayed.status)}`,
 	);
-	// Logout is CSRF-protected, so the remaining sign-in's original CSRF token must still validate.
+	// Logout is CSRF-protected for a signed-in caller, so the original CSRF token must validate.
 	const secondLogout = await post('logout', {
-		cookie: `${accessName}=${stayed.next.access}`,
+		cookie: `${accessName}=${staying.access}`,
 		'X-CSRF-Token': staying.csrf,
 	});
 	assert(
