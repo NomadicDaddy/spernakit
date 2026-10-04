@@ -226,6 +226,7 @@
 		"test:upload-validation": "bun scripts/test-upload-validation.ts",
 		"test:validation-union-values": "bun scripts/test-validation-union-values.ts",
 		"test:vendored-licenses": "bun scripts/test-vendored-licenses.ts",
+		"test:claim-app-license": "bun scripts/test-claim-app-license.ts",
 		"test:view-transition-abort": "bun scripts/test-view-transition-abort.ts",
 		"test:wait-for-http": "bun scripts/test-wait-for-http.ts",
 		"test:webhook-tls-name": "bun scripts/test-webhook-tls-name.ts",

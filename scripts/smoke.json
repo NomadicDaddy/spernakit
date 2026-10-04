@@ -304,6 +304,10 @@
 					"description": "Binary gzip and Brotli bodies plus every nginx delivery policy branch fail closed"
 				},
 				{
+					"command": "bun run test:claim-app-license",
+					"description": "A new derived app's LICENSE names whoever runs init, or a placeholder, never the template author, and keeps the template's MIT notice"
+				},
+				{
 					"command": "bun run test:vendored-licenses",
 					"description": "Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files"
 				},

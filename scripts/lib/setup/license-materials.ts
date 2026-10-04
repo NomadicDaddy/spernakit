@@ -11,6 +11,62 @@ import type { SetupSettings } from './config-writer.ts';
 
 import { updateFile, updateJsonFile } from './json-files.ts';
 
+/** Placeholder written when nobody can be named; the owner has to replace it. */
+export const COPYRIGHT_HOLDER_PLACEHOLDER = '<COPYRIGHT HOLDER>';
+
+/** Where a derived app keeps the template's MIT notice, which MIT requires it to retain. */
+export const TEMPLATE_LICENSE_COPY = 'licenses/SPERNAKIT-LICENSE.txt';
+
+/**
+ * Who owns a new derived app: the person running init, by their git identity. The template's own
+ * copyright line names the template's author, who is not the owner of someone else's app. Without
+ * a git identity there is nobody to name, so the LICENSE carries a placeholder the owner must fill.
+ */
+/**
+ * The variables `git config user.name` reads: where to find the program, where the user's global
+ * config lives, and git's own overrides. Nothing else from this process reaches git.
+ */
+const GIT_IDENTITY_ENV = [
+	'APPDATA',
+	'GIT_CONFIG_GLOBAL',
+	'GIT_CONFIG_NOSYSTEM',
+	'GIT_CONFIG_SYSTEM',
+	'HOME',
+	'HOMEDRIVE',
+	'HOMEPATH',
+	'PATH',
+	'Path',
+	'SystemRoot',
+	'USERPROFILE',
+	'XDG_CONFIG_HOME',
+];
+
+function gitIdentityEnv(): Record<string, string> {
+	const env: Record<string, string> = {};
+	for (const key of GIT_IDENTITY_ENV) {
+		const value = process.env[key];
+		if (value !== undefined) env[key] = value;
+	}
+	return env;
+}
+
+function appCopyrightHolder(): string {
+	try {
+		const result = Bun.spawnSync(['git', 'config', 'user.name'], {
+			// Passed explicitly and narrowed: Bun otherwise hands the child the whole environment this
+			// process started with, not the current one.
+			env: gitIdentityEnv(),
+			stderr: 'ignore',
+			windowsHide: true,
+		});
+		const name = result.exitCode === 0 ? result.stdout.toString().trim() : '';
+		if (name) return name;
+	} catch {
+		// git is not installed; there is still nobody to name.
+	}
+	return COPYRIGHT_HOLDER_PLACEHOLDER;
+}
+
 /**
  * Replace the template's MIT attestation with a license the app owns.
  *
@@ -22,6 +78,10 @@ import { updateFile, updateJsonFile } from './json-files.ts';
  *
  * That same `KEEP` is the owner's opt-out: an app that carries it, or whose LICENSE is no longer
  * the template's MIT text, has already made its decision and is not touched on a re-run.
+ *
+ * The app is built from Spernakit, so it contains a substantial portion of MIT-licensed software
+ * and has to keep that notice. The template's LICENSE moves to `licenses/SPERNAKIT-LICENSE.txt` rather than
+ * being discarded, and the app's LICENSE points to it.
  */
 function claimAppLicense(s: SetupSettings): void {
 	const overrides = existsSync('.templateoverrides')
@@ -30,8 +90,10 @@ function claimAppLicense(s: SetupSettings): void {
 	if (/^KEEP\s+LICENSE(?:\s|$)/m.test(overrides)) return;
 	const inherited = existsSync('LICENSE') ? readFileSync('LICENSE', 'utf8') : '';
 	if (!inherited.startsWith('MIT License')) return;
-	const holder = /^Copyright \(c\) \d{4} (.+)$/m.exec(inherited)?.[1]?.trim();
-	if (!holder) throw new Error('LICENSE is the MIT template text but names no copyright holder.');
+	if (!/^Copyright \(c\) \d{4} .+$/m.test(inherited))
+		throw new Error('LICENSE is the MIT template text but names no copyright holder.');
+	writeFileSync(TEMPLATE_LICENSE_COPY, inherited);
+	const holder = appCopyrightHolder();
 	const year = new Date().getFullYear();
 	writeFileSync(
 		'LICENSE',
@@ -40,9 +102,16 @@ function claimAppLicense(s: SetupSettings): void {
 			'publish, distribute, sublicense or sell it, in whole or in part, without the prior written\n' +
 			'permission of the copyright holder.\n\n' +
 			'Third-party components keep their own licenses. See THIRD_PARTY_LICENSES.md and\n' +
-			'THIRD_PARTY_NOTICES.md.\n',
+			'THIRD_PARTY_NOTICES.md.\n\n' +
+			'This project was created from the Spernakit template, which is licensed under the MIT\n' +
+			`License. That notice is retained in ${TEMPLATE_LICENSE_COPY}.\n`,
 	);
 	console.log('✅ Updated: LICENSE (all rights reserved)');
+	console.log(`✅ Kept: ${TEMPLATE_LICENSE_COPY} (the template's MIT notice)`);
+	if (holder === COPYRIGHT_HOLDER_PLACEHOLDER)
+		console.log(
+			`⚠️  LICENSE names no owner: replace ${COPYRIGHT_HOLDER_PLACEHOLDER} (git user.name was not set).`,
+		);
 	updateJsonFile('package.json', (pkg) => {
 		pkg['license'] = 'UNLICENSED';
 	});

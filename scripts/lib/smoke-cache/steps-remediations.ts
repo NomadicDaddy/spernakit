@@ -22,6 +22,14 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-child-output-redaction.ts',
 		],
 	},
+	'test:claim-app-license': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/setup/json-files.ts',
+			'scripts/lib/setup/license-materials.ts',
+			'scripts/test-claim-app-license.ts',
+		],
+	},
 	'test:field-encryption-rotation': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
