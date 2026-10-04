@@ -59,11 +59,13 @@ function handleStartImpersonate({
 		return notFoundError('User');
 	}
 
-	// Issue a new access token for the target with impersonatedBy claim
+	// Issue a new access token for the target with impersonatedBy claim. It keeps the admin's
+	// sign-in id, so logging out mid-impersonation ends the admin's own session.
 	const impersonationToken = signAccessToken({
 		id: targetUser.id,
 		impersonatedBy: authUser.id,
 		role: targetUser.role,
+		...(authUser.sid ? { sid: authUser.sid } : {}),
 	});
 
 	// Read the current access token from cookies to stash it

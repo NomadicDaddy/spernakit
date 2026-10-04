@@ -20,8 +20,9 @@ import {
 } from '../../services/userService.ts';
 import { broadcastCrudToAdmins } from '../../services/websocketService.ts';
 import { dataResponse, paginatedResponse, successResponse } from '../../utils/apiResponse.ts';
-import { clearCsrfToken, clearRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
+import { clearCsrfToken } from '../../utils/auth/authHelpers.ts';
 import { validatePasswordStrength } from '../../utils/auth/passwordValidation.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import {
 	badRequestError,
@@ -187,7 +188,7 @@ function handleUpdateUser({
 				DEFAULT_REFRESH_TTL_MS,
 			);
 			revokeAllUserTokens(Number(params.id), new Date(Date.now() + refreshTtlMs));
-			clearRefreshTokenHash(Number(params.id));
+			endAllRefreshSessions(Number(params.id));
 			clearCsrfToken(Number(params.id));
 		}
 
@@ -252,7 +253,7 @@ function handleDeleteUser({
 		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(targetId, new Date(Date.now() + refreshTtlMs));
-	clearRefreshTokenHash(targetId);
+	endAllRefreshSessions(targetId);
 	clearCsrfToken(targetId);
 
 	logAudit({

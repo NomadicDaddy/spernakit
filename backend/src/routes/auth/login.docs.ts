@@ -96,9 +96,10 @@ const loginDocs = {
 
 const logoutDocs = {
 	description:
-		'Logs out current user by clearing auth cookies and invalidating ' +
-		'stored refresh token. Safe to call even without valid credentials - cookies ' +
-		'are always cleared. Returns { data: null } on success.',
+		'Logs out current user by clearing auth cookies and ending the refresh-token ' +
+		'family of this sign-in. Sign-ins by the same user on other browsers stay signed ' +
+		'in. Safe to call even without valid credentials - cookies are always cleared. ' +
+		'Returns { data: null } on success.',
 	responses: {
 		'200': {
 			content: {

@@ -1,7 +1,6 @@
 import type { OAuthProvider } from 'spernakit-shared';
 
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { signTokenPair } from '../../plugins/auth.ts';
 import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { isRateLimitBypassed } from '../../plugins/rateLimit/index.ts';
 import {
@@ -12,7 +11,6 @@ import {
 import { getAuthorizationUrl, handleCallback } from '../../services/oauthService.ts';
 import { validateUserRole } from '../../types/roles.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
-import { storeRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import {
 	AUTH_ERROR_CODES,
@@ -34,6 +32,7 @@ import {
 	validateOAuthQuery,
 	validateSessionBinding,
 } from './oauth-helpers.ts';
+import { startSignIn } from './session-helpers.ts';
 
 /* -------------------------------------------------------------------------- */
 /*  Extracted handler: OAuth callback                                         */
@@ -78,7 +77,7 @@ async function processOAuthCallbackResult(
 		return undefined;
 	}
 
-	const tokens = signTokenPair({
+	const tokens = startSignIn({
 		id: result.user.id,
 		role: validateUserRole(result.user.role),
 	});
@@ -89,7 +88,6 @@ async function processOAuthCallbackResult(
 	const loginIp = getClientIp(request);
 	recordSuccessfulLogin(result.user.id, loginIp);
 
-	storeRefreshTokenHash(result.user.id, tokens.refreshToken);
 	const csrfToken = await generateAndStoreCsrfToken(result.user.id);
 
 	// Elysia runtime correctly handles string[] for set-cookie despite Record<string, string> typing

@@ -6,6 +6,7 @@ import { DEFAULT_REFRESH_TTL_MS, parseDurationMs } from '../../constants/auth.ts
 import { SERVICE_ERRORS } from '../../constants/serviceResults.ts';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { logAuth } from '../../utils/logger.ts';
 import { hashPassword, isPasswordInHistory, recordPasswordHistory } from './authCore.ts';
@@ -121,7 +122,6 @@ async function resetPassword(
 				lockedUntil: null,
 				passwordChangedAt: new Date(),
 				passwordHash: newHash,
-				refreshTokenHash: null,
 				requiresPasswordChange: false,
 				resetToken: null,
 				resetTokenExpiresAt: null,
@@ -129,6 +129,7 @@ async function resetPassword(
 			})
 			.where(eq(users.id, user.id))
 			.run();
+		endAllRefreshSessions(user.id, tx);
 	});
 
 	const config = getConfig();

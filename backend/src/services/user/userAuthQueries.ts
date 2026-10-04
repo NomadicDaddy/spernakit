@@ -25,7 +25,6 @@ interface UserRefreshInfo {
 	isDeleted: boolean;
 	lockedUntil: Date | null;
 	passwordChangedAt: Date | null;
-	refreshTokenHash: null | string;
 	role: UserRole;
 	username: string;
 }
@@ -69,10 +68,10 @@ function getUserAuthStatus(id: number): null | UserAuthStatus {
 }
 
 /**
- * Get a user's deletion status and refresh token hash for token refresh validation.
+ * Get the user fields token refresh validation reads.
  *
  * @param id - User ID
- * @returns isDeleted and refreshTokenHash, or null if not found
+ * @returns isDeleted and role, or null if not found
  */
 function getUserRefreshInfo(id: number): null | UserRefreshInfo {
 	const db = getDb();
@@ -82,7 +81,6 @@ function getUserRefreshInfo(id: number): null | UserRefreshInfo {
 				isDeleted: users.isDeleted,
 				lockedUntil: users.lockedUntil,
 				passwordChangedAt: users.passwordChangedAt,
-				refreshTokenHash: users.refreshTokenHash,
 				role: users.role,
 				username: users.username,
 			})

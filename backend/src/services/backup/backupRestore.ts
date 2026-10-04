@@ -14,6 +14,7 @@ import type { RestoreResult } from './backupRestoreHelpers.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../../db/index.ts';
+import { refreshSessions } from '../../db/schema/refreshSessions.ts';
 import { users } from '../../db/schema/users.ts';
 import { logger } from '../../utils/logger.ts';
 import { closeReadOnlyClient } from '../database-admin/rawClient.ts';
@@ -41,10 +42,10 @@ function invalidateAllUserSessions(): string[] {
 		db.update(users)
 			.set({
 				csrfToken: null,
-				refreshTokenHash: null,
 				updatedAt: new Date(),
 			})
 			.run();
+		db.delete(refreshSessions).run();
 		logger.info('Invalidated all user sessions after database restore');
 	} catch (err) {
 		logger.error({ err }, 'Failed to invalidate sessions after restore');

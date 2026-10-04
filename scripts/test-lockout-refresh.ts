@@ -5,7 +5,8 @@
  *     while the account is locked.
  *  2. /auth/refresh does not return AUTH_ACCOUNT_LOCKED.
  *  3. Account lockout rejects new password logins with reason 'locked'.
- *  4. Replaying a rotated refresh token revokes both the original and rotated access tokens.
+ *  4. Replaying a rotated refresh token ends its sign-in and revokes both the original and
+ *     rotated access tokens.
  *  5. An atomic-rotation collision uses the same non-retryable family compromise boundary.
  *  6. The lockout threshold sits strictly above the per-account login rate
  *     limit (maxLoginAttempts === AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1), so
@@ -26,12 +27,12 @@ import { createApiApp } from '../backend/src/create-api-app.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
-import { signTokenPair } from '../backend/src/plugins/auth.ts';
 import { handleRotationCollision } from '../backend/src/routes/auth/refresh.ts';
+import { startSignIn } from '../backend/src/routes/auth/session-helpers.ts';
 import { hashPassword } from '../backend/src/services/auth/authCore.ts';
 import { login } from '../backend/src/services/auth/authLogin.ts';
 import { getAuthSettings } from '../backend/src/services/auth/authSecurityService.ts';
-import { hashRefreshToken, storeRefreshTokenHash } from '../backend/src/utils/auth/authHelpers.ts';
+import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
 
 function setCookieValue(response: Response, name: string): null | string {
 	for (const header of response.headers.getSetCookie()) {
@@ -66,9 +67,8 @@ async function run(): Promise<void> {
 
 	const db = getDb();
 
-	// Issue the victim's refresh token BEFORE the lock — simulating an already
-	// authenticated session — then store its hash and lock the account.
-	const tokens = signTokenPair({ id: VICTIM_ID, role: 'OPERATOR' });
+	// The victim is already locked; the sign-in below stands for a session that was
+	// authenticated before the lock began.
 	const lockedUntil = new Date(Date.now() + 60 * 60 * 1000); // locked for 1 hour
 
 	db.insert(users)
@@ -78,11 +78,11 @@ async function run(): Promise<void> {
 			id: VICTIM_ID,
 			lockedUntil,
 			passwordHash: await hashPassword(VICTIM_PASSWORD),
-			refreshTokenHash: hashRefreshToken(tokens.refreshToken),
 			role: 'OPERATOR',
 			username: VICTIM_USERNAME,
 		})
 		.run();
+	const tokens = startSignIn({ id: VICTIM_ID, role: 'OPERATOR' });
 
 	// --- Criterion 1 & 2: refresh succeeds while locked, never AUTH_ACCOUNT_LOCKED ---
 	const app = createApiApp();
@@ -156,10 +156,12 @@ async function run(): Promise<void> {
 	assert(rotatedRefreshResponse.status === 401, 'rotated refresh token must fail after replay');
 
 	// --- Criterion 5: an atomic rotation collision invokes the same compromise boundary ---
-	const collisionTokens = signTokenPair({ id: VICTIM_ID, role: 'OPERATOR' });
-	storeRefreshTokenHash(VICTIM_ID, collisionTokens.refreshToken);
+	const collisionTokens = startSignIn({ id: VICTIM_ID, role: 'OPERATOR' });
+	const collisionRow = findRefreshSession(collisionTokens.refreshToken);
+	assert(collisionRow !== undefined, 'a new sign-in must store its refresh token');
+	if (!collisionRow) throw new Error('collision sign-in was not stored');
 	const collisionSet = { headers: {} as Record<string, number | string> };
-	const collisionError = handleRotationCollision(false, VICTIM_ID, collisionSet);
+	const collisionError = handleRotationCollision(false, collisionRow, collisionSet);
 	assert(
 		collisionError?.code === 'AUTH_TOKEN_REVOKED',
 		'rotation collision must revoke the family',

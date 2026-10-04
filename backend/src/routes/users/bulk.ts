@@ -16,7 +16,8 @@ import { UserRoleSchema } from '../../schemas/domain.ts';
 import { bulkDeleteUsers, bulkUpdateUserRoles } from '../../services/userService.ts';
 import { ROLE_HIERARCHY } from '../../types/roles.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
-import { clearCsrfToken, clearRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
+import { clearCsrfToken } from '../../utils/auth/authHelpers.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { badRequestError } from '../../utils/errorResponse.ts';
 
@@ -34,7 +35,7 @@ function revokeTokensForResults(results: { id: number; success: boolean }[]): vo
 	for (const item of results) {
 		if (item.success) {
 			revokeAllUserTokens(item.id, revokeExpiry);
-			clearRefreshTokenHash(item.id);
+			endAllRefreshSessions(item.id);
 			clearCsrfToken(item.id);
 		}
 	}

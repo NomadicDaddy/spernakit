@@ -18,7 +18,7 @@ const ROLE_IN_LIST = ROLES.map((role) => `'${role}'`).join(', ');
  * - Account lockout: failedLoginAttempts, lockedUntil for brute-force protection
  * - Password reset: resetToken, resetTokenExpiresAt for forgot password flow
  * - Password expiry: passwordChangedAt for password policy enforcement
- * - Session tracking: lastLoginAt, lastLoginIp, refreshTokenHash for security
+ * - Session tracking: lastLoginAt, lastLoginIp (refresh tokens live in refresh_sessions)
  * - Email verification: emailVerified, emailVerificationToken, emailVerificationExpiresAt
  * - CSRF protection: csrfToken for preventing Cross-Site Request Forgery attacks
  *
@@ -61,7 +61,6 @@ const users = sqliteTable(
 		lockedUntil: integer('locked_until', { mode: 'timestamp' }),
 		passwordChangedAt: integer('password_changed_at', { mode: 'timestamp' }),
 		passwordHash: text('password_hash').notNull(),
-		refreshTokenHash: text('refresh_token_hash').unique(),
 		requiresPasswordChange: integer('requires_password_change', { mode: 'boolean' })
 			.notNull()
 			.default(false),

@@ -568,9 +568,10 @@ Spernakit uses a three-tier data authority model:
 
 **Session Timeout:**
 
-- JWT Expiration: Tokens expire after 24 hours by default
-- Token Refresh: No automatic refresh - users must authenticate again
-- Concurrent Sessions: Multiple active sessions supported per user
+- JWT Expiration: Access tokens expire after 15 minutes by default (`security.jwtExpiresIn`); refresh tokens after 7 days (`security.jwtRefreshExpiresIn`)
+- Token Refresh: Automatic. The frontend refreshes on a 401 and rotates the refresh token, taking a lock shared by all tabs so two tabs never present the same token
+- Concurrent Sessions: Multiple active sessions supported per user. Each sign-in is its own refresh-token family, so signing in on another browser, or signing out of one, leaves the others signed in
+- Ending Sessions: Logout ends only its own sign-in. Replaying a rotated refresh token ends the sign-in it belongs to. Password changes and resets, account deletion, and admin password resets and bulk actions end every sign-in the user has
 
 ### Audit Trail Specifications
 

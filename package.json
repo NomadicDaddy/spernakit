@@ -214,6 +214,7 @@
 		"test:password-policy": "bun scripts/test-password-policy.ts",
 		"test:prettier-cache": "bun scripts/test-prettier-cache.ts",
 		"test:public-route-surface": "bun scripts/test-public-route-surface.ts",
+		"test:refresh-sessions": "bun scripts/test-refresh-sessions.ts",
 		"test:reset-packages": "bun scripts/test-reset-packages.ts",
 		"test:retention-zero": "bun scripts/test-retention-zero.ts",
 		"test:scaffolded-hooks": "bun scripts/test-scaffolded-hooks.ts",

@@ -269,7 +269,7 @@
 				},
 				{
 					"command": "bun run test:lockout-refresh",
-					"description": "Refresh replay and ambiguous rotation collisions clear cookies and revoke every session token"
+					"description": "Refresh replay and ambiguous rotation collisions clear cookies and end that sign-in, access tokens included"
 				},
 				{
 					"command": "bun run test:logout-audit-attribution",
@@ -286,6 +286,10 @@
 				{
 					"command": "bun run test:prettier-cache",
 					"description": "Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content"
+				},
+				{
+					"command": "bun run test:refresh-sessions",
+					"description": "One user signed in on several browsers keeps each sign-in: refresh, replay, logout and password change end only the sign-ins they mean"
 				},
 				{
 					"command": "bun run test:secret-permissions",

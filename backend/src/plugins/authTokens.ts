@@ -12,6 +12,8 @@ interface AuthPayload {
 	impersonatedBy?: number;
 	isApiKey?: boolean;
 	role: UserRole;
+	/** The sign-in (refresh-token family) this token belongs to. Absent on API-key identities. */
+	sid?: string;
 	typ?: 'access' | 'refresh';
 }
 

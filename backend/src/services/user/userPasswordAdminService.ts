@@ -6,6 +6,7 @@ import { SERVICE_ERRORS } from '../../constants/serviceResults.ts';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { validatePasswordStrength } from '../../utils/auth/passwordValidation.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import {
 	getAuthSettings,
 	hashPassword,
@@ -84,12 +85,12 @@ async function adminResetUserPassword(
 					lockedUntil: null,
 					passwordChangedAt: new Date(),
 					passwordHash: newHash,
-					refreshTokenHash: null,
 					...(isSelfReset ? {} : { requiresPasswordChange: true }),
 					updatedAt: new Date(),
 				})
 				.where(eq(users.id, targetUserId))
 				.run();
+			endAllRefreshSessions(targetUserId, tx);
 		});
 
 		invalidateUserProfileCache(targetUserId);

@@ -1,19 +1,21 @@
 /**
  * Helper to issue full auth tokens after successful MFA verification.
  *
- * Signs token pair, stores refresh hash, sets auth cookies, and returns user data.
+ * Starts a new sign-in, sets auth cookies, and returns user data.
  */
+
+import type { AuthPayload } from '../../plugins/auth.ts';
 
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
-import { type AuthPayload, signTokenPair } from '../../plugins/auth.ts';
 import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserById } from '../../services/userService.ts';
 import { dataResponse } from '../../utils/apiResponse.ts';
-import { setAuthCookies, storeRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
+import { setAuthCookies } from '../../utils/auth/authHelpers.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import { unauthorizedError } from '../../utils/errorResponse.ts';
+import { startSignIn } from './session-helpers.ts';
 
 async function issueAuthTokensForUser(
 	userId: number,
@@ -28,8 +30,7 @@ async function issueAuthTokensForUser(
 	}
 
 	const payload: AuthPayload = { id: dbUser.id, role: dbUser.role };
-	const tokens = signTokenPair(payload);
-	storeRefreshTokenHash(userId, tokens.refreshToken);
+	const tokens = startSignIn(payload);
 
 	const csrfToken = await generateAndStoreCsrfToken(userId);
 	setAuthCookies(set, config.security, tokens);

@@ -41,14 +41,10 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-field-encryption-rotation.ts',
 		],
 	},
+	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:lockout-refresh': {
 		excludes: COMMON_EXCLUDES,
-		globs: [
-			'backend/drizzle/**',
-			'backend/src/routes/auth/refresh.ts',
-			'backend/src/utils/auth/**',
-			'scripts/test-lockout-refresh.ts',
-		],
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-lockout-refresh.ts'],
 	},
 	// Loads configuration in process and scans every backend source file for an entry point.
 	'test:logger-configured': {
@@ -77,6 +73,11 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:prettier-cache': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['.prettierrc', 'package.json', 'scripts/test-prettier-cache.ts'],
+	},
+	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
+	'test:refresh-sessions': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-refresh-sessions.ts'],
 	},
 	'test:secret-permissions': {
 		excludes: COMMON_EXCLUDES,

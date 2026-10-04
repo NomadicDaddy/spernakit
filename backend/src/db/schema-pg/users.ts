@@ -50,7 +50,6 @@ const users = pgTable(
 		lockedUntil: timestamp('locked_until', { mode: 'date' }),
 		passwordChangedAt: timestamp('password_changed_at', { mode: 'date' }),
 		passwordHash: text('password_hash').notNull(),
-		refreshTokenHash: text('refresh_token_hash').unique(),
 		requiresPasswordChange: boolean('requires_password_change').notNull().default(false),
 		resetToken: text('reset_token').unique(),
 		resetTokenExpiresAt: timestamp('reset_token_expires_at', { mode: 'date' }),
