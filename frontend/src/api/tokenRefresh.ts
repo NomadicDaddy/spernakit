@@ -38,9 +38,10 @@ async function attemptRefresh(): Promise<boolean> {
  *
  * Tabs share the refresh cookie, and the server treats a second presentation of an already
  * rotated token as theft and ends the sign-in. Holding the lock means a tab that waits sends the
- * cookie the previous tab's refresh just set, never the one it rotated away. Without the Locks API
- * (an insecure context: a plain-HTTP host other than localhost, which production's required HTTPS
- * rules out) the refresh runs unguarded, and two tabs refreshing at once can end the sign-in.
+ * cookie the previous tab's refresh just set, never the one it rotated away. The lock exists only
+ * when navigator.locks does: a secure context (HTTPS or localhost) in a browser with the Web Locks
+ * API. Without it, for any reason, the refresh runs unguarded, and two tabs refreshing at once can
+ * end the sign-in.
  */
 function refreshAcrossTabs(): Promise<boolean> {
 	const locks = (navigator as Partial<Navigator>).locks;
