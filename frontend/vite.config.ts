@@ -1,5 +1,6 @@
+import babel from '@rolldown/plugin-babel';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -210,11 +211,15 @@ export default defineConfig({
 	plugins: [
 		releaseBuildPlugin(resolve(configDir, '..')),
 		lucideDirectImportsPlugin(),
-		react({
-			babel: {
-				plugins: ['babel-plugin-react-compiler'],
-			},
-		}),
+		/*
+		 * React Compiler. @vitejs/plugin-react 6 no longer runs Babel, so its old
+		 * `babel: { plugins: [...] }` option is silently ignored and nothing was being
+		 * compiled. The compiler now runs through @rolldown/plugin-babel with the preset
+		 * plugin-react exports, as aidd does. The template forbids manual memo, useMemo
+		 * and useCallback, so this is what provides memoization.
+		 */
+		react(),
+		babel({ presets: [reactCompilerPreset()] }),
 		tailwindcss(),
 		stripCssFallbacksPlugin(),
 		compression({

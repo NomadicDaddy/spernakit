@@ -1,14 +1,21 @@
 {
 	"compilerOptions": {
+		"allowImportingTsExtensions": true,
 		"composite": true,
 		"erasableSyntaxOnly": true,
 		"module": "ESNext",
 		"moduleResolution": "bundler",
+		"noEmit": true,
 		"noUncheckedSideEffectImports": true,
 		"skipLibCheck": true,
 		"strict": true,
 		"target": "ES2022",
 		"types": ["node"]
 	},
-	"include": ["vite.config.ts"]
+	"include": [
+		"vite.config.ts",
+		"releaseBuildPlugin.ts",
+		"vite-plugins/*.ts",
+		"../scripts/lib/release-build.ts"
+	]
 }

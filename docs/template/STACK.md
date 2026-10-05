@@ -200,7 +200,7 @@ graph TD
 - **Component-based**: Reusable UI components with consistent design system
 - **State management**: TanStack Query for server state, Zustand for global state
 - **Route protection**: `ProtectedRoute` component with role-based access control
-- **React Compiler**: Automatic memoization via `babel-plugin-react-compiler` (no manual `React.memo` needed)
+- **React Compiler**: Automatic memoization via `babel-plugin-react-compiler`, run through `@rolldown/plugin-babel` with `reactCompilerPreset()` from `@vitejs/plugin-react` (plugin-react 6 no longer runs Babel itself); `check:critical-path` fails if no app chunk carries compiled output. No manual `React.memo` needed
 - **Performance**: Code splitting, lazy loading, memory management
 
 #### Backend Architecture

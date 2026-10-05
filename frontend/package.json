@@ -40,6 +40,7 @@
 		"zustand": "5.0.15"
 	},
 	"devDependencies": {
+		"@rolldown/plugin-babel": "0.2.4",
 		"@tailwindcss/vite": "4.3.3",
 		"@types/node": "26.6.3",
 		"@types/qrcode": "1.5.6",
@@ -66,7 +67,7 @@
 		"lint:fast": "bunx eslint . --cache --cache-location ../node_modules/.cache/eslint-frontend/ --report-unused-disable-directives --max-warnings 0",
 		"lint:fix": "bunx eslint . --report-unused-disable-directives --max-warnings 0 --fix",
 		"build:analyze": "ANALYZE=true bunx vite build",
-		"typecheck": "bunx tsc -p tsconfig.build.json",
+		"typecheck": "bunx tsc -p tsconfig.build.json && bunx tsc -p tsconfig.node.json --noEmit",
 		"preinstall": "bun ../scripts/require-bun.ts"
 	},
 	"type": "module"
