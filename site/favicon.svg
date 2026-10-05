@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36">
+	<!-- The site header's brand mark (.brand-mark in index.html) as a favicon: two stacked frames,
+	     cyan under amber, on the dark tile with its teal-to-amber wash. Geometry copied from the
+	     rendered mark: 21x15 frames (17x11 content-box plus a 2px border), offset -4 and +5. -->
+	<defs>
+		<linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0" stop-color="#14b8a6" stop-opacity="0.28"/>
+			<stop offset="1" stop-color="#f59e0b" stop-opacity="0.22"/>
+		</linearGradient>
+	</defs>
+	<rect width="36" height="36" rx="8" fill="#08111f"/>
+	<rect width="36" height="36" rx="8" fill="url(#wash)"/>
+	<rect x="0.5" y="0.5" width="35" height="35" rx="7.5" fill="none" stroke="#ffffff" stroke-opacity="0.26"/>
+	<rect x="8.5" y="7.5" width="19" height="13" rx="3" fill="none" stroke="#7dd3fc" stroke-width="2"/>
+	<rect x="8.5" y="16.5" width="19" height="13" rx="3" fill="none" stroke="#fbbf24" stroke-width="2"/>
+</svg>
