@@ -622,6 +622,70 @@
 			.footer-links a:hover {
 				color: #ffffff;
 			}
+			/* The family row: identical on the aidd, Spernakit and summon pages, so the three read as
+			   one family. Each entry is that product's own one-line description. */
+			.family {
+				border-bottom: 1px solid var(--night-line);
+			}
+			.family-inner {
+				display: grid;
+				width: min(1120px, calc(100% - 40px));
+				gap: 16px;
+				margin: 0 auto;
+				padding: 30px 0 26px;
+			}
+			.family-label {
+				margin: 0;
+				color: var(--night-text);
+				font-size: 12px;
+				font-weight: 800;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+			.family-label a {
+				color: inherit;
+			}
+			.family-list {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+				gap: 16px 32px;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.family-list li {
+				display: grid;
+				align-content: start;
+				gap: 4px;
+			}
+			.family-list a,
+			.family-list strong {
+				width: fit-content;
+				color: #ffffff;
+				font-size: 16px;
+				font-weight: 850;
+			}
+			.family-list a {
+				text-decoration: underline;
+				text-decoration-color: rgba(255, 255, 255, 0.35);
+				text-underline-offset: 3px;
+			}
+			.family-list a:hover {
+				text-decoration-color: #ffffff;
+			}
+			.family-list [aria-current] strong::after {
+				margin-left: 8px;
+				color: var(--night-muted);
+				font-size: 12px;
+				font-weight: 700;
+				content: 'this page';
+			}
+			.family-list span {
+				max-width: 46ch;
+				color: var(--night-muted);
+				font-size: 14px;
+				line-height: 1.45;
+			}
 			@media (prefers-reduced-motion: no-preference) {
 				.brand-mark,
 				.eyebrow::before {
@@ -665,6 +729,7 @@
 				.site-header-inner,
 				.section-inner,
 				.hero-inner,
+				.family-inner,
 				.footer-inner {
 					width: min(100% - 28px, 1120px);
 				}
@@ -741,16 +806,11 @@
 					<span class="brand-name">Spernakit</span>
 				</a>
 				<nav aria-label="Primary navigation">
-					<a href="#template">Template</a>
-					<a href="https://github.com/NomadicDaddy/spernakit">GitHub</a>
-					<a href="https://github.com/NomadicDaddy/spernakit/tree/main/docs/template"
-						>Docs</a
-					>
-					<a
-						href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/CHANGELOG.md"
-						>Changelog</a
-					>
-					<a href="#start">Start</a>
+					<a href="#template">Where it fits</a>
+					<a href="#trust">Trust</a>
+					<a href="#license">License</a>
+					<a href="#start">Get started</a>
+					<a href="https://github.com/NomadicDaddy/spernakit">Source and docs</a>
 				</nav>
 			</div>
 		</header>
@@ -1151,7 +1211,7 @@ bun run smoke:qc</code></pre>
 							</a>
 						</aside>
 					</div>
-					<div class="license-note">
+					<div class="license-note" id="license">
 						<p>
 							Spernakit is
 							<a href="https://github.com/NomadicDaddy/spernakit/blob/main/LICENSE"
@@ -1161,7 +1221,7 @@ bun run smoke:qc</code></pre>
 						</p>
 						<p>
 							For AI-assisted work across derived apps, Spernakit pairs with
-							<a href="https://github.com/NomadicDaddy/aidd">aidd</a>, which tracks
+							<a href="https://nomadicdaddy.github.io/aidd/">aidd</a>, which tracks
 							the feature contract and verifies work against real gates.
 						</p>
 					</div>
@@ -1170,6 +1230,31 @@ bun run smoke:qc</code></pre>
 		</main>
 
 		<footer class="site-footer">
+			<div class="family">
+				<div class="family-inner">
+					<p class="family-label">
+						Part of a family of tools by
+						<a href="https://beazley.org">Phillip Beazley</a>
+					</p>
+					<ul class="family-list">
+						<li>
+							<a href="https://nomadicdaddy.github.io/aidd/">aidd</a>
+							<span
+								>A local control panel for planning AI coding work and reviewing the
+								results. Spernakit pairs with it for AI-assisted work across derived
+								apps.</span
+							>
+						</li>
+						<li aria-current="page">
+							<strong>Spernakit</strong>
+							<span
+								>A self-hosted admin application template with the hard parts
+								already wired.</span
+							>
+						</li>
+					</ul>
+				</div>
+			</div>
 			<div class="footer-inner">
 				<strong>Spernakit - a self-hosted admin application template.</strong>
 				<div class="footer-links">
