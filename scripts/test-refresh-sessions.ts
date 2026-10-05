@@ -62,6 +62,9 @@ async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
 	config.rateLimit.enabled = false;
+	// The login limiter is keyed separately and is on by default, so a fresh checkout's config
+	// answered this test's logins with 429. Process-local: no config file is written.
+	config.rateLimit.authEnabled = false;
 	const origin = config.server.frontendUrl;
 	const accessName = config.security.authCookieName;
 	const refreshName = config.security.refreshCookieName;
