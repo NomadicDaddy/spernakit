@@ -32,7 +32,9 @@
 				--panel: #ffffff;
 				--wash: #f5f8fb;
 				--line: #d7dee8;
-				--cyan: #0891b2;
+				/* Spernakit's own accent is the teal of its mark, not the cyan aidd uses; #0f766e is also
+				   5.47:1 for the small section kickers on white, where #0891b2 reached only 3.68:1. */
+				--cyan: #0f766e;
 				--teal: #0f766e;
 				--green: #10b981;
 				--amber: #f59e0b;
@@ -196,10 +198,10 @@
 				align-items: center;
 				gap: 10px;
 				margin: 0;
-				border: 1px solid rgba(125, 211, 252, 0.34);
+				border: 1px solid rgba(94, 234, 212, 0.4);
 				border-radius: 999px;
 				background: rgba(6, 17, 31, 0.5);
-				color: #acecff;
+				color: #a7f3eb;
 				font-size: 13px;
 				font-weight: 850;
 				letter-spacing: 0.11em;
@@ -259,9 +261,9 @@
 				transform: translateY(-1px);
 			}
 			.button-primary {
-				background: #ecfeff;
+				background: #f0fdfa;
 				color: #06202a;
-				box-shadow: 0 18px 40px rgba(34, 211, 238, 0.2);
+				box-shadow: 0 18px 40px rgba(20, 184, 166, 0.24);
 			}
 			.button-secondary {
 				border: 1px solid rgba(255, 255, 255, 0.28);
@@ -556,7 +558,8 @@
 				margin: 18px 0 0;
 				border-radius: var(--radius);
 				background:
-					linear-gradient(90deg, rgba(34, 211, 238, 0.1), transparent 36%), var(--night-2);
+					linear-gradient(90deg, rgba(20, 184, 166, 0.12), transparent 36%),
+					var(--night-2);
 				color: #dbf5ff;
 				font:
 					13px/1.65 ui-monospace,
