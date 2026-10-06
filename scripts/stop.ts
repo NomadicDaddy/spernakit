@@ -2,17 +2,22 @@
  * Stop Script
  *
  * Stops running spernakit processes by:
- * 1. Reading PID files from logs/ directory (written by start.ts)
- * 2. Falling back to port-based detection if PID files are missing
+ * 1. Reading PID files from logs/ directory (written by start.ts and dev-with-logs.ts)
+ * 2. Falling back to port-based detection if PID files are missing. The fallback is not
+ *    dependable: on at least one Windows host both netstat and Get-NetTCPConnection reported
+ *    no listener while both ports answered HTTP, so a stack with no PID files can be reported
+ *    as not running while it serves. `dev:quick` and the bare workspace dev scripts write no
+ *    PID files and rely on this fallback.
  * 3. Running docker-compose down if Docker containers are running
  *
  * Usage:
  *   bun scripts/stop.ts              # Stop both backend and frontend
  *   bun scripts/stop.ts --backend    # Stop backend only
  *   bun scripts/stop.ts --frontend   # Stop frontend only
- *   bun scripts/stop.ts --from-start # Called by start.ts: clean stale PIDs without
- *                                    # exiting non-zero (a stale PID with nothing to
- *                                    # kill is the normal recoverable case here)
+ *   bun scripts/stop.ts --from-start # Clearing the way for a launch (start.ts, dev,
+ *                                    # dev:quick): clean stale PIDs without exiting
+ *                                    # non-zero, since a stale PID with nothing to kill
+ *                                    # is the normal recoverable case before a start
  */
 import { execSync, spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -172,9 +177,10 @@ if (stopBackend && stopFrontend && isDockerRunning()) {
 	}
 
 	// When invoked directly, a stale PID with nothing to kill means a service
-	// crashed silently — surface it loudly with a non-zero exit. When invoked by
-	// start.ts (--from-start), that same condition is the normal recoverable case:
-	// just clean up and let start proceed.
+	// crashed silently — surface it loudly with a non-zero exit. When clearing the
+	// way for a launch (--from-start, passed by start.ts, dev and dev:quick), that
+	// same condition is the normal recoverable case: just clean up and let the
+	// launch proceed.
 	if (sawStalePid && !killedAny && !values['from-start']) {
 		console.log(
 			'ℹ Hint: backend may have crashed mid-session — check logs/backend.log and logs/backend.error.log',

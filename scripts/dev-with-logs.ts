@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStream, type RotatingFileStream } from 'rotating-file-stream';
 
+import { removePidFile, writePidFile } from './lib/process/pid-files.ts';
 import {
 	collectConfiguredSecrets,
 	redactText,
@@ -184,6 +185,10 @@ function startServer(name: string, command: string, args: string[], color: strin
 		env: { ...process.env, FORCE_COLOR: '1' }, // allow-env-spread-policy
 		shell: false, // Enable colors in output
 	});
+	// Register the server for stop.ts the way start.ts does. Its port fallback cannot be
+	// relied on: a running stack has been reported as "no running processes" on a host where
+	// socket enumeration showed no listener while both ports answered HTTP.
+	if (proc.pid !== undefined) writePidFile(logsDir, name, proc.pid);
 
 	// Handle stdout
 	proc.stdout?.on('data', (data: Buffer) => {
@@ -215,6 +220,7 @@ function startServer(name: string, command: string, args: string[], color: strin
 		if (stderrTail) errorStream.write(processLogLines(stripAnsi(stderrTail)));
 		const exitColor = code === 0 ? colors['green'] : colors['red'];
 		log(name, `Process exited with code ${code}`, exitColor ?? '');
+		removePidFile(logsDir, name);
 		logStream.end();
 		errorStream.end();
 	});
