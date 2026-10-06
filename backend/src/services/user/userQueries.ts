@@ -1,4 +1,4 @@
-import { and, count, eq, or, sql } from 'drizzle-orm';
+import { and, count, desc, eq, or, sql } from 'drizzle-orm';
 
 import type { UserRole } from '../../types/roles.ts';
 
@@ -53,7 +53,10 @@ function listUsers(options: ListOptions): PaginatedResponse<UserPublic> {
 				.select(userPublicFields)
 				.from(users)
 				.where(where)
-				.orderBy(sql`${users.createdAt} DESC`)
+				// `id` breaks ties: created_at has one-second resolution, and the seed users share a
+				// second, so an unresolved tie under LIMIT/OFFSET can show a user twice and another not
+				// at all (see auditService).
+				.orderBy(sql`${users.createdAt} DESC`, desc(users.id))
 				.limit(limit)
 				.offset(offset)
 				.all(),
