@@ -47,6 +47,8 @@ function run(): void {
 			1,
 		);
 		equal('and it is not reported as drift as well', found('drift', 'diverged'), 0);
+		equal('a stale committed generation is drift, not diverged', found('drift', 'stale'), 1);
+		equal('and not diverged as well', found('diverged-hook', 'stale'), 0);
 		check(
 			'diverged-hook fails the gate',
 			before.findings.filter(isFatal).some((f) => f.kind === 'diverged-hook'),
@@ -169,6 +171,11 @@ function run(): void {
 				.toString()
 				.slice(0, 6),
 			'100755',
+		);
+		equal(
+			'a stale generation of the hook is replaced with the current variant',
+			readFileSync(join(fleet, 'stale', '.githooks', 'pre-push'), 'utf8'),
+			'#!/bin/sh\n# OURS\nbash .githooks/guard.sh\n',
 		);
 		equal(
 			'a diverged hook is never overwritten',

@@ -72,6 +72,7 @@ function readPair(name: string) {
 
 try {
 	const prePush = readPair('pre-push');
+	const forcePushGuard = readPair('force-push-guard.sh');
 	const screenshotGuard = readPair('screenshot-guard.sh');
 	const preCommit = readPair('pre-commit');
 	const leakGuard = readPair('leak-guard.sh');
@@ -82,6 +83,7 @@ try {
 
 	for (const [name, pair] of [
 		['pre-push hook', prePush],
+		['force-push guard', forcePushGuard],
 		['screenshot guard', screenshotGuard],
 		['pre-commit hook', preCommit],
 		['leak guard', leakGuard],
@@ -165,6 +167,7 @@ try {
 	// declaration ships from the root and the copier maps it to the app root unchanged. Without it
 	// the scaffolded app is opted out and the screenshot assertion below stops asserting anything.
 	write(templateDir, '.screenshot-capture', readFileSync(join(repoRoot, '.screenshot-capture')));
+	write(templateDir, '.githooks/force-push-guard.sh', forcePushGuard.root);
 	write(templateDir, '.githooks/leak-guard-setup.sh', leakGuardSetup.root);
 	write(templateDir, '.githooks/leak-guard.sh', leakGuard.root);
 	write(templateDir, '.githooks/pre-commit', preCommit.root);
@@ -172,6 +175,7 @@ try {
 	write(templateDir, '.githooks/screenshot-guard.sh', screenshotGuard.root);
 	write(templateDir, 'package.json', templatePackage);
 	write(templateDir, 'scaffolding/.githooks/aidd-history-guard.sh', scaffoldHistoryGuard);
+	write(templateDir, 'scaffolding/.githooks/force-push-guard.sh', forcePushGuard.scaffold);
 	write(templateDir, 'scaffolding/.githooks/leak-guard-setup.sh', leakGuardSetup.scaffold);
 	write(templateDir, 'scaffolding/.githooks/leak-guard.sh', leakGuard.scaffold);
 	write(templateDir, 'scaffolding/.githooks/pre-commit', preCommit.scaffold);
@@ -183,7 +187,7 @@ try {
 	assertGit('tag', `v${TEMPLATE_VERSION}`);
 
 	const copied = copyTemplateTree(templateDir, appDir);
-	assert(copied === 9, `Expected nine app-facing files, copied ${copied}.`);
+	assert(copied === 10, `Expected ten app-facing files, copied ${copied}.`);
 	assert(
 		existsSync(join(appDir, '.screenshot-capture')),
 		'The initializer must copy .screenshot-capture, or every scaffolded app is born opted out.',

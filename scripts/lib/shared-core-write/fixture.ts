@@ -96,13 +96,26 @@ const OWNER_FILES = {
 	'.githooks/seed.txt': 'seed original\n',
 };
 
+/** The minimal hook as the owner once shipped it: a committed generation, not a current variant. */
+export const PREVIOUS_MINIMAL = '#!/bin/sh\n# OURS\n# generation 1\nbash .githooks/guard.sh\n';
+
 export function build(): Fixture {
 	const fleet = mkdtempSync(join(tmpdir(), 'shared-core-write-'));
 	const scripts = join(fleet, '_manifest');
 	mkdirSync(scripts, { recursive: true });
 	writeFileSync(join(scripts, 'shared-core-manifest.json'), JSON.stringify(MANIFEST));
 
-	const owner = makeRepo(join(fleet, 'aidd'), OWNER_FILES, 'aidd');
+	// The owner's history holds a generation of the minimal hook that is no longer current: what
+	// every target in the real fleet held when the hook changed for the first time (2026-10-06),
+	// and what the classifier then called `diverged-hook` sixty times over.
+	const owner = makeRepo(
+		join(fleet, 'aidd'),
+		{ ...OWNER_FILES, '.githooks/pre-push-minimal': PREVIOUS_MINIMAL },
+		'aidd',
+	);
+	write(join(owner, '.githooks/pre-push-minimal'), OWNER_FILES['.githooks/pre-push-minimal']);
+	git(owner, 'add', '-A');
+	git(owner, 'commit', '-qm', 'the hook changes');
 
 	// Every target carries `.aidd` so discovery finds it, and every one is a committed repository.
 	makeRepo(join(fleet, 'absent-everything'), { '.aidd/keep': 'x' }, 'absent-everything');
@@ -133,6 +146,19 @@ export function build(): Fixture {
 			'.githooks/seed.txt': 'seed original\n',
 		},
 		'diverged',
+	);
+	// Ours by marker and matching no current variant, like `diverged`, but equal to a generation
+	// the owner committed: a stale copy of ours, which is what drift means and what the writer must
+	// replace. Content alone cannot separate it from `diverged`; the owner's history can.
+	makeRepo(
+		join(fleet, 'stale'),
+		{
+			'.aidd/keep': 'x',
+			'.githooks/guard.sh': 'guard v2\n',
+			'.githooks/pre-push': PREVIOUS_MINIMAL,
+			'.githooks/seed.txt': 'seed original\n',
+		},
+		'stale',
 	);
 	makeRepo(
 		join(fleet, 'dirty'),
@@ -210,6 +236,7 @@ export function build(): Fixture {
 	for (const repo of [
 		'drifted',
 		'diverged',
+		'stale',
 		'dirty',
 		'staged',
 		'foreign',
