@@ -21,6 +21,7 @@
 	],
 	"buildCriticalBranded": ["Dockerfile"],
 	"infrastructure": [
+		"CONTEXT.md",
 		"knip.json",
 		"scripts/lib/third-party-licenses/notices.ts",
 		"backend/src/app.ts",
