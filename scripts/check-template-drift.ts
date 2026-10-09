@@ -41,6 +41,7 @@ import path from 'node:path';
 import { exit } from 'node:process';
 import { parseArgs } from 'node:util';
 
+import { sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
 import {
 	applyTemplateOverrides,
 	checkFile,
@@ -192,11 +193,17 @@ function report(options: TemplateDriftOptions): number {
 		console.log('');
 	}
 
-	const templateFiles = enumerateTemplateFiles(spernakitPath, version);
+	const governed = sharedCoreGovernedPaths(path.join(spernakitPath, 'scripts'));
+	const enumerated = enumerateTemplateFiles(spernakitPath, version);
+	const templateFiles = enumerated.filter((filePath) => !governed.has(filePath));
 	if (templateFiles.length === 0) {
 		skip('no template files enumerated from git ls-tree');
 	}
 	console.log(`   Found ${templateFiles.length} template-managed files.`);
+	const skipped = enumerated.length - templateFiles.length;
+	console.log(
+		`   Skipped ${skipped} shared-core file(s); check:shared-core holds those to their owner.`,
+	);
 	console.log('');
 
 	// Branding values normalize the branded files before they are compared.
