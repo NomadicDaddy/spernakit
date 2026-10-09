@@ -6,12 +6,15 @@
  * to the owner's current copy. The drift check used to compare the same files to the release an app
  * is pinned to, so every guard update between releases failed every derived app (2026-10-09). This
  * pins both halves: the three files that failed are governed, and ordinary template files are not,
- * so the exclusion cannot quietly swallow real drift.
+ * so the exclusion cannot quietly swallow real drift. It also pins that only the comparison is
+ * excluded: a governed file the app is missing still fails the drift check.
  */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
-import { sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
+import { driftCheckedFiles, sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
 
 const governed = sharedCoreGovernedPaths(join(import.meta.dir));
 const failures: string[] = [];
@@ -37,6 +40,30 @@ for (const path of governed) {
 	if (path.startsWith('/') || path.startsWith('./') || path.includes('\\')) {
 		failures.push(`${path} is not a normalized app-relative path`);
 	}
+}
+
+// Only the content comparison is handed off. A governed file the app lacks must still reach
+// checkFile, where it fails as missing-in-app; shared-core reports absence as advisory only.
+const appRoot = mkdtempSync(join(tmpdir(), 'drift-governed-'));
+try {
+	mkdirSync(join(appRoot, '.githooks'));
+	writeFileSync(join(appRoot, '.githooks', 'pre-push'), '#!/bin/sh\n');
+	const checked = driftCheckedFiles(
+		['.githooks/pre-push', '.githooks/leak-guard.sh', 'backend/src/app.ts'],
+		governed,
+		appRoot,
+	);
+	if (checked.includes('.githooks/pre-push')) {
+		failures.push('.githooks/pre-push is present, so its comparison belongs to shared-core');
+	}
+	if (!checked.includes('.githooks/leak-guard.sh')) {
+		failures.push('.githooks/leak-guard.sh is missing and must still fail as missing-in-app');
+	}
+	if (!checked.includes('backend/src/app.ts')) {
+		failures.push('backend/src/app.ts is template-managed and must stay drift-checked');
+	}
+} finally {
+	rmSync(appRoot, { force: true, recursive: true });
 }
 
 if (failures.length > 0) {

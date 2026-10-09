@@ -41,7 +41,7 @@ import path from 'node:path';
 import { exit } from 'node:process';
 import { parseArgs } from 'node:util';
 
-import { sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
+import { driftCheckedFiles, sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
 import {
 	applyTemplateOverrides,
 	checkFile,
@@ -195,14 +195,14 @@ function report(options: TemplateDriftOptions): number {
 
 	const governed = sharedCoreGovernedPaths(path.join(spernakitPath, 'scripts'));
 	const enumerated = enumerateTemplateFiles(spernakitPath, version);
-	const templateFiles = enumerated.filter((filePath) => !governed.has(filePath));
+	const templateFiles = driftCheckedFiles(enumerated, governed, repoRoot);
 	if (templateFiles.length === 0) {
 		skip('no template files enumerated from git ls-tree');
 	}
 	console.log(`   Found ${templateFiles.length} template-managed files.`);
 	const skipped = enumerated.length - templateFiles.length;
 	console.log(
-		`   Skipped ${skipped} shared-core file(s); check:shared-core holds those to their owner.`,
+		`   Skipped ${skipped} shared-core file(s) the app has; check:shared-core compares those.`,
 	);
 	console.log('');
 

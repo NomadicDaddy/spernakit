@@ -6,7 +6,9 @@
  * files to the release the app is pinned to, which lags whenever a guard changes between releases.
  * The second comparison added no protection; it only failed every derived app after each guard sync
  * until the next dance (2026-10-09: leak-guard.sh, pre-push and check-leak-guard.sh at v3.47.3).
- * The drift check skips these paths and says so, and the shared-core check stays the one that fails.
+ * The drift check skips comparing the copies an app has and says so; the shared-core check stays
+ * the one that fails on their content. A copy the app lacks is still checked here, because only
+ * the drift check fails on a missing file.
  */
 import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
@@ -31,4 +33,20 @@ export function sharedCoreGovernedPaths(scriptsDir: string): Set<string> {
 		}
 	}
 	return governed;
+}
+
+/**
+ * The template files the drift check still runs through checkFile: every path outside the
+ * governed set, plus any governed path the app does not have. check:shared-core reports a missing
+ * copy only as uncovered and never fails on it, so handing off the content comparison must not
+ * hand off presence. A deleted guard still fails here as missing-in-app.
+ */
+export function driftCheckedFiles(
+	enumerated: string[],
+	governed: Set<string>,
+	appRoot: string,
+): string[] {
+	return enumerated.filter(
+		(filePath) => !governed.has(filePath) || !existsSync(join(appRoot, filePath)),
+	);
 }
