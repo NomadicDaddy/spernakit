@@ -194,7 +194,7 @@ it is not distributed, so it is not inventoried here.
 
 ## Bundled runtime: Bun and its LGPL components
 
-The local verification image is built on `oven/bun:1.4.2-alpine`, so it contains the Bun
+The local verification image is built on `oven/bun:1.4.3-alpine`, so it contains the Bun
 runtime, and Bun statically links libraries under the LGPL. This section records what a derived
 project must consider before distributing that image. Bun's own license text is reproduced in
 [`licenses/BUN-LICENSE.md`](./licenses/BUN-LICENSE.md); that file, this file, and the root
@@ -220,7 +220,7 @@ licenses in `licenses/BUN-LICENSE.md`.
 
 - The patched WebKit/JavaScriptCore that Bun links is published at
   <https://github.com/oven-sh/webkit>.
-- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.2`.
+- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.3`.
 - TinyCC is at <https://github.com/tinycc/tinycc>.
 
 **How to modify the LGPL library and relink**

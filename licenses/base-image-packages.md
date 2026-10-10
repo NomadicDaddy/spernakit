@@ -31,7 +31,7 @@ application. Their licenses apply to those components rather than the applicatio
 - `gettext-envsubst` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
 - `gettext-libs` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
 - `gettext` (GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT)
-- `libapk2` (GPL-2.0-only)
+- `libapk` (GPL-2.0-only)
 - `libgcc` (GPL-2.0-or-later AND LGPL-2.1-or-later)
 - `libgomp` (GPL-2.0-or-later AND LGPL-2.1-or-later)
 - `libintl` (LGPL-2.1-or-later)
@@ -60,7 +60,7 @@ application. Their licenses apply to those components rather than the applicatio
 | gettext-envsubst       | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
 | gettext-libs           | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
 | gettext                | GPL-3.0-or-later AND LGPL-2.1-or-later AND MIT                    |
-| libapk2                | GPL-2.0-only                                                      |
+| libapk                 | GPL-2.0-only                                                      |
 | libbz2                 | bzip2-1.0.6                                                       |
 | libcrypto3             | Apache-2.0                                                        |
 | libexpat               | MIT                                                               |

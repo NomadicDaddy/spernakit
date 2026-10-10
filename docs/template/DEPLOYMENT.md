@@ -465,7 +465,7 @@ bun run docker:image:build
 
 ### **Refreshing the Bun Base Image Digest**
 
-The root `Dockerfile` pins `oven/bun:1.4.2-alpine` with an OCI index digest in the
+The root `Dockerfile` pins `oven/bun:1.4.3-alpine` with an OCI index digest in the
 `base-builder`, `prod-deps`, and `production` stages. When the Bun version changes, refresh the
 digest in the same commit:
 
