@@ -153,10 +153,10 @@ async function computeStepHash(
 		fileHashes.push(...batchHashes);
 	}
 
+	// The runtime is part of the key: a pass recorded under one Bun is not a pass under another.
 	const fileEntries = files.map((f, i) => `file:${f}:${fileHashes[i]}`);
 	const directoryEntries = directories.map((d) => `dir:${d}:present`);
-	const combined = [...fileEntries, ...directoryEntries].join('\n');
-
+	const combined = [`bun:${Bun.version}`, ...fileEntries, ...directoryEntries].join('\n');
 	return Bun.hash(combined).toString(16);
 }
 
