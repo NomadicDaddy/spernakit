@@ -67,6 +67,26 @@ function run(): void {
 			1,
 		);
 		equal('without either, prepare is unwired', unwired({}), 1);
+		// Roger on dab78ef: a mention is not a call, in the command or in the file it names.
+		writeFileSync(
+			join(repo, 'scripts', 'noted.ts'),
+			"// Runs .githooks/guard-setup.sh\n/* .githooks/guard-setup.sh */\nconsole.log('x');\n",
+		);
+		equal(
+			'a file naming the setup only in comments does not satisfy prepare',
+			unwired({ 'setup:hooks': 'bun scripts/noted.ts' }),
+			1,
+		);
+		equal(
+			'a command that only echoes the wrapper does not run it',
+			unwired({ 'setup:hooks': 'echo scripts/setup.ts' }),
+			1,
+		);
+		equal(
+			'bun run on the wrapper does run it',
+			unwired({ 'setup:hooks': 'bun run scripts/setup.ts' }),
+			0,
+		);
 		equal(
 			'a prepare that runs something else stays unwired',
 			unwired({ prepare: 'echo hi', 'setup:hooks': 'bun scripts/setup.ts' }),
