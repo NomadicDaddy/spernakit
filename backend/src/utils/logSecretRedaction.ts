@@ -81,8 +81,23 @@ function redactText(text: string): string {
 }
 
 function scrubError(error: Error, seen: WeakMap<object, unknown>): Error {
-	const clone = Object.create(Object.getPrototypeOf(error)) as Error;
+	// A DOMException keeps name, message and stack in accessors bound to the real instance, so a
+	// clone made from its prototype throws on the first read of any of them. That turned a logged
+	// DataCloneError into a second crash inside the handler reporting the first. Such an error is
+	// cloned as a plain Error carrying those three by value.
+	const detached = error instanceof DOMException;
+	const clone = Object.create(detached ? Error.prototype : Object.getPrototypeOf(error)) as Error;
 	seen.set(error, clone);
+	if (detached) {
+		for (const key of ['name', 'message', 'stack'] as const) {
+			Object.defineProperty(clone, key, {
+				configurable: true,
+				enumerable: false,
+				value: scrubLogValue(error[key], seen),
+				writable: true,
+			});
+		}
+	}
 	for (const key of Object.getOwnPropertyNames(error)) {
 		const descriptor = Object.getOwnPropertyDescriptor(error, key);
 		if (!descriptor || !('value' in descriptor)) continue;

@@ -200,7 +200,7 @@
 		"test:gate-conventions": "bun scripts/test-gate-conventions.ts",
 		"test:impersonation-audit": "bun scripts/test-impersonation-audit.ts",
 		"test:lockout-refresh": "bun scripts/test-lockout-refresh.ts",
-		"test:logger-configured": "bun scripts/test-logger-configured.ts",
+		"test:logger-configured": "bun scripts/test-logger-configured.ts && bun scripts/test-logger-fallback.ts",
 		"test:logout-audit-attribution": "bun scripts/test-logout-audit-attribution.ts",
 		"test:lost-lines": "bun scripts/test-lost-lines.ts",
 		"test:memory-health-thresholds": "bun scripts/test-memory-health-thresholds.ts",

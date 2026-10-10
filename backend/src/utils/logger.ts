@@ -1,4 +1,3 @@
-import { createRequire } from 'node:module';
 import pino from 'pino';
 
 import type { AppConfig } from '../config/configSchema.ts';
@@ -8,23 +7,9 @@ import { configLogger } from '../config/configLogger.ts';
 import { LogCategory, type LogCategoryType } from './logCategories.ts';
 import { REDACT_PATHS } from './logRedactPaths.ts';
 import { LOG_SECRET_REDACTION_HOOKS, registerLogSecretValues } from './logSecretRedaction.ts';
+import { resolveOptionalTransport, resolveTransport } from './logTransport.ts';
 
 type LogLevel = 'debug' | 'error' | 'info' | 'warn';
-
-/**
- * Resolve a transport module to an absolute path.
- *
- * pino resolves a bare target name against the files on the stack that called it, which under Bun
- * is the process entry rather than this module. A process that starts anywhere outside backend/
- * therefore dies with "unable to determine transport target for pino-pretty" instead of logging.
- * Resolving from this file gives the same answer for every entry point.
- *
- * @param name - Transport package to resolve
- * @returns Absolute path pino can load without consulting the call stack
- */
-function resolveTransport(name: string): string {
-	return createRequire(import.meta.url).resolve(name);
-}
 
 /** The stderr file descriptor, which is what `logs/<name>.error.log` is a copy of. */
 const STDERR_FD = 2;
@@ -88,6 +73,28 @@ function buildFileTarget(config: AppConfig): pino.TransportTargetOptions | undef
 }
 
 /**
+ * Build the pretty-printed development targets, when pino-pretty is installed.
+ *
+ * It is not installed in an image built from production dependencies, which docker-local runs
+ * with a development configuration; see resolveOptionalTransport. Such a process logs through the
+ * JSON targets instead.
+ *
+ * @param resolve - Transport resolver, injectable so a gate can simulate the missing package
+ * @returns The two development targets, or undefined when pino-pretty is not usable
+ */
+function developmentTargets(
+	resolve: (name: string) => string = resolveTransport,
+): pino.TransportTargetOptions[] | undefined {
+	const pretty = resolveOptionalTransport('pino-pretty', resolve);
+	if (pretty === undefined) return undefined;
+	return [
+		{ level: 'debug', options: { ...PRETTY_OPTIONS, colorize: true }, target: pretty },
+		// Uncolored: this copy is read back out of a file, not off a terminal.
+		buildErrorStreamTarget(pretty, { ...PRETTY_OPTIONS, colorize: false }),
+	];
+}
+
+/**
  * Create a pino logger for a given configuration.
  *
  * - Development: pretty-printed to stdout, with error and above also written to stderr.
@@ -118,26 +125,14 @@ function buildFileTarget(config: AppConfig): pino.TransportTargetOptions | undef
 function createLoggerForConfig(config: AppConfig | undefined): pino.Logger {
 	registerLogSecretValues(config);
 	const nodeEnv = config?.server.nodeEnv ?? 'development';
+	const prettyTargets = nodeEnv === 'development' ? developmentTargets() : undefined;
 
-	if (nodeEnv === 'development') {
+	if (prettyTargets !== undefined) {
 		return pino({
 			hooks: LOG_SECRET_REDACTION_HOOKS,
 			level: 'debug',
 			redact: REDACT_PATHS,
-			transport: {
-				targets: [
-					{
-						level: 'debug',
-						options: { ...PRETTY_OPTIONS, colorize: true },
-						target: resolveTransport('pino-pretty'),
-					},
-					// Uncolored: this copy is read back out of a file, not off a terminal.
-					buildErrorStreamTarget(resolveTransport('pino-pretty'), {
-						...PRETTY_OPTIONS,
-						colorize: false,
-					}),
-				],
-			},
+			transport: { targets: prettyTargets },
 		});
 	}
 
@@ -263,6 +258,7 @@ function logScheduler(level: LogLevel, message: string, meta?: Record<string, un
 export {
 	configureLogger,
 	createLoggerForConfig,
+	developmentTargets,
 	logApi,
 	logAuth,
 	logDatabase,

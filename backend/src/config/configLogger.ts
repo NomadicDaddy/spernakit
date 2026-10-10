@@ -1,9 +1,14 @@
 import pino from 'pino';
 
 import { LOG_SECRET_REDACTION_HOOKS } from '../utils/logSecretRedaction.ts';
+import { resolveOptionalTransport } from '../utils/logTransport.ts';
 
 // Bootstrap-only process.env read; see configSecrets.ts policy comment for the full exception rationale.
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Undefined in production, and wherever pino-pretty is not installed: an image built from
+// production dependencies runs scripts such as the seed without NODE_ENV set.
+const prettyTransport = isProduction ? undefined : resolveOptionalTransport('pino-pretty');
 
 /**
  * Redaction paths shared with the main application logger to prevent
@@ -41,14 +46,14 @@ const REDACT_PATHS = [
 
 /**
  * Shared logger for config modules. Uses structured JSON in production
- * and pino-pretty in development. Initialized before app config is loaded,
- * so it reads NODE_ENV directly from the environment.
+ * and pino-pretty in development, when pino-pretty is installed. Initialized
+ * before app config is loaded, so it reads NODE_ENV directly from the environment.
  */
 export const configLogger = pino({
 	hooks: LOG_SECRET_REDACTION_HOOKS,
 	level: 'debug',
 	redact: REDACT_PATHS,
-	...(isProduction
+	...(prettyTransport === undefined
 		? {}
 		: {
 				transport: {
@@ -57,7 +62,7 @@ export const configLogger = pino({
 						ignore: 'pid,hostname',
 						translateTime: 'HH:MM:ss',
 					},
-					target: 'pino-pretty',
+					target: prettyTransport,
 				},
 			}),
 });
