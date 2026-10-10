@@ -34,7 +34,7 @@ function write(path: string, body: string): void {
 }
 
 /** A committed repository, so `git status --porcelain` has a baseline to answer against. */
-function makeRepo(
+export function makeRepo(
 	root: string,
 	files: Record<string, string>,
 	name?: string,
