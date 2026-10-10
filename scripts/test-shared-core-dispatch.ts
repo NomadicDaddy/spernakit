@@ -82,6 +82,22 @@ function run(): void {
 			unwired({ 'setup:hooks': 'echo scripts/setup.ts' }),
 			1,
 		);
+		// Roger on 7afa482: a runner word after echo is still only echoed.
+		equal(
+			'echoing a runner and the wrapper runs neither',
+			unwired({ 'setup:hooks': 'echo bun scripts/setup.ts' }),
+			1,
+		);
+		equal(
+			'echoing the required command itself does not run it',
+			unwired({ 'setup:hooks': 'echo bun run-bash.ts .githooks/guard-setup.sh' }),
+			1,
+		);
+		equal(
+			'the required command as a later step does',
+			unwired({ 'setup:hooks': 'echo arming && bun run-bash.ts .githooks/guard-setup.sh' }),
+			0,
+		);
 		equal(
 			'bun run on the wrapper does run it',
 			unwired({ 'setup:hooks': 'bun run scripts/setup.ts' }),
