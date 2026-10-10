@@ -49,7 +49,11 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	// Loads configuration in process and scans every backend source file for an entry point.
 	'test:logger-configured': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/src/**', 'scripts/test-logger-configured.ts'],
+		globs: [
+			'backend/src/**',
+			'scripts/test-logger-configured.ts',
+			'scripts/test-logger-fallback.ts',
+		],
 	},
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:logout-audit-attribution': {
