@@ -192,6 +192,7 @@
 		"test:error-log-wiring": "bun scripts/test-error-log-wiring.ts",
 		"test:field-encryption-rotation": "bun scripts/test-field-encryption-rotation.ts",
 		"test:onboarding-password-step": "bun scripts/test-onboarding-password-step.ts",
+		"test:onboarding-reset": "bun scripts/test-onboarding-reset.ts",
 		"test:feature-integration": "bun scripts/test-feature-integration.ts",
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fleet-manifest-sync": "bun scripts/test-fleet-manifest-sync.ts",

@@ -74,6 +74,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-oauth-secret-update.ts'],
 	},
+	// In-process temp-DB gate: it applies the migrations, runs the seed and drives the onboarding
+	// service through the settings cache, so its world is the backend source plus the gate script.
+	'test:onboarding-reset': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-onboarding-reset.ts'],
+	},
 	'test:prettier-cache': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['.prettierrc', 'package.json', 'scripts/test-prettier-cache.ts'],

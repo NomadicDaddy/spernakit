@@ -244,6 +244,10 @@
 					"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on"
 				},
 				{
+					"command": "bun run test:onboarding-reset",
+					"description": "Completing and resetting onboarding each return the state they just wrote, through a warm settings cache, and a completion after a reset records who and when"
+				},
+				{
 					"command": "bun run test:audit-outcome-filter",
 					"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use"
 				},

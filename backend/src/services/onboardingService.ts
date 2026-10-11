@@ -4,6 +4,7 @@ import { getDb } from '../db/index.ts';
 import { settings } from '../db/schema/settings.ts';
 import { users } from '../db/schema/users.ts';
 import { getSeedIdentity, SEED_USER_COUNT } from '../utils/auth/passwordGenerator.ts';
+import { settingsCache } from './settings/settingsQueries.ts';
 import { getByKeys } from './settingsService.ts';
 
 /* -------------------------------------------------------------------------- */
@@ -103,16 +104,41 @@ function sysopIsOnItsSeededPassword(): boolean {
 type DbClient = ReturnType<typeof getDb>;
 type DbTransaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 
-function setSetting(key: string, value: string, userId: number, tx?: DbTransaction): void {
-	const client = tx ?? getDb();
-	client
-		.insert(settings)
+/** Every settings row onboarding writes, and so every cached row a write here makes stale. */
+const ONBOARDING_KEYS = [
+	ONBOARDING_COMPLETED_KEY,
+	ONBOARDING_COMPLETED_AT_KEY,
+	ONBOARDING_COMPLETED_BY_KEY,
+	ONBOARDING_RESET_AT_KEY,
+];
+
+// Upsert one onboarding setting. A reset soft-deletes the completion stamps, so the update half
+// restores the row as well as its value; otherwise a completion after a reset would be recorded
+// on rows no read returns.
+function setSetting(key: string, value: string, userId: number, tx: DbTransaction): void {
+	tx.insert(settings)
 		.values({ createdBy: userId, key, updatedBy: userId, value })
 		.onConflictDoUpdate({
-			set: { updatedAt: new Date(), updatedBy: userId, value },
+			set: {
+				deletedAt: null,
+				deletedBy: null,
+				isDeleted: false,
+				updatedAt: new Date(),
+				updatedBy: userId,
+				value,
+			},
 			target: settings.key,
 		})
 		.run();
+}
+
+/**
+ * Drop the onboarding rows from the settings cache once a write has committed. These writes go
+ * straight to the table, not through the settings mutations that invalidate per key, and
+ * `getOnboardingStatus` reads through that cache.
+ */
+function forgetCachedOnboardingSettings(): void {
+	for (const key of ONBOARDING_KEYS) settingsCache.delete(key);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -210,6 +236,7 @@ function completeOnboarding(userId: number): OnboardingStatus {
 		setSetting(ONBOARDING_COMPLETED_AT_KEY, now, userId, tx);
 		setSetting(ONBOARDING_COMPLETED_BY_KEY, String(userId), userId, tx);
 	});
+	forgetCachedOnboardingSettings();
 	return getOnboardingStatus();
 }
 
@@ -228,6 +255,7 @@ function resetOnboarding(userId: number): OnboardingStatus {
 			.where(eq(settings.key, ONBOARDING_COMPLETED_BY_KEY))
 			.run();
 	});
+	forgetCachedOnboardingSettings();
 	return getOnboardingStatus();
 }
 
