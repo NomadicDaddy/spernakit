@@ -21,14 +21,14 @@ by license family, and it does not inventory the Alpine base system.
 | [@types/pg](https://www.npmjs.com/package/@types/pg)                                   | 8.23.1  | MIT           |
 | [@zxcvbn-ts/core](https://www.npmjs.com/package/@zxcvbn-ts/core)                       | 4.2.0   | MIT           |
 | [@zxcvbn-ts/language-common](https://www.npmjs.com/package/@zxcvbn-ts/language-common) | 4.1.3   | MIT           |
-| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)                               | 0.45.3  | Apache-2.0    |
+| [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)                               | 0.45.4  | Apache-2.0    |
 | [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.30  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.3  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.0.10 | MIT-0         |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.1.0  | MIT-0         |
 | [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.5.2   | MIT           |
-| [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.0  | MIT           |
-| [pino](https://www.npmjs.com/package/pino)                                             | 10.3.1  | MIT           |
+| [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.1  | MIT           |
+| [pino](https://www.npmjs.com/package/pino)                                             | 10.4.0  | MIT           |
 | [pino-roll](https://www.npmjs.com/package/pino-roll)                                   | 4.0.0   | MIT           |
 
 ## Frontend runtime dependencies
@@ -37,36 +37,36 @@ by license family, and it does not inventory the Alpine base system.
 | -------------------------------------------------------------------------------------------- | ------- | ---------- |
 | [@fontsource-variable/inter](https://www.npmjs.com/package/@fontsource-variable/inter)       | 5.3.0   | OFL-1.1    |
 | [@fontsource-variable/manrope](https://www.npmjs.com/package/@fontsource-variable/manrope)   | 5.3.0   | OFL-1.1    |
-| [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog)   | 1.1.23  | MIT        |
-| [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar)               | 1.2.6   | MIT        |
-| [@radix-ui/react-checkbox](https://www.npmjs.com/package/@radix-ui/react-checkbox)           | 1.3.11  | MIT        |
-| [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog)               | 1.1.23  | MIT        |
-| [@radix-ui/react-dropdown-menu](https://www.npmjs.com/package/@radix-ui/react-dropdown-menu) | 2.1.24  | MIT        |
-| [@radix-ui/react-label](https://www.npmjs.com/package/@radix-ui/react-label)                 | 2.1.15  | MIT        |
-| [@radix-ui/react-popover](https://www.npmjs.com/package/@radix-ui/react-popover)             | 1.1.23  | MIT        |
-| [@radix-ui/react-progress](https://www.npmjs.com/package/@radix-ui/react-progress)           | 1.1.16  | MIT        |
-| [@radix-ui/react-select](https://www.npmjs.com/package/@radix-ui/react-select)               | 2.3.7   | MIT        |
-| [@radix-ui/react-separator](https://www.npmjs.com/package/@radix-ui/react-separator)         | 1.1.15  | MIT        |
-| [@radix-ui/react-slot](https://www.npmjs.com/package/@radix-ui/react-slot)                   | 1.3.3   | MIT        |
-| [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.3.7   | MIT        |
-| [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.1.21  | MIT        |
-| [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.2.16  | MIT        |
-| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.104.0 | MIT        |
-| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.2.4   | MIT        |
-| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.13 | MIT        |
+| [@radix-ui/react-alert-dialog](https://www.npmjs.com/package/@radix-ui/react-alert-dialog)   | 1.2.0   | MIT        |
+| [@radix-ui/react-avatar](https://www.npmjs.com/package/@radix-ui/react-avatar)               | 1.3.0   | MIT        |
+| [@radix-ui/react-checkbox](https://www.npmjs.com/package/@radix-ui/react-checkbox)           | 1.4.0   | MIT        |
+| [@radix-ui/react-dialog](https://www.npmjs.com/package/@radix-ui/react-dialog)               | 1.3.0   | MIT        |
+| [@radix-ui/react-dropdown-menu](https://www.npmjs.com/package/@radix-ui/react-dropdown-menu) | 2.2.0   | MIT        |
+| [@radix-ui/react-label](https://www.npmjs.com/package/@radix-ui/react-label)                 | 2.1.17  | MIT        |
+| [@radix-ui/react-popover](https://www.npmjs.com/package/@radix-ui/react-popover)             | 1.3.0   | MIT        |
+| [@radix-ui/react-progress](https://www.npmjs.com/package/@radix-ui/react-progress)           | 1.2.0   | MIT        |
+| [@radix-ui/react-select](https://www.npmjs.com/package/@radix-ui/react-select)               | 2.4.0   | MIT        |
+| [@radix-ui/react-separator](https://www.npmjs.com/package/@radix-ui/react-separator)         | 1.2.0   | MIT        |
+| [@radix-ui/react-slot](https://www.npmjs.com/package/@radix-ui/react-slot)                   | 1.5.0   | MIT        |
+| [@radix-ui/react-switch](https://www.npmjs.com/package/@radix-ui/react-switch)               | 1.4.0   | MIT        |
+| [@radix-ui/react-tabs](https://www.npmjs.com/package/@radix-ui/react-tabs)                   | 1.2.0   | MIT        |
+| [@radix-ui/react-tooltip](https://www.npmjs.com/package/@radix-ui/react-tooltip)             | 1.4.0   | MIT        |
+| [@tanstack/react-query](https://www.npmjs.com/package/@tanstack/react-query)                 | 5.104.2 | MIT        |
+| [@tanstack/react-table](https://www.npmjs.com/package/@tanstack/react-table)                 | 9.2.8   | MIT        |
+| [@tanstack/react-virtual](https://www.npmjs.com/package/@tanstack/react-virtual)             | 3.14.17 | MIT        |
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.48.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.55.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.3.0  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.3.0  | MIT        |
-| [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.2.4   | MIT        |
+| [react-grid-layout](https://www.npmjs.com/package/react-grid-layout)                         | 2.3.0   | MIT        |
 | [react-router](https://www.npmjs.com/package/react-router)                                   | 8.4.0   | MIT        |
 | [recharts](https://www.npmjs.com/package/recharts)                                           | 3.10.1  | MIT        |
 | [sonner](https://www.npmjs.com/package/sonner)                                               | 2.0.8   | MIT        |
 | [tailwind-merge](https://www.npmjs.com/package/tailwind-merge)                               | 3.7.0   | MIT        |
-| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.2.2   | Apache-2.0 |
+| [web-vitals](https://www.npmjs.com/package/web-vitals)                                       | 6.2.3   | Apache-2.0 |
 | [zustand](https://www.npmjs.com/package/zustand)                                             | 5.0.15  | MIT        |
 
 ## Vendored source materials
@@ -168,8 +168,8 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **230**
-third-party package versions (227 unique names). It includes backend runtime
+closure follows everything they pull in transitively and covers **231**
+third-party package versions (226 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
 package-directory count in the Linux image, but it must never be smaller. Development-only
@@ -177,7 +177,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 195      |
+| MIT              | 196      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
