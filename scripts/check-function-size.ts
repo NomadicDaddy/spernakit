@@ -19,8 +19,9 @@
  *
  * The baseline lives in scripts/function-size-baseline.json and is committed. It is each
  * repository's own: the template's counts say nothing about a derived app's, so the file is not
- * synced. A template upgrade cannot push an app over its baseline, because the template is held by
- * this same gate and the code it ships can only hold or lower an app's counts.
+ * synced. The template is held by this same gate, so the files an app takes from it unchanged
+ * cannot add to that app's counts across an upgrade. That is all it proves: an app's overrides and
+ * its own code are counted only by the app running its gate.
  *
  * When a change lowers a count the gate passes and says so; run with --update-baseline to record
  * the lower number, and commit it with the change that earned it. The gate never raises the
@@ -240,10 +241,19 @@ export async function runCheckFunctionSize(updateBaseline: boolean): Promise<num
  * that could be re-recorded at will would let the counts rise, which is the one thing the gate is
  * for.
  *
+ * The path and the measurement are parameters so the self-test can exercise both outcomes against
+ * a throwaway file. Called with the defaults from a test, this would write a real baseline into
+ * any repository that has none.
+ *
+ * @param baselinePath - Where the baseline lives; the repository's own by default.
+ * @param measureWith - How the counts are taken; a real ESLint run by default.
  * @returns The exit code.
  */
-export function recordBaseline(): number {
-	if (existsSync(BASELINE_PATH)) {
+export function recordBaseline(
+	baselinePath: string = BASELINE_PATH,
+	measureWith: (baseline: Baseline) => Measured = measure,
+): number {
+	if (existsSync(baselinePath)) {
 		console.error(
 			'[FAIL] function-size already has a baseline. It may only be lowered, with --update-baseline.',
 		);
@@ -253,12 +263,12 @@ export function recordBaseline(): number {
 		complexity: { over: 0, threshold: THRESHOLDS.complexity },
 		lines: { over: 0, threshold: THRESHOLDS.lines },
 	};
-	const measured = measure(first);
+	const measured = measureWith(first);
 	first.complexity.over = measured.complexity.length;
 	first.lines.over = measured.lines.length;
-	writeFileSync(BASELINE_PATH, `${JSON.stringify(first, null, '\t')}\n`);
+	writeFileSync(baselinePath, `${JSON.stringify(first, null, '\t')}\n`);
 	console.log(
-		`[OK] function-size baseline recorded: ${first.complexity.over} functions over complexity ${first.complexity.threshold} and ${first.lines.over} over ${first.lines.threshold} lines, across ${measured.files} files. Commit ${BASELINE_PATH}.`,
+		`[OK] function-size baseline recorded: ${first.complexity.over} functions over complexity ${first.complexity.threshold} and ${first.lines.over} over ${first.lines.threshold} lines, across ${measured.files} files. Commit ${baselinePath}.`,
 	);
 	return 0;
 }

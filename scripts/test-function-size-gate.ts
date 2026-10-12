@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 
 import { parseReport, recordBaseline } from './check-function-size.ts';
 import { STEP_DEPENDENCIES } from './lib/smoke-cache/dependencies.ts';
@@ -78,17 +81,38 @@ function run(): void {
 	assert.throws(() => parseReport('[]', 0, '', ROOT), /no report/);
 	assert.throws(() => parseReport('Oops: something', 2, '', ROOT), /not JSON/);
 
-	// A baseline is recorded once. With one committed, recording again is refused, because a
-	// baseline that could be rewritten at will would let the counts rise.
-	const refusals: string[] = [];
+	// A baseline is recorded once, and recording again is refused, because a baseline that could
+	// be rewritten at will would let the counts rise. Both outcomes run against a throwaway path
+	// with a stand-in measurement: called on the repository's own path, the first would write a
+	// real baseline into any app that has none, ahead of the gate that is meant to ask for it.
+	const ownBaseline = resolve(import.meta.dir, 'function-size-baseline.json');
+	const ownBefore = existsSync(ownBaseline) ? readFileSync(ownBaseline, 'utf8') : null;
+	const scratch = mkdtempSync(join(tmpdir(), 'function-size-gate-'));
+	const scratchBaseline = join(scratch, 'function-size-baseline.json');
+	const standIn = (): ReturnType<typeof parseReport> => parseReport(normal, 0, '', ROOT);
+	const said: string[] = [];
 	const realError = console.error;
-	console.error = (message: string) => refusals.push(message);
+	const realLog = console.log;
+	console.error = (message: string) => said.push(message);
+	console.log = (message: string) => said.push(message);
 	try {
-		assert.equal(recordBaseline(), 1);
+		assert.equal(recordBaseline(scratchBaseline, standIn), 0);
+		const recorded = readFileSync(scratchBaseline, 'utf8');
+		assert.deepEqual(JSON.parse(recorded), {
+			complexity: { over: 2, threshold: 7 },
+			lines: { over: 1, threshold: 40 },
+		});
+		assert.equal(recordBaseline(scratchBaseline, standIn), 1);
+		assert.equal(readFileSync(scratchBaseline, 'utf8'), recorded);
 	} finally {
 		console.error = realError;
+		console.log = realLog;
+		rmSync(scratch, { force: true, recursive: true });
 	}
-	assert.match(refusals.join('\n'), /already has a baseline/);
+	assert.match(said.join('\n'), /baseline recorded/);
+	assert.match(said.join('\n'), /already has a baseline/);
+	// The repository's own baseline is exactly as it was, present or absent.
+	assert.equal(existsSync(ownBaseline) ? readFileSync(ownBaseline, 'utf8') : null, ownBefore);
 
 	// The smoke cache must invalidate on everything the gate measures or measures with. The gate
 	// hands ESLint whole directories and the config selects ts, tsx, js and jsx, so a source file of
