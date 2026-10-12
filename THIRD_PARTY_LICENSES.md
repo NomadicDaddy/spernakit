@@ -168,7 +168,7 @@ are included in the distributed asset tree.
 ## Conservative production closure
 
 The tables above enumerate the direct production dependencies. The lockfile-resolved
-closure follows everything they pull in transitively and covers **231**
+closure follows everything they pull in transitively and covers **229**
 third-party package versions (226 unique names). It includes backend runtime
 packages, frontend bundle inputs, and any optional packages the lockfile resolves for them,
 regardless of the platform generating this file. It can therefore be larger than the
@@ -177,7 +177,7 @@ tooling is excluded. Its license distribution is:
 
 | License          | Packages |
 | ---------------- | -------- |
-| MIT              | 196      |
+| MIT              | 194      |
 | ISC              | 22       |
 | Apache-2.0       | 4        |
 | BSD-3-Clause     | 2        |
