@@ -71,6 +71,18 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-fleet-manifest-sync.ts',
 		],
 	},
+	// The gate's parser, the synthetic reports the test feeds it, and the whole smoke-cache
+	// dependency map, because the test also asserts the gate's cache entry covers its inputs: a
+	// change to that map alone must rerun the test that checks it.
+	'test:function-size-gate': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-function-size.ts',
+			'scripts/function-size-baseline.json',
+			'scripts/lib/smoke-cache/**/*.ts',
+			'scripts/test-function-size-gate.ts',
+		],
+	},
 	'test:gate-conventions': {
 		// The gate and its rule library are the inputs; the fixture the test writes is created and
 		// deleted inside the run, so it can never be a cache input.

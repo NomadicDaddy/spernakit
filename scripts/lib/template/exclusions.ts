@@ -98,6 +98,9 @@ const INIT_EXCLUDED_PATTERNS = [
 // Patterns excluded from DRIFT only (copied into apps, then diverge per-app): the license inventories
 // are generated from each app's own dependency graph, bun.lock resolves per-app, and both size
 // budgets are measured from each app's own build (scripts/lib/{bundle,critical-path}-budget.ts).
+// The function-size baseline is each app's own count of oversized functions: a new app starts from
+// the template's, because its code is the template's, and an existing app records its own the
+// first time check:function-size reports that it has none.
 const DRIFT_EXCLUDED_PATTERNS = [
 	// `config/` used to be excluded as a directory, on the reasoning that setup.ts generates its
 	// contents per app. Only two files under it are tracked in the template, and enumeration reads
@@ -112,6 +115,7 @@ const DRIFT_EXCLUDED_PATTERNS = [
 	/^THIRD_PARTY_NOTICES\.md$/,
 	/^scripts\/bundle-budget\.json$/,
 	/^scripts\/critical-path-budget\.json$/,
+	/^scripts\/function-size-baseline\.json$/,
 	/\.lock$/,
 ];
 

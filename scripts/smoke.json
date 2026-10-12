@@ -292,6 +292,10 @@
 					"description": "Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content"
 				},
 				{
+					"command": "bun run test:function-size-gate",
+					"description": "The function-size ratchet reads rule offenders with their measures, refuses fatal, rule-less, empty and non-JSON ESLint reports, refuses to re-record a baseline, and its cache entry covers everything it measures"
+				},
+				{
 					"command": "bun run test:refresh-sessions",
 					"description": "One user signed in on several browsers keeps each sign-in: refresh, replay, logout and password change end only the sign-ins they mean"
 				},
@@ -468,6 +472,10 @@
 				{
 					"command": "bun run check:max-lines",
 					"description": "300-line max-lines gate"
+				},
+				{
+					"command": "bun run check:function-size",
+					"description": "Function-size ratchet: no change may add functions over complexity 7 or over 40 lines beyond the repository's committed baseline"
 				},
 				{
 					"command": "bun run check:script-targets",
