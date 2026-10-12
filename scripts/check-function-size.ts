@@ -19,9 +19,10 @@
  *
  * The baseline lives in scripts/function-size-baseline.json and is committed. It is each
  * repository's own: the template's counts say nothing about a derived app's, so the file is not
- * synced. The template is held by this same gate, so the files an app takes from it unchanged
- * cannot add to that app's counts across an upgrade. That is all it proves: an app's overrides and
- * its own code are counted only by the app running its gate.
+ * synced. The template is held by this same gate, so its own total cannot rise. That says nothing
+ * about any one app: a release can add an oversized function to one file while removing one from
+ * another, and an app that takes the first and overrides the second gains one. Each app's counts
+ * are known only by that app running its gate.
  *
  * When a change lowers a count the gate passes and says so; run with --update-baseline to record
  * the lower number, and commit it with the change that earned it. The gate never raises the
