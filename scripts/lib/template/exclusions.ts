@@ -65,27 +65,14 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^run\.ps1$/,
 	/^spernakit\.psd1$/,
 	/^spernakit\.json$/,
-	// Every shared-core roster, and the `.example` beside it. A roster names the private sibling
-	// repositories one sync group writes into and is gitignored for that reason; the example is the
-	// tracked half that shows the shape. Both are template-only, because nothing in a derived app can
-	// read a roster: `sync-shared-core.ts`, `scripts/lib/shared-core/` and the manifest are all
-	// excluded below, and `sync-license-core.ts` — the one entry point that does ship — refuses on
-	// ownership before it would resolve one. This is a pattern and not a list because the list is
-	// what broke. It named `shared-core-targets.json` alone and stayed that way when the license-core
-	// sync generalized into four groups, so `gate-conventions-`, `portable-gates-` and
-	// `shared-core-sync-targets.json.example` went to all eleven apps as instructions for a command
-	// they do not have. The sync's self-tests used to hold this pattern to every roster the manifest
-	// declares; they moved to smokestack, where they check that a roster is untracked and cannot
-	// check this list. So nothing asserts it now. The gap closes when the tracked examples leave
-	// this repository and the pattern with them.
-	/^[a-z0-9-]+-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,
-	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: only
-	// aidd and spernakit own shared-core groups, so in a derived app every one of these can do
-	// nothing but refuse. Its qc step is already templateOnly; excluding it from init keeps the
-	// script, its library and its manifest out of trees that cannot use them.
+	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: one
+	// repository owns every shared-core group and it is not a derived app, so in a derived app
+	// every one of these can do nothing but refuse. Its qc step is already templateOnly; excluding
+	// it from init keeps the script, its library and its manifest out of trees that cannot use
+	// them.
 	/^scripts\/lib\/shared-core\//,
 	/^scripts\/shared-core-manifest\.json$/,
 	/^scripts\/sync-shared-core\.ts$/,

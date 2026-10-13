@@ -63,11 +63,6 @@ nul/
 
 # local config
 /spernakit.psd1
-/shared-core-targets.json
-/shared-core-sync-targets.json
-/license-core-adapter-targets.json
-/gate-conventions-targets.json
-/portable-gates-targets.json
 /config/*.json
 /config/*.json.backup.*
 /config/testing.local.json
