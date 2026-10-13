@@ -76,6 +76,11 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^scripts\/lib\/shared-core\//,
 	/^scripts\/shared-core-manifest\.json$/,
 	/^scripts\/sync-shared-core\.ts$/,
+	// The template's own record of what the shared-core owner delivered to it: versions, a commit
+	// and a hash per file, all of them statements about this repository. A derived app is not a
+	// target of that delivery and has no tool that reads the file, so a copy there would be a lock
+	// describing somebody else's tree.
+	/^smokestack\.lock$/,
 	/^smoke-cache\.json$/,
 	/^sync\.ps1$/,
 ];
