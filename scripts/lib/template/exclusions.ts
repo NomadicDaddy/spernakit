@@ -74,8 +74,10 @@ const INIT_EXCLUDED_PATTERNS = [
 	// what broke. It named `shared-core-targets.json` alone and stayed that way when the license-core
 	// sync generalized into four groups, so `gate-conventions-`, `portable-gates-` and
 	// `shared-core-sync-targets.json.example` went to all eleven apps as instructions for a command
-	// they do not have. The sync's own self-tests, which live in smokestack, hold every roster the
-	// manifest actually declares to being untracked, so the next group cannot repeat it.
+	// they do not have. The sync's self-tests used to hold this pattern to every roster the manifest
+	// declares; they moved to smokestack, where they check that a roster is untracked and cannot
+	// check this list. So nothing asserts it now. The gap closes when the tracked examples leave
+	// this repository and the pattern with them.
 	/^[a-z0-9-]+-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
