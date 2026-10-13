@@ -424,11 +424,6 @@
 					"description": "Third-party license inventory matches the installed graph"
 				},
 				{
-					"command": "bun run test:shared-core-write",
-					"description": "Shared-core write path regression self-test (synthetic fleet)",
-					"templateOnly": true
-				},
-				{
 					"command": "bun run check:shared-core",
 					"description": "Shared-core files in sibling repositories match their owning repository (when present)",
 					"templateOnly": true

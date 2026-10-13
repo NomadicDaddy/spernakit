@@ -125,15 +125,6 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-secrets-file.ts',
 		],
 	},
-	// Replaces the retired `licenses:sync-core:check` entry, which was cacheable for a reason that
-	// was wrong: every glob it listed was spernakit-side, so drift introduced in one of the four
-	// sibling repositories changed none of them and the step replayed a cached pass over a fleet it
-	// had not looked at. What is cacheable here is the self-test, whose whole world is this tree;
-	// the fleet-facing half is `check:shared-core`, which is uncacheable for that same reason.
-	'test:shared-core-write': {
-		excludes: COMMON_EXCLUDES,
-		globs: ['scripts/lib/shared-core/**/*.ts', 'scripts/test-shared-core-write.ts'],
-	},
 	typecheck: {
 		excludes: COMMON_EXCLUDES,
 		globs: [

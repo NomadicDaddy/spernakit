@@ -244,7 +244,6 @@
 		"preinstall": "bun scripts/require-bun.ts",
 		"smoke:docs": "bun scripts/sync-smoke-docs.ts",
 		"check:smoke-docs": "bun scripts/sync-smoke-docs.ts --check",
-		"test:shared-core-write": "bun scripts/test-shared-core-write.ts && bun scripts/test-shared-core-roots.ts && bun scripts/test-shared-core-dispatch.ts",
 		"shared-core:write": "bun scripts/sync-shared-core.ts --write",
 		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts",
 		"test:dialog-focus-return": "bun scripts/test-dialog-focus-return.ts",

@@ -74,8 +74,8 @@ const INIT_EXCLUDED_PATTERNS = [
 	// what broke. It named `shared-core-targets.json` alone and stayed that way when the license-core
 	// sync generalized into four groups, so `gate-conventions-`, `portable-gates-` and
 	// `shared-core-sync-targets.json.example` went to all eleven apps as instructions for a command
-	// they do not have. `assertRosterHygiene` holds this pattern to every roster the manifest
-	// actually declares, so the next group cannot repeat it.
+	// they do not have. The sync's own self-tests, which live in smokestack, hold every roster the
+	// manifest actually declares to being untracked, so the next group cannot repeat it.
 	/^[a-z0-9-]+-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
@@ -83,14 +83,10 @@ const INIT_EXCLUDED_PATTERNS = [
 	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: only
 	// aidd and spernakit own shared-core groups, so in a derived app every one of these can do
 	// nothing but refuse. Its qc step is already templateOnly; excluding it from init keeps the
-	// script, both its libraries, its manifest and its self-test out of trees that cannot use them.
-	// shared-core-write/ is the self-test's fixture and invariant library and imports shared-core/,
-	// so shipping one without the other leaves an app files that are dead and cannot typecheck.
+	// script, its library and its manifest out of trees that cannot use them.
 	/^scripts\/lib\/shared-core\//,
-	/^scripts\/lib\/shared-core-write\//,
 	/^scripts\/shared-core-manifest\.json$/,
 	/^scripts\/sync-shared-core\.ts$/,
-	/^scripts\/test-shared-core-write\.ts$/,
 	/^smoke-cache\.json$/,
 	/^sync\.ps1$/,
 ];
