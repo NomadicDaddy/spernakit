@@ -7,6 +7,9 @@ key entities, and relationships. Findings or code that contradict this glossary 
 reconsidered. For authoritative architecture and rules, defer to `docs/template/STACK.md`,
 `docs/template/DEVELOPMENT.md`, and `.aidd/spec.md`.
 
+Spernakit is MIT-licensed and **is** the template - not an umbrella brand that aidd or any other
+tool sits under.
+
 ## Key Entities
 
 These map to database tables (see `backend/src/db/schema/`; PostgreSQL mirror in `schema-pg/`).
