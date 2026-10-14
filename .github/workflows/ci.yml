@@ -24,7 +24,10 @@ jobs:
     quality:
         name: Quality Checks
         runs-on: ubuntu-latest
-        timeout-minutes: 15
+        # The measured cold full gate runs about 17 minutes on the hosted runner; the step
+        # cache below cuts most runs far below that, but a cache-cold or many-inputs run
+        # must not die at the old 15-minute wall mid-gate.
+        timeout-minutes: 30
 
         steps:
             - name: Checkout
@@ -47,6 +50,18 @@ jobs:
 
             - name: Install dependencies
               run: bun install --frozen-lockfile
+
+            # Persist the gate's own step cache so a warm CI run replays unchanged steps
+            # instead of re-running all ~124. The key covers the two inputs that redefine
+            # the step set and the dependency tree; restore-keys lets a partial hit carry
+            # whatever steps still match.
+            - name: Cache smoke step results
+              uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: scripts/smoke-cache.json
+                  key: smoke-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'scripts/smoke.json') }}
+                  restore-keys: |
+                      smoke-cache-${{ runner.os }}-
 
             # One canonical entrypoint keeps hosted quality checks aligned with local QC.
             # Template drift and fleet checks are explicit no-ops when their external
