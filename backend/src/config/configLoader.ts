@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { registerLogSecretValues } from '../utils/logSecretRedaction.ts';
 import { configLogger } from './configLogger.ts';
@@ -104,6 +104,11 @@ function parseConfigSchema(raw: Record<string, unknown>): AppConfig {
  *   gets exactly the previous behavior, including all security checks.
  */
 function initializeConfig(configDirOverride?: string): AppConfig {
+	if (configDirOverride !== undefined && !isAbsolute(configDirOverride)) {
+		throw new Error(
+			'initializeConfig: configDirOverride must be an absolute directory, got a relative path',
+		);
+	}
 	const defaults = loadDefaults();
 	const slug = getAppSlug(defaults);
 	const configDir = configDirOverride ?? join(projectRoot, 'config');
