@@ -52,14 +52,15 @@ jobs:
               run: bun install --frozen-lockfile
 
             # Persist the gate's own step cache so a warm CI run replays unchanged steps
-            # instead of re-running all ~124. The key covers the two inputs that redefine
-            # the step set and the dependency tree; restore-keys lets a partial hit carry
-            # whatever steps still match.
+            # instead of re-running all ~124. Each run saves under a commit-unique key
+            # (actions/cache never saves on an exact hit, so a static key would freeze the
+            # ledger at its first save), and the restore prefix picks up the newest saved
+            # ledger; each step still replays only when its own inputs hash the same.
             - name: Cache smoke step results
               uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
               with:
                   path: scripts/smoke-cache.json
-                  key: smoke-cache-${{ runner.os }}-${{ hashFiles('bun.lock', 'scripts/smoke.json') }}
+                  key: smoke-cache-${{ runner.os }}-${{ github.sha }}
                   restore-keys: |
                       smoke-cache-${{ runner.os }}-
 
