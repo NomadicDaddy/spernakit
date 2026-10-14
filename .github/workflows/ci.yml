@@ -24,9 +24,9 @@ jobs:
     quality:
         name: Quality Checks
         runs-on: ubuntu-latest
-        # The measured cold full gate runs about 17 minutes on the hosted runner; the step
-        # cache below cuts most runs far below that, but a cache-cold or many-inputs run
-        # must not die at the old 15-minute wall mid-gate.
+        # A cold full gate measured 16.8 minutes on a local dev host; hosted-runner cold
+        # time is unobserved, so 30 minutes is headroom rather than a measured bound. The
+        # step cache below cuts most runs far below that.
         timeout-minutes: 30
 
         steps:
