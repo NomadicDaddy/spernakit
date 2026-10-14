@@ -41,6 +41,13 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-field-encryption-rotation.ts',
 		],
 	},
+	'test:license-collect-workspace': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/third-party-licenses/collect.ts',
+			'scripts/test-license-collect-workspace.ts',
+		],
+	},
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:lockout-refresh': {
 		excludes: COMMON_EXCLUDES,

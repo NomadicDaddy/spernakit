@@ -247,155 +247,157 @@ Steps (in order):
     - A new derived app's LICENSE names whoever runs init, or a placeholder, never the template author, and keeps the template's MIT notice.
 48. `bun run test:vendored-licenses`
     - Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files.
-49. `bun run test:nginx-security`
+49. `bun run test:license-collect-workspace`
+    - The licence collector reports the version installed for the declaring workspace and falls back to the root copy.
+50. `bun run test:nginx-security`
     - Nginx security policy regression catches missing COOP or CORP and forced COEP.
-50. `bun run test:auth-before-validation`
+51. `bun run test:auth-before-validation`
     - A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle.
-51. `bun run test:auth-rate-limit-state`
+52. `bun run test:auth-rate-limit-state`
     - Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule.
-52. `bun run test:public-route-surface`
+53. `bun run test:public-route-surface`
     - Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded.
-53. `bun run test:bug-report-supersede`
+54. `bun run test:bug-report-supersede`
     - A corrected bug report can name the one that replaced it, both reports read the link back, the default inbox stops counting the superseded one as open work, and a link that is circular, self-referential, or points at nothing is refused.
-54. `bun run test:bug-report-whitespace`
+55. `bun run test:bug-report-whitespace`
     - A bug report whose description is empty once trimmed is refused rather than stored, every field the service trims is trimmed before the schema sees it, and a description opening with a blank line still gets a title.
-55. `bun run test:dashboard-not-found`
+56. `bun run test:dashboard-not-found`
     - A deleted dashboard renders the page not-found state with a route back, is not retried, and the error boundary still renders readable text for errors that are genuinely unexpected.
-56. `bun run test:dashboard-share-revoke`
+57. `bun run test:dashboard-share-revoke`
     - A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted.
-57. `bun run test:view-transition-abort`
+58. `bun run test:view-transition-abort`
     - Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, the cross-document opt-in stays out of the stylesheet, and the crawl is not taught to ignore the message.
-58. `bun run test:dialog-focus-return`
+59. `bun run test:dialog-focus-return`
     - A dialog dismissed after being opened from a data-table row actions menu puts focus back on that row's menu button rather than on the document body, because the origin an overlay is handed is resolved to something that is still on the page once the menu has closed.
-59. `bun run test:dialog-form-survival`
+60. `bun run test:dialog-form-survival`
     - A dialog form is put back to its starting state when it opens and at no other time, so a submission the server refuses leaves every field as it was and a dialog the parent closes on success opens empty next time.
-60. `bun run test:step-up-password-message`
+61. `bun run test:step-up-password-message`
     - A form that asks an already signed-in user for their current password says that the current password is wrong when it is, from every surface that asks for one, and answers with a status that does not send the client off to refresh the session or sign the user out.
-61. `bun run test:username-parity`
+62. `bun run test:username-parity`
     - The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds.
-62. `bun run test:render-phase-sync`
+63. `bun run test:render-phase-sync`
     - A component that adjusts state during render compares against a sentinel nothing else writes, so a form seeded from the record it was opened for still holds what the user typed.
-63. `bun run test:bad-request-recovery`
+64. `bun run test:bad-request-recovery`
     - A read the API refuses as malformed is not retried and does not replace the page it came from, so a stale filter in the address leaves the table, the search box and the actions usable and says what happened.
-64. `bun run test:workspace-header-contract`
+65. `bun run test:workspace-header-contract`
     - A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, a workspace that does not exist is answered 404 on every listing that reads the header rather than an empty page on some of them, and no route reads the header without authorizing it or words the header's messages itself.
-65. `bun run test:workspace-subresource-existence`
+66. `bun run test:workspace-subresource-existence`
     - A workspace sub-resource answers 404 for a name that points at nothing, whether that is a workspace a soft delete left members behind in or a user id no account carries, while a non-member still hears the same status either way, a real duplicate member still conflicts and an existing workspace answers as before.
-66. `bun run test:wait-for-http`
+67. `bun run test:wait-for-http`
     - Docker readiness failures print bounded container log diagnostics.
-67. `bun run test:wait-for-port`
+68. `bun run test:wait-for-port`
     - bun run start tells a crashed service from a slow one and never gives up before the runbook's own readiness wait.
-68. `bun run check:db-location`
+69. `bun run check:db-location`
     - Database location guard (ASSERT-010: DB files only under data/).
-69. `bun run check:no-inline-references`
+70. `bun run check:no-inline-references`
     - Inline .references() ban (ASSERT-012).
-70. `bun run check:secrets-shape`
+71. `bun run check:secrets-shape`
     - Secrets file shape parity.
-71. `bun run check:nginx-security`
+72. `bun run check:nginx-security`
     - Every nginx frontend response block retains COOP and CORP while COEP remains opt-in.
-72. `bun run check:leak-guard`
+73. `bun run check:leak-guard`
     - Leak-guard hook self-test (synthetic fixtures).
-73. `bun run check:licenses`
+74. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
-74. `bun run check:shared-core`
+75. `bun run check:shared-core`
     - Shared-core files in sibling repositories match their owning repository (when present).
-75. `bun run test:fleet-manifest`
+76. `bun run test:fleet-manifest`
     - Fleet manifest validator regression self-test.
-76. `bun run test:fleet-manifest-sync`
+77. `bun run test:fleet-manifest-sync`
     - Fleet manifest writer regression self-test.
-77. `bun run check:fleet-manifest`
+78. `bun run check:fleet-manifest`
     - Fleet manifest matches packages and runtime configs.
-78. `bun run check:image-publication`
+79. `bun run check:image-publication`
     - Template image publication guard.
-79. `bun run check:process-env`
+80. `bun run check:process-env`
     - Process environment access check.
-80. `bun run check:env-spread`
+81. `bun run check:env-spread`
     - Child processes receive only the environment they need.
-81. `bun run check:git-window-hide`
+82. `bun run check:git-window-hide`
     - Direct Git subprocesses hide their Windows console window.
-82. `bun run check:audit-artifact-hygiene`
+83. `bun run check:audit-artifact-hygiene`
     - No audit report claims a date that has not happened yet.
-83. `bun run check:max-lines`
+84. `bun run check:max-lines`
     - 300-line max-lines gate.
-84. `bun run check:function-size`
+85. `bun run check:function-size`
     - Function-size ratchet: no change may add functions over complexity 7 or over 40 lines beyond the repository's committed baseline.
-85. `bun run check:script-targets`
+86. `bun run check:script-targets`
     - Every package.json script resolves to a real file and task.
-86. `bun run check:gates-wired`
+87. `bun run check:gates-wired`
     - Every test:* script is run by a smoke step, or excused by name with a reason.
-87. `bun run test:gates-wired`
+88. `bun run test:gates-wired`
     - The wired-gates check fails on an unwired script, a prefix of a wired name, and a reasonless or stale excuse.
-88. `bun run test:gate-conventions`
+89. `bun run test:gate-conventions`
     - Gate conventions meta-gate regression self-test.
-89. `bun run check:gate-conventions`
+90. `bun run check:gate-conventions`
     - Every gate follows docs/reference/gate-conventions.md.
-90. `bun run check-application`
+91. `bun run check-application`
     - Application check.
-91. `bun run test:destructive-comments`
+92. `bun run test:destructive-comments`
     - Destructive-confirmation reads code not prose (comment stripping and waiver honouring).
-92. `bun run test:destructive-evidence`
+93. `bun run test:destructive-evidence`
     - Destructive-confirmation evidence resolver assertion (window and one-level handler hop).
-93. `bun run check:destructive-confirmation`
+94. `bun run check:destructive-confirmation`
     - Destructive mutation confirmation check.
-94. `bun run test:mutation-denylist`
+95. `bun run test:mutation-denylist`
     - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
-95. `bun run check:docs`
+96. `bun run check:docs`
     - Documentation consistency check.
-96. `bun run check:version-refs`
+97. `bun run check:version-refs`
     - Current-state version claims in docs match package.json.
-97. `bun run check:crawl-route-coverage`
+98. `bun run check:crawl-route-coverage`
     - Every page the router registers is one the crawl is required to visit, or is exempt with a reason.
-98. `bun run check:smoke-docs`
+99. `bun run check:smoke-docs`
     - Smoke runbook matches scripts/smoke.json.
-99. `bun run typecheck`
-    - Typecheck.
-100. `bun run lint`
+100. `bun run typecheck`
+     - Typecheck.
+101. `bun run lint`
      - Lint.
-101. `bun run build`
+102. `bun run build`
      - Build.
-102. `bun run verify-minification`
+103. `bun run verify-minification`
      - Verify bundle minification and total size budget.
-103. `bun run check:critical-path`
+104. `bun run check:critical-path`
      - Verify critical-path size, React runtime placement, and no preload waterfall.
-104. `bun run check:api-types`
+105. `bun run check:api-types`
      - API type contract validation.
-105. `bun run check:feature-integration`
+106. `bun run check:feature-integration`
      - Feature integration check.
-106. `bun run test:feature-integration`
+107. `bun run test:feature-integration`
      - Feature integration rejects unmounted flat route modules.
-107. `bun run check:schema-parity`
+108. `bun run check:schema-parity`
      - SQLite/PG schema parity check.
-108. `bun run test:backup-compression`
+109. `bun run test:backup-compression`
      - Backup decompression guard rejects high-ratio archives and cleans up.
-109. `bun run test:bundle-budget`
+110. `bun run test:bundle-budget`
      - Bundle budget stays app-owned and is only enforced with matching provenance.
-110. `bun run test:crawl-credentials`
+111. `bun run test:crawl-credentials`
      - Crawl login resolves from the seed account and never from a tracked config file.
-111. `bun run test:critical-path-budget`
+112. `bun run test:critical-path-budget`
      - Critical-path budget stays app-owned and regenerates both recorded limits.
-112. `bun run test:lost-lines`
+113. `bun run test:lost-lines`
      - Upgrade audit reports app-authored lines the template copy deleted.
-113. `bun run test:override-deltas`
+114. `bun run test:override-deltas`
      - Override report names the template content each .templateoverrides entry withholds.
-114. `bun run test:smoke-steps`
+115. `bun run test:smoke-steps`
      - Smoke step comparison names a template step a derived app's runbook lost.
-115. `bun run test:reset-packages`
+116. `bun run test:reset-packages`
      - Package reset preserves dependencies when the frozen-install preflight fails.
-116. `bun run test:clear-logs`
+117. `bun run test:clear-logs`
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-117. `bun run test:scaffolded-hooks`
+118. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-118. `bun run test:template-drift`
+119. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-119. `bun run format:check`
+120. `bun run format:check`
      - Format check.
-120. `bun run test:aidd-format`
+121. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-121. `bun run check:aidd-format`
+122. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-122. `bun run check-deps`
+123. `bun run check-deps`
      - Check dependency versions.
-123. `bun run check:dead-code`
+124. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

@@ -324,6 +324,10 @@
 					"description": "Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files"
 				},
 				{
+					"command": "bun run test:license-collect-workspace",
+					"description": "The licence collector reports the version installed for the declaring workspace and falls back to the root copy"
+				},
+				{
 					"command": "bun run test:nginx-security",
 					"description": "Nginx security policy regression catches missing COOP or CORP and forced COEP"
 				},

@@ -201,6 +201,7 @@
 		"test:gates-wired": "bun scripts/test-gates-wired.ts",
 		"test:gate-conventions": "bun scripts/test-gate-conventions.ts",
 		"test:impersonation-audit": "bun scripts/test-impersonation-audit.ts",
+		"test:license-collect-workspace": "bun scripts/test-license-collect-workspace.ts",
 		"test:lockout-refresh": "bun scripts/test-lockout-refresh.ts",
 		"test:logger-configured": "bun scripts/test-logger-configured.ts && bun scripts/test-logger-fallback.ts",
 		"test:logout-audit-attribution": "bun scripts/test-logout-audit-attribution.ts",
