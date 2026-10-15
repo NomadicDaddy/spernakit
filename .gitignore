@@ -4,6 +4,7 @@
 .worktrees/
 node_modules/
 ps_modules/
+.smokestack-cache.json
 
 # aidd / agent-generated artifacts
 .agents/

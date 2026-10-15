@@ -1,0 +1,2877 @@
+{
+	"fast": {
+		"steps": ["check:max-lines", "typecheck", "format:check", "lint"]
+	},
+	"qc": {
+		"steps": [
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Template drift check",
+				"name": "check:drift",
+				"run": ["bun", "run", "check:drift"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Runbook carries every template smoke step at this app's template version",
+				"name": "check:smoke-steps",
+				"run": ["bun", "run", "check:smoke-steps"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Fresh public baseline content check",
+				"name": "check:fresh-release",
+				"run": ["bun", "run", "check:fresh-release"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "The fresh-release validator rejects stale baseline content, and the release workflow and sync-plan floor still match the baseline version",
+				"name": "test:fresh-release",
+				"run": ["bun", "run", "test:fresh-release"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".claude/**"
+					],
+					"inputs": [
+						".aidd/features/*/feature.json",
+						"scripts/check-feature-id-directory.ts"
+					]
+				},
+				"description": "Feature id matches its directory",
+				"name": "check:feature-id-directory",
+				"run": ["bun", "run", "check:feature-id-directory"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".claude/**"
+					],
+					"inputs": [
+						".aidd/features/*/feature.json",
+						"package.json",
+						"scripts/check-template-feature-versions.ts"
+					]
+				},
+				"description": "Template feature ownership version markers",
+				"name": "check:template-feature-versions",
+				"run": ["bun", "run", "check:template-feature-versions"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/check-template-feature-versions.ts",
+						"scripts/test-template-feature-versions.ts"
+					]
+				},
+				"description": "Template feature ownership marker regression",
+				"name": "test:template-feature-versions",
+				"run": ["bun", "run", "test:template-feature-versions"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Template feature records match the template",
+				"name": "check:template-features",
+				"run": ["bun", "run", "check:template-features"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						".prettierrc",
+						"scripts/check-feature-id-directory.ts",
+						"scripts/check-template-feature-versions.ts",
+						"scripts/lib/template-features/*.ts",
+						"scripts/sync-template-features.ts",
+						"scripts/test-template-features.ts"
+					]
+				},
+				"description": "Template feature sync regression",
+				"name": "test:template-features",
+				"run": ["bun", "run", "test:template-features"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/defaults.json",
+						"package.json",
+						"scripts/check-config-invariants.ts"
+					]
+				},
+				"description": "Config invariants check",
+				"name": "check:config",
+				"run": ["bun", "run", "check:config"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**/*.ts",
+						"backend/src/config/**/*.json",
+						"config/**/*.json",
+						"config/**/*.json.example",
+						"package.json",
+						"scripts/load-json-config.ts",
+						"scripts/check-config-schema-drift.ts"
+					]
+				},
+				"description": "Config schema artifact drift check",
+				"name": "check:schema-drift",
+				"run": ["bun", "run", "check:schema-drift"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**/*.ts",
+						"backend/src/config/**/*.json",
+						"config/**/*.json",
+						"config/**/*.json.example",
+						"package.json",
+						"scripts/load-json-config.ts",
+						"scripts/lib/config-validation.ts",
+						"scripts/validate-config.ts"
+					]
+				},
+				"description": "Config schema validation (defaults + example + instance)",
+				"name": "config:validate",
+				"run": ["bun", "run", "config:validate"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**/*.ts",
+						"backend/src/config/**/*.json",
+						"config/**/*.json",
+						"config/**/*.json.example",
+						"package.json",
+						"scripts/load-json-config.ts",
+						"scripts/lib/config-validation.ts",
+						"scripts/lib/crypto-keys.ts",
+						"scripts/smoke.json",
+						"scripts/test-config-preflight.ts",
+						"scripts/validate-config.ts"
+					]
+				},
+				"description": "Production config preflight rejects placeholder secrets without disclosing values",
+				"name": "test:config-preflight",
+				"run": ["bun", "run", "test:config-preflight"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/configSecretsFile.ts",
+						"backend/src/config/configUtils.ts",
+						"config/*.secrets.json.example",
+						"scripts/test-secrets-file.ts"
+					]
+				},
+				"description": "Split-secrets loader resolves dot-paths and fails fast on dangling *Ref fields",
+				"name": "test:secrets-file",
+				"run": ["bun", "run", "test:secrets-file"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-retention-zero.ts"
+					]
+				},
+				"description": "retention.*Days = 0 keeps rows forever against a real database; positive windows still purge",
+				"name": "test:retention-zero",
+				"run": ["bun", "run", "test:retention-zero"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-impersonation-audit.ts"
+					]
+				},
+				"description": "Impersonated mutations persist userId + impersonatedBy; kill-switch blocks start but not stop",
+				"name": "test:impersonation-audit",
+				"run": ["bun", "run", "test:impersonation-audit"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/services/user/userSettingsService.ts",
+						"frontend/src/components/shared/data-table/DataTablePagination.tsx",
+						"frontend/src/lib/pageSize.ts",
+						"frontend/src/pages/profile/DisplayPreferences.tsx",
+						"frontend/src/stores/layoutStore.ts",
+						"scripts/test-page-size-options.ts"
+					]
+				},
+				"description": "The rows-per-page controls offer one shared list of sizes, and the size in force is always on it",
+				"name": "test:page-size-options",
+				"run": ["bun", "run", "test:page-size-options"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/utils/validationErrorMessage.ts",
+						"scripts/test-validation-union-values.ts"
+					]
+				},
+				"description": "A rejected request is told which values a union accepts rather than the word string once per member, and is never told what it sent",
+				"name": "test:validation-union-values",
+				"run": ["bun", "run", "test:validation-union-values"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/constants/health.ts",
+						"backend/src/db/**",
+						"backend/src/services/health/**",
+						"backend/src/services/settings/**",
+						"backend/src/services/settingsService.ts",
+						"scripts/test-memory-health-thresholds.ts"
+					]
+				},
+				"description": "The memory health check answers to its configured thresholds on this runtime rather than reporting healthy whatever the process is using",
+				"name": "test:memory-health-thresholds",
+				"run": ["bun", "run", "test:memory-health-thresholds"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/constants/pagination.ts",
+						"backend/src/db/**",
+						"backend/src/routes/system/metrics.ts",
+						"backend/src/services/metrics/**",
+						"scripts/test-metrics-history-window.ts"
+					]
+				},
+				"description": "Metrics history returns points spanning the range that was asked for rather than the newest hundred minutes of it",
+				"name": "test:metrics-history-window",
+				"run": ["bun", "run", "test:metrics-history-window"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-workspace-role-predicate.ts"
+					]
+				},
+				"description": "hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it",
+				"name": "test:workspace-role-predicate",
+				"run": ["bun", "run", "test:workspace-role-predicate"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-oauth-secret-update.ts"
+					]
+				},
+				"description": "An OAuth provider's client secret still decrypts to itself after settings updates that do not carry it, and an empty secret clears it",
+				"name": "test:oauth-secret-update",
+				"run": ["bun", "run", "test:oauth-secret-update"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-admin-reset-email.ts"
+					]
+				},
+				"description": "An administrator's reset email is actually sent with the generated token, and a server that cannot send refuses without marking the account",
+				"name": "test:admin-reset-email",
+				"run": ["bun", "run", "test:admin-reset-email"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**",
+						"scripts/test-logger-configured.ts",
+						"scripts/test-logger-fallback.ts"
+					]
+				},
+				"description": "The application logger is replaced by the configured one once configuration loads, in every entry point that loads it",
+				"name": "test:logger-configured",
+				"run": ["bun", "run", "test:logger-configured"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/services/notification/alertWebhook.ts",
+						"backend/src/utils/urlValidator.ts",
+						"scripts/test-webhook-tls-name.ts"
+					]
+				},
+				"description": "An alert webhook pinned to a resolved IP verifies its certificate against the configured hostname",
+				"name": "test:webhook-tls-name",
+				"run": ["bun", "run", "test:webhook-tls-name"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": ["backend/src/**", "config/**", "scripts/test-upload-validation.ts"]
+				},
+				"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize",
+				"name": "test:upload-validation",
+				"run": ["bun", "run", "test:upload-validation"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**",
+						"backend/src/utils/logger.ts",
+						"config/**",
+						"scripts/lib/process/**",
+						"scripts/test-error-log-wiring.ts"
+					]
+				},
+				"description": "Application errors reach logs/<name>.error.log in every logging mode, redacted the same way, while the main log keeps every level",
+				"name": "test:error-log-wiring",
+				"run": ["bun", "run", "test:error-log-wiring"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/**",
+						"backend/src/db/seed/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/onboarding.ts",
+						"backend/src/services/auth/**",
+						"backend/src/services/onboardingService.ts",
+						"backend/src/services/user/userPasswordAdminService.ts",
+						"backend/src/utils/auth/**",
+						"frontend/src/pages/profile/**",
+						"frontend/src/routes/lazyPages.ts",
+						"frontend/src/routes/routeGroups.tsx",
+						"scripts/lib/password-form-route.ts",
+						"scripts/test-onboarding-password-step.ts"
+					]
+				},
+				"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on",
+				"name": "test:onboarding-password-step",
+				"run": ["bun", "run", "test:onboarding-password-step"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-onboarding-reset.ts"
+					]
+				},
+				"description": "Completing and resetting onboarding each return the state they just wrote, through a warm settings cache, and a completion after a reset records who and when",
+				"name": "test:onboarding-reset",
+				"run": ["bun", "run", "test:onboarding-reset"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/**",
+						"backend/src/db/seed/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/audit.ts",
+						"backend/src/routes/auth/**",
+						"backend/src/services/auditService.ts",
+						"backend/src/services/authService.ts",
+						"backend/src/utils/fieldSelection.ts",
+						"scripts/test-audit-outcome-filter.ts"
+					]
+				},
+				"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use",
+				"name": "test:audit-outcome-filter",
+				"run": ["bun", "run", "test:audit-outcome-filter"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/plugins/audit.ts",
+						"scripts/test-audit-plugin-lifecycle.ts"
+					]
+				},
+				"description": "Extracted audit lifecycle phases preserve exclusions, response details, and actor attribution",
+				"name": "test:audit-plugin-lifecycle",
+				"run": ["bun", "run", "test:audit-plugin-lifecycle"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/dev-with-logs.ts",
+						"scripts/lib/process/scrubbed-child.ts",
+						"scripts/lib/process/secret-scrubber.ts",
+						"scripts/lib/process/spawn-background.ts",
+						"scripts/test-child-output-redaction.ts"
+					]
+				},
+				"description": "Child stdout and stderr redact chunked, multiline, escaped, bearer, and assignment-shaped secrets",
+				"name": "test:child-output-redaction",
+				"run": ["bun", "run", "test:child-output-redaction"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**",
+						"backend/src/constants/auth.ts",
+						"backend/src/utils/auth/authHelpers.ts",
+						"scripts/test-cookie-headers.ts"
+					]
+				},
+				"description": "Auth cookie set and clear headers derive Secure only from validated configuration",
+				"name": "test:cookie-headers",
+				"run": ["bun", "run", "test:cookie-headers"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/hooks/useFormatters.ts",
+						"frontend/src/lib/dateTimePreferences.ts",
+						"frontend/src/pages/dashboards/SharedDashboardPage.tsx",
+						"frontend/src/pages/profile/DisplayPreferences.tsx",
+						"scripts/test-date-format-preferences.ts"
+					]
+				},
+				"description": "Every date, time, seconds, and timezone preference reaches shared and dashboard timestamps",
+				"name": "test:date-format-preferences",
+				"run": ["bun", "run", "test:date-format-preferences"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/config/**",
+						"backend/src/db/schema/**",
+						"backend/src/services/fieldEncryptionRotationService.ts",
+						"backend/src/utils/encryption.ts",
+						"scripts/test-field-encryption-rotation.ts"
+					]
+				},
+				"description": "Every shared-helper encrypted database field rotates atomically with previous-key fallback",
+				"name": "test:field-encryption-rotation",
+				"run": ["bun", "run", "test:field-encryption-rotation"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-lockout-refresh.ts"
+					]
+				},
+				"description": "Refresh replay and ambiguous rotation collisions clear cookies and end that sign-in, access tokens included",
+				"name": "test:lockout-refresh",
+				"run": ["bun", "run", "test:lockout-refresh"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-logout-audit-attribution.ts"
+					]
+				},
+				"description": "A sign-out audit row names the user who signed out, not System",
+				"name": "test:logout-audit-attribution",
+				"run": ["bun", "run", "test:logout-audit-attribution"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/lib/mfaTokenTransport.ts",
+						"frontend/src/pages/auth/MfaVerifyPage.tsx",
+						"scripts/test-mfa-token-transport.ts"
+					]
+				},
+				"description": "MFA challenge tokens use router state or a one-time URL fragment, the fragment is replaced before the form renders, and query-string tokens are ignored",
+				"name": "test:mfa-token-transport",
+				"run": ["bun", "run", "test:mfa-token-transport"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/routes/auth/password-reset.ts",
+						"backend/src/routes/auth/register.ts",
+						"backend/src/routes/users/profile.ts",
+						"backend/src/utils/auth/passwordValidation.ts",
+						"scripts/test-password-policy.ts"
+					]
+				},
+				"description": "Common and application-derived passwords are rejected at registration, reset, and profile boundaries",
+				"name": "test:password-policy",
+				"run": ["bun", "run", "test:password-policy"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [".prettierrc", "package.json", "scripts/test-prettier-cache.ts"]
+				},
+				"description": "Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content",
+				"name": "test:prettier-cache",
+				"run": ["bun", "run", "test:prettier-cache"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-function-size.ts",
+						"scripts/function-size-baseline.json",
+						"scripts/lib/smoke-cache/**/*.ts",
+						"scripts/test-function-size-gate.ts"
+					]
+				},
+				"description": "The function-size ratchet reads rule offenders with their measures, refuses fatal, rule-less, empty and non-JSON ESLint reports, refuses to re-record a baseline, and its cache entry covers everything it measures",
+				"name": "test:function-size-gate",
+				"run": ["bun", "run", "test:function-size-gate"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-refresh-sessions.ts"
+					]
+				},
+				"description": "One user signed in on several browsers keeps each sign-in: refresh, replay, logout and password change end only the sign-ins they mean",
+				"name": "test:refresh-sessions",
+				"run": ["bun", "run", "test:refresh-sessions"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/secretPermissions.ts",
+						"scripts/test-secret-permissions.ts"
+					]
+				},
+				"description": "Synthetic config and split-secret paths are repaired to owner-only permissions on this OS, and only the /app/config mount boundary tolerates a refused chmod",
+				"name": "test:secret-permissions",
+				"run": ["bun", "run", "test:secret-permissions"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/smoke-cache/**/*.ts",
+						"scripts/smoke-cache.ts",
+						"scripts/smoke.json",
+						"scripts/test-smoke-cache-status.ts"
+					]
+				},
+				"description": "QC cache status loads once, hashes each file once, preserves order, and matches serial decisions",
+				"name": "test:smoke-cache-status",
+				"run": ["bun", "run", "test:smoke-cache-status"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/smoke/failure-policy.ts",
+						"scripts/smoke.ts",
+						"scripts/test-smoke-failure-policy.ts"
+					]
+				},
+				"description": "Fast QC stops after the first failure while full QC aggregates independent failures",
+				"name": "test:smoke-failure-policy",
+				"run": ["bun", "run", "test:smoke-failure-policy"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/compression-probe.ts",
+						"scripts/lib/static-delivery.ts",
+						"scripts/test-static-delivery-probe.ts",
+						"scripts/verify-compression.ts"
+					]
+				},
+				"description": "Binary gzip and Brotli bodies plus every nginx delivery policy branch fail closed",
+				"name": "test:static-delivery-probe",
+				"run": ["bun", "run", "test:static-delivery-probe"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/setup/json-files.ts",
+						"scripts/lib/setup/license-materials.ts",
+						"scripts/test-claim-app-license.ts"
+					]
+				},
+				"description": "A new derived app's LICENSE names whoever runs init, or a placeholder, never the template author, and keeps the template's MIT notice",
+				"name": "test:claim-app-license",
+				"run": ["bun", "run", "test:claim-app-license"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/components/ui/**/*.tsx",
+						"licenses/shadcn-ui-MIT.txt",
+						"licenses/vendored-materials.json",
+						"scripts/lib/third-party-licenses/vendored.ts",
+						"scripts/test-vendored-licenses.ts"
+					]
+				},
+				"description": "Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files",
+				"name": "test:vendored-licenses",
+				"run": ["bun", "run", "test:vendored-licenses"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/third-party-licenses/collect.ts",
+						"scripts/test-license-collect-workspace.ts"
+					]
+				},
+				"description": "The licence collector reports the version installed for the declaring workspace and falls back to the root copy",
+				"name": "test:license-collect-workspace",
+				"run": ["bun", "run", "test:license-collect-workspace"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"docker/nginx.conf",
+						"scripts/lib/nginx-security.ts",
+						"scripts/test-nginx-security.ts"
+					]
+				},
+				"description": "Nginx security policy regression catches missing COOP or CORP and forced COEP",
+				"name": "test:nginx-security",
+				"run": ["bun", "run", "test:nginx-security"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/create-api-app.ts",
+						"backend/src/db/seed/**",
+						"backend/src/guards/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/**",
+						"backend/src/utils/errorResponse.ts",
+						"backend/src/utils/preValidationRejection.ts",
+						"scripts/lib/auth-ordering.ts",
+						"scripts/test-auth-before-validation.ts"
+					]
+				},
+				"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle",
+				"name": "test:auth-before-validation",
+				"run": ["bun", "run", "test:auth-before-validation"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/**",
+						"backend/src/create-api-app.ts",
+						"backend/src/db/seed/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/auth/**",
+						"backend/src/routes/settings/auth-security.ts",
+						"backend/src/services/auth/authSecurityService.ts",
+						"backend/src/services/authService.ts",
+						"frontend/src/api/authSecurity.ts",
+						"frontend/src/pages/settings/auth/AuthRateLimitSection.tsx",
+						"frontend/src/pages/settings/auth/AuthenticationTab.tsx",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/test-auth-rate-limit-state.ts"
+					]
+				},
+				"description": "Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule",
+				"name": "test:auth-rate-limit-state",
+				"run": ["bun", "run", "test:auth-rate-limit-state"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/create-api-app.ts",
+						"backend/src/db/seed/**",
+						"backend/src/guards/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/**",
+						"scripts/lib/public-routes.ts",
+						"scripts/test-public-route-surface.ts"
+					]
+				},
+				"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded",
+				"name": "test:public-route-surface",
+				"run": ["bun", "run", "test:public-route-surface"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/db/schema/bugReports.ts",
+						"backend/src/db/seed/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/bugs.helpers.ts",
+						"backend/src/routes/bugs.ts",
+						"backend/src/services/bug/bugSupersedeService.ts",
+						"backend/src/services/bugReportService.ts",
+						"scripts/lib/bug-supersede-world.ts",
+						"scripts/test-bug-report-supersede.ts"
+					]
+				},
+				"description": "A corrected bug report can name the one that replaced it, both reports read the link back, the default inbox stops counting the superseded one as open work, and a link that is circular, self-referential, or points at nothing is refused",
+				"name": "test:bug-report-supersede",
+				"run": ["bun", "run", "test:bug-report-supersede"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/bugReports.ts",
+						"backend/src/db/seed/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/bugs.helpers.ts",
+						"backend/src/routes/bugs.ts",
+						"backend/src/services/bugReportService.ts",
+						"scripts/test-bug-report-whitespace.ts"
+					]
+				},
+				"description": "A bug report whose description is empty once trimmed is refused rather than stored, every field the service trims is trimmed before the schema sees it, and a description opening with a blank line still gets a title",
+				"name": "test:bug-report-whitespace",
+				"run": ["bun", "run", "test:bug-report-whitespace"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/defaults.json",
+						"frontend/src/**",
+						"scripts/lib/frontend-render.ts",
+						"scripts/test-dashboard-not-found.ts"
+					]
+				},
+				"description": "A deleted dashboard renders the page not-found state with a route back, is not retried, and the error boundary still renders readable text for errors that are genuinely unexpected",
+				"name": "test:dashboard-not-found",
+				"run": ["bun", "run", "test:dashboard-not-found"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/**",
+						"backend/src/guards/**",
+						"backend/src/plugins/**",
+						"backend/src/routes/dashboards/**",
+						"backend/src/services/dashboard/**",
+						"scripts/test-dashboard-share-revoke.ts"
+					]
+				},
+				"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted",
+				"name": "test:dashboard-share-revoke",
+				"run": ["bun", "run", "test:dashboard-share-revoke"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/lib/viewTransitions.ts",
+						"frontend/src/main.tsx",
+						"frontend/src/tailwind.css",
+						"scripts/crawltest-events.ts",
+						"scripts/crawltest-types.ts",
+						"scripts/test-view-transition-abort.ts"
+					]
+				},
+				"description": "Navigating again before a view transition has finished raises nothing, a transition that failed for another reason is still reported, a navigation that ran no transition is untouched, the cross-document opt-in stays out of the stylesheet, and the crawl is not taught to ignore the message",
+				"name": "test:view-transition-abort",
+				"run": ["bun", "run", "test:view-transition-abort"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/components/ui/alert-dialog.tsx",
+						"frontend/src/components/ui/dialog.tsx",
+						"frontend/src/lib/focusReturn.ts",
+						"scripts/lib/focus-dom.ts",
+						"scripts/test-dialog-focus-return.ts"
+					]
+				},
+				"description": "A dialog dismissed after being opened from a data-table row actions menu puts focus back on that row's menu button rather than on the document body, because the origin an overlay is handed is resolved to something that is still on the page once the menu has closed",
+				"name": "test:dialog-focus-return",
+				"run": ["bun", "run", "test:dialog-focus-return"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/**",
+						"scripts/lib/dialog-form-survival.ts",
+						"scripts/test-dialog-form-survival.ts"
+					]
+				},
+				"description": "A dialog form is put back to its starting state when it opens and at no other time, so a submission the server refuses leaves every field as it was and a dialog the parent closes on success opens empty next time",
+				"name": "test:dialog-form-survival",
+				"run": ["bun", "run", "test:dialog-form-survival"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/routes/**",
+						"backend/src/services/auth/**",
+						"backend/src/utils/errorResponse.ts",
+						"backend/src/utils/errorResponseBuilders.ts",
+						"frontend/src/api/errorHandling.ts",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/step-up-password.ts",
+						"scripts/test-step-up-password-message.ts",
+						"shared/src/errorCodes.ts"
+					]
+				},
+				"description": "A form that asks an already signed-in user for their current password says that the current password is wrong when it is, from every surface that asks for one, and answers with a status that does not send the client off to refresh the session or sign the user out",
+				"name": "test:step-up-password-message",
+				"run": ["bun", "run", "test:step-up-password-message"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**",
+						"frontend/src/**",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/username-parity.ts",
+						"scripts/test-username-parity.ts",
+						"shared/src/usernamePolicy.ts"
+					]
+				},
+				"description": "The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds",
+				"name": "test:username-parity",
+				"run": ["bun", "run", "test:username-parity"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/**",
+						"scripts/lib/render-phase-sync.ts",
+						"scripts/test-render-phase-sync.ts"
+					]
+				},
+				"description": "A component that adjusts state during render compares against a sentinel nothing else writes, so a form seeded from the record it was opened for still holds what the user typed",
+				"name": "test:render-phase-sync",
+				"run": ["bun", "run", "test:render-phase-sync"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/api/errorHandling.ts",
+						"frontend/src/lib/queryClient.ts",
+						"frontend/src/lib/queryErrorPolicy.ts",
+						"scripts/test-bad-request-recovery.ts"
+					]
+				},
+				"description": "A read the API refuses as malformed is not retried and does not replace the page it came from, so a stale filter in the address leaves the table, the search box and the actions usable and says what happened",
+				"name": "test:bad-request-recovery",
+				"run": ["bun", "run", "test:bad-request-recovery"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"docs/**/*.md",
+						"frontend/src/**",
+						"scripts/lib/workspace-header-scan.ts",
+						"scripts/lib/workspace-header-world.ts",
+						"scripts/test-workspace-header-contract.ts"
+					]
+				},
+				"description": "A request that names no workspace is refused with one status and one message on every route, the caller's role is settled before the header is read, a workspace a SYSOP names scopes the listing rather than being discarded, a workspace that does not exist is answered 404 on every listing that reads the header rather than an empty page on some of them, and no route reads the header without authorizing it or words the header's messages itself",
+				"name": "test:workspace-header-contract",
+				"run": ["bun", "run", "test:workspace-header-contract"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/workspace-subresource-claims.ts",
+						"scripts/lib/workspace-subresource-scan.ts",
+						"scripts/lib/workspace-subresource-tally.ts",
+						"scripts/lib/workspace-subresource-world.ts",
+						"scripts/test-workspace-subresource-existence.ts"
+					]
+				},
+				"description": "A workspace sub-resource answers 404 for a name that points at nothing, whether that is a workspace a soft delete left members behind in or a user id no account carries, while a non-member still hears the same status either way, a real duplicate member still conflicts and an existing workspace answers as before",
+				"name": "test:workspace-subresource-existence",
+				"run": ["bun", "run", "test:workspace-subresource-existence"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/smoke.json",
+						"scripts/test-wait-for-http.ts",
+						"scripts/wait-for-http.ts"
+					]
+				},
+				"description": "Docker readiness failures print bounded container log diagnostics",
+				"name": "test:wait-for-http",
+				"run": ["bun", "run", "test:wait-for-http"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/process/pid-files.ts",
+						"scripts/lib/process/ports.ts",
+						"scripts/smoke.json",
+						"scripts/test-wait-for-port.ts"
+					]
+				},
+				"description": "bun run start tells a crashed service from a slow one and never gives up before the runbook's own readiness wait",
+				"name": "test:wait-for-port",
+				"run": ["bun", "run", "test:wait-for-port"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/configUtils.ts",
+						"backend/src/config/databaseLocation.ts",
+						"backend/src/config/defaults.json",
+						"config/**/*.json",
+						"scripts/check-db-location.ts"
+					]
+				},
+				"description": "Database location guard (ASSERT-010: DB files only under data/)",
+				"name": "check:db-location",
+				"run": ["bun", "run", "check:db-location"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/**/*.ts",
+						"backend/src/db/schema-pg/**/*.ts",
+						"scripts/check-no-inline-references.ts"
+					]
+				},
+				"description": "Inline .references() ban (ASSERT-012)",
+				"name": "check:no-inline-references",
+				"run": ["bun", "run", "check:no-inline-references"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/configSecretsFile.ts",
+						"backend/src/config/configUtils.ts",
+						"backend/src/config/**/*.json",
+						"config/**/*.json",
+						"config/**/*.json.example",
+						"scripts/check-secrets-shape.ts"
+					]
+				},
+				"description": "Secrets file shape parity",
+				"name": "check:secrets-shape",
+				"run": ["bun", "run", "check:secrets-shape"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/plugins/securityHeaders.ts",
+						"docker/nginx.conf",
+						"scripts/check-nginx-security.ts",
+						"scripts/lib/nginx-security.ts"
+					]
+				},
+				"description": "Every nginx frontend response block retains COOP and CORP while COEP remains opt-in",
+				"name": "check:nginx-security",
+				"run": ["bun", "run", "check:nginx-security"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						".githooks/leak-guard.sh",
+						"package.json",
+						"scripts/check-leak-guard.sh",
+						"scripts/run-bash.ts"
+					]
+				},
+				"description": "Leak-guard hook self-test (synthetic fixtures)",
+				"name": "check:leak-guard",
+				"run": ["bun", "run", "check:leak-guard"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"THIRD_PARTY_LICENSES.md",
+						"THIRD_PARTY_NOTICES.md",
+						"licenses/shadcn-ui-MIT.txt",
+						"licenses/vendored-materials.json",
+						"frontend/src/components/ui/**/*.tsx",
+						"backend/package.json",
+						"bun.lock",
+						"frontend/package.json",
+						"package.json",
+						"scripts/check-license-core.ts",
+						"scripts/generate-third-party-licenses.ts",
+						"scripts/lib/license-core/**/*.ts",
+						"scripts/lib/third-party-licenses/**/*.ts",
+						"shared/package.json"
+					]
+				},
+				"description": "Third-party license inventory matches the installed graph",
+				"name": "check:licenses",
+				"run": ["bun", "run", "check:licenses"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Shared-core files in sibling repositories match their owning repository (when present)",
+				"name": "check:shared-core",
+				"run": ["bun", "run", "check:shared-core"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Fleet manifest validator regression self-test",
+				"name": "test:fleet-manifest",
+				"run": ["bun", "run", "test:fleet-manifest"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-fleet-manifest.ts",
+						"scripts/lib/fleet/*.ts",
+						"scripts/read-fleet-manifest.ps1",
+						"scripts/sync-fleet-manifest.ts",
+						"scripts/test-fleet-manifest-sync.ts"
+					]
+				},
+				"description": "Fleet manifest writer regression self-test",
+				"name": "test:fleet-manifest-sync",
+				"run": ["bun", "run", "test:fleet-manifest-sync"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "Fleet manifest matches packages and runtime configs",
+				"name": "check:fleet-manifest",
+				"run": ["bun", "run", "check:fleet-manifest"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						".github/workflows/*.yml",
+						".github/workflows/*.yaml",
+						"licenses/SOURCE-OFFER.md",
+						"scripts/check-image-publication.ts",
+						"scripts/docker-image.ts"
+					]
+				},
+				"description": "Template image publication guard",
+				"name": "check:image-publication",
+				"run": ["bun", "run", "check:image-publication"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/check-process-env.ts"
+					]
+				},
+				"description": "Process environment access check",
+				"name": "check:process-env",
+				"run": ["bun", "run", "check:process-env"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/**/*.ts"
+					]
+				},
+				"description": "Child processes receive only the environment they need",
+				"name": "check:env-spread",
+				"run": ["bun", "run", "check:env-spread"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/**/*.ts"
+					]
+				},
+				"description": "Direct Git subprocesses hide their Windows console window",
+				"name": "check:git-window-hide",
+				"run": ["bun", "run", "check:git-window-hide"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "No audit report claims a date that has not happened yet",
+				"name": "check:audit-artifact-hygiene",
+				"run": ["bun", "run", "check:audit-artifact-hygiene"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/**/*.ts"
+					]
+				},
+				"description": "300-line max-lines gate",
+				"name": "check:max-lines",
+				"run": ["bun", "run", "check:max-lines"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.{ts,tsx,js,jsx}",
+						"frontend/src/**/*.{ts,tsx,js,jsx}",
+						"shared/src/**/*.{ts,tsx,js,jsx}",
+						"scripts/check-function-size.ts",
+						"scripts/function-size-baseline.json",
+						"eslint.config.js",
+						"frontend/eslint.config.js",
+						"tsconfig*.json",
+						"backend/tsconfig*.json",
+						"frontend/tsconfig*.json",
+						"shared/tsconfig*.json",
+						"package.json",
+						"backend/package.json",
+						"frontend/package.json",
+						"shared/package.json",
+						"bun.lock"
+					]
+				},
+				"description": "Function-size ratchet: no change may add functions over complexity 7 or over 40 lines beyond the repository's committed baseline",
+				"name": "check:function-size",
+				"run": ["bun", "run", "check:function-size"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"*/package.json",
+						"eslint.config.js",
+						"package.json",
+						"scripts/**/*.sh",
+						"scripts/**/*.ts"
+					]
+				},
+				"description": "Every package.json script resolves to a real file and task",
+				"name": "check:script-targets",
+				"run": ["bun", "run", "check:script-targets"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": ["package.json", "scripts/check-gates-wired.ts", "scripts/smoke.json"]
+				},
+				"description": "Every test:* script is run by a smoke step, or excused by name with a reason",
+				"name": "check:gates-wired",
+				"run": ["bun", "run", "check:gates-wired"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": ["scripts/check-gates-wired.ts", "scripts/test-gates-wired.ts"]
+				},
+				"description": "The wired-gates check fails on an unwired script, a prefix of a wired name, and a reasonless or stale excuse",
+				"name": "test:gates-wired",
+				"run": ["bun", "run", "test:gates-wired"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/check-gate-conventions.ts",
+						"scripts/lib/gate/**/*.ts",
+						"scripts/test-gate-conventions.ts"
+					]
+				},
+				"description": "Gate conventions meta-gate regression self-test",
+				"name": "test:gate-conventions",
+				"run": ["bun", "run", "test:gate-conventions"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/*.ts",
+						"scripts/gate-conventions-allowlist.json",
+						"scripts/lib/gate/**/*.ts"
+					]
+				},
+				"description": "Every gate follows docs/reference/gate-conventions.md",
+				"name": "check:gate-conventions",
+				"run": ["bun", "run", "check:gate-conventions"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**",
+						"data/**"
+					],
+					"inputs": [
+						".env*",
+						"backend/src/config/configUtils.ts",
+						"backend/src/config/defaults.json",
+						"backend/src/plugins/securityHeaders.ts",
+						"backend/package.json",
+						"config/**/*.json",
+						"docker/nginx.conf",
+						"frontend/index.html",
+						"frontend/package.json",
+						"frontend/vite-plugins/proxyTarget.ts",
+						"frontend/vite.config.ts",
+						"package.json",
+						"scripts/check-application.ts",
+						"scripts/lib/app-config-types.ts",
+						"scripts/lib/check-application/**/*.ts",
+						"scripts/lib/crypto-keys.ts",
+						"scripts/load-json-config.ts",
+						"**/*.db"
+					]
+				},
+				"description": "Application check",
+				"name": "check-application",
+				"run": ["bun", "run", "check-application"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-destructive-confirmation.ts",
+						"scripts/lib/destructive/comments.ts",
+						"scripts/lib/destructive/evidence.ts",
+						"scripts/lib/destructive/waivers.ts",
+						"scripts/test-destructive-comments.ts"
+					]
+				},
+				"description": "Destructive-confirmation reads code not prose (comment stripping and waiver honouring)",
+				"name": "test:destructive-comments",
+				"run": ["bun", "run", "test:destructive-comments"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/lib/destructive/evidence.ts",
+						"scripts/test-destructive-evidence.ts"
+					]
+				},
+				"description": "Destructive-confirmation evidence resolver assertion (window and one-level handler hop)",
+				"name": "test:destructive-evidence",
+				"run": ["bun", "run", "test:destructive-evidence"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/src/**/*.tsx",
+						"scripts/check-destructive-confirmation.ts",
+						"scripts/lib/destructive/*.ts"
+					]
+				},
+				"description": "Destructive mutation confirmation check",
+				"name": "check:destructive-confirmation",
+				"run": ["bun", "run", "check:destructive-confirmation"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/services/database-admin/schemaIntrospection.ts",
+						"backend/src/services/database-admin/dataValidation.ts",
+						"scripts/test-mutation-denylist.ts"
+					]
+				},
+				"description": "Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users)",
+				"name": "test:mutation-denylist",
+				"run": ["bun", "run", "test:mutation-denylist"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**",
+						".github/**",
+						"coverage/**",
+						"data/**",
+						"screenshots/**"
+					],
+					"inputs": ["**/*.md", "scripts/check-docs.ts", "scripts/lib/docs/*.ts"]
+				},
+				"description": "Documentation consistency check",
+				"name": "check:docs",
+				"run": ["bun", "run", "check:docs"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"README.md",
+						"docs/template/CHANGELOG.md",
+						"docs/template/README.md",
+						"package.json",
+						"scripts/check-version-refs.ts"
+					]
+				},
+				"description": "Current-state version claims in docs match package.json",
+				"name": "check:version-refs",
+				"run": ["bun", "run", "check:version-refs"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						".screenshot-capture",
+						"frontend/src/routes/**",
+						"scripts/check-crawl-route-coverage.ts",
+						"scripts/lib/router-paths.ts"
+					]
+				},
+				"description": "Every page the router registers is one the crawl is required to visit, or is exempt with a reason",
+				"name": "check:crawl-route-coverage",
+				"run": ["bun", "run", "check:crawl-route-coverage"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/smoke.json",
+						"scripts/smoke.md",
+						"scripts/sync-smoke-docs.ts"
+					]
+				},
+				"description": "Smoke runbook matches scripts/smoke.json",
+				"name": "check:smoke-docs",
+				"run": ["bun", "run", "check:smoke-docs"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"backend/package.json",
+						"backend/tsconfig.json",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"frontend/package.json",
+						"frontend/tsconfig.json",
+						"frontend/tsconfig.app.json",
+						"frontend/tsconfig.node.json",
+						"frontend/tsconfig.build.json",
+						"shared/src/**/*.ts",
+						"shared/package.json",
+						"shared/tsconfig.json",
+						"scripts/**/*.ts",
+						"scripts/tsconfig.json",
+						"package.json",
+						"bun.lock"
+					]
+				},
+				"description": "Typecheck",
+				"name": "typecheck",
+				"run": ["bun", "run", "typecheck"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/**/*.js",
+						"frontend/**/*.jsx",
+						"frontend/**/*.ts",
+						"frontend/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/**/*.ts",
+						"eslint.config.js",
+						"frontend/eslint.config.js",
+						"frontend/tsconfig*.json",
+						"package.json",
+						"bun.lock",
+						"backend/package.json",
+						"frontend/package.json",
+						"shared/package.json"
+					]
+				},
+				"description": "Lint",
+				"name": "lint",
+				"run": ["bun", "run", "lint"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**",
+						"data/**"
+					],
+					"inputs": [
+						".env*",
+						"backend/src/config/configUtils.ts",
+						"backend/src/config/defaults.json",
+						"backend/src/plugins/securityHeaders.ts",
+						"backend/package.json",
+						"config/**/*.json",
+						"docker/nginx.conf",
+						"frontend/index.html",
+						"frontend/package.json",
+						"frontend/vite-plugins/proxyTarget.ts",
+						"frontend/vite.config.ts",
+						"package.json",
+						"scripts/check-application.ts",
+						"scripts/lib/app-config-types.ts",
+						"scripts/lib/check-application/**/*.ts",
+						"scripts/lib/crypto-keys.ts",
+						"scripts/load-json-config.ts",
+						"**/*.db",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"frontend/src/**/*.css",
+						"frontend/index.html",
+						"frontend/vite.config.ts",
+						"frontend/vite-plugins/**/*.ts",
+						"frontend/tsconfig.json",
+						"frontend/tsconfig.app.json",
+						"frontend/tsconfig.build.json",
+						"frontend/package.json",
+						"shared/src/**/*.ts",
+						"shared/tsconfig.json",
+						"shared/package.json",
+						"backend/src/**/*.ts",
+						"backend/tsconfig.json",
+						"backend/package.json",
+						"package.json",
+						"bun.lock",
+						"backend/package.json",
+						"frontend/package.json",
+						"shared/package.json"
+					],
+					"outputs": ["frontend/dist"]
+				},
+				"description": "Build",
+				"name": "build",
+				"run": ["bun", "run", "build"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/dist/**/*",
+						"scripts/bundle-budget.json",
+						"scripts/lib/bundle-budget.ts",
+						"scripts/load-json-config.ts",
+						"scripts/verify-minification.ts"
+					],
+					"outputs": ["frontend/dist"]
+				},
+				"description": "Verify bundle minification and total size budget",
+				"name": "verify-minification",
+				"run": ["bun", "run", "verify-minification"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"frontend/dist/**/*",
+						"scripts/check-critical-path.ts",
+						"scripts/critical-path-budget.json",
+						"scripts/lib/critical-path-budget.ts"
+					],
+					"outputs": ["frontend/dist"]
+				},
+				"description": "Verify critical-path size, React runtime placement, and no preload waterfall",
+				"name": "check:critical-path",
+				"run": ["bun", "run", "check:critical-path"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"config/**/*.json",
+						"frontend/src/api/types/**/*.ts",
+						"shared/src/**/*.ts",
+						"scripts/lib/api-types/**/*.ts",
+						"scripts/check-api-types.ts"
+					]
+				},
+				"description": "API type contract validation",
+				"name": "check:api-types",
+				"run": ["bun", "run", "check:api-types"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/create-api-app*.ts",
+						"backend/src/routes/**/*.ts",
+						"frontend/src/components/**/*.ts",
+						"frontend/src/components/**/*.tsx",
+						"frontend/src/pages/**/*.ts",
+						"frontend/src/pages/**/*.tsx",
+						"frontend/src/routes/lazyPages.ts",
+						"scripts/check-feature-integration.ts",
+						"scripts/lib/feature-integration/**/*.ts"
+					]
+				},
+				"description": "Feature integration check",
+				"name": "check:feature-integration",
+				"run": ["bun", "run", "check:feature-integration"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/check-feature-integration.ts",
+						"scripts/lib/feature-integration/**/*.ts",
+						"scripts/test-feature-integration.ts"
+					]
+				},
+				"description": "Feature integration rejects unmounted flat route modules",
+				"name": "test:feature-integration",
+				"run": ["bun", "run", "test:feature-integration"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/db/schema/**/*.ts",
+						"backend/src/db/schema-pg/**/*.ts",
+						"scripts/check-schema-parity.ts",
+						"scripts/lib/schema-parity/**/*.ts"
+					]
+				},
+				"description": "SQLite/PG schema parity check",
+				"name": "check:schema-parity",
+				"run": ["bun", "run", "check:schema-parity"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/services/backup/backupCompressionService.ts",
+						"backend/src/services/backup/backupEncryptionService.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/test-backup-compression.ts"
+					]
+				},
+				"description": "Backup decompression guard rejects high-ratio archives and cleans up",
+				"name": "test:backup-compression",
+				"run": ["bun", "run", "test:backup-compression"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/defaults.json",
+						"scripts/bundle-budget.json",
+						"scripts/critical-path-budget.json",
+						"scripts/lib/bundle-budget.ts",
+						"scripts/lib/template/classify.ts",
+						"scripts/test-bundle-budget.ts"
+					]
+				},
+				"description": "Bundle budget stays app-owned and is only enforced with matching provenance",
+				"name": "test:bundle-budget",
+				"run": ["bun", "run", "test:bundle-budget"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/config/defaults.json",
+						"backend/src/utils/auth/passwordGenerator.ts",
+						"config/example.json",
+						"scripts/crawltest-config.ts",
+						"scripts/test-crawl-credentials.ts"
+					]
+				},
+				"description": "Crawl login resolves from the seed account and never from a tracked config file",
+				"name": "test:crawl-credentials",
+				"run": ["bun", "run", "test:crawl-credentials"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/critical-path-budget.json",
+						"scripts/lib/critical-path-budget.ts",
+						"scripts/lib/template/classify.ts",
+						"scripts/test-critical-path-budget.ts"
+					]
+				},
+				"description": "Critical-path budget stays app-owned and regenerates both recorded limits",
+				"name": "test:critical-path-budget",
+				"run": ["bun", "run", "test:critical-path-budget"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/audit-lost-lines.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/test-lost-lines.ts"
+					]
+				},
+				"description": "Upgrade audit reports app-authored lines the template copy deleted",
+				"name": "test:lost-lines",
+				"run": ["bun", "run", "test:lost-lines"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-override-deltas.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/test-override-deltas.ts"
+					]
+				},
+				"description": "Override report names the template content each .templateoverrides entry withholds",
+				"name": "test:override-deltas",
+				"run": ["bun", "run", "test:override-deltas"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-smoke-steps.ts",
+						"scripts/lib/smoke-steps/*.ts",
+						"scripts/lib/template/repo.ts",
+						"scripts/test-smoke-steps.ts"
+					]
+				},
+				"description": "Smoke step comparison names a template step a derived app's runbook lost",
+				"name": "test:smoke-steps",
+				"run": ["bun", "run", "test:smoke-steps"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"package.json",
+						"scripts/reset-packages.ts",
+						"scripts/smoke.json",
+						"scripts/test-reset-packages.ts"
+					]
+				},
+				"description": "Package reset preserves dependencies when the frozen-install preflight fails",
+				"name": "test:reset-packages",
+				"run": ["bun", "run", "test:reset-packages"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": ["scripts/clear-logs.ts", "scripts/test-clear-logs.ts"]
+				},
+				"description": "Clearing logs removes this repository's own runtime and runbook output and nothing else",
+				"name": "test:clear-logs",
+				"run": ["bun", "run", "test:clear-logs"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						".githooks/force-push-guard.sh",
+						".githooks/pre-push",
+						".githooks/screenshot-guard.sh",
+						"package.json",
+						"scaffolding/.githooks/aidd-history-guard.sh",
+						"scaffolding/.githooks/force-push-guard.sh",
+						"scaffolding/.githooks/pre-push",
+						"scaffolding/.githooks/screenshot-guard.sh",
+						"scripts/check-template-drift.ts",
+						"scripts/lib/init/scaffold.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/test-scaffolded-hooks.ts"
+					]
+				},
+				"description": "Scaffolded pre-push hook replays refs through both release guards",
+				"name": "test:scaffolded-hooks",
+				"run": ["bun", "run", "test:scaffolded-hooks"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"scripts/check-template-drift.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/template-shared.ts",
+						"scripts/test-template-deletions.ts",
+						"scripts/test-template-drift.ts"
+					]
+				},
+				"description": "Drift reports build-critical structural lines and files removed by the template",
+				"name": "test:template-drift",
+				"run": ["bun", "run", "test:template-drift"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						".prettierrc",
+						".prettierignore",
+						"package.json",
+						"bun.lock",
+						"backend/package.json",
+						"frontend/package.json",
+						"shared/package.json"
+					]
+				},
+				"description": "Format check",
+				"name": "format:check",
+				"run": ["bun", "run", "format:check"]
+			},
+			{
+				"cache": {
+					"uncacheable": "no smoke-cache classification exists for this step"
+				},
+				"description": "aidd metadata format gate self-test (synthetic fixtures)",
+				"name": "test:aidd-format",
+				"run": ["bun", "run", "test:aidd-format"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".claude/**"
+					],
+					"inputs": [
+						".aidd/features/*/feature.json",
+						".aidd/roadmap.json",
+						".gitignore",
+						".prettierrc",
+						"scripts/aidd-prettierignore",
+						"scripts/check-aidd-format.ts"
+					]
+				},
+				"description": "Tracked .aidd metadata matches the repository Prettier shape",
+				"name": "check:aidd-format",
+				"run": ["bun", "run", "check:aidd-format"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/package.json",
+						"frontend/package.json",
+						"package.json",
+						"scripts/check-deps.ts",
+						"shared/package.json"
+					]
+				},
+				"description": "Check dependency versions",
+				"name": "check-deps",
+				"run": ["bun", "run", "check-deps"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**/*.ts",
+						"frontend/src/**/*.ts",
+						"frontend/src/**/*.tsx",
+						"shared/src/**/*.ts",
+						"scripts/**/*.ts",
+						"knip.json",
+						"package.json",
+						"backend/package.json",
+						"frontend/package.json",
+						"shared/package.json"
+					]
+				},
+				"description": "Dead code detection (knip)",
+				"name": "check:dead-code",
+				"run": ["bun", "run", "check:dead-code"]
+			}
+		]
+	},
+	"version": 1
+}
