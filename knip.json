@@ -12,7 +12,6 @@
 	"workspaces": {
 		".": {
 			"entry": ["scripts/*.ts", "scripts/lib/process/error-log-probe.ts"],
-			"ignore": ["scripts/lib/smokestack/cache-inputs.ts"],
 			"ignoreBinaries": ["icacls", "netstat", "setfacl"],
 			"project": ["scripts/**/*.ts"]
 		},
