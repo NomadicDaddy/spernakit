@@ -2010,37 +2010,7 @@
 			},
 			{
 				"cache": {
-					"excludes": [
-						"**/node_modules/**",
-						"**/dist/**",
-						".git/**",
-						"logs/**",
-						"backups/**",
-						"artifacts/**",
-						".aidd/**",
-						".claude/**",
-						"data/**"
-					],
-					"inputs": [
-						".env*",
-						"backend/src/config/configUtils.ts",
-						"backend/src/config/defaults.json",
-						"backend/src/plugins/securityHeaders.ts",
-						"backend/package.json",
-						"config/**/*.json",
-						"docker/nginx.conf",
-						"frontend/index.html",
-						"frontend/package.json",
-						"frontend/vite-plugins/proxyTarget.ts",
-						"frontend/vite.config.ts",
-						"package.json",
-						"scripts/check-application.ts",
-						"scripts/lib/app-config-types.ts",
-						"scripts/lib/check-application/**/*.ts",
-						"scripts/lib/crypto-keys.ts",
-						"scripts/load-json-config.ts",
-						"**/*.db"
-					]
+					"uncacheable": "guards against rogue backup/data FOLDERS (findRogueFolders); file-glob inputs cannot see an empty folder, so no input set keys it correctly"
 				},
 				"description": "Application check",
 				"name": "check-application",
@@ -2298,59 +2268,7 @@
 			},
 			{
 				"cache": {
-					"excludes": [
-						"**/node_modules/**",
-						"**/dist/**",
-						".git/**",
-						"logs/**",
-						"backups/**",
-						"artifacts/**",
-						".aidd/**",
-						".claude/**",
-						"data/**"
-					],
-					"inputs": [
-						".env*",
-						"backend/src/config/configUtils.ts",
-						"backend/src/config/defaults.json",
-						"backend/src/plugins/securityHeaders.ts",
-						"backend/package.json",
-						"config/**/*.json",
-						"docker/nginx.conf",
-						"frontend/index.html",
-						"frontend/package.json",
-						"frontend/vite-plugins/proxyTarget.ts",
-						"frontend/vite.config.ts",
-						"package.json",
-						"scripts/check-application.ts",
-						"scripts/lib/app-config-types.ts",
-						"scripts/lib/check-application/**/*.ts",
-						"scripts/lib/crypto-keys.ts",
-						"scripts/load-json-config.ts",
-						"**/*.db",
-						"frontend/src/**/*.ts",
-						"frontend/src/**/*.tsx",
-						"frontend/src/**/*.css",
-						"frontend/index.html",
-						"frontend/vite.config.ts",
-						"frontend/vite-plugins/**/*.ts",
-						"frontend/tsconfig.json",
-						"frontend/tsconfig.app.json",
-						"frontend/tsconfig.build.json",
-						"frontend/package.json",
-						"shared/src/**/*.ts",
-						"shared/tsconfig.json",
-						"shared/package.json",
-						"backend/src/**/*.ts",
-						"backend/tsconfig.json",
-						"backend/package.json",
-						"package.json",
-						"bun.lock",
-						"backend/package.json",
-						"frontend/package.json",
-						"shared/package.json"
-					],
-					"outputs": ["frontend/dist"]
+					"uncacheable": "guards against rogue backup/data FOLDERS (findRogueFolders); file-glob inputs cannot see an empty folder, so no input set keys it correctly"
 				},
 				"description": "Build",
 				"name": "build",
@@ -2368,13 +2286,13 @@
 						".claude/**"
 					],
 					"inputs": [
+						"frontend/dist/**",
 						"frontend/dist/**/*",
 						"scripts/bundle-budget.json",
 						"scripts/lib/bundle-budget.ts",
 						"scripts/load-json-config.ts",
 						"scripts/verify-minification.ts"
-					],
-					"readsOutputs": ["build"]
+					]
 				},
 				"description": "Verify bundle minification and total size budget",
 				"name": "verify-minification",
@@ -2392,12 +2310,12 @@
 						".claude/**"
 					],
 					"inputs": [
+						"frontend/dist/**",
 						"frontend/dist/**/*",
 						"scripts/check-critical-path.ts",
 						"scripts/critical-path-budget.json",
 						"scripts/lib/critical-path-budget.ts"
-					],
-					"readsOutputs": ["build"]
+					]
 				},
 				"description": "Verify critical-path size, React runtime placement, and no preload waterfall",
 				"name": "check:critical-path",
