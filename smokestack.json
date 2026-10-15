@@ -2374,7 +2374,7 @@
 						"scripts/load-json-config.ts",
 						"scripts/verify-minification.ts"
 					],
-					"outputs": ["frontend/dist"]
+					"readsOutputs": ["build"]
 				},
 				"description": "Verify bundle minification and total size budget",
 				"name": "verify-minification",
@@ -2397,7 +2397,7 @@
 						"scripts/critical-path-budget.json",
 						"scripts/lib/critical-path-budget.ts"
 					],
-					"outputs": ["frontend/dist"]
+					"readsOutputs": ["build"]
 				},
 				"description": "Verify critical-path size, React runtime placement, and no preload waterfall",
 				"name": "check:critical-path",
@@ -2762,6 +2762,7 @@
 			},
 			{
 				"cache": {
+					"collector": "prettier",
 					"excludes": [
 						"**/node_modules/**",
 						"**/dist/**",
