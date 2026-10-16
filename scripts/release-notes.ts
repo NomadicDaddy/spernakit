@@ -52,6 +52,7 @@ function git(...args: string[]): string {
 	return execFileSync('git', args, {
 		encoding: 'utf8',
 		stdio: ['ignore', 'pipe', 'pipe'],
+		windowsHide: true,
 	}).trim();
 }
 
