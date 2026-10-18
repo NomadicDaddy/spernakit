@@ -8,6 +8,11 @@ ps_modules/
 
 # aidd / agent-generated artifacts
 .agents/
+# NOTE: apps that track their .aidd records keep the two generated-copy lines below and drop
+# the wholesale ignore; the staged reference docs (aidd's scaffoldSkillContracts) and skills
+# copies are reproducible by re-running the producer and never belong in history.
+.aidd/docs/
+.aidd/skills/
 /.aidd/
 .claude/
 .codex/
