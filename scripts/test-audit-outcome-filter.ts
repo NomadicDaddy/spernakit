@@ -9,15 +9,17 @@ import { createApiApp } from '../backend/src/create-api-app.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
-import { users } from '../backend/src/db/schema/users.ts';
 import { workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { sysopId, sysopSeed } from './lib/audit-filter-seed.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const LOGIN_PATH = '/api/v1/auth/login';
+const SEED_ROUNDS = 4;
+const WRONG_PASSWORD = 'not-the-password-9!';
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
@@ -32,23 +34,6 @@ interface AuditRow {
 	status: null | number;
 	submittedUsername: null | string;
 	username: null | string;
-}
-
-function sysopSeed(): { password: string; username: string } {
-	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === 'SYSOP');
-	if (!seed) throw new Error('SEED_USERS carries no SYSOP account');
-	return { password: seed.password, username: seed.username };
-}
-
-function sysopId(): number {
-	const { username } = sysopSeed();
-	const row = getDb()
-		.select()
-		.from(users)
-		.all()
-		.find((user) => user.username === username);
-	if (!row) throw new Error(`the seed produced no ${username} account`);
-	return row.id;
 }
 
 function attemptLogin(app: App, password: string): Promise<Response> {
@@ -112,7 +97,7 @@ async function awaitAuditRows(expected: number): Promise<number> {
 }
 
 async function provokeLogins(app: App): Promise<void> {
-	const rejected = await attemptLogin(app, 'not-the-password-9!');
+	const rejected = await attemptLogin(app, WRONG_PASSWORD);
 	assert(
 		rejected.status === 401,
 		`a wrong password must be rejected, got ${String(rejected.status)}`,
@@ -266,7 +251,7 @@ async function run(): Promise<void> {
 	const dbPath = join(tmpDir, 'test.db');
 	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
 	initializeDatabase(dbPath);
-	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), 4);
+	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
 
 	const app = createApiApp();
 	await provokeLogins(app);

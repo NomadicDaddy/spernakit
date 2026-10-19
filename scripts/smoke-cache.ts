@@ -4,8 +4,8 @@
  * Provides fast change detection to skip unchanged QC steps by tracking
  * file hashes and execution results.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import type {
 	CacheCheckResult,
@@ -21,7 +21,10 @@ import {
 	STEP_DEPENDENCIES,
 	UNCACHEABLE_STEPS,
 } from './lib/smoke-cache/dependencies.ts';
+import { type CacheFileOptions, loadCache, saveCache } from './lib/smoke-cache/file-store.ts';
 import { MAX_HASH_CONCURRENCY, scheduleHash } from './lib/smoke-cache/hash-scheduler.ts';
+
+export type { CacheFileOptions } from './lib/smoke-cache/file-store.ts';
 
 export type { CacheStatus, SmokeCacheDiagnostics } from './lib/smoke-cache/types.ts';
 
@@ -29,51 +32,7 @@ export type { CacheStatus, SmokeCacheDiagnostics } from './lib/smoke-cache/types
 
 // ===== CONSTANTS =====
 
-const CACHE_VERSION = 1;
-const CACHE_FILENAME = 'smoke-cache.json';
-
 // ===== CORE FUNCTIONS =====
-
-function getCachePath(projectRoot: string): string {
-	return join(projectRoot, 'scripts', CACHE_FILENAME);
-}
-
-function loadCache(projectRoot: string, diagnostics?: SmokeCacheDiagnostics): SmokeCache {
-	if (diagnostics) diagnostics.cacheLoads++;
-	const cachePath = getCachePath(projectRoot);
-
-	if (!existsSync(cachePath)) {
-		return {
-			lastRun: '',
-			steps: {},
-			version: CACHE_VERSION,
-		};
-	}
-
-	try {
-		const raw = readFileSync(cachePath, 'utf-8');
-		const cache = JSON.parse(raw) as SmokeCache;
-
-		if (cache.version !== CACHE_VERSION) {
-			return { lastRun: '', steps: {}, version: CACHE_VERSION };
-		}
-
-		return cache;
-	} catch {
-		return { lastRun: '', steps: {}, version: CACHE_VERSION };
-	}
-}
-
-function saveCache(projectRoot: string, cache: SmokeCache): void {
-	const cachePath = getCachePath(projectRoot);
-	const logsDir = dirname(cachePath);
-
-	if (!existsSync(logsDir)) {
-		mkdirSync(logsDir, { recursive: true });
-	}
-
-	writeFileSync(cachePath, JSON.stringify(cache, null, '\t'), 'utf-8');
-}
 
 function createHashContext(diagnostics?: SmokeCacheDiagnostics): HashContext {
 	return {
@@ -193,11 +152,12 @@ async function outputsExist(projectRoot: string, stepName: string): Promise<bool
 export async function canSkipStep(
 	projectRoot: string,
 	stepName: string,
+	options?: CacheFileOptions,
 ): Promise<CacheCheckResult> {
 	return checkStepAgainstCache(
 		projectRoot,
 		stepName,
-		loadCache(projectRoot),
+		loadCache(projectRoot, undefined, options?.cachePath),
 		createHashContext(),
 	);
 }
@@ -246,10 +206,11 @@ export async function recordStepResult(
 	stepName: string,
 	result: 'fail' | 'pass',
 	duration: number,
+	options?: CacheFileOptions,
 ): Promise<void> {
 	if (!isCacheableStep(stepName)) return;
 
-	const cache = loadCache(projectRoot);
+	const cache = loadCache(projectRoot, undefined, options?.cachePath);
 	const hash = await computeStepHash(projectRoot, stepName, createHashContext());
 
 	cache.steps[stepName] = {
@@ -261,15 +222,16 @@ export async function recordStepResult(
 
 	cache.lastRun = new Date().toISOString();
 
-	saveCache(projectRoot, cache);
+	saveCache(projectRoot, cache, options?.cachePath);
 }
 
 export async function getCacheStatus(
 	projectRoot: string,
 	steps: string[],
 	diagnostics?: SmokeCacheDiagnostics,
+	options?: CacheFileOptions,
 ): Promise<CacheStatus[]> {
-	const cache = loadCache(projectRoot, diagnostics);
+	const cache = loadCache(projectRoot, diagnostics, options?.cachePath);
 	const context = createHashContext(diagnostics);
 	const statuses: (CacheStatus | undefined)[] = new Array(steps.length);
 	let nextIndex = 0;
