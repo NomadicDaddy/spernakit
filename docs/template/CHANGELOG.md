@@ -3,6 +3,74 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.5] - 2026-10-19
+
+Patch release, the first cut since the shared gate tooling moved to its own smokestack repository.
+The quality gate now runs through the delivered runner under a lock naming every shared file
+(v0.5.7, 80 files in 10 groups), authentication tightens in several places the audit trail had
+flagged, published dependency advisories are resolved, and the project site gets its own identity.
+
+### Security
+
+- `brace-expansion` moves to 5.0.12 for its three published advisories, and `source-map-js`,
+  `fast-copy` and `smol-toml` resolve past theirs.
+- An API key can no longer manage API keys or borrow the SYSOP workspace bypass.
+- A pinned webhook certificate is verified against its hostname before delivery.
+- Signing out revokes only that sign-in's access token, and each sign-in keeps its own refresh
+  token family, so one compromised session cannot end the account's other sessions by accident of
+  ordering.
+- A stored OAuth client secret is no longer encrypted again on every partial settings update.
+
+### Added
+
+- A function-size ratchet runs beside the 300-line file limit, with a self-test that never writes
+  the repository's own baseline.
+- `initializeConfig` accepts an optional disposable config directory, which the tests use instead
+  of reaching for the repository's own configuration.
+- The site gains a where-Spernakit-does-not-fit section that stays readable on a phone, proper
+  `og:image` dimensions, type and alt text, its own teal branding with labels readable at small
+  size, section naming in the aidd and summon style with a family footer, and its own favicon and
+  deployment path.
+- Support and Privacy documents the site previously had no links for.
+
+### Changed
+
+- `smoke:qc` executes through the smokestack runner delivered under `smokestack.lock`, replacing
+  the repository-owned gate code. Steps are cache-aware where their inputs allow it, rogue-folder
+  guards stay uncacheable, bundle checks read build outputs as plain inputs, and `format:check`
+  keeps its Prettier collector. The write-side scripts the delivery superseded are gone.
+- CI raises the cold-gate timeout to 30 minutes, persists the smoke step cache under a
+  commit-unique key, and names the timeout evidence provenance as local-host.
+- The scaffold a new app starts from keeps its generated-copy ignores for `.aidd` documents,
+  runtime and tmp directories, and its pre-commit hook stays synchronized with the template's.
+- The lockfile carries one copy of the Radix primitives and of rolldown, and the frontend, backend
+  and lint, format, type and dead-code tooling dependencies move to current versions. Bun is
+  pinned at 1.4.3 and the CodeQL upload action is current.
+
+### Fixed
+
+- Onboarding completion and reset read back their own writes, and the reset email an
+  administrator asks for is the one that sends.
+- A relative `config-dir` override is refused instead of silently resolving against the working
+  directory.
+- Users and bug reports page with a stable order.
+- Dev launches recover from a stale PID file, register their servers for `stop`, and the backend
+  starts without `pino-pretty` installed; the bootstrap logger is replaced once configuration has
+  loaded.
+- Production sees the real client address through the loopback hop.
+- The og-image no longer carries a watermark chunk from its generator.
+- Each derived app gets its own license instead of the template's MIT, license resolution follows
+  the workspace that declares a dependency, the app's own terms are stated not to govern the Bun
+  runtime, and setup names the app's owner in the LICENSE.
+- The drift checks leave the fleet guard files to `check:shared-core`, still fail a derived app
+  missing its shared-core guard, treat `CONTEXT.md` as each app's own advisory glossary, stop
+  reporting a checkout's line endings as drift, find the template from a git worktree, and judge
+  explicit hook setup by what a runner actually executes.
+- UUID route segments stay out of the document title, and route paths are read whatever Prettier's
+  line breaks make of them.
+- The cross-tab refresh lock is documented against `navigator.locks` rather than production
+  behavior, and the site's privacy claim and Node requirement are corrected.
+
 ## [3.47.4] - 2026-09-28
 
 Patch release. The notification bell shows only notifications, sign-out audit rows name the user
