@@ -2,7 +2,12 @@
 /** Regression coverage for invocation-scoped cache-status reuse and ordered results. */
 import { join } from 'node:path';
 
-import { canSkipStep, getCacheStatus, type SmokeCacheDiagnostics } from './smoke-cache.ts';
+import {
+	canSkipStep,
+	getCacheStatus,
+	recordStepResult,
+	type SmokeCacheDiagnostics,
+} from './smoke-cache.ts';
 
 interface SmokeConfig {
 	modes: { qc: { steps: { command: string }[] } };
@@ -19,6 +24,13 @@ function assert(condition: boolean, message: string): void {
 const projectRoot = join(import.meta.dir, '..');
 const config = (await Bun.file(join(import.meta.dir, 'smoke.json')).json()) as SmokeConfig;
 const steps = config.modes.qc.steps.map(({ command }) => stepKey(command));
+
+// The status path only hashes files for steps with a recorded pass to verify. A cold cache
+// (a fresh CI runner restoring a per-commit smoke cache) has none, so the file-hashing
+// assertions below would fail without a recorded pass of their own making. Record one for a
+// cacheable, file-hashable step so the population is exercised on every machine equally.
+const seedStep = steps.find((step) => step === 'check-deps');
+if (seedStep) await recordStepResult(projectRoot, seedStep, 'pass', 1);
 
 const serial: Awaited<ReturnType<typeof canSkipStep>>[] = [];
 for (const step of steps) serial.push(await canSkipStep(projectRoot, step));

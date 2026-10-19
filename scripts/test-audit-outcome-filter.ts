@@ -14,10 +14,9 @@ import { workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SEED_ROUNDS = 4;
-const WRONG_PASSWORD = 'not-the-password-9!';
 const LOGIN_PATH = '/api/v1/auth/login';
 
 const failures: string[] = [];
@@ -113,7 +112,7 @@ async function awaitAuditRows(expected: number): Promise<number> {
 }
 
 async function provokeLogins(app: App): Promise<void> {
-	const rejected = await attemptLogin(app, WRONG_PASSWORD);
+	const rejected = await attemptLogin(app, 'not-the-password-9!');
 	assert(
 		rejected.status === 401,
 		`a wrong password must be rejected, got ${String(rejected.status)}`,
@@ -255,6 +254,7 @@ async function workspaceAndDateRegressions(app: App): Promise<void> {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 	config.audit.enabled = true;
@@ -266,7 +266,7 @@ async function run(): Promise<void> {
 	const dbPath = join(tmpDir, 'test.db');
 	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
 	initializeDatabase(dbPath);
-	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
+	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), 4);
 
 	const app = createApiApp();
 	await provokeLogins(app);

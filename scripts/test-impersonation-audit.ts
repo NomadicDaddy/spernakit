@@ -27,6 +27,7 @@ import { users } from '../backend/src/db/schema/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { actorFields, log as logAudit, query } from '../backend/src/services/auditService.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SYSOP_ID = 1;
@@ -49,6 +50,7 @@ function setCookieValue(response: Response, name: string): null | string {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.audit.enabled = true;
 	config.audit.ipWhitelist = [];

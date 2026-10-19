@@ -32,6 +32,7 @@ import { users } from '../backend/src/db/schema/users.ts';
 import { changeUserPassword, hashPassword } from '../backend/src/services/auth/authCore.ts';
 import { tokenCleanupTask } from '../backend/src/services/scheduler/cleanupAuth.ts';
 import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PASSWORD = 'C0rrectHorse!9';
@@ -61,6 +62,7 @@ function setCookieValue(response: Response, name: string): string {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	// The login limiter is keyed separately and is on by default, so a fresh checkout's config
 	// answered this test's logins with 429. Process-local: no config file is written.

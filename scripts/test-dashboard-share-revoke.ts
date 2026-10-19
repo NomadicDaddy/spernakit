@@ -36,6 +36,7 @@ import { users } from '../backend/src/db/schema/users.ts';
 import { workspaceMembers, workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OWNER_ID = 1;
@@ -77,6 +78,7 @@ function seedWorkspace(db: ReturnType<typeof getDb>): void {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.dashboards.enabled = true;
 	config.dashboards.sharingEnabled = true;

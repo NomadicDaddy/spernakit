@@ -47,6 +47,7 @@ import {
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { firstRoutePath, passwordStepLinkFailures } from './lib/password-form-route.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STEP_ID = 'change-sysop-password';
@@ -272,6 +273,7 @@ async function toggleOn(): Promise<void> {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 	config.audit.enabled = false;

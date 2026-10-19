@@ -30,6 +30,7 @@ import {
 	create as createWorkspace,
 } from '../../backend/src/services/workspaceService.ts';
 import { getSeedUsersWithPasswords } from '../../backend/src/utils/auth/passwordGenerator.ts';
+import { applyEphemeralAuthKeys } from './test-auth-keys.ts';
 
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
 const SEED_ROUNDS = 4;
@@ -172,6 +173,7 @@ function buildWorld(): World {
 async function startWorld(repoRoot: string): Promise<Harness> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 

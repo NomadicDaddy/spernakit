@@ -32,6 +32,7 @@ import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
@@ -210,6 +211,7 @@ function placeholderIsExplained(): void {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 

@@ -33,6 +33,7 @@ import { hashPassword } from '../backend/src/services/auth/authCore.ts';
 import { login } from '../backend/src/services/auth/authLogin.ts';
 import { getAuthSettings } from '../backend/src/services/auth/authSecurityService.ts';
 import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 function setCookieValue(response: Response, name: string): null | string {
 	for (const header of response.headers.getSetCookie()) {
@@ -55,6 +56,7 @@ function assert(condition: boolean, message: string): void {
 
 async function run(): Promise<void> {
 	initializeConfig();
+	applyEphemeralAuthKeys(getConfig().security);
 	getConfig().rateLimit.enabled = false;
 
 	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-lockout-test-'));

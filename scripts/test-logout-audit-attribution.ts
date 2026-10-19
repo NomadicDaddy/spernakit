@@ -25,6 +25,7 @@ import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const OPERATOR_ID = 1;
@@ -41,6 +42,7 @@ function assert(condition: boolean, message: string): void {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.audit.enabled = true;
 	config.audit.ipWhitelist = [];
