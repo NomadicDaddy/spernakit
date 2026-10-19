@@ -19,6 +19,10 @@ flagged, published dependency advisories are resolved, and the project site gets
 - Signing out revokes only that sign-in's access token, and each sign-in keeps its own refresh
   token family, so one compromised session cannot end the account's other sessions by accident of
   ordering.
+- The release carries two database migrations. `past_ares` moves refresh tokens into their own
+  `refresh_sessions` table and drops `users.refresh_token_hash`; `great_jack_flag` lets a
+  revocation cover an entire token family. Existing refresh tokens do not survive the move: after
+  upgrading, every signed-in session is signed out and each user signs in again.
 - A stored OAuth client secret is no longer encrypted again on every partial settings update.
 
 ### Added
