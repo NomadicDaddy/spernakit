@@ -105,6 +105,7 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/lib/setup/file-updates.ts',
 			'scripts/lib/setup/json-files.ts',
 			'scripts/lib/template/branding-normalizers.ts',
+			'scripts/lib/template/text.ts',
 			'scripts/test-gate-scripts.ts',
 		],
 	},
