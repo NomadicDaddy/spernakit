@@ -5,10 +5,27 @@ this release.
 
 ## [3.47.6] - 2026-10-20
 
-Patch release, one defect: v3.47.5 shipped the smokestack gate runner to derived applications
-that cannot run it. A derived app is not on the smokestack roster, holds no `smokestack.lock`,
-and carries no `scripts/lib/shared-core`, so its gate failed on the first missing module before
-any check ran - the dance pilot of 2026-10-19 stopped at the first app, and nothing was written.
+Patch release: the 2026-10-20 SECURITY audit's two Highs, plus the defect where v3.47.5
+shipped the smokestack gate runner to derived applications that cannot run it. A derived
+app is not on the smokestack roster, holds no `smokestack.lock`, and carries no
+`scripts/lib/shared-core`, so its gate failed on the first missing module before any check
+ran - the dance pilot of 2026-10-19 stopped at the first app, and nothing was written.
+
+### Security
+
+- API-key request signing moves to a v2 scheme that signs the single-use nonce
+  (`timestamp\nnonce\nmethod\npath\nbody`). In v1 the nonce was stored single-use but not
+  signed, so one captured signature could be replayed with any number of fresh nonces for
+  the whole timestamp window; v2 binds the nonce to the signature, so a replay with a
+  different nonce fails the HMAC comparison and a replay with the same nonce fails the
+  uniqueness insert. v1 signatures are rejected outright: neither the template nor any
+  derived app ships a client-side signer, so there is nothing to grandfather. Requests are
+  authenticated through `x-api-version: 2` alongside the existing signature headers.
+- Concurrent password resets can no longer consume the same reset token twice. The
+  consuming UPDATE re-asserts the token (`WHERE id AND resetToken = tokenHash`) and checks
+  the claimed row, so the second racer in a SELECT-to-UPDATE race loses and receives the
+  same bare response as an invalid token - the race never reveals which request won.
+- New `test:security-fixes` gate step locks both fixes in with their cache classification.
 
 ### Fixed
 
