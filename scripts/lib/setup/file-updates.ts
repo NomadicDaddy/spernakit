@@ -9,6 +9,7 @@ import { existsSync, renameSync, rmSync } from 'node:fs';
 import type { SetupSettings } from './config-writer.ts';
 
 import { commandFileReferences } from '../../check-script-targets.ts';
+import { GATE_SCRIPT_REWRITES } from '../gate-scripts.ts';
 import { updateFile, updateJsonFile } from './json-files.ts';
 
 /**
@@ -70,6 +71,16 @@ export function updatePackageJsonFiles(s: SetupSettings): void {
 		// publishing blind does not.
 		const scripts = pkg['scripts'] as Record<string, string> | undefined;
 		if (scripts) {
+			// The gate entrypoint is the one script command that legitimately differs between the
+			// template and a derived app (v3.47.6): the template runs the smokestack runner, an app
+			// keeps the shipped smoke.ts gate because the runner files are init-excluded. Rewrite
+			// the two tasks BEFORE the missing-file pruning below, or the pruning would delete the
+			// app's gate entirely - the runner file it names never arrives.
+			for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
+				if (typeof scripts[task] === 'string' && rewrite.template.test(scripts[task])) {
+					scripts[task] = rewrite.app;
+				}
+			}
 			// A task pointing at a file the app never received cannot run, and check:script-targets
 			// fails on it in every new app. Naming those tasks here was the fragile half: the
 			// fresh-release pair was removed by name, and when the shared-core group was withheld

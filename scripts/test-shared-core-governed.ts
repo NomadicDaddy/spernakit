@@ -16,7 +16,7 @@ import { exit } from 'node:process';
 
 import { driftCheckedFiles, sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
 
-const governed = sharedCoreGovernedPaths(join(import.meta.dir));
+const governed = await sharedCoreGovernedPaths(join(import.meta.dir));
 const failures: string[] = [];
 
 for (const path of [
