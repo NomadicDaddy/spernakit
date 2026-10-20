@@ -53,6 +53,16 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/check-config-invariants.ts',
 		],
 	},
+	// Reads the two route tables as source and compares them with the capture contract.
+	'check:crawl-route-coverage': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'.screenshot-capture',
+			'frontend/src/routes/**',
+			'scripts/check-crawl-route-coverage.ts',
+			'scripts/lib/router-paths.ts',
+		],
+	},
 	'check:critical-path': {
 		excludes: GENERATED_OUTPUT_EXCLUDES,
 		globs: [
@@ -109,6 +119,33 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [...SOURCE_GLOBS, 'scripts/**/*.ts'],
 	},
+	// The gate hands ESLint the three source directories, and eslint.config.js selects
+	// `**/*.{ts,tsx,js,jsx}`, so the inputs are every file of those extensions under them, not
+	// SOURCE_GLOBS (which is .ts/.tsx only). The ESLint and TypeScript configurations, the package
+	// manifests and the lockfile are inputs too: a config change that brings ignored source into
+	// the scan, or a parser upgrade, moves the count without touching a source file.
+	// test:function-size-gate checks that this entry covers what the gate measures.
+	'check:function-size': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**/*.{ts,tsx,js,jsx}',
+			'frontend/src/**/*.{ts,tsx,js,jsx}',
+			'shared/src/**/*.{ts,tsx,js,jsx}',
+			'scripts/check-function-size.ts',
+			'scripts/function-size-baseline.json',
+			'eslint.config.js',
+			'frontend/eslint.config.js',
+			'tsconfig*.json',
+			'backend/tsconfig*.json',
+			'frontend/tsconfig*.json',
+			'shared/tsconfig*.json',
+			'package.json',
+			'backend/package.json',
+			'frontend/package.json',
+			'shared/package.json',
+			'bun.lock',
+		],
+	},
 	'check:gate-conventions': {
 		// Every gate's own source is an input, because the gate reads all of them. `scripts/*.ts` is
 		// deliberately the whole directory rather than the current gate list: a task added to
@@ -121,6 +158,10 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/gate-conventions-allowlist.json',
 			'scripts/lib/gate/**/*.ts',
 		],
+	},
+	'check:gates-wired': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['package.json', 'scripts/check-gates-wired.ts', 'scripts/smoke.json'],
 	},
 	'check:git-window-hide': {
 		excludes: COMMON_EXCLUDES,

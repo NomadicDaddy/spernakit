@@ -9,11 +9,72 @@
  * check.ts compares a target against the owner; this file never opens a target at all.
  */
 import { existsSync, readFileSync } from 'node:fs';
-import { basename, join } from 'node:path';
+import { basename, join, posix } from 'node:path';
 
 import type { SharedCoreFile, SharedCoreGroup } from './manifest.ts';
 
 import { invokedScripts } from './dispatch.ts';
+
+/**
+ * A shared file's text with line endings normalised. A Windows checkout under core.autocrlf rewrites
+ * an LF blob as CRLF in the working tree, so a byte comparison reports the whole file as drifted
+ * although the committed content is the owner's exactly. Line endings are the checkout's, not the
+ * file's; every comparison in this subsystem reads through here so they cannot disagree about it.
+ */
+export function readShared(path: string): string {
+	return readFileSync(path, 'utf8').replaceAll('\r\n', '\n');
+}
+
+/**
+ * Every committed generation of one owner file, newest first, normalized as readShared normalizes
+ * a checkout. Empty when the owner is not a repository or never committed the file.
+ *
+ * What a target holds is compared against these as well as against the current variants, because
+ * a hook equal to a generation the owner once shipped is a stale copy of ours — drift, which the
+ * writer replaces — and not a hand-written chain. Without this every change to a single-variant
+ * hook made the whole fleet unwritable: the first change to `.githooks/pre-push` since aidd 3.0.0
+ * classified all sixty targets as `diverged-hook`, each one holding exactly the previous owner copy.
+ */
+export function committedGenerations(ownerRoot: string, relativePath: string): string[] {
+	const log = Bun.spawnSync(['git', '-C', ownerRoot, 'log', '--format=%H', '--', relativePath], {
+		stderr: 'pipe',
+		stdout: 'pipe',
+		windowsHide: true,
+	});
+	if (log.exitCode !== 0) return [];
+	const generations: string[] = [];
+	for (const line of log.stdout.toString().split('\n')) {
+		const sha = line.trim();
+		if (sha === '') continue;
+		const show = Bun.spawnSync(['git', '-C', ownerRoot, 'show', `${sha}:${relativePath}`], {
+			stderr: 'pipe',
+			stdout: 'pipe',
+			windowsHide: true,
+		});
+		// A commit in the file's log that cannot show it is the one that deleted it.
+		if (show.exitCode !== 0) continue;
+		generations.push(show.stdout.toString().replaceAll('\r\n', '\n'));
+	}
+	return generations;
+}
+
+/**
+ * `committedGenerations` for one group, read once per source rather than once per target: it is
+ * two git invocations per generation, and the fleet is sixty targets wide.
+ */
+export function generationReader(
+	ownerRoot: string,
+	sourceRoot: string,
+): (source: string) => string[] {
+	const generations = new Map<string, string[]>();
+	return (source) => {
+		const cached = generations.get(source);
+		if (cached !== undefined) return cached;
+		const read = committedGenerations(ownerRoot, `${sourceRoot}/${source}`);
+		generations.set(source, read);
+		return read;
+	};
+}
 
 /**
  * Every source a group could install, including the fallback variants. All of them must exist in
@@ -21,6 +82,54 @@ import { invokedScripts } from './dispatch.ts';
  */
 export function sourcesOf(file: SharedCoreFile): string[] {
 	return file.fallbackSource === undefined ? [file.source] : [file.source, file.fallbackSource];
+}
+
+/**
+ * Why a write from `ownerRoot` would deliver bytes its tag does not hold, or null. The tag check
+ * covers tracked files only, so a source the manifest names that exists on disk but was never
+ * committed would be delivered from the working tree. Every variant counts, as in
+ * `assertSourcesExist`.
+ */
+export function untrackedSourcesRefusal(
+	groups: SharedCoreGroup[],
+	ownerRoot: string,
+): null | string {
+	const sources = [
+		...new Set(
+			groups.flatMap((group) =>
+				group.files
+					.flatMap(sourcesOf)
+					.map((source) => posix.join(group.sourceRoot, source)),
+			),
+		),
+	];
+	if (sources.length === 0) return null;
+	// -z: without it git quotes a name holding non-ASCII or control characters, and a tracked file
+	// would then read as untracked.
+	const listed = Bun.spawnSync(['git', '-C', ownerRoot, 'ls-files', '-z', '--', ...sources], {
+		stderr: 'pipe',
+		stdout: 'pipe',
+		windowsHide: true,
+	});
+	if (listed.exitCode !== 0) return 'git could not list the tracked source files';
+	const tracked = new Set(listed.stdout.toString().split('\0'));
+	const untracked = sources.filter((source) => !tracked.has(source));
+	if (untracked.length === 0) return null;
+	return (
+		`${untracked.length} source file(s) the manifest names are not tracked, so the tag does ` +
+		`not hold them: ${untracked.join(', ')}`
+	);
+}
+
+/** Picks the variant a target can actually run, from the scripts its package.json defines. */
+export function resolveSource(
+	file: SharedCoreFile,
+	scripts: null | Record<string, string>,
+): string {
+	if (file.requiresScripts === undefined) return file.source;
+	const satisfied =
+		scripts !== null && file.requiresScripts.every((name) => scripts[name] !== undefined);
+	return satisfied ? file.source : (file.fallbackSource as string);
 }
 
 export function assertSourcesExist(group: SharedCoreGroup, ownerRoot: string): void {
@@ -64,8 +173,8 @@ export function assertVariantsDiffer(group: SharedCoreGroup, ownerRoot: string):
 		.filter((file) => {
 			const [source, fallback] = sourcesOf(file);
 			return (
-				readFileSync(join(ownerRoot, group.sourceRoot, source as string), 'utf8') ===
-				readFileSync(join(ownerRoot, group.sourceRoot, fallback as string), 'utf8')
+				readShared(join(ownerRoot, group.sourceRoot, source as string)) ===
+				readShared(join(ownerRoot, group.sourceRoot, fallback as string))
 			);
 		})
 		.map((file) => `${file.source} == ${file.fallbackSource as string}`);

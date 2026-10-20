@@ -14,9 +14,16 @@
 			content="Start with the parts every serious admin app needs: Elysia, Drizzle, React 19, shadcn/ui, workspaces, RBAC, config, OpenAPI contract checks, and smoke:qc."
 			property="og:description" />
 		<meta content="https://nomadicdaddy.github.io/spernakit/og-image.png" property="og:image" />
+		<meta content="1731" property="og:image:width" />
+		<meta content="909" property="og:image:height" />
+		<meta
+			content="Isometric illustration of an admin stack: a glowing central core linked to user lists, dashboards, health checks and alerts, above a database and server racks"
+			property="og:image:alt" />
+		<meta content="image/png" property="og:image:type" />
 		<meta content="website" property="og:type" />
 		<meta content="https://nomadicdaddy.github.io/spernakit/" property="og:url" />
 		<meta content="summary_large_image" name="twitter:card" />
+		<link href="favicon.svg" rel="icon" type="image/svg+xml" />
 		<link as="image" href="og-image.png" rel="preload" />
 		<style>
 			:root {
@@ -25,7 +32,9 @@
 				--panel: #ffffff;
 				--wash: #f5f8fb;
 				--line: #d7dee8;
-				--cyan: #0891b2;
+				/* Spernakit's own accent is the teal of its mark, not the cyan aidd uses; #0f766e is also
+				   5.47:1 for the small section kickers on white, where #0891b2 reached only 3.68:1. */
+				--cyan: #0f766e;
 				--teal: #0f766e;
 				--green: #10b981;
 				--amber: #f59e0b;
@@ -189,10 +198,10 @@
 				align-items: center;
 				gap: 10px;
 				margin: 0;
-				border: 1px solid rgba(125, 211, 252, 0.34);
+				border: 1px solid rgba(94, 234, 212, 0.4);
 				border-radius: 999px;
 				background: rgba(6, 17, 31, 0.5);
-				color: #acecff;
+				color: #a7f3eb;
 				font-size: 13px;
 				font-weight: 850;
 				letter-spacing: 0.11em;
@@ -252,9 +261,9 @@
 				transform: translateY(-1px);
 			}
 			.button-primary {
-				background: #ecfeff;
+				background: #f0fdfa;
 				color: #06202a;
-				box-shadow: 0 18px 40px rgba(34, 211, 238, 0.2);
+				box-shadow: 0 18px 40px rgba(20, 184, 166, 0.24);
 			}
 			.button-secondary {
 				border: 1px solid rgba(255, 255, 255, 0.28);
@@ -361,6 +370,15 @@
 				display: grid;
 				gap: 14px;
 				margin-top: 34px;
+			}
+			.fit-grid {
+				display: grid;
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 14px;
+				margin: 26px 0 34px;
+			}
+			.fit-grid .stack-card {
+				min-height: 0;
 			}
 			.card-grid {
 				grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -540,7 +558,8 @@
 				margin: 18px 0 0;
 				border-radius: var(--radius);
 				background:
-					linear-gradient(90deg, rgba(34, 211, 238, 0.1), transparent 36%), var(--night-2);
+					linear-gradient(90deg, rgba(20, 184, 166, 0.12), transparent 36%),
+					var(--night-2);
 				color: #dbf5ff;
 				font:
 					13px/1.65 ui-monospace,
@@ -606,6 +625,70 @@
 			.footer-links a:hover {
 				color: #ffffff;
 			}
+			/* The family row: identical on the aidd, Spernakit and summon pages, so the three read as
+			   one family. Each entry is that product's own one-line description. */
+			.family {
+				border-bottom: 1px solid var(--night-line);
+			}
+			.family-inner {
+				display: grid;
+				width: min(1120px, calc(100% - 40px));
+				gap: 16px;
+				margin: 0 auto;
+				padding: 30px 0 26px;
+			}
+			.family-label {
+				margin: 0;
+				color: var(--night-text);
+				font-size: 12px;
+				font-weight: 800;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+			}
+			.family-label a {
+				color: inherit;
+			}
+			.family-list {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+				gap: 16px 32px;
+				margin: 0;
+				padding: 0;
+				list-style: none;
+			}
+			.family-list li {
+				display: grid;
+				align-content: start;
+				gap: 4px;
+			}
+			.family-list a,
+			.family-list strong {
+				width: fit-content;
+				color: #ffffff;
+				font-size: 16px;
+				font-weight: 850;
+			}
+			.family-list a {
+				text-decoration: underline;
+				text-decoration-color: rgba(255, 255, 255, 0.35);
+				text-underline-offset: 3px;
+			}
+			.family-list a:hover {
+				text-decoration-color: #ffffff;
+			}
+			.family-list [aria-current] strong::after {
+				margin-left: 8px;
+				color: var(--night-muted);
+				font-size: 12px;
+				font-weight: 700;
+				content: 'this page';
+			}
+			.family-list span {
+				max-width: 46ch;
+				color: var(--night-muted);
+				font-size: 14px;
+				line-height: 1.45;
+			}
 			@media (prefers-reduced-motion: no-preference) {
 				.brand-mark,
 				.eyebrow::before {
@@ -639,6 +722,9 @@
 				}
 			}
 			@media (max-width: 680px) {
+				.fit-grid {
+					grid-template-columns: minmax(0, 1fr);
+				}
 				.site-header {
 					position: relative;
 					background: var(--night);
@@ -646,6 +732,7 @@
 				.site-header-inner,
 				.section-inner,
 				.hero-inner,
+				.family-inner,
 				.footer-inner {
 					width: min(100% - 28px, 1120px);
 				}
@@ -687,7 +774,11 @@
 					grid-template-columns: 1fr;
 				}
 				.signal-grid {
-					display: none;
+					grid-template-columns: minmax(0, 1fr);
+				}
+				.signal-grid div + div {
+					border-top: 1px solid rgba(255, 255, 255, 0.13);
+					border-left: 0;
 				}
 				.signal-grid div + div {
 					border-top: 1px solid rgba(255, 255, 255, 0.13);
@@ -718,16 +809,11 @@
 					<span class="brand-name">Spernakit</span>
 				</a>
 				<nav aria-label="Primary navigation">
-					<a href="#template">Template</a>
-					<a href="https://github.com/NomadicDaddy/spernakit">GitHub</a>
-					<a href="https://github.com/NomadicDaddy/spernakit/tree/main/docs/template"
-						>Docs</a
-					>
-					<a
-						href="https://github.com/NomadicDaddy/spernakit/blob/main/docs/template/CHANGELOG.md"
-						>Changelog</a
-					>
-					<a href="#start">Start</a>
+					<a href="#template">Where it fits</a>
+					<a href="#trust">Trust</a>
+					<a href="#license">License</a>
+					<a href="#start">Get started</a>
+					<a href="https://github.com/NomadicDaddy/spernakit">Source and docs</a>
 				</nav>
 			</div>
 		</header>
@@ -808,6 +894,30 @@
 						SaaS-style admin surfaces where the baseline should already include
 						security, configuration, observability, and deployment structure.
 					</p>
+					<div class="fit-grid">
+						<article class="stack-card">
+							<span class="trust-label">Use Spernakit when</span>
+							<h3>You want auth, roles, audit logs and deployment already wired.</h3>
+							<p>
+								You are starting an internal tool, a homelab app or a small admin
+								surface, and you would rather spend your time on the product than on
+								the parts every one of them needs.
+							</p>
+						</article>
+						<article class="stack-card">
+							<span class="trust-label">Skip Spernakit when</span>
+							<h3>
+								You want a public marketing site, a different stack, or a starter
+								you can strip to nothing.
+							</h3>
+							<p>
+								Spernakit is an opinionated admin baseline on Bun, Elysia, Drizzle
+								and React, with a template contract its gates keep checking. If you
+								do not want those choices or that contract, it is weight rather than
+								a head start.
+							</p>
+						</article>
+					</div>
 					<div class="card-grid">
 						<article class="stack-card">
 							<span class="card-index">01</span>
@@ -1055,8 +1165,9 @@
 					<p class="section-kicker">Start</p>
 					<h2>Get it running locally.</h2>
 					<p class="section-lede">
-						Spernakit expects Bun 1.4.2+ and Node 24.x compatibility tooling. SQLite is
-						the default database, with PostgreSQL supported through
+						Spernakit expects Bun 1.4.3 or newer. Node is optional, for npm-based
+						tooling only, with no version pinned. SQLite is the default database, with
+						PostgreSQL supported through
 						<code class="inline">config.database.dialect</code>.
 					</p>
 					<div class="download-layout">
@@ -1103,7 +1214,7 @@ bun run smoke:qc</code></pre>
 							</a>
 						</aside>
 					</div>
-					<div class="license-note">
+					<div class="license-note" id="license">
 						<p>
 							Spernakit is
 							<a href="https://github.com/NomadicDaddy/spernakit/blob/main/LICENSE"
@@ -1113,7 +1224,7 @@ bun run smoke:qc</code></pre>
 						</p>
 						<p>
 							For AI-assisted work across derived apps, Spernakit pairs with
-							<a href="https://github.com/NomadicDaddy/aidd">aidd</a>, which tracks
+							<a href="https://nomadicdaddy.github.io/aidd/">aidd</a>, which tracks
 							the feature contract and verifies work against real gates.
 						</p>
 					</div>
@@ -1122,6 +1233,31 @@ bun run smoke:qc</code></pre>
 		</main>
 
 		<footer class="site-footer">
+			<div class="family">
+				<div class="family-inner">
+					<p class="family-label">
+						Part of a family of tools by
+						<a href="https://beazley.org">Phillip Beazley</a>
+					</p>
+					<ul class="family-list">
+						<li>
+							<a href="https://nomadicdaddy.github.io/aidd/">aidd</a>
+							<span
+								>A local control panel for planning AI coding work and reviewing the
+								results. Spernakit pairs with it for AI-assisted work across derived
+								apps.</span
+							>
+						</li>
+						<li aria-current="page">
+							<strong>Spernakit</strong>
+							<span
+								>A self-hosted admin application template with the hard parts
+								already wired.</span
+							>
+						</li>
+					</ul>
+				</div>
+			</div>
 			<div class="footer-inner">
 				<strong>Spernakit - a self-hosted admin application template.</strong>
 				<div class="footer-links">

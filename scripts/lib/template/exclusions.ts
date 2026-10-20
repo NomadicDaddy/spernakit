@@ -65,32 +65,22 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^run\.ps1$/,
 	/^spernakit\.psd1$/,
 	/^spernakit\.json$/,
-	// Every shared-core roster, and the `.example` beside it. A roster names the private sibling
-	// repositories one sync group writes into and is gitignored for that reason; the example is the
-	// tracked half that shows the shape. Both are template-only, because nothing in a derived app can
-	// read a roster: `sync-shared-core.ts`, `scripts/lib/shared-core/` and the manifest are all
-	// excluded below, and `sync-license-core.ts` — the one entry point that does ship — refuses on
-	// ownership before it would resolve one. This is a pattern and not a list because the list is
-	// what broke. It named `shared-core-targets.json` alone and stayed that way when the license-core
-	// sync generalized into four groups, so `gate-conventions-`, `portable-gates-` and
-	// `shared-core-sync-targets.json.example` went to all eleven apps as instructions for a command
-	// they do not have. `assertRosterHygiene` holds this pattern to every roster the manifest
-	// actually declares, so the next group cannot repeat it.
-	/^[a-z0-9-]+-targets\.json(\.example)?$/,
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,
-	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: only
-	// aidd and spernakit own shared-core groups, so in a derived app every one of these can do
-	// nothing but refuse. Its qc step is already templateOnly; excluding it from init keeps the
-	// script, both its libraries, its manifest and its self-test out of trees that cannot use them.
-	// shared-core-write/ is the self-test's fixture and invariant library and imports shared-core/,
-	// so shipping one without the other leaves an app files that are dead and cannot typecheck.
+	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: one
+	// repository owns every shared-core group and it is not a derived app, so in a derived app
+	// every one of these can do nothing but refuse. Its qc step is already templateOnly; excluding
+	// it from init keeps the script, its library and its manifest out of trees that cannot use
+	// them.
 	/^scripts\/lib\/shared-core\//,
-	/^scripts\/lib\/shared-core-write\//,
 	/^scripts\/shared-core-manifest\.json$/,
 	/^scripts\/sync-shared-core\.ts$/,
-	/^scripts\/test-shared-core-write\.ts$/,
+	// The template's own record of what the shared-core owner delivered to it: versions, a commit
+	// and a hash per file, all of them statements about this repository. A derived app is not a
+	// target of that delivery and has no tool that reads the file, so a copy there would be a lock
+	// describing somebody else's tree.
+	/^smokestack\.lock$/,
 	/^smoke-cache\.json$/,
 	/^sync\.ps1$/,
 ];
@@ -98,6 +88,9 @@ const INIT_EXCLUDED_PATTERNS = [
 // Patterns excluded from DRIFT only (copied into apps, then diverge per-app): the license inventories
 // are generated from each app's own dependency graph, bun.lock resolves per-app, and both size
 // budgets are measured from each app's own build (scripts/lib/{bundle,critical-path}-budget.ts).
+// The function-size baseline is each app's own count of oversized functions: a new app starts from
+// the template's, because its code is the template's, and an existing app records its own the
+// first time check:function-size reports that it has none.
 const DRIFT_EXCLUDED_PATTERNS = [
 	// `config/` used to be excluded as a directory, on the reasoning that setup.ts generates its
 	// contents per app. Only two files under it are tracked in the template, and enumeration reads
@@ -112,6 +105,7 @@ const DRIFT_EXCLUDED_PATTERNS = [
 	/^THIRD_PARTY_NOTICES\.md$/,
 	/^scripts\/bundle-budget\.json$/,
 	/^scripts\/critical-path-budget\.json$/,
+	/^scripts\/function-size-baseline\.json$/,
 	/\.lock$/,
 ];
 

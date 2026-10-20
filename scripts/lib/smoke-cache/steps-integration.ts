@@ -36,10 +36,12 @@ export const INTEGRATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:scaffolded-hooks': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
+			'.githooks/force-push-guard.sh',
 			'.githooks/pre-push',
 			'.githooks/screenshot-guard.sh',
 			'package.json',
 			'scaffolding/.githooks/aidd-history-guard.sh',
+			'scaffolding/.githooks/force-push-guard.sh',
 			'scaffolding/.githooks/pre-push',
 			'scaffolding/.githooks/screenshot-guard.sh',
 			'scripts/check-template-drift.ts',

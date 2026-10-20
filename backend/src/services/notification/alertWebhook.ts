@@ -56,11 +56,28 @@ function buildWebhookPayload(
 	};
 }
 
+/**
+ * The name TLS must verify the certificate against when the request is sent to a pinned IP.
+ *
+ * The request goes to the address that passed the SSRF check, not to the hostname, so that a
+ * second DNS answer cannot redirect it. Left at that, the TLS layer was asked to verify the
+ * certificate against the IP, which no public certificate names, and every HTTPS webhook to a
+ * hostname failed. Naming the configured hostname here keeps the pin and verifies the right name.
+ * @param configuredUrl - The webhook URL as configured
+ * @param pinned - Whether the request is being sent to a resolved IP instead of the hostname
+ * @returns The hostname to verify, or undefined when the URL is not HTTPS or was not rewritten
+ */
+function tlsServerName(configuredUrl: string, pinned: boolean): string | undefined {
+	const parsed = new URL(configuredUrl);
+	return pinned && parsed.protocol === 'https:' ? parsed.hostname : undefined;
+}
+
 async function sendWebhookRequest(
 	url: string,
 	payload: object,
 	headers: Record<string, string>,
 	timeoutMs: number,
+	serverName: string | undefined,
 ): Promise<{ error?: string; ok: boolean; status?: number }> {
 	const controller = new AbortController();
 	const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -71,6 +88,7 @@ async function sendWebhookRequest(
 			method: 'POST',
 			redirect: 'manual',
 			signal: controller.signal,
+			...(serverName === undefined ? {} : { tls: { serverName } }),
 		});
 		clearTimeout(timeout);
 		if (response.ok) return { ok: true, status: response.status };
@@ -131,6 +149,7 @@ async function sendWebhookAlert(alert: AlertData): Promise<AlertNotificationResu
 		payload,
 		headers,
 		alerting.webhook.timeoutMs,
+		tlsServerName(alerting.webhook.url, validation.originalHost !== undefined),
 	);
 
 	if (result.ok) {
@@ -148,5 +167,5 @@ async function sendWebhookAlert(alert: AlertData): Promise<AlertNotificationResu
 	return { channel: 'webhook', error: result.error ?? 'Unknown error', success: false };
 }
 
-export { sendWebhookAlert };
+export { sendWebhookAlert, tlsServerName };
 export type { AlertData, AlertNotificationResult };

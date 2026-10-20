@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { registerLogSecretValues } from '../utils/logSecretRedaction.ts';
 import { configLogger } from './configLogger.ts';
@@ -96,11 +96,22 @@ function parseConfigSchema(raw: Record<string, unknown>): AppConfig {
  * 4. Validate with the TypeBox schema
  * 5. Run security checks, including that every `*Ref` field resolves to a loaded secret
  * 6. Store in module-level singleton
+ *
+ * @param configDirOverride - Absolute directory to read (or create) the user config and the
+ *   optional split-secrets file from, instead of the project's config/ directory. Intended for
+ *   throwaway fixtures that must neither read the project's real secret material nor risk
+ *   recreating its config in a session that cannot see it; every production caller omits it and
+ *   gets exactly the previous behavior, including all security checks.
  */
-function initializeConfig(): AppConfig {
+function initializeConfig(configDirOverride?: string): AppConfig {
+	if (configDirOverride !== undefined && !isAbsolute(configDirOverride)) {
+		throw new Error(
+			'initializeConfig: configDirOverride must be an absolute directory, got a relative path',
+		);
+	}
 	const defaults = loadDefaults();
 	const slug = getAppSlug(defaults);
-	const configDir = join(projectRoot, 'config');
+	const configDir = configDirOverride ?? join(projectRoot, 'config');
 	const configPath = join(configDir, `${slug}.json`);
 
 	// Loaded first and kept apart from `config`: the secrets namespace is read at use sites via

@@ -37,6 +37,7 @@ function revokeAccessToken(token: string, expiresAt: number, userId?: number): v
 	db.insert(tokenBlacklist)
 		.values({
 			expiresAt: new Date(expiresAt * 1000),
+			revokesAll: false,
 			tokenHash: hash,
 			userId: userId ?? 0,
 		})
@@ -78,6 +79,7 @@ function revokeAllUserTokens(userId: number, expiresAt: Date): void {
 	db.insert(tokenBlacklist)
 		.values({
 			expiresAt,
+			revokesAll: true,
 			tokenHash: hash,
 			userId,
 		})
@@ -86,8 +88,9 @@ function revokeAllUserTokens(userId: number, expiresAt: Date): void {
 
 /**
  * Check if all tokens for a user have been revoked after a given timestamp.
- * Returns true if there's a revocation entry that was created after the token
- * was issued and hasn't expired yet.
+ * Returns true if there's an account-wide revocation (a revokeAllUserTokens sentinel) that was
+ * created after the token was issued and hasn't expired yet. A single revoked token, such as a
+ * logout, is not one: it must not sign the user's other browsers out.
  *
  * @param userId - User ID to check
  * @param tokenIssuedAt - When the token was issued (from JWT `iat` claim)
@@ -102,6 +105,7 @@ function isUserTokensRevokedAfter(userId: number, tokenIssuedAt: Date): boolean 
 		.where(
 			and(
 				eq(tokenBlacklist.userId, userId),
+				eq(tokenBlacklist.revokesAll, true),
 				gt(tokenBlacklist.expiresAt, now),
 				gte(tokenBlacklist.createdAt, tokenIssuedAt),
 			),

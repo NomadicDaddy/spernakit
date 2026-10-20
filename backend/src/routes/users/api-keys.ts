@@ -61,6 +61,25 @@ function authorizeApiKeyAccess({
 	return { freshRole };
 }
 
+/**
+ * Refuse key management to a caller who authenticated with an API key.
+ *
+ * These handlers authorize against the owner's stored role, which is right for a signed-in user
+ * and wrong for a key: an ADMIN's read-scoped key could create an admin-scoped key for the same
+ * account, so a narrow key was only ever as narrow as its holder chose. Listing, creating and
+ * revoking keys are things an account owner does, so they need the owner's session.
+ *
+ * @returns A 403 response for an API-key caller, otherwise null
+ */
+function rejectApiKeyCaller(
+	authUser: ReturnType<typeof assertUser>,
+	set: { status?: number | string },
+): null | ReturnType<typeof forbiddenError> {
+	if (!authUser.isApiKey) return null;
+	set.status = HTTP_STATUS.FORBIDDEN;
+	return forbiddenError('API keys cannot manage API keys. Sign in to manage them.');
+}
+
 async function handleCreateApiKey({
 	body,
 	params,
@@ -73,6 +92,8 @@ async function handleCreateApiKey({
 	user: AuthPayload | null;
 }) {
 	const authUser = assertUser(user);
+	const rejection = rejectApiKeyCaller(authUser, set);
+	if (rejection) return rejection;
 	const targetId = Number(params.id);
 
 	let freshRole: UserRole;
@@ -151,6 +172,8 @@ const usersApiKeysRoutes = new Elysia({
 		async ({ params, set, user }) => {
 			setCacheHeaders(set, 'NO_CACHE');
 			const authUser = assertUser(user);
+			const rejection = rejectApiKeyCaller(authUser, set);
+			if (rejection) return rejection;
 			const targetId = Number(params.id);
 
 			if (targetId !== authUser.id) {
@@ -181,6 +204,8 @@ const usersApiKeysRoutes = new Elysia({
 		'/:id/api-keys/:keyId',
 		async ({ params, set, user }) => {
 			const authUser = assertUser(user);
+			const rejection = rejectApiKeyCaller(authUser, set);
+			if (rejection) return rejection;
 			const targetId = Number(params.id);
 
 			if (targetId !== authUser.id) {

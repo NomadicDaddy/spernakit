@@ -8,7 +8,7 @@ This file is the canonical tech stack and architecture reference for the Spernak
 
 ## Prerequisites
 
-- **Bun 1.4.2+** - Required runtime and package manager ([Install Bun](https://bun.sh))
+- **Bun 1.4.3+** - Required runtime and package manager ([Install Bun](https://bun.sh))
 - **Node.js** - Optional; only for npm-based tooling compatibility (no version pinned)
 
 ## Core Development Commands
@@ -200,7 +200,7 @@ graph TD
 - **Component-based**: Reusable UI components with consistent design system
 - **State management**: TanStack Query for server state, Zustand for global state
 - **Route protection**: `ProtectedRoute` component with role-based access control
-- **React Compiler**: Automatic memoization via `babel-plugin-react-compiler` (no manual `React.memo` needed)
+- **React Compiler**: Automatic memoization via `babel-plugin-react-compiler`, run through `@rolldown/plugin-babel` with `reactCompilerPreset()` from `@vitejs/plugin-react` (plugin-react 6 no longer runs Babel itself); `check:critical-path` fails if no app chunk carries compiled output. No manual `React.memo` needed
 - **Performance**: Code splitting, lazy loading, memory management
 
 #### Backend Architecture
@@ -566,5 +566,5 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for the deployment guide.
 
 ### Template Version
 
-**Spernakit v3.47.4** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
+**Spernakit v3.47.5** - See [CHANGELOG.md](CHANGELOG.md) for the current baseline and future
 release changes.

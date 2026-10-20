@@ -46,9 +46,6 @@ const SYSTEM_METRICS_RETENTION_DAYS = 30;
 /** Web vitals retention (days) */
 const WEB_VITALS_RETENTION_DAYS = 7;
 
-/** Days of inactivity before a user's refresh token is considered stale */
-const STALE_USER_LOGIN_DAYS = 30;
-
 /** Database VACUUM interval (hours) - weekly */
 const DATABASE_VACUUM_INTERVAL_HOURS = 168;
 
@@ -67,7 +64,6 @@ export {
 	MS_PER_MINUTE,
 	NOTIFICATIONS_CLEANUP_INTERVAL_HOURS,
 	SOFT_DELETED_FILES_CLEANUP_INTERVAL_HOURS,
-	STALE_USER_LOGIN_DAYS,
 	SYSTEM_METRICS_CLEANUP_INTERVAL_HOURS,
 	SYSTEM_METRICS_RETENTION_DAYS,
 	WEB_VITALS_RETENTION_DAYS,

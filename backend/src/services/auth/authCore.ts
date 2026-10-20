@@ -6,6 +6,7 @@ import { getDb } from '../../db/index.ts';
 import { passwordHistory } from '../../db/schema/passwordHistory.ts';
 import { users } from '../../db/schema/users.ts';
 import { validatePasswordStrength } from '../../utils/auth/passwordValidation.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { invalidatePasswordChangeCache } from '../../utils/passwordChangeCache.ts';
 import { getAuthSettings, meetsMinPasswordAge } from './authSecurityService.ts';
 
@@ -169,12 +170,12 @@ async function changeUserPassword(
 				csrfToken: null,
 				passwordChangedAt: new Date(),
 				passwordHash: newHash,
-				refreshTokenHash: null,
 				requiresPasswordChange: false,
 				updatedAt: new Date(),
 			})
 			.where(eq(users.id, userId))
 			.run();
+		endAllRefreshSessions(userId, tx);
 	});
 
 	invalidatePasswordChangeCache(userId);

@@ -11,28 +11,48 @@
  * covered. Only the second fails the gate. Collapsing them would make this red on day one across a
  * fleet the write path has not been built for, and a gate that is red by construction gets removed.
  */
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-import type { SharedCoreFile, SharedCoreGroup } from './manifest.ts';
+import type { Deliveries } from './deliveries.ts';
+import type { SharedCoreGroup } from './manifest.ts';
 
-import { chainedByHook, dispatcherBody, hooksPath, invokes } from './dispatch.ts';
+import { departedFindings } from './delivery-check.ts';
+import { chainedByHook } from './dispatch.ts';
 import { assertPackageIdentity, skipReason } from './eligibility.ts';
+import {
+	differingHookFinding,
+	readDispatch,
+	standingFinding,
+	standingOf,
+	unguardedFinding,
+} from './hook.ts';
+import { lockFindings } from './lock-check.ts';
+import { LOCK_FILE } from './lock.ts';
 import {
 	assertHookChainIsCarried,
 	assertSourcesExist,
 	assertVariantsDiffer,
-	sourcesOf,
+	generationReader,
+	readShared,
+	resolveSource,
 } from './owner.ts';
 import { readScripts, resolveTargets } from './targets.ts';
+import { wiringFindings } from './wiring.ts';
 
 export type FindingKind =
 	| 'diverged-hook'
 	| 'drift'
 	| 'foreign-hook'
 	| 'local-chain'
+	| 'lost-delivery'
 	| 'not-applicable'
+	| 'not-run'
+	| 'old-path'
+	| 'stale-layout'
+	| 'stale-lock'
 	| 'uncovered'
+	| 'unguarded'
 	| 'unmanaged-dispatch'
 	| 'unwired';
 
@@ -66,16 +86,10 @@ export interface GroupReport {
 	group: string;
 	matched: number;
 	owner: string;
+	/** The directory of every target compared, which is every target the group reaches. */
+	reached: string[];
 	skipped: string[];
 	targets: number;
-}
-
-/** Picks the variant this target can actually run. */
-function resolveSource(file: SharedCoreFile, scripts: null | Record<string, string>): string {
-	if (file.requiresScripts === undefined) return file.source;
-	const satisfied =
-		scripts !== null && file.requiresScripts.every((name) => scripts[name] !== undefined);
-	return satisfied ? file.source : (file.fallbackSource as string);
 }
 
 export function checkGroup(
@@ -83,22 +97,28 @@ export function checkGroup(
 	fleetRoot: string,
 	ownerRoot: string,
 	only?: Set<string>,
+	// The owner's record of deliveries for this fleet root. Empty where the owner holds none, which
+	// the entry point fails on its own account; a caller comparing files alone passes nothing.
+	deliveries: Deliveries = {},
 ): GroupReport {
 	assertSourcesExist(group, ownerRoot);
 	// After assertSourcesExist, which is what lets this one read both variants without guarding.
 	assertVariantsDiffer(group, ownerRoot);
 	assertHookChainIsCarried(group, ownerRoot);
 	const chained = chainedByHook(group, ownerRoot);
+	const generationsOf = generationReader(ownerRoot, group.sourceRoot);
 
 	const report: GroupReport = {
 		findings: [],
 		group: group.name,
 		matched: 0,
 		owner: group.owner,
+		reached: [],
 		skipped: [],
 		targets: 0,
 	};
 
+	const skipReasons = new Map<string, string>();
 	for (const target of resolveTargets(group, fleetRoot, ownerRoot, only)) {
 		const scripts = readScripts(target.path);
 		// A skipped target produces no findings, and the write path takes its worklist from findings,
@@ -107,66 +127,39 @@ export function checkGroup(
 		const skip = skipReason(group, target, scripts);
 		if (skip !== null) {
 			report.skipped.push(`${target.directory} (${skip})`);
+			skipReasons.set(target.directory, skip);
 			continue;
 		}
 		assertPackageIdentity(target);
 		report.targets += 1;
+		report.reached.push(target.directory);
+		const first = report.findings.length;
 
-		// The dispatcher is conditional on the target's dispatcher, exactly as the full hook variant
-		// is conditional on the script contract. One repository in this fleet reaches leak-guard.sh
-		// through simple-git-hooks and never sets core.hooksPath; it IS covered, and writing a
-		// .githooks/pre-commit there would install a file git never executes while reporting the
-		// repository as current.
-		//
-		// The guards are unconditional on the REPOSITORY — they need only bash and git, which is why
-		// they already work under a foreign dispatcher — but not on the DISPATCHER, which has to
-		// actually call them. Where dispatch is ours that is settled by construction. Where it is
-		// not, `foreign` holds whatever git really runs, and the guard's applicability is read out of
-		// it below instead of assumed in either direction.
-		const configured = group.hook === undefined ? '' : hooksPath(target.path);
-		const dispatches = group.hook === undefined || configured === group.targetRoot;
-		const foreign = dispatches
-			? null
-			: dispatcherBody(target.path, configured, group.hook as string);
+		// Whether anything dispatches this group's hook here, and which guards it reaches: hook.ts.
+		const dispatch = readDispatch(group, target.path);
+		if (dispatch.unguarded) {
+			report.findings.push(unguardedFinding(group, dispatch, target.directory));
+		}
+
+		// A target with a lock is held to every file of the group whatever it dispatches. Its lock
+		// records them all, because what a clone dispatches is not part of the repository (see
+		// expected.ts), so standing a file down here would leave the lock unwritable or untrue. It
+		// is still told that nothing runs, or that dispatch is not ours. A target with no lock is
+		// stood down exactly as before.
+		const locked = existsSync(join(target.path, LOCK_FILE));
 
 		for (const file of group.files) {
 			const name = file.target ?? file.source;
+			const standing = standingOf(group, name, dispatch, chained);
+			if (standing === 'unmanaged-dispatch' || (standing === 'not-applicable' && !locked)) {
+				report.findings.push(standingFinding(group, name, standing, target.directory));
+			}
+			if (standing !== 'applies' && !locked) continue;
 			const source = resolveSource(file, scripts);
 			const sourcePath = join(ownerRoot, group.sourceRoot, source);
-			const expected = readFileSync(sourcePath, 'utf8');
+			const expected = readShared(sourcePath);
 			const destination = join(target.path, group.targetRoot, name);
 
-			if (name === group.hook && !dispatches) {
-				report.findings.push({
-					detail: `${name}: core.hooksPath does not resolve to ${group.targetRoot}; dispatch is not managed here`,
-					group: group.name,
-					kind: 'unmanaged-dispatch',
-					target: target.directory,
-				});
-				continue;
-			}
-			// A guard is delivered where something runs it, and nowhere else. Under a foreign
-			// dispatcher only that dispatcher can answer which of our guards it chains, and it
-			// answers differently per file: in the repository named above, the pre-commit that
-			// dispatcher runs calls leak-guard.sh, so that guard is covered and verified here,
-			// while its pre-push calls only aidd-history-guard.sh and never screenshot-guard.sh.
-			//
-			// Both assumptions are wrong. Treating every guard as applicable classifies
-			// screenshot-guard.sh as `uncovered` — which carries a source and a destination, so
-			// `--write` delivers a guard nothing will ever invoke and the note goes green while the
-			// repository is no safer. Treating none as applicable stops verifying the guards a
-			// foreign dispatcher genuinely does run, which is most of the coverage such a repository
-			// has. So this reads the dispatcher rather than guessing, and a guard it does not name
-			// gets a classification with no destination, which is what makes it unwritable.
-			if (!dispatches && chained.has(name) && !invokes(foreign ?? '', name)) {
-				report.findings.push({
-					detail: `${group.targetRoot}/${name} does not apply: ${group.hook} here is the target's own and does not run it`,
-					group: group.name,
-					kind: 'not-applicable',
-					target: target.directory,
-				});
-				continue;
-			}
 			if (!existsSync(destination)) {
 				report.findings.push({
 					destination,
@@ -181,68 +174,28 @@ export function checkGroup(
 			}
 
 			// Idempotence by content, never by presence. A presence check is what reported eleven
-			// repositories as current while they ran a pre-push one generation behind.
-			const actual = readFileSync(destination, 'utf8');
+			// repositories as current while they ran a pre-push one generation behind. Content
+			// excludes line endings: see readShared.
+			const actual = readShared(destination);
 			if (actual === expected) {
 				report.matched += 1;
 				continue;
 			}
 
-			// Two ways a differing hook is NOT drift, both of which the existing installers already
-			// honor and neither of which the write path may ever overwrite. A hook missing the
-			// group's marker belongs to another tool; core.hooksPath holds one hook of each name, so
-			// replacing it disables whatever was there. A hook carrying the local-chain marker is a
-			// repository that deliberately maintains its own chain around the guard, which is a
-			// correct configuration — calling it drift is how a check pressures someone into
-			// reverting working code.
+			// A hook that differs is not always drift: it may be another tool's, a chain kept by hand,
+			// or ours and matching nothing the owner ever shipped. hook.ts says which, and none of
+			// those three carries a destination.
 			if (name === group.hook) {
-				if (group.hookMarker !== undefined && !actual.includes(group.hookMarker)) {
-					report.findings.push({
-						detail: `${name} exists and is not ours (no '${group.hookMarker}'); refusing to claim it`,
-						group: group.name,
-						kind: 'foreign-hook',
-						target: target.directory,
-					});
-					continue;
-				}
-				if (
-					group.localChainMarker !== undefined &&
-					actual.includes(group.localChainMarker)
-				) {
-					report.findings.push({
-						detail: `${name} is a hand-maintained local chain; the guard it carries was verified, the hook body is the target's own`,
-						group: group.name,
-						kind: 'local-chain',
-						target: target.directory,
-					});
-					continue;
-				}
-
-				// Ours by marker, undeclared, and matching NO variant — which content cannot tell
-				// apart from a hand-written chain whose author never added the marker. Both call the
-				// guard and both match neither variant, so overwriting deletes real commit-time
-				// checks and leaving it lets a stale copy read as covered.
-				//
-				// Fatal AND unwritable, which no other kind is. `install-leak-guard.ts` refuses this
-				// state outright, and calling it plain `drift` here would have the writer overwrite
-				// it; either reading picks a loser: refuse and let a stale hook go unnoticed, or
-				// overwrite and delete someone's checks. This picks neither. The gate stays red until a
-				// person decides, and the writer is given no destination to decide it with.
-				//
-				// Matching the OTHER variant is deliberately not this: that is a target whose
-				// package.json now satisfies the script contract it did not before, and moving it to
-				// the right variant is exactly what `requiresScripts` is for. It falls through to
-				// drift below.
-				const variants = sourcesOf(file).map((s) =>
-					readFileSync(join(ownerRoot, group.sourceRoot, s), 'utf8'),
+				const finding = differingHookFinding(
+					group,
+					file,
+					actual,
+					target.directory,
+					ownerRoot,
+					generationsOf,
 				);
-				if (!variants.includes(actual)) {
-					report.findings.push({
-						detail: `${name} calls the guard but matches no current variant and does not declare itself a local chain — either delete it and re-run to take the current variant, or add '${group.localChainMarker ?? 'the local-chain marker'}' to its header if its extra steps are deliberate`,
-						group: group.name,
-						kind: 'diverged-hook',
-						target: target.directory,
-					});
+				if (finding !== null) {
+					report.findings.push(finding);
 					continue;
 				}
 			}
@@ -264,29 +217,37 @@ export function checkGroup(
 			});
 		}
 
-		// Contains, not equals — see SharedCoreGroup.wiring for why, and for what each value has to
-		// name so that a passing substring is real evidence rather than a looser test.
-		for (const [key, required] of Object.entries(group.wiring ?? {})) {
-			const script = scripts === null ? undefined : scripts[key];
-			if (scripts !== null && (script === undefined || !script.includes(required))) {
-				report.findings.push({
-					detail: `package.json script '${key}' ${script === undefined ? 'is missing' : `does not run \`${required}\``}`,
-					group: group.name,
-					kind: 'unwired',
-					target: target.directory,
-				});
-			}
-		}
+		report.findings.push(...wiringFindings(group, target, scripts));
+		// Last, because it is judged against everything this target was just found to hold.
+		const entry = deliveries[target.directory];
+		report.findings.push(
+			...lockFindings(group, target, ownerRoot, report.findings.slice(first), entry),
+		);
 	}
 
+	// A repository the record says was delivered this group, and which was not reached above.
+	report.findings.push(
+		...departedFindings(group, deliveries, fleetRoot, report.reached, skipReasons, only),
+	);
 	return report;
 }
 
 /**
- * The two kinds that fail the gate, both of them a target running a stale copy of a guard while
- * reporting as covered. See the header for why absence is not one of them, and `diverged-hook`
- * above for why exactly one fatal kind is deliberately unwritable.
+ * The kinds that fail the gate. Two are a target running a stale copy of a guard while reporting as
+ * covered: see the header for why absence is not one of them, and `divergedHook` in hook.ts for why
+ * that fatal kind is deliberately unwritable. The other two come from a target's lock: files that
+ * are current under a lock that does not say so, and a file the lock's delivery included that is
+ * gone, which is the one absence that is not a rollout gap. See lock-check.ts. The last is a group
+ * whose wiring is its point, held by a repository that does not run it: see wiring.ts. And a script
+ * or hook still naming where a moved group used to be: see old-path.ts.
  */
 export function isFatal(finding: Finding): boolean {
-	return finding.kind === 'diverged-hook' || finding.kind === 'drift';
+	return (
+		finding.kind === 'diverged-hook' ||
+		finding.kind === 'drift' ||
+		finding.kind === 'lost-delivery' ||
+		finding.kind === 'not-run' ||
+		finding.kind === 'old-path' ||
+		finding.kind === 'stale-lock'
+	);
 }

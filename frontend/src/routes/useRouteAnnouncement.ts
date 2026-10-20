@@ -26,8 +26,11 @@ function humanizeSegment(segment: string): string {
  * The fallback below titles a page after its last path segment, which on `/dashboards/shared/:token`
  * is a 64-character hex string. The tab, the bookmark name and the history entry all read as that
  * token. Anything long and purely hexadecimal is an opaque id, never something to show a reader.
+ * A UUID is one too, and its hyphens keep it out of the plain hex form: deeper's
+ * `/fleet/instances/:id` titled its tab "3679baf8 C91b 4d3b B124 Ed5023f6ec13".
  */
-const OPAQUE_SEGMENT = /^[0-9a-f]{16,}$/i;
+const OPAQUE_SEGMENT =
+	/^(?:[0-9a-f]{16,}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
 
 /**
  * A title the matched route states for itself, rather than one derived from the URL.

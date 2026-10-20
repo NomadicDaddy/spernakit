@@ -23,6 +23,14 @@
 					"description": "Wait for frontend to be ready"
 				},
 				{
+					"command": "bun run test:auth-reset-api",
+					"description": "Password reset endpoints reject bad requests on the running backend"
+				},
+				{
+					"command": "bun run test:auth-reset-ui-dev",
+					"description": "Test auth reset UI (dev)"
+				},
+				{
 					"command": "bun scripts/crawltest.ts --mode dev",
 					"description": "Crawl test (dev)",
 					"logFile": "logs/crawltest.log"
@@ -132,6 +140,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run test:fresh-release",
+					"description": "The fresh-release validator rejects stale baseline content, and the release workflow and sync-plan floor still match the baseline version",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:feature-id-directory",
 					"description": "Feature id matches its directory"
 				},
@@ -203,6 +216,22 @@
 					"description": "hasWorkspaceRole decides the workspace-role question without side effects, and requireWorkspaceRole never disagrees with it"
 				},
 				{
+					"command": "bun run test:oauth-secret-update",
+					"description": "An OAuth provider's client secret still decrypts to itself after settings updates that do not carry it, and an empty secret clears it"
+				},
+				{
+					"command": "bun run test:admin-reset-email",
+					"description": "An administrator's reset email is actually sent with the generated token, and a server that cannot send refuses without marking the account"
+				},
+				{
+					"command": "bun run test:logger-configured",
+					"description": "The application logger is replaced by the configured one once configuration loads, in every entry point that loads it"
+				},
+				{
+					"command": "bun run test:webhook-tls-name",
+					"description": "An alert webhook pinned to a resolved IP verifies its certificate against the configured hostname"
+				},
+				{
 					"command": "bun run test:upload-validation",
 					"description": "Images and PDFs require recognized signatures, binary uploads skip the text line-length check, text formats keep it, and the request-body ceiling leaves room above storage.maxFileSize"
 				},
@@ -213,6 +242,10 @@
 				{
 					"command": "bun run test:onboarding-password-step",
 					"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on"
+				},
+				{
+					"command": "bun run test:onboarding-reset",
+					"description": "Completing and resetting onboarding each return the state they just wrote, through a warm settings cache, and a completion after a reset records who and when"
 				},
 				{
 					"command": "bun run test:audit-outcome-filter",
@@ -240,7 +273,7 @@
 				},
 				{
 					"command": "bun run test:lockout-refresh",
-					"description": "Refresh replay and ambiguous rotation collisions clear cookies and revoke every session token"
+					"description": "Refresh replay and ambiguous rotation collisions clear cookies and end that sign-in, access tokens included"
 				},
 				{
 					"command": "bun run test:logout-audit-attribution",
@@ -259,6 +292,14 @@
 					"description": "Prettier's persistent cache reuses unchanged files and invalidates changed misformatted content"
 				},
 				{
+					"command": "bun run test:function-size-gate",
+					"description": "The function-size ratchet reads rule offenders with their measures, refuses fatal, rule-less, empty and non-JSON ESLint reports, refuses to re-record a baseline, and its cache entry covers everything it measures"
+				},
+				{
+					"command": "bun run test:refresh-sessions",
+					"description": "One user signed in on several browsers keeps each sign-in: refresh, replay, logout and password change end only the sign-ins they mean"
+				},
+				{
 					"command": "bun run test:secret-permissions",
 					"description": "Synthetic config and split-secret paths are repaired to owner-only permissions on this OS, and only the /app/config mount boundary tolerates a refused chmod"
 				},
@@ -275,8 +316,16 @@
 					"description": "Binary gzip and Brotli bodies plus every nginx delivery policy branch fail closed"
 				},
 				{
+					"command": "bun run test:claim-app-license",
+					"description": "A new derived app's LICENSE names whoever runs init, or a placeholder, never the template author, and keeps the template's MIT notice"
+				},
+				{
 					"command": "bun run test:vendored-licenses",
 					"description": "Vendored shadcn provenance pins an immutable commit and rejects unrecorded generated UI files"
+				},
+				{
+					"command": "bun run test:license-collect-workspace",
+					"description": "The licence collector reports the version installed for the declaring workspace and falls back to the root copy"
 				},
 				{
 					"command": "bun run test:nginx-security",
@@ -379,11 +428,6 @@
 					"description": "Third-party license inventory matches the installed graph"
 				},
 				{
-					"command": "bun run test:shared-core-write",
-					"description": "Shared-core write path regression self-test (synthetic fleet)",
-					"templateOnly": true
-				},
-				{
 					"command": "bun run check:shared-core",
 					"description": "Shared-core files in sibling repositories match their owning repository (when present)",
 					"templateOnly": true
@@ -429,8 +473,20 @@
 					"description": "300-line max-lines gate"
 				},
 				{
+					"command": "bun run check:function-size",
+					"description": "Function-size ratchet: no change may add functions over complexity 7 or over 40 lines beyond the repository's committed baseline"
+				},
+				{
 					"command": "bun run check:script-targets",
 					"description": "Every package.json script resolves to a real file and task"
+				},
+				{
+					"command": "bun run check:gates-wired",
+					"description": "Every test:* script is run by a smoke step, or excused by name with a reason"
+				},
+				{
+					"command": "bun run test:gates-wired",
+					"description": "The wired-gates check fails on an unwired script, a prefix of a wired name, and a reasonless or stale excuse"
 				},
 				{
 					"command": "bun run test:gate-conventions",
@@ -469,6 +525,11 @@
 				{
 					"command": "bun run check:version-refs",
 					"description": "Current-state version claims in docs match package.json",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run check:crawl-route-coverage",
+					"description": "Every page the router registers is one the crawl is required to visit, or is exempt with a reason",
 					"templateOnly": true
 				},
 				{

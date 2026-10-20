@@ -97,53 +97,38 @@ async function run(): Promise<void> {
 			await page.type('#password', 'definitely-wrong-password', { delay: 50 });
 			await page.click('button[type="submit"]');
 
+			// The page shows its own wording for AUTH_INVALID_CREDENTIALS
+			// (frontend/src/api/errorHandling.ts), not the backend's generic message.
 			await page.waitForFunction(
-				() => document.body.innerText.includes('Invalid credentials'),
+				() => document.body.innerText.includes('Invalid username or password'),
 				{ timeout: 15000 },
 			);
 		});
 
 		await step('Reset password request validates missing email', async () => {
-			await page.goto(new URL('/reset-password', baseUrl).toString(), {
+			// The request form lives at /forgot-password; /reset-password is the confirm page.
+			await page.goto(new URL('/forgot-password', baseUrl).toString(), {
 				timeout: 30000,
 				waitUntil: 'domcontentloaded',
 			});
-
-			// The reset page is gated behind email configuration. In environments
-			// where password reset is disabled, we should see the service-unavailable
-			// message instead of the form submit button.
-			const serviceUnavailableText =
-				'Password reset is currently unavailable. Email services are not configured.';
-
-			const stateHandle = await page.waitForFunction(
-				(unavailableText: string) => {
-					const text = document.body.innerText;
-					if (text.includes(unavailableText)) return 'unavailable';
-					if (document.querySelector('button[type="submit"]')) return 'has-submit';
-					return null;
-				},
-				{ timeout: 15000 },
-				serviceUnavailableText,
-			);
-			const state = await stateHandle.jsonValue();
-
-			if (state === 'unavailable') {
-				console.log(
-					'Password reset is disabled in this environment; skipping missing-email validation step.',
-				);
-				return;
-			}
-
+			await page.waitForSelector('#email', { timeout: 15000 });
 			await page.click('button[type="submit"]');
 
-			await page.waitForFunction(
-				() => document.body.innerText.includes('Email is required'),
-				{ timeout: 15000 },
-			);
+			// The form uses the browser's own required-field validation, so an empty submit is
+			// stopped before any request: the field reports valueMissing and the page does not
+			// move on to its "Check Your Email" state.
+			const blocked = await page.evaluate(() => {
+				const email = document.querySelector<HTMLInputElement>('#email');
+				return (
+					email?.validity.valueMissing === true &&
+					!document.body.innerText.includes('Check Your Email')
+				);
+			});
+			if (!blocked) throw new Error('An empty email was not stopped by the request form.');
 		});
 
 		await step('Reset password confirm shows error for invalid token', async () => {
-			const invalidUrl = new URL('/reset-password/confirm', baseUrl);
+			const invalidUrl = new URL('/reset-password', baseUrl);
 			invalidUrl.searchParams.set('token', 'invalid-token');
 
 			await page.goto(invalidUrl.toString(), {
@@ -159,11 +144,12 @@ async function run(): Promise<void> {
 			await page.type('#confirm-password', newPassword, { delay: 50 });
 			await page.click('button[type="submit"]');
 
-			// Wait for Sonner error toast with the backend error message
-			await page.waitForFunction(
-				() => document.body.innerText.includes('Invalid or expired reset token'),
-				{ timeout: 20000 },
-			);
+			await page.waitForSelector('#reset-password-error', { timeout: 20000 });
+			const shown = await page.$eval('#reset-password-error', (el) => el.textContent ?? '');
+			console.log(`Reset error shown: ${shown}`);
+			if (!/invalid or (has )?expired/i.test(shown)) {
+				throw new Error(`Unexpected reset error for an invalid token: ${shown}`);
+			}
 		});
 	} catch (err) {
 		const error = err as Error;

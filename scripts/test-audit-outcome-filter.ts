@@ -9,16 +9,17 @@ import { createApiApp } from '../backend/src/create-api-app.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
-import { users } from '../backend/src/db/schema/users.ts';
 import { workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { sysopId, sysopSeed } from './lib/audit-filter-seed.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const LOGIN_PATH = '/api/v1/auth/login';
 const SEED_ROUNDS = 4;
 const WRONG_PASSWORD = 'not-the-password-9!';
-const LOGIN_PATH = '/api/v1/auth/login';
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
@@ -33,23 +34,6 @@ interface AuditRow {
 	status: null | number;
 	submittedUsername: null | string;
 	username: null | string;
-}
-
-function sysopSeed(): { password: string; username: string } {
-	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === 'SYSOP');
-	if (!seed) throw new Error('SEED_USERS carries no SYSOP account');
-	return { password: seed.password, username: seed.username };
-}
-
-function sysopId(): number {
-	const { username } = sysopSeed();
-	const row = getDb()
-		.select()
-		.from(users)
-		.all()
-		.find((user) => user.username === username);
-	if (!row) throw new Error(`the seed produced no ${username} account`);
-	return row.id;
 }
 
 function attemptLogin(app: App, password: string): Promise<Response> {
@@ -255,6 +239,7 @@ async function workspaceAndDateRegressions(app: App): Promise<void> {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 	config.audit.enabled = true;

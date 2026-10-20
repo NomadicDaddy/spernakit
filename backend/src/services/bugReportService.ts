@@ -188,7 +188,9 @@ function list(
 					.select()
 					.from(bugReports)
 					.where(where)
-					.orderBy(desc(bugReports.createdAt))
+					// `id` breaks ties under LIMIT/OFFSET, so paging through every report (the dance's
+					// intake does) never repeats one and drops another (see auditService).
+					.orderBy(desc(bugReports.createdAt), desc(bugReports.id))
 					.limit(limitNum)
 					.offset(offset)
 					.all(),

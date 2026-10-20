@@ -6,10 +6,20 @@
 # repo under a temp dir; the real user-level pattern file is never read
 # (LEAK_GUARD_PATTERNS is always set explicitly).
 #
-# Keep this file byte-identical between the aidd, spernakit, and starsync repos.
+# smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+# smokestack; every repository that takes it holds a byte-identical copy.
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "$0")/.." && pwd)"
+# The repository is the parent of the nearest scripts directory above this file, at any depth.
+scripts_dir="$(cd "$(dirname "$0")" && pwd)"
+while [ "$(basename "$scripts_dir")" != scripts ]; do
+	if [ "$(dirname "$scripts_dir")" = "$scripts_dir" ]; then
+		echo "check-leak-guard: no scripts directory above $0" >&2
+		exit 2
+	fi
+	scripts_dir="$(dirname "$scripts_dir")"
+done
+repo_root="$(dirname "$scripts_dir")"
 hook="$repo_root/.githooks/leak-guard.sh"
 
 tmp="$(mktemp -d)"
@@ -75,7 +85,7 @@ b64_run="$(printf 'A%.0s' 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 
 [ "$(run_guard "$synthetic" "\"tlsKey\": \"${pem_header}\\n...\"")" = 0 ] || fail 'PEM placeholder in docs was blocked'
 
 # 4. Home-directory path (runtime-built backslashes) is blocked.
-bs="$(printf '\\')"
+bs="$(printf '\134')"
 win_path="C:${bs}Users${bs}someone${bs}project"
 [ "$(run_guard "$synthetic" "path=$win_path")" = 1 ] || fail 'home-directory path was not blocked'
 
@@ -111,6 +121,7 @@ run_guard_registry() {
 	printf '\r\nHKEY_CURRENT_USER\\Environment\r\n    LEAK_GUARD_PATTERNS    REG_SZ    %s\r\n\r\n' "$1" >"$tmp/reg-answer"
 	local code=0
 	(
+		# shellcheck disable=SC2317 # exported with export -f; the guard calls it in a child bash
 		reg.exe() { cat "$tmp/reg-answer"; }
 		export -f reg.exe
 		export tmp
@@ -126,6 +137,7 @@ printf '%s\n' 'mentions zzz-synthetic-app somewhere' >"$guard_repo/staged.txt"
 git -C "$guard_repo" add staged.txt
 printf '\r\nHKEY_CURRENT_USER\\Environment\r\n    LEAK_GUARD_PATTERNS    REG_SZ    %s\r\n\r\n' "$synthetic" >"$tmp/reg-answer"
 (
+	# shellcheck disable=SC2317 # exported with export -f; the guard calls it in a child bash
 	reg.exe() { cat "$tmp/reg-answer"; }
 	export -f reg.exe
 	export tmp
@@ -141,6 +153,7 @@ code=0
 printf '%s\n' 'plain harmless content' >"$guard_repo/staged.txt"
 git -C "$guard_repo" add staged.txt
 (
+	# shellcheck disable=SC2317 # exported with export -f; the guard calls it in a child bash
 	reg.exe() { return 1; }
 	export -f reg.exe
 	cd "$guard_repo" && env -u LEAK_GUARD_PATTERNS HOME="$tmp/empty-home" bash .githooks/leak-guard.sh
@@ -172,6 +185,37 @@ printf '%s\n' '\bzzz-synthetic-app\b' '\bzzz-sibling-app\b' >"$tmp/patterns-pair
 [ "$(run_guard "$tmp/patterns-pair" 'mentions zzz-sibling-app somewhere')" = 1 ] || fail 'sibling pattern was dropped along with the self pattern'
 [ "$(run_guard "$tmp/patterns-pair" 'mentions zzz-synthetic-app somewhere')" = 0 ] || fail 'self pattern survived alongside a sibling pattern'
 guard_repo="$tmp/repo"
+
+# 13. A refusal names the file and counts the lines, and never repeats what it refused. The guard
+# has just stopped that text from being committed; printing it would copy the secret into the
+# terminal and into any log that captures the hook's output.
+[ "$(run_guard "$synthetic" "key=$aws_key")" = 1 ] || fail 'synthetic AWS key was not blocked (case 13)'
+grep -q 'staged.txt: 1 line(s), secret format' "$tmp/stderr" || fail 'a refusal did not name the file and the class'
+if grep -q "$aws_key" "$tmp/stderr"; then fail 'a refusal printed the secret it refused'; fi
+[ "$(run_guard "$tmp/patterns-pair" 'mentions zzz-sibling-app somewhere')" = 1 ] || fail 'sibling name was not blocked (case 13)'
+grep -q 'staged.txt: 1 line(s), private name' "$tmp/stderr" || fail 'a private-name refusal did not name the file and the class'
+if grep -q 'zzz-sibling-app' "$tmp/stderr"; then fail 'a refusal printed the private name it refused'; fi
+
+# 14. A private pattern that is not a valid expression stops the commit. It is kept in the list on
+# purpose so that it fails closed; when the error was swallowed the whole private tier reported no
+# hits and passed. The per-commit override still lets the user commit on tier 1 alone.
+printf '%s\n' '\bzzz-sibling-app\b' '[zzz-unclosed' >"$tmp/patterns-broken"
+[ "$(run_guard "$tmp/patterns-broken" 'plain harmless content')" = 1 ] || fail 'an invalid private pattern let a commit through'
+grep -q 'not a valid expression' "$tmp/stderr" || fail 'an invalid private pattern did not say why it refused'
+code=0
+(cd "$guard_repo" && LEAK_GUARD_PATTERNS="$tmp/patterns-broken" LEAK_GUARD_ALLOW_NO_PRIVATE=1 bash .githooks/leak-guard.sh) 2>"$tmp/stderr" || code=$?
+[ "$code" = 0 ] || fail 'the per-commit override did not allow a commit past an invalid private pattern'
+
+# 15. A refusal for a private key names only the file that holds one. A second staged file that
+# merely shows the header, the shape a key takes, is not what was refused, and listing it would
+# send whoever cleans up to the wrong file.
+printf '%s\n' "$pem_header" >"$guard_repo/shape.txt"
+git -C "$guard_repo" add shape.txt
+[ "$(run_guard "$synthetic" "$(printf '%s\n%s' "$pem_header" "$b64_run")")" = 1 ] || fail 'a key beside a bare header was not blocked'
+grep -q 'staged.txt: 1 key(s), private key material' "$tmp/stderr" || fail 'a key refusal did not name the file holding the key'
+if grep -q 'shape.txt' "$tmp/stderr"; then fail 'a key refusal named a file that only shows a bare header'; fi
+git -C "$guard_repo" rm -q --cached shape.txt
+rm -f "$guard_repo/shape.txt"
 
 # 12. A public site may publish a sibling's name once the repo's staged leak-guard-publishes clears
 # it, and the guard says it did. The file is read from the index, so an unstaged edit clears nothing.

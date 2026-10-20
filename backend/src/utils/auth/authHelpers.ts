@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { createHmac } from 'node:crypto';
 
 import { getConfig } from '../../config/configLoader.ts';
@@ -20,57 +20,8 @@ export function hashRefreshToken(token: string): string {
 }
 
 /**
- * Store a hashed refresh token on the user record.
- * @param userId - The user ID to store the token for
- * @param refreshToken - The refresh token to hash and store
- */
-export function storeRefreshTokenHash(userId: number, refreshToken: string): void {
-	const db = getDb();
-	db.update(users)
-		.set({ refreshTokenHash: hashRefreshToken(refreshToken), updatedAt: new Date() })
-		.where(eq(users.id, userId))
-		.run();
-}
-
-/**
- * Atomically rotate the refresh token hash using optimistic concurrency.
- * Only updates if the current hash matches `expectedOldHash`, preventing
- * race conditions when multiple tabs refresh concurrently.
- *
- * @param userId - The user ID to rotate the token for
- * @param expectedOldHash - The hash that should currently be stored
- * @param newRefreshToken - The new refresh token to hash and store
- * @returns `true` if the rotation succeeded, `false` if the hash was already changed
- */
-export function rotateRefreshTokenHash(
-	userId: number,
-	expectedOldHash: string,
-	newRefreshToken: string,
-): boolean {
-	const db = getDb();
-	const rows = db
-		.update(users)
-		.set({ refreshTokenHash: hashRefreshToken(newRefreshToken), updatedAt: new Date() })
-		.where(and(eq(users.id, userId), eq(users.refreshTokenHash, expectedOldHash)))
-		.returning({ id: users.id })
-		.all();
-	return rows.length > 0;
-}
-
-/**
- * Clear the stored refresh token hash (on logout or password change).
- * @param userId - The user ID to clear the token for
- */
-export function clearRefreshTokenHash(userId: number): void {
-	const db = getDb();
-	db.update(users)
-		.set({ refreshTokenHash: null, updatedAt: new Date() })
-		.where(eq(users.id, userId))
-		.run();
-}
-
-/**
- * Clear the stored CSRF token hash (on logout or password change).
+ * Clear the user's CSRF signing secret, for admin actions that end every session the user has.
+ * A single logout must not call this: the secret is shared by all of the user's sign-ins.
  * @param userId - The user ID to clear the CSRF token for
  */
 export function clearCsrfToken(userId: number): void {

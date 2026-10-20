@@ -1,9 +1,10 @@
 import { and, eq, isNotNull, lt, sql } from 'drizzle-orm';
 
 import { getConfig } from '../../config/configLoader.ts';
-import { MAX_CLEANUP_BATCH_SIZE, STALE_USER_LOGIN_DAYS } from '../../constants/scheduler.ts';
+import { MAX_CLEANUP_BATCH_SIZE } from '../../constants/scheduler.ts';
 import { getDb } from '../../db/index.ts';
 import { notifications } from '../../db/schema/notifications.ts';
+import { refreshSessions } from '../../db/schema/refreshSessions.ts';
 import { users } from '../../db/schema/users.ts';
 import { cleanupExpiredBlacklistEntries } from '../../utils/auth/tokenBlacklist.ts';
 import { logScheduler } from '../../utils/logger.ts';
@@ -12,7 +13,6 @@ import { cleanupExpiredPKCECodes } from '../oauth/oauthProviderService.ts';
 import {
 	createBatchCleanupTask,
 	cutoffDate,
-	daysAgo,
 	type DbClient,
 	isRetentionDisabled,
 	MAX_CLEANUP_BATCHES,
@@ -74,26 +74,29 @@ function tokenCleanupTask(): { refreshTokensCleaned: number; resetTokensCleaned:
 		});
 	}
 
-	const staleDate = daysAgo(STALE_USER_LOGIN_DAYS);
-	const refreshCondition = and(
-		isNotNull(users.refreshTokenHash),
-		lt(users.lastLoginAt, staleDate),
-	);
-	let refreshTokensCleaned = 0;
-	batches = 0;
-	batchCleaned = batchTokenUpdate(db, refreshCondition, { refreshTokenHash: null }, now);
-	while (batchCleaned > 0 && batches < MAX_CLEANUP_BATCHES) {
-		refreshTokensCleaned += batchCleaned;
-		batches++;
-		batchCleaned = batchTokenUpdate(db, refreshCondition, { refreshTokenHash: null }, now);
-	}
+	// Rotated rows are kept until they expire so a replay can still be recognised; past that the
+	// refresh JWT has expired too, and the row proves nothing.
+	const refreshTokensCleaned = createBatchCleanupTask({
+		deleteBatch: (batchDb, batchNow) => {
+			const idsToDelete = batchDb
+				.select({ id: refreshSessions.id })
+				.from(refreshSessions)
+				.where(lt(refreshSessions.expiresAt, batchNow))
+				.limit(MAX_CLEANUP_BATCH_SIZE)
+				.all()
+				.map((row) => row.id);
 
-	if (batches >= MAX_CLEANUP_BATCHES) {
-		logScheduler('warn', 'Refresh token cleanup hit batch cap, remaining work deferred', {
-			batches,
-			refreshTokensCleaned,
-		});
-	}
+			if (idsToDelete.length === 0) return 0;
+
+			batchDb
+				.delete(refreshSessions)
+				.where(sql`${refreshSessions.id} IN ${idsToDelete}`)
+				.run();
+
+			return idsToDelete.length;
+		},
+		taskName: 'Expired refresh token cleanup',
+	})().cleaned;
 
 	const blacklistResult = cleanupExpiredBlacklistEntries();
 

@@ -24,7 +24,10 @@ jobs:
     quality:
         name: Quality Checks
         runs-on: ubuntu-latest
-        timeout-minutes: 15
+        # A cold full gate measured 16.8 minutes on a local dev host; hosted-runner cold
+        # time is unobserved, so 30 minutes is headroom rather than a measured bound. The
+        # step cache below cuts most runs far below that.
+        timeout-minutes: 30
 
         steps:
             - name: Checkout
@@ -47,6 +50,19 @@ jobs:
 
             - name: Install dependencies
               run: bun install --frozen-lockfile
+
+            # Persist the gate's own step cache so a warm CI run replays unchanged steps
+            # instead of re-running all ~124. Each run saves under a commit-unique key
+            # (actions/cache never saves on an exact hit, so a static key would freeze the
+            # ledger at its first save), and the restore prefix picks up the newest saved
+            # ledger; each step still replays only when its own inputs hash the same.
+            - name: Cache smoke step results
+              uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+              with:
+                  path: scripts/smoke-cache.json
+                  key: smoke-cache-${{ runner.os }}-${{ github.sha }}
+                  restore-keys: |
+                      smoke-cache-${{ runner.os }}-
 
             # One canonical entrypoint keeps hosted quality checks aligned with local QC.
             # Template drift and fleet checks are explicit no-ops when their external

@@ -3,13 +3,14 @@
 		{
 			"files": [
 				{ "disposition": "synced", "source": "pre-push" },
+				{ "disposition": "synced", "source": "force-push-guard.sh" },
 				{ "disposition": "synced", "source": "aidd-history-guard.sh" },
 				{ "disposition": "synced", "source": "screenshot-guard.sh" }
 			],
 			"hook": "pre-push",
 			"hookMarker": "aidd history guard",
 			"name": "push-guards",
-			"owner": "aidd",
+			"owner": "smokestack",
 			"sourceRoot": ".githooks",
 			"targetRoot": ".githooks",
 			"targets": { "marker": ".aidd", "model": "discovered" }
@@ -29,7 +30,7 @@
 			"hookMarker": "bash .githooks/leak-guard.sh",
 			"localChainMarker": "# leak-guard: local chain, kept by hand",
 			"name": "leak-guard-hooks",
-			"owner": "aidd",
+			"owner": "smokestack",
 			"sourceRoot": ".githooks",
 			"targetRoot": ".githooks",
 			"targets": { "model": "discovered" }
@@ -40,7 +41,7 @@
 				{ "disposition": "seeded", "source": "run-bash.ts" }
 			],
 			"name": "leak-guard-scripts",
-			"owner": "aidd",
+			"owner": "smokestack",
 			"requiresPackageJson": true,
 			"sourceRoot": "scripts",
 			"targetRoot": "scripts",
@@ -56,7 +57,7 @@
 				{ "disposition": "synced", "source": "check-env-spread.ts" }
 			],
 			"name": "portable-gates-aidd",
-			"owner": "aidd",
+			"owner": "smokestack",
 			"requiresPackageJson": true,
 			"sourceRoot": "scripts",
 			"targetRoot": "scripts",
@@ -76,10 +77,11 @@
 				{ "disposition": "synced", "source": "lib/destructive/evidence.ts" },
 				{ "disposition": "synced", "source": "lib/destructive/waivers.ts" },
 				{ "disposition": "synced", "source": "lib/docs/git-ignored.ts" },
+				{ "disposition": "synced", "source": "lib/docs/scan.ts" },
 				{ "disposition": "synced", "source": "lib/docs/waivers.ts" }
 			],
 			"name": "portable-gates",
-			"owner": "spernakit",
+			"owner": "smokestack",
 			"requiresPackageJson": true,
 			"sourceRoot": "scripts",
 			"targetRoot": "scripts",
@@ -106,7 +108,7 @@
 				{ "disposition": "synced", "source": "scripts/test-gate-conventions.ts" }
 			],
 			"name": "gate-conventions",
-			"owner": "spernakit",
+			"owner": "smokestack",
 			"requiresPackageJson": true,
 			"sourceRoot": ".",
 			"targetRoot": ".",
@@ -127,7 +129,7 @@
 				{ "disposition": "synced", "source": "scripts/lib/license-core/resolve.ts" }
 			],
 			"name": "license-core",
-			"owner": "spernakit",
+			"owner": "smokestack",
 			"sourceRoot": ".",
 			"targetRoot": ".",
 			"targets": { "model": "roster", "roster": "shared-core-targets.json" }
@@ -137,7 +139,7 @@
 				{ "disposition": "synced", "source": "scripts/lib/third-party-licenses/resolve.ts" }
 			],
 			"name": "license-core-adapter",
-			"owner": "spernakit",
+			"owner": "smokestack",
 			"sourceRoot": ".",
 			"targetRoot": ".",
 			"targets": { "model": "roster", "roster": "license-core-adapter-targets.json" }
@@ -147,17 +149,34 @@
 				{ "disposition": "synced", "source": "scripts/shared-core-manifest.json" },
 				{ "disposition": "synced", "source": "scripts/sync-shared-core.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/check.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/deliveries.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/delivery-check.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/dispatch.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/eligibility.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/expected.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/hook.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/lock-check.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/lock-scope.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/lock-write.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/lock.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/manifest-file.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/manifest.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/move.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/old-path.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/origin.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/owner.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/reaching.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/report.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/requires.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/roots.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/self-check.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/targets.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/vacuity.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/shared-core/wiring.ts" },
 				{ "disposition": "synced", "source": "scripts/lib/shared-core/write.ts" }
 			],
 			"name": "shared-core-sync",
-			"owner": "spernakit",
+			"owner": "smokestack",
 			"requiresPackageJson": true,
 			"sourceRoot": ".",
 			"targetRoot": ".",
@@ -165,6 +184,43 @@
 			"wiring": {
 				"check:shared-core": "bun scripts/sync-shared-core.ts --check"
 			}
+		},
+		{
+			"files": [
+				{ "disposition": "synced", "source": "scripts/smokestack.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/cache-config.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/cache-inputs.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/cache-prettier.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/cache-store.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/cache.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/config-read.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/config.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/env.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/gate.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/list.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/preflight.ts" },
+				{ "disposition": "synced", "source": "scripts/lib/smokestack/spawn.ts" }
+			],
+			"name": "runner",
+			"owner": "smokestack",
+			"requires": ["shared-core-sync"],
+			"requiresPackageJson": true,
+			"sourceRoot": ".",
+			"targetRoot": ".",
+			"targets": { "model": "roster", "roster": "runner-targets.json" },
+			"wiring": {
+				"smoke:qc": "bun scripts/smokestack.ts",
+				"smoke:qc:fast": "bun scripts/smokestack.ts --fast"
+			},
+			"wiringRequired": true
+		},
+		{
+			"files": [{ "disposition": "synced", "source": "pre-commit-leak-guard-only" }],
+			"name": "hook-variant-sources",
+			"owner": "smokestack",
+			"sourceRoot": ".githooks",
+			"targetRoot": ".githooks",
+			"targets": { "model": "roster", "roster": "hook-variant-sources-targets.json" }
 		}
 	]
 }

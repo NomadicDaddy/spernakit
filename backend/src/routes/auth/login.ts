@@ -6,7 +6,7 @@ import type { ErrorCode } from '../../constants/errorCodes.ts';
 import { getConfig } from '../../config/configLoader.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { PASSWORD_MAX_LENGTH } from '../../constants/validation.ts';
-import { authPlugin, parseCookies, signTokenPair, verifyAccessToken } from '../../plugins/auth.ts';
+import { authPlugin, parseCookies, verifyAccessToken } from '../../plugins/auth.ts';
 import { publishResolvedUser, resolveUserFromRequest } from '../../plugins/authRequest.ts';
 import { csrfPlugin, generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import {
@@ -18,13 +18,8 @@ import {
 } from '../../services/authService.ts';
 import { trackEvent } from '../../services/metricsService.ts';
 import { dataResponse, successResponse } from '../../utils/apiResponse.ts';
-import {
-	clearAuthCookies,
-	clearCsrfToken,
-	clearRefreshTokenHash,
-	setAuthCookies,
-	storeRefreshTokenHash,
-} from '../../utils/auth/authHelpers.ts';
+import { clearAuthCookies, setAuthCookies } from '../../utils/auth/authHelpers.ts';
+import { endRefreshFamily } from '../../utils/auth/refreshSessions.ts';
 import { revokeAccessToken } from '../../utils/auth/tokenBlacklist.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
@@ -35,6 +30,7 @@ import {
 } from '../../utils/errorResponse.ts';
 import { logAuth } from '../../utils/logger.ts';
 import { loginDocs, logoutDocs } from './login.docs.ts';
+import { startSignIn } from './session-helpers.ts';
 
 // All failure reasons return generic 'Invalid credentials' to prevent user enumeration.
 // The actual failure reason is logged server-side for security monitoring.
@@ -101,8 +97,7 @@ async function handleLogin({ body, request, set }: LoginContext) {
 		);
 	}
 
-	const tokens = signTokenPair(result.payload);
-	storeRefreshTokenHash(result.payload.id, tokens.refreshToken);
+	const tokens = startSignIn(result.payload);
 
 	const csrfToken = await generateAndStoreCsrfToken(result.payload.id);
 
@@ -150,8 +145,9 @@ function revokeAccessTokenFromRequest(request: Request): void {
 	const payload = verifyAccessToken(accessToken);
 	if (!payload) return;
 
-	clearRefreshTokenHash(payload.id);
-	clearCsrfToken(payload.id);
+	// End this sign-in only. The user's other browsers keep their own families, and the CSRF
+	// signing secret is shared by all of them, so neither is touched here.
+	if (payload.sid) endRefreshFamily(payload.sid);
 
 	const decoded = jwt.decode(accessToken) as { exp?: number } | null;
 	if (!decoded?.exp) return;

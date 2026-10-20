@@ -1,12 +1,13 @@
 /**
- * The clean-run verdict for `--check`.
+ * The clean-run verdict for the owner's `--check`.
  *
- * `check:shared-core` reads sibling checkouts rather than this tree, so "no drift" and "nothing was
- * compared" are different results that a single `[OK]` would conflate. Both zero cases are real:
+ * In the owner, `check:shared-core` reads sibling checkouts rather than this tree, so "no drift"
+ * and "nothing was compared" are different results that a single `[OK]` would conflate. A
+ * repository that owns no group never reaches this file: it checks itself against its lock, and a
+ * lock with nothing in it fails there. Both zero cases here are real:
  *
- * - **No peer is checked out.** CI clones one repository, and a developer may hold only one. There
- *   is genuinely nothing to compare, which `docs/reference/gate-conventions.md` covers as `[SKIP]`
- *   with the reason, exit 0.
+ * - **No peer is checked out.** The owner cloned alone has nothing beside it to compare, which
+ *   `docs/reference/gate-conventions.md` covers as `[SKIP]` with the reason, exit 0.
  * - **`--only` matched nothing.** That flag narrows the target directories a group's model already
  *   resolved, so a name that matches none of them silences every group at once. A typo there
  *   produced a green gate over zero targets, which is exactly the presence-over-content failure
@@ -32,14 +33,14 @@ export function reportClean(reports: GroupReport[], only?: Set<string>): number 
 	}
 
 	if (targets === 0) {
-		console.log(
+		console.info(
 			'[SKIP] Shared core: no peer repository is checked out beside this one, so there is ' +
 				'nothing to compare against.',
 		);
 		return 0;
 	}
 
-	console.log(
+	console.info(
 		`[OK] Shared core: no drift (${files} file(s) across ${targets} target(s) examined).`,
 	);
 	return 0;

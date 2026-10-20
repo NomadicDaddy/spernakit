@@ -1,9 +1,9 @@
 # Gate Conventions
 
-> **Shared-core file.** spernakit owns this document. aidd and every other target carry a
-> byte-identical copy, synced by `scripts/sync-shared-core.ts` under the `gate-conventions` bundle
-> and enforced by `check:shared-core`. Edit it here and sync outward; an edit made in a copy shows
-> up as drift and fails that gate.
+> **Shared-core file.** smokestack owns this document. Every target carries a byte-identical copy,
+> synced by `scripts/sync-shared-core.ts` under the `gate-conventions` group and enforced by
+> `check:shared-core`. Edit it in smokestack and sync outward; an edit made in a copy shows up as
+> drift, fails that gate, and is overwritten by the next write.
 
 A **gate** is a script that asserts something about the repository and fails the build when the
 assertion does not hold. It is declared by a `check*` task, or by a reasoned entry in that
@@ -205,10 +205,16 @@ The point is that one consumer can read every gate's JSON without a per-gate ada
 
 ## Enforcement
 
-`scripts/check-gate-conventions.ts` (owner: spernakit, run in both repositories) enforces the
+`scripts/check-gate-conventions.ts` (owner: smokestack, run in every target) enforces the
 statically decidable rules. It reads `package.json`, follows every `check*` task and every task the
 allowlist's `gates` map declares to the `.ts` file it runs, follows `bun run <task>` references
 transitively, and applies the rules to each file's source.
+
+It reads that source with patterns, not a parser, and so do the other source-reading gates
+smokestack delivers. Each pattern is a deliberate approximation: it enforces a rule where the rule
+shows in the text, and a construct the pattern cannot see is a known limit of the gate, not a pass
+it has earned. When a limit is found, it is recorded against the gate in smokestack's records and
+fixed there, never patched in a delivered copy.
 
 | ID    | Rule           | Statically enforced                                                        |
 | ----- | -------------- | -------------------------------------------------------------------------- |

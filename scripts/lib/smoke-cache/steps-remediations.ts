@@ -3,6 +3,11 @@ import { COMMON_EXCLUDES } from './globs.ts';
 import { type StepDependencies } from './types.ts';
 
 export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
+	// In-process temp-DB gate over the admin password service, with the mail sender substituted.
+	'test:admin-reset-email': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-admin-reset-email.ts'],
+	},
 	'test:audit-plugin-lifecycle': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/src/plugins/audit.ts', 'scripts/test-audit-plugin-lifecycle.ts'],
@@ -17,6 +22,14 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-child-output-redaction.ts',
 		],
 	},
+	'test:claim-app-license': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/setup/json-files.ts',
+			'scripts/lib/setup/license-materials.ts',
+			'scripts/test-claim-app-license.ts',
+		],
+	},
 	'test:field-encryption-rotation': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -28,19 +41,41 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-field-encryption-rotation.ts',
 		],
 	},
+	'test:license-collect-workspace': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/third-party-licenses/collect.ts',
+			'scripts/test-license-collect-workspace.ts',
+		],
+	},
+	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:lockout-refresh': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'backend/drizzle/**',
-			'backend/src/routes/auth/refresh.ts',
-			'backend/src/utils/auth/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-lockout-refresh.ts',
+		],
+	},
+	// Loads configuration in process and scans every backend source file for an entry point.
+	'test:logger-configured': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**',
+			'scripts/test-logger-configured.ts',
+			'scripts/test-logger-fallback.ts',
 		],
 	},
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:logout-audit-attribution': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-logout-audit-attribution.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-logout-audit-attribution.ts',
+		],
 	},
 	'test:nginx-security': {
 		excludes: COMMON_EXCLUDES,
@@ -50,9 +85,31 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-nginx-security.ts',
 		],
 	},
+	// In-process temp-DB gate: it applies the migrations and drives the settings service, so its
+	// world is the backend source plus the gate script itself.
+	'test:oauth-secret-update': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-oauth-secret-update.ts'],
+	},
+	// In-process temp-DB gate: it applies the migrations, runs the seed and drives the onboarding
+	// service through the settings cache, so its world is the backend source plus the gate script.
+	'test:onboarding-reset': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-onboarding-reset.ts'],
+	},
 	'test:prettier-cache': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['.prettierrc', 'package.json', 'scripts/test-prettier-cache.ts'],
+	},
+	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
+	'test:refresh-sessions': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-refresh-sessions.ts',
+		],
 	},
 	'test:secret-permissions': {
 		excludes: COMMON_EXCLUDES,
@@ -75,6 +132,14 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'licenses/vendored-materials.json',
 			'scripts/lib/third-party-licenses/vendored.ts',
 			'scripts/test-vendored-licenses.ts',
+		],
+	},
+	'test:webhook-tls-name': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/services/notification/alertWebhook.ts',
+			'backend/src/utils/urlValidator.ts',
+			'scripts/test-webhook-tls-name.ts',
 		],
 	},
 };

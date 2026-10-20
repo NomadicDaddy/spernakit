@@ -46,7 +46,8 @@ import {
 } from '../backend/src/services/onboardingService.ts';
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
-import { passwordStepLinkFailures } from './lib/password-form-route.ts';
+import { firstRoutePath, passwordStepLinkFailures } from './lib/password-form-route.ts';
+import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STEP_ID = 'change-sysop-password';
@@ -179,6 +180,8 @@ async function defaultInstall(): Promise<void> {
 	for (const failure of passwordStepLinkFailures(repoRoot, getPasswordChangeStep().link)) {
 		assert(false, failure);
 	}
+	const oneLine = "{ element: <S />, path: 'security' },";
+	assert(firstRoutePath(oneLine) === 'security', 'a one-line route object must still be read');
 
 	const changed = await changeUserPassword(sysop.id, sysopSeed().password, NEW_PASSWORD);
 	assert(changed.success, `changing the sysop password: ${changed.error ?? 'refused'}`);
@@ -270,6 +273,7 @@ async function toggleOn(): Promise<void> {
 async function run(): Promise<void> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 	config.audit.enabled = false;

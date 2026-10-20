@@ -31,7 +31,6 @@ erDiagram
         text email UK
         text passwordHash
         text role "SYSOP|ADMIN|MANAGER|OPERATOR|VIEWER"
-        text refreshTokenHash
         text resetToken
         int resetTokenExpiresAt
         int requiresPasswordChange
@@ -270,6 +269,7 @@ erDiagram
 
     users ||--o{ api_keys : "owns"
     users ||--o{ token_blacklist : "owns"
+    users ||--o{ refresh_sessions : "signs in"
     users ||--o{ password_history : "owns"
 
     api_keys {
@@ -306,7 +306,18 @@ erDiagram
     token_blacklist {
         int id PK
         text tokenHash
+        int revokesAll "1 = account-wide sentinel, 0 = one token"
         int userId FK
+        int createdAt
+        int expiresAt
+    }
+
+    refresh_sessions {
+        int id PK
+        int userId FK
+        text familyId
+        text tokenHash UK
+        int rotatedAt
         int createdAt
         int expiresAt
     }
@@ -363,4 +374,5 @@ erDiagram
 | `settings`                      | `deletedBy`   | `users`             | set null  |
 | `api_keys`                      | `createdBy`   | `users`             | cascade   |
 | `token_blacklist`               | `userId`      | `users`             | cascade   |
+| `refresh_sessions`              | `userId`      | `users`             | cascade   |
 | `password_history`              | `userId`      | `users`             | cascade   |

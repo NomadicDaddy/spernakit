@@ -13,6 +13,7 @@ export { oauthAccounts, oauthAccountsRelations } from './oauthAccounts.ts';
 export { passwordHistory } from './passwordHistory.ts';
 export { pkceVerifiers } from './pkceVerifiers.ts';
 export { rateLimitEntries } from './rateLimitEntries.ts';
+export { refreshSessions } from './refreshSessions.ts';
 export { scheduledTaskConfigs, scheduledTaskExecutions } from './scheduledTasks.ts';
 export { settings } from './settings.ts';
 export { systemMetrics } from './systemMetrics.ts';

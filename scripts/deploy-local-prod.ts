@@ -226,7 +226,15 @@ if (existsSync(configPath) && !values['rotate-secrets']) {
 	server['backendPort'] = backendPort;
 	server['backendUrl'] = `http://localhost:${backendPort}`;
 	server['trustProxy'] = true;
-	server['trustedProxies'] = ['172.16.0.0/12', '10.0.0.0/8', '192.168.0.0/16'];
+	// Loopback comes first: nginx in the container reaches the backend over 127.0.0.1, so without
+	// it the forwarded headers are ignored and every client resolves to 127.0.0.1.
+	server['trustedProxies'] = [
+		'127.0.0.0/8',
+		'::1/128',
+		'172.16.0.0/12',
+		'10.0.0.0/8',
+		'192.168.0.0/16',
+	];
 
 	cors['allowedOrigins'] = allowedOrigins;
 	cors['frontendDevOrigins'] = [];

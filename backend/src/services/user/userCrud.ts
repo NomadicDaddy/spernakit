@@ -5,6 +5,7 @@ import type { UserRole } from '../../types/roles.ts';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { workspaces } from '../../db/schema/workspaces.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorResponse.ts';
 import { hashPassword } from '../authService.ts';
 import { bulkDeleteUsers, bulkUpdateUserRoles } from './userBatchService.ts';
@@ -154,11 +155,11 @@ function softDeleteUser(id: number, deletedBy: number): boolean {
 			deletedBy,
 			isDeleted: true,
 			lastLoginIp: null,
-			refreshTokenHash: null,
 			updatedAt: new Date(),
 		})
 		.where(eq(users.id, id))
 		.run();
+	endAllRefreshSessions(id);
 
 	userCache.delete(id);
 	return true;

@@ -14,39 +14,45 @@ function resetLoggingOutGuard(): void {
 	isLoggingOut = false;
 }
 
-/** Attempt to refresh the access token, retrying once on 409 (concurrent rotation). */
+/** Name of the lock every tab of this origin takes before it refreshes. */
+const REFRESH_LOCK_NAME = 'auth-refresh';
+
+/** Ask the server to rotate the token pair. */
 async function attemptRefresh(): Promise<boolean> {
-	const headers: Record<string, string> = getCommonHeaders();
+	const res = await fetch('/api/v1/auth/refresh', {
+		credentials: 'include',
+		headers: { ...getCommonHeaders(), ...getCsrfHeader() },
+		method: 'POST',
+	});
+	if (!res.ok) return false;
 
-	for (let attempt = 0; attempt < 2; attempt++) {
-		const res = await fetch('/api/v1/auth/refresh', {
-			credentials: 'include',
-			headers: { ...headers, ...getCsrfHeader() },
-			method: 'POST',
-		});
-
-		if (res.ok) {
-			const csrfToken = res.headers.get('X-CSRF-Token');
-			if (csrfToken) {
-				useAuthStore.getState().setCsrfToken(csrfToken);
-			}
-			return true;
-		}
-
-		// 409 = concurrent refresh from another tab rotated the token.
-		// Retry once — the new cookie from that tab's response may already be set.
-		if (res.status === 409 && attempt === 0) continue;
-
-		return false;
+	const csrfToken = res.headers.get('X-CSRF-Token');
+	if (csrfToken) {
+		useAuthStore.getState().setCsrfToken(csrfToken);
 	}
-
-	return false;
+	return true;
 }
 
-/** Deduplicate concurrent refresh calls so only one in-flight request exists. */
+/**
+ * Refresh under a lock shared by every tab of this origin.
+ *
+ * Tabs share the refresh cookie, and the server treats a second presentation of an already
+ * rotated token as theft and ends the sign-in. Holding the lock means a tab that waits sends the
+ * cookie the previous tab's refresh just set, never the one it rotated away. The lock exists only
+ * when navigator.locks does: a secure context (HTTPS or localhost) in a browser with the Web Locks
+ * API. Without it, for any reason, the refresh runs unguarded, and two tabs refreshing at once can
+ * end the sign-in.
+ */
+function refreshAcrossTabs(): Promise<boolean> {
+	const locks = (navigator as Partial<Navigator>).locks;
+	if (!locks) return attemptRefresh();
+	return locks.request(REFRESH_LOCK_NAME, attemptRefresh);
+}
+
+/** Deduplicate concurrent refresh calls so only one in-flight request exists per tab. */
 function deduplicateRefresh(): Promise<boolean> {
 	if (!refreshPromise) {
-		refreshPromise = attemptRefresh().finally(() => {
+		refreshPromise = refreshAcrossTabs().finally(() => {
 			refreshPromise = null;
 		});
 	}

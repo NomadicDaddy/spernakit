@@ -139,16 +139,16 @@ Chosen alternative: Cookie-based JWT authentication with HTTP-only cookies
 
 1. Access token expires (15 minutes)
 2. Frontend calls `/api/v1/auth/refresh` endpoint
-3. Server validates `refreshToken` cookie against database
+3. Server looks the `refreshToken` cookie up in `refresh_sessions`. Each sign-in is its own token family, so a user can be signed in on several browsers at once
 4. If valid, server generates new access token and sets cookie
-5. Refresh token rotated (new token generated, old invalidated)
+5. Refresh token rotated within its family (successor stored, presented token marked rotated). Presenting a rotated token again ends that family only
 6. User session continues without interruption
 
 ### Logout Flow
 
 1. User clicks logout
 2. Frontend calls `/api/v1/auth/logout` endpoint
-3. Server deletes refresh token from database
+3. Server deletes this sign-in's refresh-token family from the database; the user's other sign-ins are untouched
 4. Server clears cookies (`expires: past date`)
 5. Both tokens invalidated, user logged out
 

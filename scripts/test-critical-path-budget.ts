@@ -27,6 +27,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
+import { evaluateCompilerOutput, MEMO_CACHE_SENTINEL } from './lib/compiler-output.ts';
 import {
 	BUDGET_PAD_BYTES,
 	type BudgetResult,
@@ -243,6 +244,24 @@ try {
 	assert(
 		textOf(halfBudget).includes('--update-budget'),
 		'A half budget must point the operator at regeneration',
+	);
+
+	// 7. React Compiler output. The runtime chunk defines the sentinel itself, so a build with the
+	// compiler switched off still contains it once; only output outside that chunk counts.
+	const runtime = { name: 'react-core.js', source: `Symbol.for("${MEMO_CACHE_SENTINEL}")` };
+	const page = { name: 'Page.js', source: `if(t[0]===Symbol.for("${MEMO_CACHE_SENTINEL}"))` };
+	const plain = { name: 'utils.js', source: 'export const x=1' };
+	assert(
+		!evaluateCompilerOutput([runtime, plain], runtime.name).ok,
+		'A build whose only sentinel is the React runtime must fail: the compiler did not run',
+	);
+	assert(
+		evaluateCompilerOutput([runtime, page, plain], runtime.name).ok,
+		'A build with compiled output outside the runtime chunk must pass',
+	);
+	assert(
+		!evaluateCompilerOutput([plain], null).ok,
+		'A build with no sentinel anywhere must fail',
 	);
 
 	console.log(`Critical-path budget ownership regression test passed (${checks} assertions).`);

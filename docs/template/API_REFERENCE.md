@@ -222,7 +222,7 @@ Register a new user account (public endpoint).
 
 ### POST /api/v1/auth/logout
 
-Logout user and clear authentication cookie.
+Logout user and clear authentication cookie. Ends this sign-in only; the user's sign-ins on other browsers stay signed in.
 
 **Headers:** `Authorization: Bearer token` or authenticated cookie
 
@@ -258,7 +258,7 @@ Get current authenticated user information (validates JWT from cookie).
 
 ### POST /api/v1/auth/refresh
 
-Refresh access token using refresh cookie.
+Refresh access token using refresh cookie. Rotates the refresh token within its sign-in's family.
 
 **Response (200):**
 
@@ -267,6 +267,8 @@ Refresh access token using refresh cookie.
 	"success": true
 }
 ```
+
+**Response (401):** `AUTH_TOKEN_REVOKED` when an already rotated refresh token is presented again; that sign-in is ended and the user's other sign-ins are not. `AUTH_TOKEN_INVALID` when the token belongs to a sign-in that has already ended.
 
 ### POST /api/v1/auth/forgot-password
 

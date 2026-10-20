@@ -118,7 +118,7 @@ sequenceDiagram
     D-->>S: User record
     S->>S: Verify bcrypt hash
     S->>S: Generate JWT pair (access + refresh)
-    S->>D: Store refreshTokenHash
+    S->>D: Insert refresh_sessions row (new family)
     S-->>A: User + tokens
     A-->>C: Set-Cookie: spernakit_auth, spernakit_refresh
 
@@ -131,9 +131,9 @@ sequenceDiagram
     Note over C,D: Token Refresh
     C->>A: POST /auth/refresh (Cookie: refreshToken=...)
     A->>S: refreshTokens(refreshToken)
-    S->>D: Verify hash matches stored hash
+    S->>D: Find refresh_sessions row by token hash
     S->>S: Issue new JWT pair (token rotation)
-    S->>D: Update refreshTokenHash
+    S->>D: Mark row rotated, insert successor in same family
     S-->>A: New tokens
     A-->>C: Set-Cookie: spernakit_auth, spernakit_refresh
 ```

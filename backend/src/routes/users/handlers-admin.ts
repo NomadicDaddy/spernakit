@@ -7,7 +7,8 @@ import { assertUser, canModifyRole } from '../../guards/role.ts';
 import { actorFields, log as logAudit } from '../../services/auditService.ts';
 import { adminResetUserPassword, getUserById, unlockUser } from '../../services/userService.ts';
 import { successResponse } from '../../utils/apiResponse.ts';
-import { clearCsrfToken, clearRefreshTokenHash } from '../../utils/auth/authHelpers.ts';
+import { clearCsrfToken } from '../../utils/auth/authHelpers.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { badRequestError, forbiddenError, notFoundError } from '../../utils/errorResponse.ts';
 
@@ -101,7 +102,7 @@ async function handleAdminResetPassword({
 		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(targetId, new Date(Date.now() + refreshTtlMs));
-	clearRefreshTokenHash(targetId);
+	endAllRefreshSessions(targetId);
 	clearCsrfToken(targetId);
 
 	const auditAction = isSelfReset ? 'password.reset.admin.self' : 'password.reset.admin';

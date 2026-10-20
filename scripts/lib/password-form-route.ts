@@ -49,6 +49,15 @@ function passwordFormPage(repoRoot: string): null | string {
  * @param repoRoot - The repository root.
  * @returns The path, or null when the form or its route cannot be resolved from the source.
  */
+/**
+ * The first route `path` in a slice of route source. No trailing comma is required: a route object
+ * Prettier keeps on one line ends `path: 'security' },`, and requiring `',` made the gate report a
+ * mounted tab as unmounted (found in deeper by Jimmy, 2026-09-30).
+ */
+function firstRoutePath(source: string): string | undefined {
+	return /path: '([^']+)'/.exec(source)?.[1];
+}
+
 function passwordFormRoute(repoRoot: string): null | string {
 	const page = passwordFormPage(repoRoot);
 	if (page === null) return null;
@@ -63,7 +72,7 @@ function passwordFormRoute(repoRoot: string): null | string {
 	const mountedAt = routes.indexOf(`Component={${page}} />`);
 	if (mountedAt < 0) return null;
 
-	const path = /path: '([^']+)',/.exec(routes.slice(mountedAt))?.[1];
+	const path = firstRoutePath(routes.slice(mountedAt));
 	if (path === undefined || path.startsWith('/')) return null;
 
 	return `${PROFILE_ROOT}/${path}`;
@@ -99,4 +108,4 @@ function passwordStepLinkFailures(repoRoot: string, link: string): string[] {
 	return [`the step links to ${route}, where the password form is, and not to ${link}`];
 }
 
-export { passwordFormPage, passwordFormRoute, passwordStepLinkFailures };
+export { firstRoutePath, passwordFormPage, passwordFormRoute, passwordStepLinkFailures };

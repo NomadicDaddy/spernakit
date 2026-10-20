@@ -1,23 +1,21 @@
 import { Elysia } from 'elysia';
-import { timingSafeEqual } from 'node:crypto';
 
 import { getConfig } from '../../config/configLoader.ts';
-import { parseDurationMs } from '../../constants/auth.ts';
 import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import { SUCCESS_EXAMPLE } from '../../constants/responseExamples.ts';
-import { MS_PER_DAY } from '../../constants/scheduler.ts';
 import { authPlugin, parseCookies, signTokenPair, verifyRefreshToken } from '../../plugins/auth.ts';
 import { publishResolvedUser } from '../../plugins/authRequest.ts';
 import { generateAndStoreCsrfToken } from '../../plugins/csrf.ts';
 import { getUserRefreshInfo } from '../../services/userService.ts';
 import { successResponse } from '../../utils/apiResponse.ts';
+import { clearAuthCookies, setAuthCookies } from '../../utils/auth/authHelpers.ts';
 import {
-	clearAuthCookies,
-	clearRefreshTokenHash,
-	hashRefreshToken,
-	rotateRefreshTokenHash,
-	setAuthCookies,
-} from '../../utils/auth/authHelpers.ts';
+	endRefreshFamily,
+	findRefreshSession,
+	refreshExpiry,
+	type RefreshSessionRow,
+	rotateRefreshSession,
+} from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
 import { AUTH_ERROR_CODES, unauthorizedError } from '../../utils/errorResponse.ts';
@@ -40,41 +38,49 @@ function extractRefreshToken(request: Request): string | undefined {
 	return cookies[config.security.refreshCookieName];
 }
 
-function validateRefreshTokenReuse(
-	dbUser: ReturnType<typeof getUserRefreshInfo>,
-	refreshToken: string,
-	userId: number,
-	set: RefreshContext['set'],
-) {
-	const presentedHash = hashRefreshToken(refreshToken);
-	if (
-		!dbUser?.refreshTokenHash ||
-		dbUser.refreshTokenHash.length !== presentedHash.length ||
-		!timingSafeEqual(Buffer.from(dbUser.refreshTokenHash), Buffer.from(presentedHash))
-	) {
-		return compromiseTokenFamily(userId, set, 'reuse');
-	}
-	return null;
+/**
+ * Answer a refresh token the server holds no live row for: one from a sign-in that already ended
+ * (logout, password change, an earlier compromise) or that expired. Nothing is revoked, because a
+ * dead token proves nothing about the user's other sign-ins.
+ */
+function rejectUnknownRefreshToken(set: RefreshContext['set']) {
+	clearAuthCookies(set, getConfig().security);
+	setCacheHeaders(set, 'NO_CACHE');
+	set.status = HTTP_STATUS.UNAUTHORIZED;
+	return unauthorizedError('Refresh token not recognised', AUTH_ERROR_CODES.AUTH_TOKEN_INVALID);
 }
 
+/**
+ * A rotated token was presented again, or two requests raced to rotate the same one: somebody else
+ * holds this sign-in's token. End the sign-in the token belongs to and nothing else.
+ *
+ * Access tokens are not checked against their family on every request, so the family's access
+ * tokens are ended with the account-wide revocation. The user's other sign-ins keep their refresh
+ * tokens and recover with one silent refresh.
+ */
 function compromiseTokenFamily(
-	userId: number,
+	row: RefreshSessionRow,
 	set: RefreshContext['set'],
 	reason: 'reuse' | 'rotation-collision',
 ) {
-	const config = getConfig();
-	const refreshTtlMs = parseDurationMs(config.security.jwtRefreshExpiresIn, 7 * MS_PER_DAY);
-	clearRefreshTokenHash(userId);
-	revokeAllUserTokens(userId, new Date(Date.now() + refreshTtlMs));
-	clearAuthCookies(set, config.security);
+	endRefreshFamily(row.familyId);
+	revokeAllUserTokens(row.userId, refreshExpiry());
+	clearAuthCookies(set, getConfig().security);
 	setCacheHeaders(set, 'NO_CACHE');
-	logger.warn({ reason, userId }, 'Refresh token family compromised, revoking sessions');
+	logger.warn(
+		{ reason, userId: row.userId },
+		'Refresh token family compromised, ending that sign-in',
+	);
 	set.status = HTTP_STATUS.UNAUTHORIZED;
 	return unauthorizedError('Refresh token revoked', AUTH_ERROR_CODES.AUTH_TOKEN_REVOKED);
 }
 
-function handleRotationCollision(rotated: boolean, userId: number, set: RefreshContext['set']) {
-	return rotated ? null : compromiseTokenFamily(userId, set, 'rotation-collision');
+function handleRotationCollision(
+	rotated: boolean,
+	row: RefreshSessionRow,
+	set: RefreshContext['set'],
+) {
+	return rotated ? null : compromiseTokenFamily(row, set, 'rotation-collision');
 }
 
 async function handleTokenRefresh({ request, set }: RefreshContext) {
@@ -107,8 +113,8 @@ async function handleTokenRefresh({ request, set }: RefreshContext) {
 	// authenticated before the lock began. Checking lockout here would let a known-username
 	// attacker terminate a victim's active sessions by deliberately tripping the lock with bad
 	// passwords. Sessions are still revoked through the legitimate channels:
-	// refresh-token reuse detection, account deletion, and password change (which rotates the
-	// refresh-token hash).
+	// refresh-token reuse detection, account deletion, and password change (which ends every
+	// refresh-token family the user has).
 
 	// NOTE: Password expiry is intentionally NOT checked during token refresh.
 	// Blocking refresh when password is expired creates a lockout: the user's access token
@@ -116,24 +122,28 @@ async function handleTokenRefresh({ request, set }: RefreshContext) {
 	// the password-change endpoint. The passwordChangeGuard plugin handles restricting
 	// expired-password users to only the password-change endpoint.
 
-	const reuseError = validateRefreshTokenReuse(dbUser, refreshToken, payload.id, set);
-	if (reuseError) return reuseError;
+	const row = findRefreshSession(refreshToken);
+	if (
+		!row ||
+		row.userId !== payload.id ||
+		row.familyId !== payload.sid ||
+		row.expiresAt <= new Date()
+	) {
+		return rejectUnknownRefreshToken(set);
+	}
+	if (row.rotatedAt) return compromiseTokenFamily(row, set, 'reuse');
 
 	const config = getConfig();
 	const tokens = signTokenPair({
 		id: payload.id,
 		role: dbUser.role,
+		sid: row.familyId,
 	});
 
-	// Atomic rotation: only succeeds if the hash hasn't changed since we read it.
-	// Prevents race condition where concurrent refreshes from multiple tabs
-	// could each pass validation but overwrite each other's new tokens.
-	const rotated = rotateRefreshTokenHash(
-		payload.id,
-		dbUser.refreshTokenHash!,
-		tokens.refreshToken,
-	);
-	const collisionError = handleRotationCollision(rotated, payload.id, set);
+	// Atomic rotation: only one of two concurrent refreshes with the same token can claim it.
+	// The browser serialises its own tabs' refreshes, so losing that race means a second holder.
+	const rotated = rotateRefreshSession(row, tokens.refreshToken);
+	const collisionError = handleRotationCollision(rotated, row, set);
 	if (collisionError) return collisionError;
 
 	setAuthCookies(set, config.security, tokens);
@@ -155,9 +165,11 @@ const authRefreshRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/aut
 		detail: {
 			description:
 				'Rotates access/refresh token pair using refresh cookie. Issues new ' +
-				'tokens and updates cookies. Implements refresh-token rotation - reuse of a ' +
-				'previously rotated token revokes all sessions for user (AUTH_TOKEN_REVOKED). ' +
-				'An ambiguous concurrent rotation is treated as the same non-retryable compromise. ' +
+				'tokens and updates cookies. Each sign-in is its own refresh-token family, so a ' +
+				'user may be signed in on several browsers at once. Reuse of a previously rotated ' +
+				'token ends that sign-in only (AUTH_TOKEN_REVOKED); a token from a sign-in that ' +
+				'already ended is AUTH_TOKEN_INVALID. An ambiguous concurrent rotation is treated ' +
+				'as the same non-retryable compromise. ' +
 				'Also returns AUTH_ACCOUNT_DELETED if account was removed. Account lockout from ' +
 				'failed password logins is intentionally NOT enforced here, so an attacker cannot ' +
 				"kill a victim's active session by tripping the lock.",
@@ -180,6 +192,14 @@ const authRefreshRoutes = new Elysia({ detail: { tags: ['Auth'] }, prefix: '/aut
 										code: 'AUTH_ACCOUNT_DELETED',
 										error: 'Unauthorized',
 										message: 'Account has been deleted',
+									},
+								},
+								tokenInvalid: {
+									summary: 'Refresh token from a sign-in that already ended',
+									value: {
+										code: 'AUTH_TOKEN_INVALID',
+										error: 'Unauthorized',
+										message: 'Refresh token not recognised',
 									},
 								},
 								tokenMissing: {

@@ -24,6 +24,7 @@ import { seedUsersIfEmpty } from '../../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../../backend/src/plugins/csrf.ts';
 import { getSeedUsersWithPasswords } from '../../backend/src/utils/auth/passwordGenerator.ts';
+import { applyEphemeralAuthKeys } from './test-auth-keys.ts';
 
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
 const SEED_ROUNDS = 4;
@@ -154,6 +155,7 @@ async function listAll(
 async function startWorld(repoRoot: string): Promise<Harness> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 

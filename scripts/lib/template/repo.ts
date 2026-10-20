@@ -25,13 +25,42 @@ export function resolveSpernakitPath(
 		return null;
 	}
 
-	// 3. Convention: sibling directory
-	const sibling = path.resolve(path.join(repoRoot, '..', 'spernakit'));
-	if (fs.existsSync(path.join(sibling, '.git'))) return sibling;
+	// 3. Convention: sibling directory — of the main checkout when this one is a git worktree.
+	// A worktree lives elsewhere (D:/applications.worktrees/<app>/<agent>/<task>), so its own
+	// ../spernakit does not exist, and the resulting skip let a worktree commit report a drift pass
+	// on a check that never ran (deeper d513381).
+	const roots = [repoRoot];
+	const main = mainCheckoutRoot(repoRoot);
+	if (main && main !== repoRoot) roots.push(main);
+	for (const root of roots) {
+		const sibling = path.resolve(path.join(root, '..', 'spernakit'));
+		if (fs.existsSync(path.join(sibling, '.git'))) return sibling;
+	}
 
 	console.log('   Warning: spernakit repo not found at ../spernakit');
 	console.log('   Use --template /path/to/spernakit or set SPERNAKIT_PATH');
 	return null;
+}
+
+/**
+ * The main checkout behind a git worktree, or null when `repoRoot` is not a worktree.
+ *
+ * A worktree's `.git` is a file (`gitdir: <main>/.git/worktrees/<name>`), and that directory's
+ * `commondir` names the shared `.git` relative to itself. Read from disk rather than asked of git so
+ * the lookup stays synchronous and needs no git on PATH.
+ */
+function mainCheckoutRoot(repoRoot: string): null | string {
+	try {
+		const dotGit = path.join(repoRoot, '.git');
+		if (!fs.statSync(dotGit).isFile()) return null;
+		const pointer = /^gitdir:\s*(.+)$/m.exec(fs.readFileSync(dotGit, 'utf8'))?.[1]?.trim();
+		if (!pointer) return null;
+		const gitDir = path.resolve(repoRoot, pointer);
+		const common = fs.readFileSync(path.join(gitDir, 'commondir'), 'utf8').trim();
+		return path.dirname(path.resolve(gitDir, common));
+	} catch {
+		return null;
+	}
 }
 
 export function readSpernakitVersion(repoRoot: string): null | string {

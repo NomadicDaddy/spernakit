@@ -113,6 +113,7 @@ const TEMPLATE_OVERRIDES = [
 	"# Seeded by init.ts: these branded files diverge from the tagged baseline by init's own",
 	'# transforms (app branding, port assignment, version reset, license ownership).',
 	'KEEP  Dockerfile                     # init branding + port assignment',
+	'KEEP  LICENSE                        # init replaces the template MIT with an app-owned license',
 	'KEEP  README.md                      # init branding',
 	'KEEP  backend/README.md              # init branding',
 	'KEEP  docker-compose.yml             # init branding + ports',

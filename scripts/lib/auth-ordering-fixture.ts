@@ -21,6 +21,7 @@ import { users } from '../../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../../backend/src/utils/auth/passwordGenerator.ts';
+import { applyEphemeralAuthKeys } from './test-auth-keys.ts';
 
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
 const SEED_ROUNDS = 4;
@@ -147,6 +148,7 @@ function get(app: App, path: string, claim?: Claim): Promise<Response> {
 async function startFixture(repoRoot: string): Promise<{ app: App; dispose: () => Promise<void> }> {
 	initializeConfig();
 	const config = getConfig();
+	applyEphemeralAuthKeys(config.security);
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 

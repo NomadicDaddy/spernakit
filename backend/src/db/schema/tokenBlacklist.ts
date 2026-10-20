@@ -8,6 +8,10 @@ import { users } from './users.ts';
  * Stores SHA-256 hashes of revoked access tokens with their expiry timestamps.
  * Replaces the in-memory blacklist to survive process restarts.
  *
+ * `revokesAll` separates the two kinds of row. A sentinel written by revokeAllUserTokens revokes
+ * every access token the user was issued before it; a row for one revoked token (a logout) revokes
+ * only that token, so signing out of one browser leaves the user's other sign-ins working.
+ *
  * Intentional omissions:
  * - No soft delete: Ephemeral entries — expired entries are hard-deleted by cleanup task.
  * - No createdBy/updatedBy: System-managed entries with no human actor.
@@ -21,6 +25,7 @@ export const tokenBlacklist = sqliteTable(
 			.$defaultFn(() => new Date()),
 		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
 		id: integer('id').primaryKey({ autoIncrement: true }),
+		revokesAll: integer('revokes_all', { mode: 'boolean' }).notNull().default(true),
 		tokenHash: text('token_hash').notNull().unique(),
 		userId: integer('user_id').notNull(),
 	},

@@ -14,6 +14,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { asFile, assertLockablePath } from './manifest-file.ts';
+import { asRequires, assertRequirements } from './requires.ts';
+
 /**
  * Overwrite to match the owner, or write once and never touch again. There is no third.
  *
@@ -88,6 +91,8 @@ export interface SharedCoreGroup {
 	name: string;
 	/** Required. Never defaulted, and never inferred from the working directory. */
 	owner: string;
+	/** Groups a repository must also take to take this one. Held as requires.ts describes. */
+	requires?: string[];
 	requiresPackageJson?: boolean;
 	sourceRoot: string;
 	targetRoot: string;
@@ -104,64 +109,18 @@ export interface SharedCoreGroup {
 	 * dispatch reaches .githooks is a separate question, already answered by the dispatch check.
 	 */
 	wiring?: Record<string, string>;
+	/**
+	 * The wiring is the group's whole point, so a repository that holds its files and does not run
+	 * them fails the owner's check. Elsewhere unwired is a note: a guard may be set up another way.
+	 * A gate runner that a repository carries and whose gate is something else is not a variation.
+	 */
+	wiringRequired?: true;
 }
 
-const OWNERS = new Set(['aidd', 'spernakit']);
+const OWNERS = new Set(['smokestack']);
 
 function fail(message: string): never {
 	throw new Error(`shared-core-manifest.json: ${message}`);
-}
-
-function asFile(raw: unknown, where: string): SharedCoreFile {
-	if (raw === null || typeof raw !== 'object') fail(`${where} must be an object.`);
-	const file = raw as Record<string, unknown>;
-	const source = file['source'];
-	if (typeof source !== 'string' || source.length === 0) {
-		fail(`${where} needs a non-empty source.`);
-	}
-	const disposition = file['disposition'];
-	if (disposition !== 'seeded' && disposition !== 'synced') {
-		fail(`${where} disposition must be 'seeded' or 'synced'.`);
-	}
-
-	// Both halves or neither. A fallbackSource with no predicate can never be selected, and a
-	// predicate with no fallback turns an unmet contract into a silent skip rather than a lesser
-	// install — which is how a repository ends up with a hook calling a script it does not define,
-	// failing every commit instead of guarding it.
-	const requiresScripts = file['requiresScripts'];
-	const fallbackSource = file['fallbackSource'];
-	if ((requiresScripts === undefined) !== (fallbackSource === undefined)) {
-		fail(`${where} must declare requiresScripts and fallbackSource together, or neither.`);
-	}
-	if (requiresScripts !== undefined) {
-		if (
-			!Array.isArray(requiresScripts) ||
-			requiresScripts.length === 0 ||
-			requiresScripts.some((s) => typeof s !== 'string')
-		) {
-			fail(`${where} requiresScripts must be a non-empty array of script names.`);
-		}
-		if (typeof fallbackSource !== 'string' || fallbackSource.length === 0) {
-			fail(`${where} fallbackSource must be a non-empty string.`);
-		}
-	}
-
-	const target = file['target'];
-	if (target !== undefined && (typeof target !== 'string' || target.length === 0)) {
-		fail(`${where} target must be a non-empty string when present.`);
-	}
-
-	return {
-		disposition,
-		source,
-		...(typeof target === 'string' ? { target } : {}),
-		...(requiresScripts === undefined
-			? {}
-			: {
-					fallbackSource: fallbackSource as string,
-					requiresScripts: requiresScripts as string[],
-				}),
-	};
 }
 
 function asTargets(raw: unknown, where: string): DiscoveredTargets | RosterTargets {
@@ -199,6 +158,7 @@ function asGroup(raw: unknown, index: number): SharedCoreGroup {
 		if (typeof group[key] !== 'string' || (group[key] as string).length === 0) {
 			fail(`${where} needs a non-empty ${key}.`);
 		}
+		assertLockablePath(group[key] as string, `${where} ${key}`);
 	}
 	const rawFiles = group['files'];
 	if (!Array.isArray(rawFiles) || rawFiles.length === 0) {
@@ -240,6 +200,10 @@ function asGroup(raw: unknown, index: number): SharedCoreGroup {
 			}
 		}
 	}
+	const wiringRequired = group['wiringRequired'];
+	if (wiringRequired !== undefined && (wiringRequired !== true || wiring === undefined)) {
+		fail(`${where} wiringRequired must be true, on a group that declares wiring.`);
+	}
 
 	return {
 		files,
@@ -255,6 +219,10 @@ function asGroup(raw: unknown, index: number): SharedCoreGroup {
 			: {}),
 		...(wiring === undefined ? {} : { wiring: wiring as Record<string, string> }),
 		...(group['requiresPackageJson'] === true ? { requiresPackageJson: true } : {}),
+		...(wiringRequired === true ? { wiringRequired: true } : {}),
+		...(group['requires'] === undefined
+			? {}
+			: { requires: asRequires(group['requires'], where) }),
 	};
 }
 
@@ -262,8 +230,12 @@ function asGroup(raw: unknown, index: number): SharedCoreGroup {
 export function loadManifest(scriptsDir: string): SharedCoreGroup[] {
 	const path = join(scriptsDir, 'shared-core-manifest.json');
 	if (!existsSync(path)) fail(`not found at ${path}.`);
+	return parseManifest(readFileSync(path, 'utf8'));
+}
 
-	const parsed = JSON.parse(readFileSync(path, 'utf8')) as unknown;
+/** Validates a manifest's text, wherever it was read from: the working tree, or a commit. */
+export function parseManifest(text: string): SharedCoreGroup[] {
+	const parsed = JSON.parse(text) as unknown;
 	const rawGroups = (parsed as null | Record<string, unknown>)?.['groups'];
 	if (!Array.isArray(rawGroups) || rawGroups.length === 0) {
 		fail('expected a non-empty "groups" array.');
@@ -284,5 +256,6 @@ export function loadManifest(scriptsDir: string): SharedCoreGroup[] {
 			writes.add(destination);
 		}
 	}
+	assertRequirements(groups);
 	return groups;
 }

@@ -137,7 +137,7 @@ The same `{root}/{slug}/` pattern is used, with `APPDATA_ROOT` and `BACKUPS_ROOT
 
 /opt/backups/                        # BACKUPS_ROOT
 ├── spernakit/
-│   └── spernakit_<timestamp>.db
+│   └── spernakit.<timestamp>.backup.db.enc
 └── ...
 ```
 
@@ -465,7 +465,7 @@ bun run docker:image:build
 
 ### **Refreshing the Bun Base Image Digest**
 
-The root `Dockerfile` pins `oven/bun:1.4.2-alpine` with an OCI index digest in the
+The root `Dockerfile` pins `oven/bun:1.4.3-alpine` with an OCI index digest in the
 `base-builder`, `prod-deps`, and `production` stages. When the Bun version changes, refresh the
 digest in the same commit:
 
@@ -493,7 +493,11 @@ Every production deployment must have a documented rollback path. This section i
 Use when a deployment introduces a regression but the database is healthy.
 
 ```bash
-# 1. Select a previous known-good local image and re-deploy.
+# 1. Select a previous known-good local image and re-deploy. The compose file refuses to
+#    start without all five variables.
+export APP_SLUG=my-app
+export APPDATA_ROOT=/opt/appdata
+export BACKUPS_ROOT=/opt/backups
 export APP_IMAGE=my-app-test:3.13.0
 export APP_VERSION=3.13.0
 docker compose -f docker-compose.production.yml up -d
@@ -525,21 +529,33 @@ Use when the database is corrupted, accidentally wiped, or a migration cannot be
 curl -X POST https://your-domain.com/api/v1/system/backup/restore \
   -H "Authorization: Bearer $SYSOP_JWT" \
   -H "Content-Type: application/json" \
-  -d '{"backupId": "<backup-uuid>"}'
+  -d '{"backupPath": "your-app.2026-04-23T02-00-00.backup.db.enc"}'
 ```
 
-See the implementation in `backend/src/services/backup/backupRestore.ts` and the OpenAPI spec at `/api/v1/docs` for the full contract.
+`backupPath` is the file name of a backup in the backup directory, not a path and not an id. See the implementation in `backend/src/services/backup/backupRestore.ts` and the OpenAPI spec at `/api/v1/docs` for the full contract.
 
-> **Encryption key must match.** If `database.backup.encrypt` is `true`, the restore path decrypts with `security.encryptionKey`. Rotating the encryption key makes older encrypted backups unrecoverable. Before rotating, take a fresh unencrypted snapshot or re-encrypt existing backups with the new key.
+Backup files are named `<db-name>.<timestamp>.backup.db`, with `.gz` appended when `database.backup.compress` is on and `.enc` appended when `database.backup.encrypt` is on. Encryption is on by default, so a default install writes `your-app.2026-04-23T02-00-00.backup.db.enc`.
+
+> **Encryption key must match.** If `database.backup.encrypt` is `true`, the restore path decrypts with `security.backupEncryptionKey`. To rotate it, move the old value to `security.backupEncryptionKeyPrevious` and set the new one, so backups written under the old key can still be read. A backup whose key is in neither setting cannot be recovered.
 
 **CLI fallback (container down, no auth path, disaster recovery):**
 
+An encrypted or compressed backup cannot be copied over the database: the file is ciphertext or gzip, not SQLite. Restore those through the admin UI or the REST call above, which needs a running container. If the current database is too damaged to start, move it aside, start the container on a new database, create a SYSOP account the way a new install does, and restore from there.
+
+The raw copy below is valid only for a file that ends in `.backup.db`, with neither `.gz` nor `.enc` after it.
+
 ```bash
+export APP_SLUG=my-app
+export APPDATA_ROOT=/opt/appdata
+export BACKUPS_ROOT=/opt/backups
+export APP_IMAGE=my-app-test:3.13.0
+export APP_VERSION=3.13.0
+
 # 1. Stop the container so the SQLite file is closed cleanly.
 docker compose -f docker-compose.production.yml down
 
-# 2. Copy the backup into the data volume. Replace paths with your APPDATA_ROOT / BACKUPS_ROOT.
-cp "${BACKUPS_ROOT}/${APP_SLUG}/your-app_20260423_020000.db" \
+# 2. Copy the unencrypted, uncompressed backup into the data volume.
+cp "${BACKUPS_ROOT}/${APP_SLUG}/your-app.2026-04-23T02-00-00.backup.db" \
    "${APPDATA_ROOT}/${APP_SLUG}/data/your-app.db"
 
 # IMPORTANT: exclude WAL/SHM sidecars from the copy - they belong to a different DB
@@ -576,9 +592,9 @@ When a production alert fires or a user reports an outage:
 Run a **quarterly restore drill** against staging to prove the runbook works before you need it:
 
 1. Take a fresh production backup.
-2. Restore it into a staging instance using the CLI fallback path (§2).
+2. Restore it into a staging instance by the same path you would use in an incident (§2): the admin UI or REST call for an encrypted backup, the CLI fallback only for an unencrypted one. The staging instance needs the production `security.backupEncryptionKey` to read an encrypted backup.
 3. Run `bun run smoke:qc` against the restored staging.
-4. Record the drill date and outcome in the admin UI (**Settings → Backups → Drill Log**) and in `.aidd/CHANGELOG.md`.
+4. Record the drill date and outcome in `.aidd/CHANGELOG.md`.
 
 ---
 
@@ -590,8 +606,9 @@ Run a **quarterly restore drill** against staging to prove the runbook works bef
 # On your production server
 cd /path/to/your/app
 
-# Install production dependencies
-bun install --production
+# Install dependencies. The build needs typescript and vite, which are devDependencies,
+# so do not pass --production.
+bun install --frozen-lockfile
 
 # Run database migrations
 bun run db:migrate
@@ -599,8 +616,9 @@ bun run db:migrate
 # Build application
 bun run build
 
-# Start directly with Bun
-bun run start
+# Start the backend directly with Bun. Do not use `bun run start` here: that is the
+# development launcher and starts the Vite dev server.
+bun run --cwd backend start
 ```
 
 ### **Frontend Deployment**
@@ -723,17 +741,27 @@ bun run --cwd backend db:seed
 
 ### **Database Backup Strategy**
 
-```bash
-# Create backup script
-#!/bin/bash
-# backup-db.sh
-DATE=$(date +%Y%m%d_%H%M%S)
-cp ./data/your-app.db "/backups/your-app_$DATE.db"
+The application takes its own backups. Do not `cp` the live database file: under WAL mode a copy taken while the app is running can be inconsistent.
 
-# Schedule with cron
-crontab -e
-# Add: 0 2 * * * /path/to/backup-db.sh
+The built-in schedule is configured under `database.backup` in the app config:
+
+| Setting         | Default     | Meaning                                               |
+| --------------- | ----------- | ----------------------------------------------------- |
+| `enabled`       | `true`      | Take scheduled backups                                |
+| `intervalHours` | `24`        | Hours between backups                                 |
+| `retentionDays` | `30`        | Age after which a backup is deleted                   |
+| `encrypt`       | `true`      | Encrypt with `security.backupEncryptionKey` (`.enc`)  |
+| `compress`      | `false`     | Gzip before encrypting (`.gz`)                        |
+| `location`      | `./backups` | Directory inside the container, mounted from the host |
+
+In the production compose file that directory is `${BACKUPS_ROOT}/${APP_SLUG}` on the host. Backups kept only there are lost with the host, so copy the directory to another machine on a schedule:
+
+```bash
+# Add with: crontab -e
+30 2 * * * rsync -a --delete /opt/backups/my-app/ backup-host:/srv/backups/my-app/
 ```
+
+Keep `security.backupEncryptionKey` somewhere other than the backup destination. An encrypted backup is useless without it.
 
 ---
 
@@ -938,8 +966,8 @@ curl -f http://localhost:3330 || exit 1
 The Elysia backend runs directly under Bun. For production, use Docker with supervisord (included in the monolithic container), or a process manager like systemd:
 
 ```bash
-# Direct start
-bun run start
+# Direct start of the backend (`bun run start` is the development launcher)
+bun run --cwd backend start
 
 # Or via Docker
 bun run docker:up

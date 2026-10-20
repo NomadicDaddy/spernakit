@@ -23,17 +23,20 @@
  *   3. WATERFALL — the entry chunk never statically imports a chunk that is not
  *                  preloaded. That combination is the round-trip bug by definition:
  *                  the browser cannot know it needs the chunk until it parses the entry.
+ *   4. COMPILER  — React Compiler output appears outside the React runtime chunk, so a
+ *                  compiler that silently stopped running fails here instead of nowhere.
  *
  * Regenerate the budget after intentional growth:
  *   bun scripts/check-critical-path.ts --update-budget
  */
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 
+import { evaluateCompilerOutput, type JsChunk, readJsChunks } from './lib/compiler-output.ts';
 import {
 	evaluateCriticalPathBudget,
 	kb,
@@ -149,16 +152,11 @@ function staticImportsOf(entryName: string): string[] {
 	}
 	return [...imports];
 }
-function findReactRuntimeChunk(): null | string {
-	// Only .js chunks can hold the runtime; skip .br/.gz/.map siblings and CSS.
-	// Sorted so the result cannot depend on platform readdir order.
-	for (const name of readdirSync(ASSETS_DIR)
-		.filter((f) => f.endsWith('.js'))
-		.sort()) {
-		const content = readFileSync(join(ASSETS_DIR, name), 'utf-8');
-		if (REACT_RUNTIME_MARKERS.every((marker) => content.includes(marker))) return name;
-	}
-	return null;
+function findReactRuntimeChunk(chunks: readonly JsChunk[]): null | string {
+	const runtime = chunks.find((chunk) =>
+		REACT_RUNTIME_MARKERS.every((marker) => chunk.source.includes(marker)),
+	);
+	return runtime?.name ?? null;
 }
 function checkBudget(totalBrotli: number, totalGzipJs: number, updateBudget: boolean): boolean {
 	const input = {
@@ -214,7 +212,8 @@ export function runCriticalPath(updateBudget = false): number {
 		log('  never be reported as one that passed.', 'yellow');
 		return 1;
 	}
-	const reactChunk = findReactRuntimeChunk();
+	const chunks = readJsChunks(ASSETS_DIR);
+	const reactChunk = findReactRuntimeChunk(chunks);
 	let runtimeOk = true;
 
 	if (!reactChunk) {
@@ -260,7 +259,11 @@ export function runCriticalPath(updateBudget = false): number {
 		}
 	}
 
-	if (!budgetOk || !runtimeOk || !waterfallOk) {
+	// --- Check 4: React Compiler actually compiled the app (see scripts/lib/compiler-output.ts) ---
+	const compiler = evaluateCompilerOutput(chunks, reactChunk);
+	for (const line of compiler.lines) log(line.text, line.color);
+
+	if (!budgetOk || !runtimeOk || !waterfallOk || !compiler.ok) {
 		log('\n[FAIL] Critical-path verification failed\n', 'red');
 		return 1;
 	}
