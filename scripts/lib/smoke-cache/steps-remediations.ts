@@ -51,7 +51,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:lockout-refresh': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-lockout-refresh.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-lockout-refresh.ts',
+		],
 	},
 	// Loads configuration in process and scans every backend source file for an entry point.
 	'test:logger-configured': {
@@ -65,7 +70,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:logout-audit-attribution': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-logout-audit-attribution.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-logout-audit-attribution.ts',
+		],
 	},
 	'test:nginx-security': {
 		excludes: COMMON_EXCLUDES,
@@ -94,7 +104,12 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	// In-process against a temp SQLite file through the full API app, so any backend change re-runs it.
 	'test:refresh-sessions': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-refresh-sessions.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-refresh-sessions.ts',
+		],
 	},
 	'test:secret-permissions': {
 		excludes: COMMON_EXCLUDES,

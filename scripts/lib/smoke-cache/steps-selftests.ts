@@ -126,6 +126,8 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/lib/smoke-cache/**/*.ts',
 			'scripts/smoke-cache.ts',
 			'scripts/smoke.json',
+			'scripts/lib/smoke-cache/file-store.ts',
+			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-smoke-cache-status.ts',
 		],
 	},

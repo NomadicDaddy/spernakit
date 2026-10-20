@@ -297,6 +297,7 @@
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-impersonation-audit.ts"
 					]
 				},
@@ -578,6 +579,7 @@
 						"frontend/src/routes/lazyPages.ts",
 						"frontend/src/routes/routeGroups.tsx",
 						"scripts/lib/password-form-route.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-onboarding-password-step.ts"
 					]
 				},
@@ -628,6 +630,8 @@
 						"backend/src/services/auditService.ts",
 						"backend/src/services/authService.ts",
 						"backend/src/utils/fieldSelection.ts",
+						"scripts/lib/audit-filter-seed.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-audit-outcome-filter.ts"
 					]
 				},
@@ -767,6 +771,7 @@
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-lockout-refresh.ts"
 					]
 				},
@@ -789,6 +794,7 @@
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-logout-audit-attribution.ts"
 					]
 				},
@@ -898,6 +904,7 @@
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-refresh-sessions.ts"
 					]
 				},
@@ -942,6 +949,8 @@
 						"scripts/lib/smoke-cache/**/*.ts",
 						"scripts/smoke-cache.ts",
 						"scripts/smoke.json",
+						"scripts/lib/smoke-cache/file-store.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-smoke-cache-status.ts"
 					]
 				},
@@ -1104,6 +1113,7 @@
 						"backend/src/utils/errorResponse.ts",
 						"backend/src/utils/preValidationRejection.ts",
 						"scripts/lib/auth-ordering.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-auth-before-validation.ts"
 					]
 				},
@@ -1136,6 +1146,7 @@
 						"frontend/src/pages/settings/auth/AuthRateLimitSection.tsx",
 						"frontend/src/pages/settings/auth/AuthenticationTab.tsx",
 						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-auth-rate-limit-state.ts"
 					]
 				},
@@ -1192,6 +1203,7 @@
 						"backend/src/services/bug/bugSupersedeService.ts",
 						"backend/src/services/bugReportService.ts",
 						"scripts/lib/bug-supersede-world.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-bug-report-supersede.ts"
 					]
 				},
@@ -1218,6 +1230,7 @@
 						"backend/src/routes/bugs.helpers.ts",
 						"backend/src/routes/bugs.ts",
 						"backend/src/services/bugReportService.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-bug-report-whitespace.ts"
 					]
 				},
@@ -1266,6 +1279,7 @@
 						"backend/src/plugins/**",
 						"backend/src/routes/dashboards/**",
 						"backend/src/services/dashboard/**",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-dashboard-share-revoke.ts"
 					]
 				},
@@ -1364,6 +1378,7 @@
 						"frontend/src/api/errorHandling.ts",
 						"scripts/lib/auth-ordering-fixture.ts",
 						"scripts/lib/step-up-password.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-step-up-password-message.ts",
 						"shared/src/errorCodes.ts"
 					]
@@ -1389,6 +1404,7 @@
 						"frontend/src/**",
 						"scripts/lib/auth-ordering-fixture.ts",
 						"scripts/lib/username-parity.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-username-parity.ts",
 						"shared/src/usernamePolicy.ts"
 					]
@@ -1461,6 +1477,7 @@
 						"frontend/src/**",
 						"scripts/lib/workspace-header-scan.ts",
 						"scripts/lib/workspace-header-world.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-workspace-header-contract.ts"
 					]
 				},
@@ -1487,6 +1504,7 @@
 						"scripts/lib/workspace-subresource-scan.ts",
 						"scripts/lib/workspace-subresource-tally.ts",
 						"scripts/lib/workspace-subresource-world.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-workspace-subresource-existence.ts"
 					]
 				},

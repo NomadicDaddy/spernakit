@@ -13,6 +13,7 @@
 import { CHECK_STEP_DEPENDENCIES } from './steps-checks.ts';
 import { INTEGRATION_STEP_DEPENDENCIES } from './steps-integration.ts';
 import { METADATA_STEP_DEPENDENCIES } from './steps-metadata.ts';
+import { AUTH_REGRESSION_STEP_DEPENDENCIES } from './steps-regressions-auth.ts';
 import { BROWSER_REGRESSION_STEP_DEPENDENCIES } from './steps-regressions-browser.ts';
 import { WORKSPACE_REGRESSION_STEP_DEPENDENCIES } from './steps-regressions-workspace.ts';
 import { REGRESSION_STEP_DEPENDENCIES } from './steps-regressions.ts';
@@ -55,6 +56,7 @@ export const UNCACHEABLE_STEPS = new Set([
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	...BROWSER_REGRESSION_STEP_DEPENDENCIES,
+	...AUTH_REGRESSION_STEP_DEPENDENCIES,
 	...CHECK_STEP_DEPENDENCIES,
 	...INTEGRATION_STEP_DEPENDENCIES,
 	...METADATA_STEP_DEPENDENCIES,
