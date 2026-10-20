@@ -2738,8 +2738,10 @@
 					],
 					"inputs": [
 						"scripts/check-template-drift.ts",
+						"scripts/lib/gate-scripts.ts",
 						"scripts/lib/template/*.ts",
 						"scripts/template-shared.ts",
+						"scripts/test-shared-core-governed.ts",
 						"scripts/test-template-deletions.ts",
 						"scripts/test-template-drift.ts"
 					]
@@ -2747,6 +2749,18 @@
 				"description": "Drift reports build-critical structural lines and files removed by the template",
 				"name": "test:template-drift",
 				"run": ["bun", "run", "test:template-drift"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"scripts/lib/gate-scripts.ts",
+						"scripts/lib/template/branding-normalizers.ts",
+						"scripts/test-gate-scripts.ts"
+					]
+				},
+				"description": "Sanctioned gate-command mapping holds: exact forms only, drift-equal",
+				"name": "test:gate-scripts",
+				"run": ["bun", "run", "test:gate-scripts"]
 			},
 			{
 				"cache": {

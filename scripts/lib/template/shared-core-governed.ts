@@ -14,19 +14,19 @@ import { existsSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import type { SharedCoreGroup } from '../shared-core/manifest.ts';
+import type { SharedCoreGroup } from './shared-core-group.ts';
 
 /**
  * Load the shared-core manifest module from the tree that owns it.
  *
  * The static import this replaces resolved relative to THIS module, which broke check:drift in
- * every derived app at v3.47.5: apps do not carry scripts/lib/shared-core, so
- * `Cannot find module '../shared-core/manifest.ts'` fired before the guard below could return.
- * The manifest is a property of the governing scriptsDir (the template's), so it is imported
- * from there at call time; a governing tree without shared-core still short-circuits above
- * without importing anything. The group type itself is import type - erased at runtime by
- * verbatimModuleSyntax, so nothing resolves from it in an app, and it cannot drift from the
- * real manifest's shape.
+ * every derived app at v3.47.5 twice over: apps do not carry scripts/lib/shared-core, so the
+ * value import failed at runtime AND a type-only import still failed their typecheck (the
+ * scripts tsconfig includes every script file; Roger 8152a9be). The manifest is a property of the
+ * governing scriptsDir (the template's), so it is imported from there at call time; the group
+ * shape itself lives in a shipped module (./shared-core-group.ts) so nothing resolves from the
+ * missing directory anywhere. A governing tree without shared-core still short-circuits above
+ * without importing anything.
  */
 async function loadManifestFrom(scriptsDir: string): Promise<(dir: string) => SharedCoreGroup[]> {
 	const manifestUrl = pathToFileURL(join(scriptsDir, 'lib', 'shared-core', 'manifest.ts')).href;

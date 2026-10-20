@@ -223,6 +223,7 @@
 		"test:secret-permissions": "bun scripts/test-secret-permissions.ts",
 		"test:secrets-file": "bun scripts/test-secrets-file.ts",
 		"test:template-deletions": "bun scripts/test-template-deletions.ts",
+		"test:gate-scripts": "bun scripts/test-gate-scripts.ts",
 		"test:template-drift": "bun scripts/test-template-drift.ts && bun scripts/test-template-deletions.ts && bun scripts/test-shared-core-governed.ts",
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",

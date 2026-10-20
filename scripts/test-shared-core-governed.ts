@@ -9,22 +9,36 @@
  * so the exclusion cannot quietly swallow real drift. It also pins that only the comparison is
  * excluded: a governed file the app is missing still fails the drift check.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import { driftCheckedFiles, sharedCoreGovernedPaths } from './lib/template/shared-core-governed.ts';
 
-const governed = await sharedCoreGovernedPaths(join(import.meta.dir));
+const scriptsDir = join(import.meta.dir);
+const templateMode = existsSync(join(scriptsDir, 'shared-core-manifest.json'));
+const governed = await sharedCoreGovernedPaths(scriptsDir);
 const failures: string[] = [];
 
-for (const path of [
-	'.githooks/leak-guard.sh',
-	'.githooks/pre-push',
-	'scripts/check-leak-guard.sh',
-]) {
-	if (!governed.has(path)) failures.push(`${path} should be governed by shared-core`);
+if (templateMode) {
+	for (const path of [
+		'.githooks/leak-guard.sh',
+		'.githooks/pre-push',
+		'scripts/check-leak-guard.sh',
+	]) {
+		if (!governed.has(path)) failures.push(`${path} should be governed by shared-core`);
+	}
+} else {
+	// A derived app ships this self-test but no shared-core: the local manifest is absent, the
+	// guard returns an empty governed set, and nothing is excluded from comparison locally
+	// (governance for an app's drift run is read from the template it checks against). An empty
+	// set here is the app-mode contract, not a silent swallow (Roger 88317845).
+	if (governed.size !== 0) {
+		failures.push(
+			'an app has no local shared-core manifest, so the governed set must be empty',
+		);
+	}
 }
 // Template files, and a roster group's file (license core reaches derived apps via the template).
 for (const path of [

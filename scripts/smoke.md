@@ -387,17 +387,19 @@ Steps (in order):
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
 118. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-119. `bun run test:template-drift`
+119. `bun run test:gate-scripts`
+     - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
+120. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-120. `bun run format:check`
+121. `bun run format:check`
      - Format check.
-121. `bun run test:aidd-format`
+122. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-122. `bun run check:aidd-format`
+123. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-123. `bun run check-deps`
+124. `bun run check-deps`
      - Check dependency versions.
-124. `bun run check:dead-code`
+125. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod
