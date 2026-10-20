@@ -3,6 +3,28 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.6] - 2026-10-20
+
+Patch release, one defect: v3.47.5 shipped the smokestack gate runner to derived applications
+that cannot run it. A derived app is not on the smokestack roster, holds no `smokestack.lock`,
+and carries no `scripts/lib/shared-core`, so its gate failed on the first missing module before
+any check ran - the dance pilot of 2026-10-19 stopped at the first app, and nothing was written.
+
+### Fixed
+
+- The smokestack runner (`scripts/smokestack.ts`, `scripts/lib/smokestack/` and
+  `smokestack.json`) no longer ships to derived applications; the template keeps it with the
+  lock that wires it. An app's `smoke:qc` stays `bun scripts/smoke.ts --mode qc`, the gate it
+  always had.
+- The two gate commands are a sanctioned template/app difference in one shared table
+  (`scripts/lib/gate-scripts.ts`): scaffold setup rewrites them into a new app before its
+  missing-file pruning runs (which would otherwise delete the gate task outright), and the drift
+  checker normalizes both forms for comparison. Anything else found in those two script tasks
+  remains real drift.
+- `check:drift` runs again in a derived app. Its shared-core governance import resolved from the
+  app's own (never-shipped) copy; it now loads the manifest from the template tree it is
+  checking against, and only where that tree has shared-core.
+
 ## [3.47.5] - 2026-10-19
 
 Patch release, the first cut since the shared gate tooling moved to its own smokestack repository.
