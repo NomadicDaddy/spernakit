@@ -9,8 +9,32 @@ import { existsSync, renameSync, rmSync } from 'node:fs';
 import type { SetupSettings } from './config-writer.ts';
 
 import { commandFileReferences } from '../../check-script-targets.ts';
-import { GATE_SCRIPT_REWRITES } from '../gate-scripts.ts';
+import { applyGateScriptRewrites } from '../gate-scripts.ts';
 import { updateFile, updateJsonFile } from './json-files.ts';
+
+/**
+ * The scaffold's scripts-block transform, extracted so its ORDER is testable (v3.47.6):
+ * the two gate tasks are rewritten to the app's shipped-gate commands BEFORE the missing-file
+ * pruning runs, because the runner file the template's commands name never reaches a derived
+ * app - without the rewrite-first order the prune deletes the app's gate entirely
+ * (Morticia #16566 Low, Roger 877403c8 Low). `fileArrived` answers from the tree setup copied.
+ */
+export function rewriteGateScriptsThenPrune(
+	scripts: Record<string, string>,
+	fileArrived: (file: string) => boolean,
+): void {
+	applyGateScriptRewrites(scripts);
+	// A task pointing at a file the app never received cannot run, and check:script-targets
+	// fails on it in every new app. Naming those tasks here was the fragile half: the
+	// fresh-release pair was removed by name, and when the shared-core group was withheld
+	// from init later, its three tasks kept shipping and no longer resolved.
+	for (const [task, command] of Object.entries(scripts)) {
+		const missing = commandFileReferences(command).filter((file) => !fileArrived(file));
+		if (missing.length > 0) {
+			delete scripts[task];
+		}
+	}
+}
 
 /**
  * Shared helper for package.json spernakit_version ordering logic.
@@ -71,33 +95,7 @@ export function updatePackageJsonFiles(s: SetupSettings): void {
 		// publishing blind does not.
 		const scripts = pkg['scripts'] as Record<string, string> | undefined;
 		if (scripts) {
-			// The gate entrypoint is the one script command that legitimately differs between the
-			// template and a derived app (v3.47.6): the template runs the smokestack runner, an app
-			// keeps the shipped smoke.ts gate because the runner files are init-excluded. Rewrite
-			// the two tasks BEFORE the missing-file pruning below, or the pruning would delete the
-			// app's gate entirely - the runner file it names never arrives.
-			for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
-				if (typeof scripts[task] === 'string' && rewrite.template.test(scripts[task])) {
-					scripts[task] = rewrite.app;
-				}
-			}
-			// A task pointing at a file the app never received cannot run, and check:script-targets
-			// fails on it in every new app. Naming those tasks here was the fragile half: the
-			// fresh-release pair was removed by name, and when the shared-core group was withheld
-			// from init later, its three tasks kept shipping and no longer resolved.
-			//
-			// Setup runs after the copy, so the tree itself answers which files arrived. That is
-			// also the only question worth asking: re-deriving it from the copy predicate gets
-			// `prepare` deleted, because .githooks/ reaches an app through scaffolding/ and its
-			// own template path is init-excluded.
-			for (const [task, command] of Object.entries(scripts)) {
-				const missing = commandFileReferences(command).filter(
-					(file) => !existsSync(file.replace(/^\.\//, '')),
-				);
-				if (missing.length > 0) {
-					delete scripts[task];
-				}
-			}
+			rewriteGateScriptsThenPrune(scripts, (file) => existsSync(file.replace(/^\.\//, '')));
 			scripts['docker:image:push'] = 'bun scripts/docker-image.ts push';
 			scripts['release:publish'] = 'bun run docker:image:push';
 		}

@@ -159,8 +159,10 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'scripts/check-template-drift.ts',
+			'scripts/lib/gate-scripts.ts',
 			'scripts/lib/template/*.ts',
 			'scripts/template-shared.ts',
+			'scripts/test-shared-core-governed.ts',
 			'scripts/test-template-deletions.ts',
 			'scripts/test-template-drift.ts',
 		],

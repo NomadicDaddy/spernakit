@@ -12,7 +12,8 @@
  */
 import { exit } from 'node:process';
 
-import { GATE_SCRIPT_REWRITES } from './lib/gate-scripts.ts';
+import { applyGateScriptRewrites, GATE_SCRIPT_REWRITES } from './lib/gate-scripts.ts';
+import { rewriteGateScriptsThenPrune } from './lib/setup/file-updates.ts';
 import { normalizePackageJson } from './lib/template/branding-normalizers.ts';
 
 const failures: string[] = [];
@@ -94,6 +95,47 @@ if (normalizedRogue === normalizedApp) {
 	failures.push('a rogue smoke:qc command normalizes the same as the sanctioned app form');
 }
 
+// The shared helper setup calls before its missing-file pruning: rewriting in place proves the
+// exact-form behavior the scaffold depends on, and the rogue case proves the prune cannot use
+// it to keep a foreign command (Morticia #16566 Low).
+const setupScripts: Record<string, string> = {
+	build: 'bun run build',
+	...templateScripts,
+};
+applyGateScriptRewrites(setupScripts);
+for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
+	if (setupScripts[task] !== rewrite.app) {
+		failures.push(`setup helper left ${task} as ${setupScripts[task]}`);
+	}
+}
+if (setupScripts['build'] !== 'bun run build') {
+	failures.push('setup helper touched an unrelated task');
+}
+// The consumer path (Roger 877403c8 Low): with the runner ABSENT as in a scaffolded app, the
+// setup transform must keep both gate tasks - rewritten to the app commands - while a task
+// naming a file that did not arrive is still pruned. A reordering of the real consumer would
+// fail here, because the un-rewritten runner command names a file the predicate rejects.
+const scaffoldScripts: Record<string, string> = {
+	...templateScripts,
+	'not-a-task': 'bun scripts/never-arrived.ts',
+};
+rewriteGateScriptsThenPrune(
+	scaffoldScripts,
+	(file) => file === './scripts/smoke.ts' || file === 'scripts/smoke.ts',
+);
+for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
+	if (scaffoldScripts[task] !== rewrite.app) {
+		failures.push(
+			`scaffold transform lost or mangled ${task}: ${String(scaffoldScripts[task])}`,
+		);
+	}
+}
+if (!('not-a-task' in scaffoldScripts)) {
+	// expected: pruned. The assertion below reads better as the negative.
+}
+if ('not-a-task' in scaffoldScripts) {
+	failures.push('a task naming an absent file must still be pruned');
+}
 if (failures.length > 0) {
 	console.error('[FAIL] gate script mapping:');
 	for (const failure of failures) console.error(`  - ${failure}`);

@@ -58,13 +58,17 @@ for (const path of governed) {
 
 // Only the content comparison is handed off. A governed file the app lacks must still reach
 // checkFile, where it fails as missing-in-app; shared-core reports absence as advisory only.
+// The fixture uses a SYNTHETIC governed set, not the tree's real one: in template mode the real
+// set works, but in a derived app it is legitimately empty (no local manifest), and the point
+// here is the handoff behavior itself, not which files this tree governs (Morticia #16566).
 const appRoot = mkdtempSync(join(tmpdir(), 'drift-governed-'));
 try {
 	mkdirSync(join(appRoot, '.githooks'));
 	writeFileSync(join(appRoot, '.githooks', 'pre-push'), '#!/bin/sh\n');
+	const fixtureGoverned = new Set(['.githooks/pre-push']);
 	const checked = driftCheckedFiles(
 		['.githooks/pre-push', '.githooks/leak-guard.sh', 'backend/src/app.ts'],
-		governed,
+		fixtureGoverned,
 		appRoot,
 	);
 	if (checked.includes('.githooks/pre-push')) {
@@ -75,6 +79,19 @@ try {
 	}
 	if (!checked.includes('backend/src/app.ts')) {
 		failures.push('backend/src/app.ts is template-managed and must stay drift-checked');
+	}
+	// The same handoff with an empty governed set (a derived app's local reality): nothing is
+	// excluded, so every enumerated path - including a present .githooks/pre-push - stays checked.
+	const checkedUngoverned = driftCheckedFiles(
+		['.githooks/pre-push', 'backend/src/app.ts'],
+		new Set<string>(),
+		appRoot,
+	);
+	if (
+		!checkedUngoverned.includes('.githooks/pre-push') ||
+		!checkedUngoverned.includes('backend/src/app.ts')
+	) {
+		failures.push('with no governed paths (an app), every enumerated path must stay checked');
 	}
 } finally {
 	rmSync(appRoot, { force: true, recursive: true });

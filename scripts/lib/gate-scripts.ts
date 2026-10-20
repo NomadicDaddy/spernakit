@@ -26,3 +26,17 @@ export const GATE_SCRIPT_REWRITES: Record<string, GateScriptRewrite> = {
 		template: /^bun scripts\/smokestack\.ts --fast$/,
 	},
 };
+
+/**
+ * Apply the sanctioned rewrites to a scripts block, in place. Setup calls this on a scaffolded
+ * app's package.json BEFORE its missing-file pruning, so the gate tasks point at files the app
+ * actually holds rather than being deleted for naming the never-shipped runner
+ * (lib/setup/file-updates.ts; the order is what keeps the gate task alive - Morticia #16566 Low).
+ */
+export function applyGateScriptRewrites(scripts: Record<string, string>): void {
+	for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
+		if (typeof scripts[task] === 'string' && rewrite.template.test(scripts[task])) {
+			scripts[task] = rewrite.app;
+		}
+	}
+}
