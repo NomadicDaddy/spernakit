@@ -77,7 +77,12 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 	// backend source plus the migrations it applies; a change anywhere in backend/src re-runs it.
 	'test:impersonation-audit': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-impersonation-audit.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-impersonation-audit.ts',
+		],
 	},
 	// Seeds through the real seed path and reads the checklist over the real API, so its world is
 	// the onboarding service and route, the accounts and settings the seed writes, the password
