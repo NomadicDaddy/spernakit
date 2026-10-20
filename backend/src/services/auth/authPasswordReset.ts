@@ -111,26 +111,50 @@ async function resetPassword(
 	const newHash = await hashPassword(newPassword);
 
 	// Wrap password history recording and password update in a single transaction
-	// so both succeed or fail atomically
-	db.transaction((tx) => {
-		recordPasswordHistory(user.id, user.passwordHash, tx);
+	// so both succeed or fail atomically. The consuming UPDATE re-asserts the reset token
+	// (WHERE id AND resetToken = tokenHash) and checks rows affected: the SELECT above can race
+	// a concurrent reset with the same token (the 2026-10-20 SECURITY audit High, fixed in
+	// v3.47.6), and without the re-assertion both racers write and the last password wins.
+	// A zero-row update means the token was consumed between the SELECT and here; the failure
+	// deliberately returns the SAME shape and message as an invalid token so the race never
+	// reveals which request won.
+	let consumed = false;
+	try {
+		db.transaction((tx) => {
+			recordPasswordHistory(user.id, user.passwordHash, tx);
 
-		tx.update(users)
-			.set({
-				csrfToken: null,
-				failedLoginAttempts: 0,
-				lockedUntil: null,
-				passwordChangedAt: new Date(),
-				passwordHash: newHash,
-				requiresPasswordChange: false,
-				resetToken: null,
-				resetTokenExpiresAt: null,
-				updatedAt: new Date(),
-			})
-			.where(eq(users.id, user.id))
-			.run();
-		endAllRefreshSessions(user.id, tx);
-	});
+			const consumedRows = tx
+				.update(users)
+				.set({
+					csrfToken: null,
+					failedLoginAttempts: 0,
+					lockedUntil: null,
+					passwordChangedAt: new Date(),
+					passwordHash: newHash,
+					requiresPasswordChange: false,
+					resetToken: null,
+					resetTokenExpiresAt: null,
+					updatedAt: new Date(),
+				})
+				.where(and(eq(users.id, user.id), eq(users.resetToken, tokenHash)))
+				.returning({ id: users.id })
+				.all();
+			consumed = consumedRows.length === 1;
+			if (!consumed) {
+				// Throwing rolls the transaction back (the history row above with it); the
+				// catch below swallows it into the invalid-token response.
+				throw new Error('RESET_TOKEN_CONSUMED');
+			}
+			endAllRefreshSessions(user.id, tx);
+		});
+	} catch {
+		// Swallowed deliberately: identical response to the invalid-token path above.
+	}
+
+	if (!consumed) {
+		logAuth('debug', 'Password reset failed: invalid token');
+		return { success: false };
+	}
 
 	const config = getConfig();
 	const refreshTtlMs = parseDurationMs(

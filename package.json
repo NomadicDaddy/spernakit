@@ -220,6 +220,7 @@
 		"test:reset-packages": "bun scripts/test-reset-packages.ts",
 		"test:retention-zero": "bun scripts/test-retention-zero.ts",
 		"test:scaffolded-hooks": "bun scripts/test-scaffolded-hooks.ts",
+		"test:security-fixes": "bun scripts/test-security-fixes.ts",
 		"test:secret-permissions": "bun scripts/test-secret-permissions.ts",
 		"test:secrets-file": "bun scripts/test-secrets-file.ts",
 		"test:template-deletions": "bun scripts/test-template-deletions.ts",

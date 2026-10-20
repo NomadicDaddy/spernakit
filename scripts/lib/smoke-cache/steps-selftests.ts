@@ -135,6 +135,18 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-override-deltas.ts',
 		],
 	},
+	'test:security-fixes': {
+		// The v2 signing scheme and the reset consumption race (v3.47.6): the four backend files
+		// the fixes touch plus the test decide the verdict.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/plugins/authRequest.ts',
+			'backend/src/services/api-key/apiKeyManagement.ts',
+			'backend/src/services/apiKeySignatureService.ts',
+			'backend/src/services/auth/authPasswordReset.ts',
+			'scripts/test-security-fixes.ts',
+		],
+	},
 	'test:smoke-cache-status': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

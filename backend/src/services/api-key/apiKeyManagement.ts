@@ -22,6 +22,8 @@ interface ValidateApiKeyInput {
 	path: string;
 	signature: string;
 	timestamp: number;
+	/** Scheme version from the x-api-version header; only 2 is accepted. */
+	version: number;
 }
 
 interface ApiKeyListItem {

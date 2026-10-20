@@ -2753,7 +2753,20 @@
 			{
 				"cache": {
 					"inputs": [
-						"scripts/check-script-targets.ts",
+						"backend/src/plugins/authRequest.ts",
+						"backend/src/services/api-key/apiKeyManagement.ts",
+						"backend/src/services/apiKeySignatureService.ts",
+						"backend/src/services/auth/authPasswordReset.ts",
+						"scripts/test-security-fixes.ts"
+					]
+				},
+				"description": "v2 signed-nonce API-key scheme and reset consumption race regressions",
+				"name": "test:security-fixes",
+				"run": ["bun", "run", "test:security-fixes"]
+			},
+			{
+				"cache": {
+					"inputs": [
 						"scripts/lib/gate-scripts.ts",
 						"scripts/lib/setup/file-updates.ts",
 						"scripts/lib/setup/json-files.ts",

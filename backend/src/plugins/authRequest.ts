@@ -99,6 +99,7 @@ async function resolveApiKeyUser(
 			path: url.pathname + url.search,
 			signature: request.headers.get('x-api-signature') ?? '',
 			timestamp,
+			version: Number.parseInt(request.headers.get('x-api-version') ?? '0', 10),
 		});
 	} else {
 		validated = await validateApiKey(apiKeyHeader);

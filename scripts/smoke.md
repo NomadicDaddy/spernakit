@@ -80,15 +80,17 @@ Steps (in order):
     - Wait for backend to be ready.
 5. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000`
     - Wait for frontend to be ready.
-6. `bun run test:auth-reset-api`
+6. `bun run test:security-fixes`
+    - v2 signed-nonce API-key scheme and reset consumption race regressions.
+7. `bun run test:auth-reset-api`
     - Password reset endpoints reject bad requests on the running backend.
-7. `bun run test:auth-reset-ui-dev`
+8. `bun run test:auth-reset-ui-dev`
     - Test auth reset UI (dev).
-8. `bun scripts/crawltest.ts --mode dev`
+9. `bun scripts/crawltest.ts --mode dev`
     - Crawl test (dev).
-9. `bun run verify-compression --mode dev`
+10. `bun run verify-compression --mode dev`
     - Verify gzip compression on backend responses (warn-only in dev).
-10. `bun run stop`
+11. `bun run stop`
     - Stop services.
 
 ### 2. Preview
