@@ -65,7 +65,7 @@ const appRoot = mkdtempSync(join(tmpdir(), 'drift-governed-'));
 try {
 	mkdirSync(join(appRoot, '.githooks'));
 	writeFileSync(join(appRoot, '.githooks', 'pre-push'), '#!/bin/sh\n');
-	const fixtureGoverned = new Set(['.githooks/pre-push']);
+	const fixtureGoverned = new Set(['.githooks/leak-guard.sh', '.githooks/pre-push']);
 	const checked = driftCheckedFiles(
 		['.githooks/pre-push', '.githooks/leak-guard.sh', 'backend/src/app.ts'],
 		fixtureGoverned,

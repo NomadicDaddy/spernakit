@@ -94,6 +94,20 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-gate-conventions.ts',
 		],
 	},
+	'test:gate-scripts': {
+		// The mapping table, the drift normalizer that reads it, the setup consumer whose
+		// rewrite-before-prune order it pins, and that consumer's own imports (commandFileReferences
+		// and the json-files writer) all decide the verdict (v3.47.6; Morticia #16625).
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-script-targets.ts',
+			'scripts/lib/gate-scripts.ts',
+			'scripts/lib/setup/file-updates.ts',
+			'scripts/lib/setup/json-files.ts',
+			'scripts/lib/template/branding-normalizers.ts',
+			'scripts/test-gate-scripts.ts',
+		],
+	},
 	'test:gates-wired': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/check-gates-wired.ts', 'scripts/test-gates-wired.ts'],
