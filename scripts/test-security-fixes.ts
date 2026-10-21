@@ -91,6 +91,30 @@ try {
 	);
 	if (v1Accepted) failures.push('a v1 signature must be rejected outright');
 
+	// An otherwise-VALID v2 signature (fresh nonce, correct payload) submitted as version 1
+	// must also be refused: with the version gate removed this request would pass the HMAC
+	// and succeed, so this case is what actually detects the gate's removal - the legacy
+	// payload above could never pass the v2 HMAC and would mask exactly that regression.
+	const v1GateNonce = randomBytes(16).toString('hex');
+	const v2ValidSignature = createHmac('sha256', keySecret)
+		.update(`${timestamp}\n${v1GateNonce}\n${method}\n${path}\n${body}`)
+		.digest('hex');
+	const validV2AsV1 = validateSignature(
+		{
+			body,
+			method,
+			nonce: v1GateNonce,
+			path,
+			signature: v2ValidSignature,
+			timestamp,
+			version: 1,
+		},
+		keySecret,
+	);
+	if (validV2AsV1) {
+		failures.push('a valid v2 signature submitted as version 1 must be refused (version gate)');
+	}
+
 	const boundaryNonce = `x${'\nGET\n/other\n'}${randomBytes(8).toString('hex')}`;
 	const boundaryShift = validateSignature(
 		{

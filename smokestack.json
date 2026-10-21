@@ -2755,8 +2755,10 @@
 					"inputs": [
 						"backend/drizzle/*.sql",
 						"backend/src/config/configLoader.ts",
+						"backend/src/constants/auth.ts",
 						"backend/src/db/autoMigrate.ts",
 						"backend/src/db/index.ts",
+						"backend/src/db/schema/apiKeyNonces.ts",
 						"backend/src/db/schema/users.ts",
 						"backend/src/plugins/authRequest.ts",
 						"backend/src/services/api-key/apiKeyManagement.ts",
@@ -2765,6 +2767,9 @@
 						"backend/src/services/auth/authPasswordReset.ts",
 						"backend/src/services/auth/authPasswordResetConsume.ts",
 						"backend/src/utils/auth/refreshSessions.ts",
+						"backend/src/utils/auth/tokenBlacklist.ts",
+						"backend/src/utils/errorResponse.ts",
+						"backend/src/utils/logger.ts",
 						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-security-fixes.ts"
 					]

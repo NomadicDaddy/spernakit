@@ -5,8 +5,11 @@ this release.
 
 ## [3.47.6] - 2026-10-20
 
-Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit (both
-audit records stay open pending the unsigned-path removal), plus the defect where v3.47.5
+Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both
+audit records remain open, for different residuals: the API-key record for removing the
+unsigned simple-key path (a breaking protocol change that lands separately), and the reset
+record for re-asserting expiry/soft-deletion and the password-hash snapshot inside the
+consumption transaction plus an expiry-race regression. Also fixes the defect where v3.47.5
 shipped the smokestack gate runner to derived applications that cannot run it. A derived
 app is not on the smokestack roster, holds no `smokestack.lock`, and carries no
 `scripts/lib/shared-core`, so its gate failed on the first missing module before any check
