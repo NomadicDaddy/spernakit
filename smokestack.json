@@ -2753,10 +2753,19 @@
 			{
 				"cache": {
 					"inputs": [
+						"backend/drizzle/*.sql",
+						"backend/src/config/configLoader.ts",
+						"backend/src/db/autoMigrate.ts",
+						"backend/src/db/index.ts",
+						"backend/src/db/schema/users.ts",
 						"backend/src/plugins/authRequest.ts",
 						"backend/src/services/api-key/apiKeyManagement.ts",
 						"backend/src/services/apiKeySignatureService.ts",
+						"backend/src/services/auth/authCore.ts",
 						"backend/src/services/auth/authPasswordReset.ts",
+						"backend/src/services/auth/authPasswordResetConsume.ts",
+						"backend/src/utils/auth/refreshSessions.ts",
+						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-security-fixes.ts"
 					]
 				},
@@ -2767,6 +2776,7 @@
 			{
 				"cache": {
 					"inputs": [
+						"scripts/check-script-targets.ts",
 						"scripts/lib/gate-scripts.ts",
 						"scripts/lib/setup/file-updates.ts",
 						"scripts/lib/setup/json-files.ts",

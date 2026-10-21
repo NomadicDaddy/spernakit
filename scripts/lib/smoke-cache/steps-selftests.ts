@@ -136,14 +136,24 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		],
 	},
 	'test:security-fixes': {
-		// The v2 signing scheme and the reset consumption race (v3.47.6): the four backend files
-		// the fixes touch plus the test decide the verdict.
+		// The v2 signing scheme and the reset consumption race (v3.47.6): every module the
+		// test imports and the fixes lean on, plus the migrations it applies, decide the
+		// verdict - kept identical to the template runner's smokestack.json inputs.
 		excludes: COMMON_EXCLUDES,
 		globs: [
+			'backend/drizzle/*.sql',
+			'backend/src/config/configLoader.ts',
+			'backend/src/db/autoMigrate.ts',
+			'backend/src/db/index.ts',
+			'backend/src/db/schema/users.ts',
 			'backend/src/plugins/authRequest.ts',
 			'backend/src/services/api-key/apiKeyManagement.ts',
 			'backend/src/services/apiKeySignatureService.ts',
+			'backend/src/services/auth/authCore.ts',
 			'backend/src/services/auth/authPasswordReset.ts',
+			'backend/src/services/auth/authPasswordResetConsume.ts',
+			'backend/src/utils/auth/refreshSessions.ts',
+			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-security-fixes.ts',
 		],
 	},

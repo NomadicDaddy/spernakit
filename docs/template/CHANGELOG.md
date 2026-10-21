@@ -5,7 +5,8 @@ this release.
 
 ## [3.47.6] - 2026-10-20
 
-Patch release: the 2026-10-20 SECURITY audit's two Highs, plus the defect where v3.47.5
+Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit (both
+audit records stay open pending the unsigned-path removal), plus the defect where v3.47.5
 shipped the smokestack gate runner to derived applications that cannot run it. A derived
 app is not on the smokestack roster, holds no `smokestack.lock`, and carries no
 `scripts/lib/shared-core`, so its gate failed on the first missing module before any check
@@ -18,14 +19,23 @@ ran - the dance pilot of 2026-10-19 stopped at the first app, and nothing was wr
   signed, so one captured signature could be replayed with any number of fresh nonces for
   the whole timestamp window; v2 binds the nonce to the signature, so a replay with a
   different nonce fails the HMAC comparison and a replay with the same nonce fails the
-  uniqueness insert. v1 signatures are rejected outright: neither the template nor any
-  derived app ships a client-side signer, so there is nothing to grandfather. Requests are
-  authenticated through `x-api-version: 2` alongside the existing signature headers.
+  uniqueness insert. v1 signatures are rejected outright: no executable client-side signer
+  ships in the template or any derived app. Requests are authenticated through
+  `X-API-Version: 2` alongside the existing signature headers - existing HMAC clients
+  written against the v1 payload (without the nonce, without the version header) must move
+  to v2; the API authentication guide, the profile key screen and the CORS allow-list now
+  teach and admit the v2 protocol. Nonces are restricted to letters, digits and hyphens
+  (16-128 characters) so a crafted value cannot shift the payload's newline field
+  boundaries, and the version header is parsed strictly.
 - Concurrent password resets can no longer consume the same reset token twice. The
   consuming UPDATE re-asserts the token (`WHERE id AND resetToken = tokenHash`) and checks
   the claimed row, so the second racer in a SELECT-to-UPDATE race loses and receives the
-  same bare response as an invalid token - the race never reveals which request won.
-- New `test:security-fixes` gate step locks both fixes in with their cache classification.
+  same bare response as an invalid token - the race never reveals which request won. A
+  failure after the claim (session revocation, commit) rolls the whole transaction back
+  and reports failure at error level, never a rolled-back "success".
+- New `test:security-fixes` gate step locks both fixes in with their cache classification:
+  genuinely concurrent resets with a negative control against the pre-fix id-only
+  predicate, a post-claim failure injection, replay/reuse/v1/boundary-nonce assertions.
 
 ### Fixed
 

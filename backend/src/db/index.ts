@@ -254,6 +254,11 @@ function getSqlTimestampParam(date: Date): Date | number {
 	return date;
 }
 
+// Re-exported for gate scripts (scripts/test-security-fixes.ts), which resolve dependencies
+// from the root manifest and therefore cannot import drizzle-orm directly; backend modules
+// keep importing the operators from drizzle-orm itself.
+export { eq } from 'drizzle-orm';
+
 export {
 	backupDatabaseTo,
 	closeDatabase,

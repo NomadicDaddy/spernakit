@@ -11,24 +11,13 @@ interface SignatureValidationInput {
 	path: string;
 	signature: string;
 	timestamp: number;
-	/** Scheme version from the x-api-version header; only 2 is accepted. */
+	/** Scheme version from a strictly-parsed x-api-version header; only 2 is accepted. */
 	version: number;
 }
 
 /** Maximum age for API key signature timestamps (5 minutes). */
 const MAX_TIMESTAMP_AGE_MS = 5 * 60 * 1000;
 
-/**
- * Generate the v2 HMAC signature for an API key request (timestamp\nnonce\nmethod\npath\nbody).
- *
- * @param timestamp - Unix timestamp in seconds
- * @param nonce - Single-use nonce, part of the signed payload
- * @param method - HTTP method
- * @param path - Request path
- * @param body - Request body (empty string for GET)
- * @param keySecret - API key secret
- * @returns Hex-encoded HMAC-SHA256 signature
- */
 /**
  * The request-signing scheme version this build verifies.
  *
@@ -43,6 +32,25 @@ const MAX_TIMESTAMP_AGE_MS = 5 * 60 * 1000;
  */
 const SIGNATURE_VERSION = 2;
 
+/**
+ * Nonces are restricted to unambiguous characters so a crafted value cannot shift the
+ * payload's newline field boundaries (the body comes last and may itself contain newlines,
+ * so a nonce like `x\nGET\n/other` could otherwise re-bind a captured signature to a
+ * different request). 16-128 characters of [A-Za-z0-9-].
+ */
+const NONCE_PATTERN = /^[A-Za-z0-9-]{16,128}$/;
+
+/**
+ * Generate the v2 HMAC signature for an API key request (timestamp\nnonce\nmethod\npath\nbody).
+ *
+ * @param timestamp - Unix timestamp in seconds
+ * @param nonce - Single-use nonce, part of the signed payload
+ * @param method - HTTP method
+ * @param path - Request path
+ * @param body - Request body (empty string for GET)
+ * @param keySecret - API key secret
+ * @returns Hex-encoded HMAC-SHA256 signature
+ */
 function generateApiKeySignature(
 	timestamp: number,
 	nonce: string,
@@ -101,6 +109,8 @@ function validateSignature(input: SignatureValidationInput, keySecret: string): 
 
 	const timestampAge = Date.now() - timestampMs;
 	if (Math.abs(timestampAge) > MAX_TIMESTAMP_AGE_MS) return false;
+
+	if (!NONCE_PATTERN.test(input.nonce)) return false;
 
 	const expected = generateApiKeySignature(
 		input.timestamp,

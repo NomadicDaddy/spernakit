@@ -46,14 +46,14 @@ Store both values securely. The secret is returned only once.
 
 ### Request Signing
 
-To sign a request:
+To sign a request (scheme v2):
 
-1. **Generate a nonce**: A unique string for each request (UUID v4 recommended)
+1. **Generate a nonce**: A unique string for each request (UUID v4 recommended). Restricted to letters, digits and hyphens, 16-128 characters.
 2. **Get timestamp**: Current Unix timestamp in seconds
-3. **Create payload**: Join with newlines: `timestamp + "\n" + method + "\n" + path + "\n" + body`
+3. **Create payload**: Join with newlines: `timestamp + "\n" + nonce + "\n" + method + "\n" + path + "\n" + body`
 4. **Generate signature**: HMAC-SHA256 of `payload` using `keySecret`
 
-> **Newline delimiters**: The payload fields are separated by `\n` to prevent ambiguous concatenations (e.g., timestamp digits bleeding into the method).
+> **Newline delimiters**: The payload fields are separated by `\n` to prevent ambiguous concatenations (e.g., timestamp digits bleeding into the method). The nonce is restricted to characters that cannot appear as delimiters so it cannot shift the field boundaries.
 
 > **Path construction**: The path must include the query string if present. For example, `/api/users?page=1` not just `/api/users`.
 
@@ -66,7 +66,10 @@ X-API-Key: <api_key>
 X-API-Signature: <sha256_signature>
 X-API-Timestamp: <unix_timestamp_in_seconds>
 X-API-Nonce: <unique_nonce>
+X-API-Version: 2
 ```
+
+> **Scheme versioning**: `X-API-Version: 2` is required. The nonce is part of the signed payload in v2, so a captured signature cannot be replayed under a fresh nonce. Requests without the version header - or signed with the v1 payload, which excluded the nonce - are rejected outright. Existing HMAC clients written against v1 must move to the v2 payload and send the version header.
 
 ### Example: GET Request
 
@@ -81,7 +84,7 @@ const body = '';
 const timestamp = Math.floor(Date.now() / 1000);
 const nonce = crypto.randomUUID();
 
-const payload = `${timestamp}\n${method}\n${path}\n${body}`;
+const payload = `${timestamp}\n${nonce}\n${method}\n${path}\n${body}`;
 const signature = createHmac('sha256', apiKeySecret).update(payload).digest('hex');
 
 const response = await fetch('http://localhost:3331' + path, {
@@ -91,6 +94,7 @@ const response = await fetch('http://localhost:3331' + path, {
 		'X-API-Signature': signature,
 		'X-API-Timestamp': timestamp.toString(),
 		'X-API-Nonce': nonce,
+		'X-API-Version': '2',
 	},
 });
 ```
@@ -108,7 +112,7 @@ const body = JSON.stringify({ username: 'newuser', password: 'secure123' });
 const timestamp = Math.floor(Date.now() / 1000);
 const nonce = crypto.randomUUID();
 
-const payload = `${timestamp}\n${method}\n${path}\n${body}`;
+const payload = `${timestamp}\n${nonce}\n${method}\n${path}\n${body}`;
 const signature = createHmac('sha256', apiKeySecret).update(payload).digest('hex');
 
 const response = await fetch('http://localhost:3331' + path, {
@@ -118,6 +122,7 @@ const response = await fetch('http://localhost:3331' + path, {
 		'X-API-Signature': signature,
 		'X-API-Timestamp': timestamp.toString(),
 		'X-API-Nonce': nonce,
+		'X-API-Version': '2',
 		'Content-Type': 'application/json',
 	},
 	body,
@@ -137,6 +142,7 @@ const response = await fetch('http://localhost:3331' + path, {
 - Server stores each nonce with 5-minute expiry
 - Prevents duplicate submission of the same request
 - Each request must carry its own nonce; a captured request cannot be resent
+- The nonce is part of the signed payload (v2), so a captured signature cannot be replayed under a fresh nonce either
 
 ### Constant-Time Comparison
 
@@ -160,7 +166,7 @@ class ApiKeyClient {
 	private sign(method: string, path: string, body: string): Record<string, string> {
 		const timestamp = Math.floor(Date.now() / 1000);
 		const nonce = randomUUID();
-		const payload = `${timestamp}\n${method}\n${path}\n${body}`;
+		const payload = `${timestamp}\n${nonce}\n${method}\n${path}\n${body}`;
 		const signature = createHmac('sha256', this.apiKeySecret).update(payload).digest('hex');
 
 		return {
@@ -168,6 +174,7 @@ class ApiKeyClient {
 			'X-API-Signature': signature,
 			'X-API-Timestamp': timestamp.toString(),
 			'X-API-Nonce': nonce,
+			'X-API-Version': '2',
 			'Content-Type': 'application/json',
 		};
 	}
@@ -233,13 +240,14 @@ class ApiKeyClient:
     def _sign_request(self, method: str, path: str, body: str) -> dict:
         timestamp = int(time.time())
         nonce = str(uuid.uuid4())
-        payload = f"{timestamp}\n{method}\n{path}\n{body}"
+        payload = f"{timestamp}\n{nonce}\n{method}\n{path}\n{body}"
         signature = hmac.new(self.api_key_secret.encode(), payload.encode(), 'sha256').hexdigest()
         return {
             'X-API-Key': self.api_key,
             'X-API-Signature': signature,
             'X-API-Timestamp': str(timestamp),
             'X-API-Nonce': nonce,
+            'X-API-Version': '2',
         }
 
     def request(self, method: str, path: str, body: Optional[dict] = None):
@@ -284,7 +292,8 @@ All API-key authentication failures (unknown/revoked/expired key, bad signature,
 
 ### Request fails with signature error
 
-- Verify payload construction: newline-delimited `timestamp + "\n" + method + "\n" + path + "\n" + body`
+- Verify payload construction: newline-delimited `timestamp + "\n" + nonce + "\n" + method + "\n" + path + "\n" + body` (v2; the nonce is included)
+- Send `X-API-Version: 2` - requests without it are rejected outright
 - Ensure body is the exact string sent (including whitespace)
 - Ensure the signature uses HMAC-SHA256 with the key secret, not a plain SHA-256 hash
 - Check that path includes the query string (e.g., `/api/users?page=1`)
@@ -296,11 +305,12 @@ All API-key authentication failures (unknown/revoked/expired key, bad signature,
 - Ensure timestamp is in **seconds**, not milliseconds
 - Use NTP to synchronize system time
 
-### Request rejected due to nonce reuse
+### Request rejected due to nonce reuse or format
 
 - Generate a unique nonce for each request
 - Use UUID v4 or a cryptographically secure random string
 - Never reuse nonces across requests
+- Keep the nonce to letters, digits and hyphens, 16-128 characters; anything else (including newlines) is refused
 
 ## References
 
