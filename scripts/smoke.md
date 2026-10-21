@@ -80,15 +80,17 @@ Steps (in order):
     - Wait for backend to be ready.
 5. `bun scripts/wait-for-http.ts --url http://localhost:{{FRONTEND_PORT}} --timeoutMs 30000`
     - Wait for frontend to be ready.
-6. `bun run test:auth-reset-api`
+6. `bun run test:security-fixes`
+    - v2 signed-nonce API-key scheme and reset consumption race regressions.
+7. `bun run test:auth-reset-api`
     - Password reset endpoints reject bad requests on the running backend.
-7. `bun run test:auth-reset-ui-dev`
+8. `bun run test:auth-reset-ui-dev`
     - Test auth reset UI (dev).
-8. `bun scripts/crawltest.ts --mode dev`
+9. `bun scripts/crawltest.ts --mode dev`
     - Crawl test (dev).
-9. `bun run verify-compression --mode dev`
+10. `bun run verify-compression --mode dev`
     - Verify gzip compression on backend responses (warn-only in dev).
-10. `bun run stop`
+11. `bun run stop`
     - Stop services.
 
 ### 2. Preview
@@ -387,17 +389,19 @@ Steps (in order):
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
 118. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-119. `bun run test:template-drift`
+119. `bun run test:gate-scripts`
+     - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
+120. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-120. `bun run format:check`
+121. `bun run format:check`
      - Format check.
-121. `bun run test:aidd-format`
+122. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-122. `bun run check:aidd-format`
+123. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-123. `bun run check-deps`
+124. `bun run check-deps`
      - Check dependency versions.
-124. `bun run check:dead-code`
+125. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

@@ -81,7 +81,7 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					{'  '}$API_BASE_URL/users
 				</pre>
 				<p>
-					HMAC mode - additionally send{' '}
+					HMAC mode (v2) - additionally send{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						X-API-Signature
 					</code>
@@ -89,11 +89,20 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						X-API-Timestamp
 					</code>
-					, and{' '}
+					,{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						X-API-Nonce
 					</code>{' '}
-					computed from the API Secret.
+					and{' '}
+					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
+						X-API-Version: 2
+					</code>
+					. The signature is an HMAC-SHA256 over{' '}
+					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
+						timestamp{'\n'}nonce{'\n'}method{'\n'}path{'\n'}body
+					</code>{' '}
+					using the API Secret; the nonce (letters, digits and hyphen, 16-128 chars) is
+					single-use and part of the signed payload. See the API authentication guide.
 				</p>
 				<p className="text-muted-foreground/80">
 					These user-minted keys are distinct from the app-level{' '}

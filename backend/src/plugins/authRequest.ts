@@ -77,6 +77,17 @@ function resolveUserFromRequest(request: Request): AuthPayload | null {
 	return payload;
 }
 
+/**
+ * Strict integer parse of the x-api-version header. Number.parseInt alone would accept
+ * "2abc" as 2, leaking a malformed header through as a valid scheme version.
+ *
+ * @param raw - Raw header value or null when absent
+ * @returns The parsed version, or NaN when the value is not a bare run of digits
+ */
+function parseStrictVersion(raw: null | string): number {
+	return raw !== null && /^\d+$/.test(raw) ? Number.parseInt(raw, 10) : Number.NaN;
+}
+
 async function resolveApiKeyUser(
 	request: Request,
 	apiKeyHeader: string,
@@ -99,6 +110,7 @@ async function resolveApiKeyUser(
 			path: url.pathname + url.search,
 			signature: request.headers.get('x-api-signature') ?? '',
 			timestamp,
+			version: parseStrictVersion(request.headers.get('x-api-version')),
 		});
 	} else {
 		validated = await validateApiKey(apiKeyHeader);

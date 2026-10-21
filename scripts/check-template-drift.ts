@@ -150,7 +150,7 @@ function fail(reason: string): never {
 
 // ===== MAIN =====
 
-function report(options: TemplateDriftOptions): number {
+async function report(options: TemplateDriftOptions): Promise<number> {
 	console.log('Checking template drift...');
 	console.log('');
 
@@ -193,7 +193,7 @@ function report(options: TemplateDriftOptions): number {
 		console.log('');
 	}
 
-	const governed = sharedCoreGovernedPaths(path.join(spernakitPath, 'scripts'));
+	const governed = await sharedCoreGovernedPaths(path.join(spernakitPath, 'scripts'));
 	const enumerated = enumerateTemplateFiles(spernakitPath, version);
 	const templateFiles = driftCheckedFiles(enumerated, governed, repoRoot);
 	if (templateFiles.length === 0) {
@@ -264,9 +264,9 @@ function report(options: TemplateDriftOptions): number {
 	return totalDrift + retained > 0 ? 1 : 0;
 }
 
-export function runTemplateDrift(options: TemplateDriftOptions = {}): number {
+export async function runTemplateDrift(options: TemplateDriftOptions = {}): Promise<number> {
 	try {
-		return report(options);
+		return await report(options);
 	} catch (err: unknown) {
 		// `skip` and `fail` land here carrying the code they chose; everything else is an
 		// unanticipated failure, which is a finding rather than a bad-argument exit.
@@ -290,5 +290,5 @@ if (import.meta.main) {
 		);
 		exit(2);
 	}
-	exit(runTemplateDrift(options));
+	exit(await runTemplateDrift(options));
 }

@@ -23,6 +23,10 @@
 					"description": "Wait for frontend to be ready"
 				},
 				{
+					"command": "bun run test:security-fixes",
+					"description": "v2 signed-nonce API-key scheme and reset consumption race regressions"
+				},
+				{
 					"command": "bun run test:auth-reset-api",
 					"description": "Password reset endpoints reject bad requests on the running backend"
 				},
@@ -612,6 +616,11 @@
 				{
 					"command": "bun run test:scaffolded-hooks",
 					"description": "Scaffolded pre-push hook replays refs through both release guards",
+					"templateOnly": true
+				},
+				{
+					"command": "bun run test:gate-scripts",
+					"description": "Sanctioned gate-command mapping holds: exact forms only, drift-equal",
 					"templateOnly": true
 				},
 				{

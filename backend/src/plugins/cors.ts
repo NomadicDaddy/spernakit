@@ -40,7 +40,7 @@ const corsPlugin = new Elysia({ name: 'cors' })
 				// The workspace header is named by the guard that reads it, so the allow-list
 				// cannot come to publish a spelling the server does not answer to.
 				set.headers['Access-Control-Allow-Headers'] =
-					`Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-API-Key, X-API-Signature, X-API-Timestamp, X-API-Nonce, X-Request-ID, X-Session-ID, ${WORKSPACE_HEADER}`;
+					`Content-Type, Authorization, X-Requested-With, X-CSRF-Token, X-API-Key, X-API-Signature, X-API-Timestamp, X-API-Nonce, X-API-Version, X-Request-ID, X-Session-ID, ${WORKSPACE_HEADER}`;
 				set.headers['Access-Control-Expose-Headers'] = 'X-CSRF-Token, X-Request-ID';
 				set.headers['Access-Control-Allow-Credentials'] = 'true';
 				set.headers['Access-Control-Max-Age'] = String(CORS_MAX_AGE_SECONDS);

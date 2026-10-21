@@ -94,6 +94,21 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-gate-conventions.ts',
 		],
 	},
+	'test:gate-scripts': {
+		// The mapping table, the drift normalizer that reads it, the setup consumer whose
+		// rewrite-before-prune order it pins, and that consumer's own imports (commandFileReferences
+		// and the json-files writer) all decide the verdict (v3.47.6; Morticia #16625).
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-script-targets.ts',
+			'scripts/lib/gate-scripts.ts',
+			'scripts/lib/setup/file-updates.ts',
+			'scripts/lib/setup/json-files.ts',
+			'scripts/lib/template/branding-normalizers.ts',
+			'scripts/lib/template/text.ts',
+			'scripts/test-gate-scripts.ts',
+		],
+	},
 	'test:gates-wired': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['scripts/check-gates-wired.ts', 'scripts/test-gates-wired.ts'],
@@ -118,6 +133,33 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/check-override-deltas.ts',
 			'scripts/lib/template/*.ts',
 			'scripts/test-override-deltas.ts',
+		],
+	},
+	'test:security-fixes': {
+		// The v2 signing scheme and the reset consumption race (v3.47.6): every module the
+		// test imports and the fixes lean on, plus the migrations it applies, decide the
+		// verdict - kept identical to the template runner's smokestack.json inputs.
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/*.sql',
+			'backend/src/config/configLoader.ts',
+			'backend/src/constants/auth.ts',
+			'backend/src/db/autoMigrate.ts',
+			'backend/src/db/index.ts',
+			'backend/src/db/schema/apiKeyNonces.ts',
+			'backend/src/db/schema/users.ts',
+			'backend/src/plugins/authRequest.ts',
+			'backend/src/services/api-key/apiKeyManagement.ts',
+			'backend/src/services/apiKeySignatureService.ts',
+			'backend/src/services/auth/authCore.ts',
+			'backend/src/services/auth/authPasswordReset.ts',
+			'backend/src/services/auth/authPasswordResetConsume.ts',
+			'backend/src/utils/auth/refreshSessions.ts',
+			'backend/src/utils/auth/tokenBlacklist.ts',
+			'backend/src/utils/errorResponse.ts',
+			'backend/src/utils/logger.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-security-fixes.ts',
 		],
 	},
 	'test:smoke-cache-status': {
@@ -159,8 +201,10 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'scripts/check-template-drift.ts',
+			'scripts/lib/gate-scripts.ts',
 			'scripts/lib/template/*.ts',
 			'scripts/template-shared.ts',
+			'scripts/test-shared-core-governed.ts',
 			'scripts/test-template-deletions.ts',
 			'scripts/test-template-drift.ts',
 		],

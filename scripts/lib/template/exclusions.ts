@@ -76,6 +76,17 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^scripts\/lib\/shared-core\//,
 	/^scripts\/shared-core-manifest\.json$/,
 	/^scripts\/sync-shared-core\.ts$/,
+	// The smokestack gate runner, template-only for the same structural reason: it is delivered
+	// and wired through smokestack.lock, which only a roster member holds. A derived app is not on
+	// the roster, so the runner in an app can only refuse ("there is no smokestack.lock here"),
+	// and its imports into scripts/lib/shared-core cannot even resolve there (v3.47.5 shipped it
+	// anyway and every derived app's gate failed on the missing module - the dance pilot halt of
+	// 2026-10-19). Apps keep the shipped gate entry scripts/smoke.ts; the template's own
+	// package.json runs the runner, and the smoke:qc script difference is a branded
+	// normalization (branding-normalizers.ts) rather than drift.
+	/^scripts\/smokestack\.ts$/,
+	/^scripts\/lib\/smokestack\//,
+	/^smokestack\.json$/,
 	// The template's own record of what the shared-core owner delivered to it: versions, a commit
 	// and a hash per file, all of them statements about this repository. A derived app is not a
 	// target of that delivery and has no tool that reads the file, so a copy there would be a lock

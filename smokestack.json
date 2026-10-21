@@ -2738,8 +2738,10 @@
 					],
 					"inputs": [
 						"scripts/check-template-drift.ts",
+						"scripts/lib/gate-scripts.ts",
 						"scripts/lib/template/*.ts",
 						"scripts/template-shared.ts",
+						"scripts/test-shared-core-governed.ts",
 						"scripts/test-template-deletions.ts",
 						"scripts/test-template-drift.ts"
 					]
@@ -2747,6 +2749,50 @@
 				"description": "Drift reports build-critical structural lines and files removed by the template",
 				"name": "test:template-drift",
 				"run": ["bun", "run", "test:template-drift"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/drizzle/*.sql",
+						"backend/src/config/configLoader.ts",
+						"backend/src/constants/auth.ts",
+						"backend/src/db/autoMigrate.ts",
+						"backend/src/db/index.ts",
+						"backend/src/db/schema/apiKeyNonces.ts",
+						"backend/src/db/schema/users.ts",
+						"backend/src/plugins/authRequest.ts",
+						"backend/src/services/api-key/apiKeyManagement.ts",
+						"backend/src/services/apiKeySignatureService.ts",
+						"backend/src/services/auth/authCore.ts",
+						"backend/src/services/auth/authPasswordReset.ts",
+						"backend/src/services/auth/authPasswordResetConsume.ts",
+						"backend/src/utils/auth/refreshSessions.ts",
+						"backend/src/utils/auth/tokenBlacklist.ts",
+						"backend/src/utils/errorResponse.ts",
+						"backend/src/utils/logger.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-security-fixes.ts"
+					]
+				},
+				"description": "v2 signed-nonce API-key scheme and reset consumption race regressions",
+				"name": "test:security-fixes",
+				"run": ["bun", "run", "test:security-fixes"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"scripts/check-script-targets.ts",
+						"scripts/lib/gate-scripts.ts",
+						"scripts/lib/setup/file-updates.ts",
+						"scripts/lib/setup/json-files.ts",
+						"scripts/lib/template/branding-normalizers.ts",
+						"scripts/lib/template/text.ts",
+						"scripts/test-gate-scripts.ts"
+					]
+				},
+				"description": "Sanctioned gate-command mapping holds: exact forms only, drift-equal",
+				"name": "test:gate-scripts",
+				"run": ["bun", "run", "test:gate-scripts"]
 			},
 			{
 				"cache": {

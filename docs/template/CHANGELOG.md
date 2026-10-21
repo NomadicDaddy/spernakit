@@ -3,6 +3,58 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.47.6] - 2026-10-20
+
+Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both
+audit records remain open, for different residuals: the API-key record for removing the
+unsigned simple-key path (a breaking protocol change that lands separately), and the reset
+record for re-asserting expiry/soft-deletion and the password-hash snapshot inside the
+consumption transaction plus an expiry-race regression. Also fixes the defect where v3.47.5
+shipped the smokestack gate runner to derived applications that cannot run it. A derived
+app is not on the smokestack roster, holds no `smokestack.lock`, and carries no
+`scripts/lib/shared-core`, so its gate failed on the first missing module before any check
+ran - the dance pilot of 2026-10-19 stopped at the first app, and nothing was written.
+
+### Security
+
+- API-key request signing moves to a v2 scheme that signs the single-use nonce
+  (`timestamp\nnonce\nmethod\npath\nbody`). In v1 the nonce was stored single-use but not
+  signed, so one captured signature could be replayed with any number of fresh nonces for
+  the whole timestamp window; v2 binds the nonce to the signature, so a replay with a
+  different nonce fails the HMAC comparison and a replay with the same nonce fails the
+  uniqueness insert. v1 signatures are rejected outright: no executable client-side signer
+  ships in the template or any derived app. Requests are authenticated through
+  `X-API-Version: 2` alongside the existing signature headers - existing HMAC clients
+  written against the v1 payload (without the nonce, without the version header) must move
+  to v2; the API authentication guide, the profile key screen and the CORS allow-list now
+  teach and admit the v2 protocol. Nonces are restricted to letters, digits and hyphens
+  (16-128 characters) so a crafted value cannot shift the payload's newline field
+  boundaries, and the version header is parsed strictly.
+- Concurrent password resets can no longer consume the same reset token twice. The
+  consuming UPDATE re-asserts the token (`WHERE id AND resetToken = tokenHash`) and checks
+  the claimed row, so the second racer in a SELECT-to-UPDATE race loses and receives the
+  same bare response as an invalid token - the race never reveals which request won. A
+  failure after the claim (session revocation, commit) rolls the whole transaction back
+  and reports failure at error level, never a rolled-back "success".
+- New `test:security-fixes` gate step locks both fixes in with their cache classification:
+  genuinely concurrent resets with a negative control against the pre-fix id-only
+  predicate, a post-claim failure injection, replay/reuse/v1/boundary-nonce assertions.
+
+### Fixed
+
+- The smokestack runner (`scripts/smokestack.ts`, `scripts/lib/smokestack/` and
+  `smokestack.json`) no longer ships to derived applications; the template keeps it with the
+  lock that wires it. An app's `smoke:qc` stays `bun scripts/smoke.ts --mode qc`, the gate it
+  always had.
+- The two gate commands are a sanctioned template/app difference in one shared table
+  (`scripts/lib/gate-scripts.ts`): scaffold setup rewrites them into a new app before its
+  missing-file pruning runs (which would otherwise delete the gate task outright), and the drift
+  checker normalizes both forms for comparison. Anything else found in those two script tasks
+  remains real drift.
+- `check:drift` runs again in a derived app. Its shared-core governance import resolved from the
+  app's own (never-shipped) copy; it now loads the manifest from the template tree it is
+  checking against, and only where that tree has shared-core.
+
 ## [3.47.5] - 2026-10-19
 
 Patch release, the first cut since the shared gate tooling moved to its own smokestack repository.

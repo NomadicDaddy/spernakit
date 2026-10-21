@@ -3,6 +3,7 @@ import type { BrandingValues } from './types.ts';
 /**
  * Per-file branding normalizers used by normalizeBranding in branding.ts.
  */
+import { GATE_SCRIPT_REWRITES } from '../gate-scripts.ts';
 import { escapeRegex, normalizeLineEndings } from './text.ts';
 
 export function normalizePackageJson(
@@ -28,6 +29,24 @@ export function normalizePackageJson(
 		delete pkg['bugs'];
 		delete pkg['homepage'];
 		delete pkg['repository'];
+
+		// The gate entrypoint is a legitimate template/app difference (v3.47.6): the template runs
+		// the smokestack runner (`bun scripts/smokestack.ts`), which its smokestack.lock wires,
+		// while a derived app is not on the smokestack roster and keeps the shipped gate
+		// (`bun scripts/smoke.ts --mode qc`). Both mean "run the qc gate"; the sanctioned forms
+		// live in one shared table (lib/gate-scripts.ts) that setup's scaffold rewrite also
+		// reads, and anything else in these two scripts is real drift and stays compared.
+		const scripts = pkg['scripts'] as Record<string, string> | undefined;
+		if (scripts) {
+			for (const [key, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
+				if (
+					typeof scripts[key] === 'string' &&
+					(rewrite.template.test(scripts[key]) || scripts[key] === rewrite.app)
+				) {
+					scripts[key] = `{{${key.replaceAll(':', '_').toUpperCase()}}}`;
+				}
+			}
+		}
 
 		return JSON.stringify(pkg, null, '\t');
 	} catch {
