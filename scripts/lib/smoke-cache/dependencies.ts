@@ -52,6 +52,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	// It imports the release-notes and sync-plan tools whole and reads the release workflow, so its
 	// inputs are most of `scripts/`. It runs in a fraction of a second; a cache would save nothing.
 	'test:fresh-release',
+	// It initializes from the live HEAD tree, so every template file is an input; only a full-tree
+	// hash would be honest, and the copy itself is the cost the cache would need to skip.
+	'test:init-exclusions',
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {

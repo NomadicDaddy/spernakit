@@ -14,6 +14,8 @@
  *   bun scripts/init.ts --application myapp --target ../myapp --description "My app"
  *   bun scripts/init.ts --application myapp --target /abs/path/myapp \
  *     --name "My App" --description "…" --frontend-port 3340 --backend-port 3341
+ *   bun scripts/init.ts --application myapp --target ../probe --no-install \
+ *     --description "copy-only probe (no install, setup, migrations, seed, licenses or gate)"
  */
 import { copyFileSync, existsSync, readFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
@@ -45,6 +47,8 @@ interface Args {
 	frontendPort?: number;
 	manifest?: string;
 	name?: string;
+	/** Skip install, setup, migrate, seed and licenses; copy and configure only. */
+	noInstall: boolean;
 	registerFleet: boolean;
 	source?: string;
 	target?: string;
@@ -57,7 +61,7 @@ function fail(message: string): never {
 }
 
 function parseArgs(argv: string[]): Args {
-	const args: Args = { force: false, registerFleet: true };
+	const args: Args = { force: false, noInstall: false, registerFleet: true };
 	for (let i = 0; i < argv.length; i++) {
 		const value = (): string => {
 			const next = argv[++i];
@@ -85,6 +89,9 @@ function parseArgs(argv: string[]): Args {
 				break;
 			case '--name':
 				args.name = value();
+				break;
+			case '--no-install':
+				args.noInstall = true;
 				break;
 			case '--no-register-fleet':
 				args.registerFleet = false;
@@ -169,6 +176,12 @@ async function main(): Promise<void> {
 	try {
 		prepareTarget(target, args.force);
 		log(`Copied ${copyTemplateTree(source, target)} template files.`);
+
+		if (args.noInstall) {
+			seedTemplateOverrides(target);
+			log('  --no-install: skipped install, setup, migrations, seed, licenses and gate.');
+			return;
+		}
 
 		run(['bun', 'i', '--frozen-lockfile'], target);
 		// setup may exit non-zero via check-application even when it succeeded (mirrors init.ps1).

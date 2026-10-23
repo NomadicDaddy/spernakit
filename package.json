@@ -196,6 +196,7 @@
 		"test:fleet-manifest": "bun scripts/test-fleet-manifest.ts",
 		"test:fleet-manifest-sync": "bun scripts/test-fleet-manifest-sync.ts",
 		"test:fresh-release": "bun scripts/test-fresh-release.ts",
+		"test:init-exclusions": "bun scripts/test-init-exclusions.ts",
 		"test:gates-wired": "bun scripts/test-gates-wired.ts",
 		"test:gate-conventions": "bun scripts/smokestack/test-gate-conventions.ts",
 		"test:impersonation-audit": "bun scripts/test-impersonation-audit.ts",

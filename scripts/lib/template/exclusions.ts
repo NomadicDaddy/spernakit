@@ -68,30 +68,29 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,
-	// Fleet peer-sync machinery, template-only for the same reason check-fresh-release is: one
-	// repository owns every shared-core group and it is not a derived app, so in a derived app
-	// every one of these can do nothing but refuse. Its qc step is already templateOnly; excluding
-	// it from init keeps the script, its library and its manifest out of trees that cannot use
-	// them.
-	/^scripts\/lib\/shared-core\//,
-	/^scripts\/shared-core-manifest\.json$/,
-	/^scripts\/sync-shared-core\.ts$/,
-	// The smokestack gate runner, template-only for the same structural reason: it is delivered
-	// and wired through smokestack.lock, which only a roster member holds. A derived app is not on
-	// the roster, so the runner in an app can only refuse ("there is no smokestack.lock here"),
-	// and its imports into scripts/lib/shared-core cannot even resolve there (v3.47.5 shipped it
-	// anyway and every derived app's gate failed on the missing module - the dance pilot halt of
-	// 2026-10-19). Apps keep the shipped gate entry scripts/smoke.ts; the template's own
-	// package.json runs the runner, and the smoke:qc script difference is a branded
-	// normalization (branding-normalizers.ts) rather than drift.
-	/^scripts\/smokestack\.ts$/,
-	/^scripts\/lib\/smokestack\//,
-	/^smokestack\.json$/,
-	// The template's own record of what the shared-core owner delivered to it: versions, a commit
-	// and a hash per file, all of them statements about this repository. A derived app is not a
-	// target of that delivery and has no tool that reads the file, so a copy there would be a lock
-	// describing somebody else's tree.
-	/^smokestack\.lock$/,
+	// The init-from-HEAD exclusion control itself: it drives THIS template's init and reads its
+	// live tree, so in a derived app it can only fail.
+	/^scripts\/test-init-exclusions\.ts$/,
+	// Fleet peer-sync machinery and the smokestack gate runner, template-only for the same reason
+	// check-fresh-release is: one repository owns every shared-core group and it is not a derived
+	// app, so in a derived app every one of these can do nothing but refuse. Since smokestack
+	// v0.6.0 these live under scripts/smokestack/ at their new homes; the seven exclusions name
+	// exactly that template-only set (runner, its lib, shared-core, the manifest, the sync, the
+	// json and the lock) and nothing else, because the rest of scripts/smokestack/ is what derived
+	// apps are MEANT to receive through the template: check-leak-guard.sh, the hooks, run-bash.ts,
+	// license-core and the destructive checks (blanket-excluding the directory withheld modules
+	// the copied license/destructive files import - reviews #20481/#20486/#20487). The pre-v0.6.0
+	// per-path patterns stopped matching after the move, which would have copied the whole
+	// template-only set into any app initialized from main (shadow review 2026-10-23, Medium).
+	// Apps keep the shipped gate entry scripts/smoke.ts; the smoke:qc script difference is a
+	// branded normalization (branding-normalizers.ts) rather than drift.
+	/^scripts\/smokestack\/smokestack\.ts$/,
+	/^scripts\/smokestack\/lib\/smokestack\//,
+	/^scripts\/smokestack\/lib\/shared-core\//,
+	/^scripts\/smokestack\/shared-core-manifest\.json$/,
+	/^scripts\/smokestack\/sync-shared-core\.ts$/,
+	/^scripts\/smokestack\/smokestack\.json$/,
+	/^scripts\/smokestack\/smokestack\.lock$/,
 	/^smoke-cache\.json$/,
 	/^sync\.ps1$/,
 ];

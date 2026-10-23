@@ -149,6 +149,11 @@
 					"templateOnly": true
 				},
 				{
+					"command": "bun run test:init-exclusions",
+					"description": "Initializing a throwaway app from HEAD seeds no delivery-managed smokestack or shared-core files, by directory and by the retired pre-v0.6.0 paths",
+					"templateOnly": true
+				},
+				{
 					"command": "bun run check:feature-id-directory",
 					"description": "Feature id matches its directory"
 				},
