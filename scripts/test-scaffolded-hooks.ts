@@ -29,6 +29,7 @@ import {
 	type RunResult,
 	write,
 } from './lib/scaffolded-hooks/harness.ts';
+import { assertPairs, readPair } from './lib/scaffolded-hooks/pairs.ts';
 
 const TEMPLATE_VERSION = '9.0.0';
 const ZERO = '0'.repeat(40);
@@ -62,38 +63,25 @@ function assertGit(...args: string[]): RunResult {
 	return result;
 }
 
-/** Reads a hook or guard from both the repo root and `scaffolding/`, which must never diverge. */
-function readPair(name: string) {
-	return {
-		root: readFileSync(join(repoRoot, '.githooks', name)),
-		scaffold: readFileSync(join(repoRoot, 'scaffolding', '.githooks', name)),
-	};
-}
-
 try {
-	const prePush = readPair('pre-push');
-	const forcePushGuard = readPair('force-push-guard.sh');
-	const screenshotGuard = readPair('screenshot-guard.sh');
-	const preCommit = readPair('pre-commit');
-	const leakGuard = readPair('leak-guard.sh');
-	const leakGuardSetup = readPair('leak-guard-setup.sh');
+	const prePush = readPair(repoRoot, 'pre-push');
+	const forcePushGuard = readPair(repoRoot, 'force-push-guard.sh');
+	const screenshotGuard = readPair(repoRoot, 'screenshot-guard.sh');
+	const preCommit = readPair(repoRoot, 'pre-commit');
+	const leakGuard = readPair(repoRoot, 'leak-guard.sh');
+	const leakGuardSetup = readPair(repoRoot, 'leak-guard-setup.sh');
 	const scaffoldHistoryGuard = readFileSync(
 		join(repoRoot, 'scaffolding', '.githooks', 'aidd-history-guard.sh'),
 	);
 
-	for (const [name, pair] of [
-		['pre-push hook', prePush],
-		['force-push guard', forcePushGuard],
-		['screenshot guard', screenshotGuard],
-		['pre-commit hook', preCommit],
-		['leak guard', leakGuard],
-		['leak-guard setup', leakGuardSetup],
-	] as const) {
-		assert(
-			equalBytes(pair.root, pair.scaffold),
-			`The scaffold ${name} must byte-match the root copy.`,
-		);
-	}
+	assertPairs([
+		['pre-push', 'pre-push hook', prePush],
+		['force-push-guard.sh', 'force-push guard', forcePushGuard],
+		['screenshot-guard.sh', 'screenshot guard', screenshotGuard],
+		['pre-commit', 'pre-commit hook', preCommit],
+		['leak-guard.sh', 'leak guard', leakGuard],
+		['leak-guard-setup.sh', 'leak-guard setup', leakGuardSetup],
+	]);
 
 	const prePushText = commandLines(prePush.scaffold.toString('utf8'));
 	const preCommitText = commandLines(preCommit.scaffold.toString('utf8'));
