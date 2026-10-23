@@ -31,7 +31,7 @@
  *    Bash and fails from PowerShell on the same machine — the failure that
  *    broke `bun install` and smoke:qc with an execvpe(/bin/bash) relay error
  *    naming neither the script nor the shell it wanted. Shell scripts are
- *    invoked through scripts/run-bash.ts, which resolves Git's own bash.
+ *    invoked through scripts/smokestack/run-bash.ts, which resolves Git's own bash.
  *
  * Scope is intentionally narrow. Expand only with a documented justification.
  *
@@ -171,7 +171,7 @@ function checkScriptShellInvariants(): string[] {
 				`package.json scripts.${name} invokes a bare "bash": ${command}\n    ` +
 				'On Windows that resolves to the System32 WSL launcher, not Git Bash, so the ' +
 				'script passes from Git Bash and fails from PowerShell on the same machine. ' +
-				'Invoke it as `bun ./scripts/run-bash.ts <script.sh>` instead.',
+				'Invoke it as `bun ./scripts/smokestack/run-bash.ts <script.sh>` instead.',
 		);
 }
 

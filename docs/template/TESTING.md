@@ -46,7 +46,8 @@ bun run smoke:qc:fast
 ```
 
 It runs the four cached static checks (`check:max-lines`, `typecheck`, `format:check`, `lint`) and
-is what `.githooks/pre-commit` invokes. Run the full `smoke:qc` once before committing.
+is what the pre-commit hook (`scripts/smokestack/hooks/pre-commit`) invokes. Run the full
+`smoke:qc` once before committing.
 
 ## Supertest (Full Validation Chain)
 

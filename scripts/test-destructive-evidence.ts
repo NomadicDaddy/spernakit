@@ -21,7 +21,7 @@ import {
 	enclosingFunction,
 	EVIDENCE_WINDOW_LINES,
 	hasConfirmationEvidence,
-} from './lib/destructive/evidence.ts';
+} from './smokestack/lib/destructive/evidence.ts';
 
 let failures = 0;
 function expect(cond: boolean, msg: string): void {

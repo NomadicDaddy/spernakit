@@ -8,7 +8,7 @@ import { existsSync, renameSync, rmSync } from 'node:fs';
 
 import type { SetupSettings } from './config-writer.ts';
 
-import { commandFileReferences } from '../../check-script-targets.ts';
+import { commandFileReferences } from '../../smokestack/check-script-targets.ts';
 import { applyGateScriptRewrites } from '../gate-scripts.ts';
 import { updateFile, updateJsonFile } from './json-files.ts';
 

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { byCodepoint } from '../license-core/order.ts';
+import { byCodepoint } from '../../smokestack/lib/license-core/order.ts';
 
 const RECORD_PATH = 'licenses/vendored-materials.json';
 const SHADCN_ROOT = 'frontend/src/components/ui';

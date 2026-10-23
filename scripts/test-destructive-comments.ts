@@ -17,8 +17,8 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { runDestructiveConfirmation } from './check-destructive-confirmation.ts';
-import { codeOnly } from './lib/destructive/comments.ts';
+import { runDestructiveConfirmation } from './smokestack/check-destructive-confirmation.ts';
+import { codeOnly } from './smokestack/lib/destructive/comments.ts';
 
 let failures = 0;
 function expect(cond: boolean, msg: string): void {

@@ -9,7 +9,7 @@ If something here turns into a real failure, escalate it into tracked work and f
 
 ## Destructive-confirmation check is file-level, not AST
 
-**Problem.** `scripts/check-destructive-confirmation.ts` scans for nearby confirmation evidence
+**Problem.** `scripts/smokestack/check-destructive-confirmation.ts` scans for nearby confirmation evidence
 using string and regex heuristics rather than parsing the TSX into an AST and proving a
 `ConfirmAlertDialog` (or equivalent) is wired to the destructive handler.
 
@@ -17,7 +17,7 @@ using string and regex heuristics rather than parsing the TSX into an AST and pr
 missing confirmation near delete, reset, and disable handlers. An AST implementation would improve
 precision without changing the enforced policy.
 
-**Where to look.** `scripts/check-destructive-confirmation.ts`.
+**Where to look.** `scripts/smokestack/check-destructive-confirmation.ts`.
 
 ---
 

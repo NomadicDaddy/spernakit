@@ -7,7 +7,7 @@ those, read `scripts/smoke.md`, which is generated from `scripts/smoke.json` by
 `bun run smoke:docs` and enumerates every step of every mode in the order it runs. Adding a gate
 does not obligate you to add a section here; leaving one out of `smoke.json` is what would hide it.
 
-**Before you write or change a gate**, read `docs/reference/gate-conventions.md`. It is the contract
+**Before you write or change a gate**, read `scripts/smokestack/docs/gate-conventions.md`. It is the contract
 every `check*` script in this repository follows: entry shape, exit codes, output, arguments,
 anti-vacuity, rule linkage, waiver forms, and `--json`. `bun run check:gate-conventions` enforces
 the statically decidable half, and the same document carries the six-part shape that a gate change
@@ -43,39 +43,39 @@ has to land with.
 
 ## Quick Reference
 
-| Goal                                             | Recommended command                                   | Script file                               |
-| ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------- |
-| Validate repo identity/config/Docker consistency | `bun run check-application`                           | `scripts/check-application.ts`            |
-| Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-deps.ts`                   |
-| Check every gate follows the gate conventions    | `bun run check:gate-conventions`                      | `scripts/check-gate-conventions.ts`       |
-| Check every package.json script resolves         | `bun run check:script-targets`                        | `scripts/check-script-targets.ts`         |
-| Initialize or re-template a derived app repo     | `bun run setup`                                       | `scripts/setup.ts`                        |
-| Run check-only local quality chain (mode-based)  | `bun run smoke:qc`                                    | `scripts/smoke.ts` + `scripts/smoke.json` |
-| Run the cached inner-loop quality subset         | `bun run smoke:qc:fast`                               | `scripts/smoke.ts` + `scripts/smoke.json` |
-| Repair lint/format drift, then validate          | `bun run qc:fix`                                      | `package.json` + `scripts/smoke.json`     |
-| Start dev servers with logs                      | `bun run dev`                                         | `scripts/dev-with-logs.ts`                |
-| Start services in background                     | `bun run start`                                       | `scripts/start.ts`                        |
-| Stop running services                            | `bun run stop`                                        | `scripts/stop.ts`                         |
-| Clear log files                                  | `bun scripts/clear-logs.ts`                           | `scripts/clear-logs.ts`                   |
-| Crawl the app to catch errors                    | `bun run crawltest`                                   | `scripts/crawltest.ts`                    |
-| Crawl the preview build                          | `bun run crawltest:preview`                           | `scripts/crawltest.ts`                    |
-| Test password-reset API error paths              | `bun run test:auth-reset-api`                         | `scripts/test-auth-reset-api.ts`          |
-| Test auth/reset UI (dev)                         | `bun run test:auth-reset-ui-dev`                      | `scripts/test-auth-reset-ui.ts`           |
-| Test auth/reset UI (preview)                     | `bun run test:auth-reset-ui-preview`                  | `scripts/test-auth-reset-ui.ts`           |
-| Run database migrations                          | `bun run db:migrate`                                  | `scripts/migrate.ts`                      |
-| Show migration status                            | `bun run db:migrate:status`                           | `scripts/migrate.ts`                      |
-| Generate new secure keys in config JSON          | `bun run generate-keys`                               | `scripts/generate-keys.ts`                |
-| Verify compression behavior                      | `bun run verify-compression`                          | `scripts/verify-compression.ts`           |
-| Analyze bundle minification (static comparison)  | `bun run verify-minification`                         | `scripts/verify-minification.ts`          |
-| Optimize frontend images                         | `bun run optimize-images`                             | `scripts/optimize-images.ts`              |
-| Reset packages (destructive)                     | `bun run reset-packages`                              | `scripts/reset-packages.ts`               |
-| Template drift check                             | `bun run check:drift`                                 | `scripts/check-template-drift.ts`         |
-| API type contract validation                     | `bun run check:api-types`                             | `scripts/check-api-types.ts`              |
-| Validate config against schema                   | `bun run config:validate`                             | `scripts/validate-config.ts`              |
-| Generate JSON schema for editor intellisense     | `bun run config:schema`                               | `scripts/generate-config-schema.ts`       |
-| Production screenshot capture                    | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json` |
-| Generate read-only template sync packet          | `bun run template:sync-plan -- --app ../acme-monitor` | `scripts/template-sync-plan.ts`           |
-| Restate the fleet manifest after a version bump  | `bun run fleet-manifest:sync`                         | `scripts/sync-fleet-manifest.ts`          |
+| Goal                                             | Recommended command                                   | Script file                                    |
+| ------------------------------------------------ | ----------------------------------------------------- | ---------------------------------------------- |
+| Validate repo identity/config/Docker consistency | `bun run check-application`                           | `scripts/check-application.ts`                 |
+| Check critical dependencies are pinned           | `bun run check-deps`                                  | `scripts/check-deps.ts`                        |
+| Check every gate follows the gate conventions    | `bun run check:gate-conventions`                      | `scripts/smokestack/check-gate-conventions.ts` |
+| Check every package.json script resolves         | `bun run check:script-targets`                        | `scripts/smokestack/check-script-targets.ts`   |
+| Initialize or re-template a derived app repo     | `bun run setup`                                       | `scripts/setup.ts`                             |
+| Run check-only local quality chain (mode-based)  | `bun run smoke:qc`                                    | `scripts/smoke.ts` + `scripts/smoke.json`      |
+| Run the cached inner-loop quality subset         | `bun run smoke:qc:fast`                               | `scripts/smoke.ts` + `scripts/smoke.json`      |
+| Repair lint/format drift, then validate          | `bun run qc:fix`                                      | `package.json` + `scripts/smoke.json`          |
+| Start dev servers with logs                      | `bun run dev`                                         | `scripts/dev-with-logs.ts`                     |
+| Start services in background                     | `bun run start`                                       | `scripts/start.ts`                             |
+| Stop running services                            | `bun run stop`                                        | `scripts/stop.ts`                              |
+| Clear log files                                  | `bun scripts/clear-logs.ts`                           | `scripts/clear-logs.ts`                        |
+| Crawl the app to catch errors                    | `bun run crawltest`                                   | `scripts/crawltest.ts`                         |
+| Crawl the preview build                          | `bun run crawltest:preview`                           | `scripts/crawltest.ts`                         |
+| Test password-reset API error paths              | `bun run test:auth-reset-api`                         | `scripts/test-auth-reset-api.ts`               |
+| Test auth/reset UI (dev)                         | `bun run test:auth-reset-ui-dev`                      | `scripts/test-auth-reset-ui.ts`                |
+| Test auth/reset UI (preview)                     | `bun run test:auth-reset-ui-preview`                  | `scripts/test-auth-reset-ui.ts`                |
+| Run database migrations                          | `bun run db:migrate`                                  | `scripts/migrate.ts`                           |
+| Show migration status                            | `bun run db:migrate:status`                           | `scripts/migrate.ts`                           |
+| Generate new secure keys in config JSON          | `bun run generate-keys`                               | `scripts/generate-keys.ts`                     |
+| Verify compression behavior                      | `bun run verify-compression`                          | `scripts/verify-compression.ts`                |
+| Analyze bundle minification (static comparison)  | `bun run verify-minification`                         | `scripts/verify-minification.ts`               |
+| Optimize frontend images                         | `bun run optimize-images`                             | `scripts/optimize-images.ts`                   |
+| Reset packages (destructive)                     | `bun run reset-packages`                              | `scripts/reset-packages.ts`                    |
+| Template drift check                             | `bun run check:drift`                                 | `scripts/check-template-drift.ts`              |
+| API type contract validation                     | `bun run check:api-types`                             | `scripts/check-api-types.ts`                   |
+| Validate config against schema                   | `bun run config:validate`                             | `scripts/validate-config.ts`                   |
+| Generate JSON schema for editor intellisense     | `bun run config:schema`                               | `scripts/generate-config-schema.ts`            |
+| Production screenshot capture                    | `bun run smoke:screenshots`                           | `scripts/smoke.ts` + `scripts/smoke.json`      |
+| Generate read-only template sync packet          | `bun run template:sync-plan -- --app ../acme-monitor` | `scripts/template-sync-plan.ts`                |
+| Restate the fleet manifest after a version bump  | `bun run fleet-manifest:sync`                         | `scripts/sync-fleet-manifest.ts`               |
 
 ## Common Configuration
 
