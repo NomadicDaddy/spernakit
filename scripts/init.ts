@@ -210,8 +210,9 @@ async function main(): Promise<void> {
 		run(['bun', 'run', '--cwd', 'backend', 'db:seed'], target);
 		run(['bun', 'run', 'licenses:generate'], target);
 		seedTemplateOverrides(target);
-		// Before `format` and `smoke:qc` so the new gates grade the records, and before `git add -A`
-		// so they land in the init commit — `scaffolding/.gitignore` tracks `.aidd/features`.
+		// Before `format` and `smoke:qc` so the new gates grade the records. The seeds stay local:
+		// `scaffolding/.gitignore` ignores `/.aidd/` wholesale, so nothing here reaches the init
+		// commit; the corpus is still on disk for aidd tooling and future re-seeds.
 		const seeded = await seedTemplateFeatures(source, target);
 		log(
 			seeded === null

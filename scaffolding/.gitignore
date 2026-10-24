@@ -7,30 +7,7 @@ ps_modules/
 
 # aidd / agent-generated artifacts
 .agents/
-# generated — reproducible by re-running the producer
-.aidd/_common/
-.aidd/.artifacts-check.json
-.aidd/apply-ui/
-.aidd/audit-reports/
-.aidd/audits/
-# staged skill reference copies (aidd scaffoldSkillContracts); reproducible by re-scaffold
-.aidd/docs/
-.aidd/feature-review-report.md
-.aidd/remediation-review.md
-.aidd/reports/
-.aidd/response-review.md
-.aidd/screenshots/
-.aidd/skills/
-# runtime — meaningful only for the run that wrote it
-.aidd/active-runs/
-.aidd/dev-server*.log
-.aidd/iterations/
-.aidd/runs.jsonl
-.aidd/runtime/
-.aidd/tmp/
-.aidd/.stop
-# secret — provider API keys, web.authToken, botToken; never commit
-.aidd/aidd.config.json
+/.aidd/
 .claude/
 .codex/
 .windsurf/
