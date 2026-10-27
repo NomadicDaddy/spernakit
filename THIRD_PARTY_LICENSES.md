@@ -25,7 +25,7 @@ by license family, and it does not inventory the Alpine base system.
 | [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.30  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.3  | BlueOak-1.0.0 |
-| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.1.0  | MIT-0         |
+| [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.1.4  | MIT-0         |
 | [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.5.2   | MIT           |
 | [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.1  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                                             | 10.4.0  | MIT           |
