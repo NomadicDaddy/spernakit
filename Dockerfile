@@ -10,7 +10,7 @@
 # --------------------------------------------------------------------------
 # Stage 1: Base builder - install dependencies
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.3-alpine@sha256:629e17411f1f129dbec3af78d5af9c9f2a937435c80349437206c6b0b7422373 AS base-builder
+FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS base-builder
 
 # Install build dependencies for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++
@@ -45,7 +45,7 @@ RUN bun install --frozen-lockfile
 # Keep build and development tooling out of the runtime image. This reduces the
 # image size and keeps its license inventory aligned with the distributed files.
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.3-alpine@sha256:629e17411f1f129dbec3af78d5af9c9f2a937435c80349437206c6b0b7422373 AS prod-deps
+FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS prod-deps
 
 WORKDIR /app
 
@@ -93,7 +93,7 @@ RUN bunx tsc -p tsconfig.build.json && bunx vite build
 # --------------------------------------------------------------------------
 # Stage 4: Production image
 # --------------------------------------------------------------------------
-FROM oven/bun:1.4.3-alpine@sha256:629e17411f1f129dbec3af78d5af9c9f2a937435c80349437206c6b0b7422373 AS production
+FROM oven/bun:1.4.4-alpine@sha256:4cf82f5686b196504fe119db3fcd9185b191f82ece82c40680e597228ec6070a AS production
 
 # Install runtime dependencies (pinned to minor version for reproducible builds).
 # Also upgrade the OpenSSL libs past the base image's pinned digest to pick up
