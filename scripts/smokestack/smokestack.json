@@ -2019,6 +2019,7 @@
 						"package.json",
 						"scripts/*.ts",
 						"scripts/gate-conventions-allowlist.json",
+						"scripts/smokestack/*.ts",
 						"scripts/smokestack/lib/gate/**/*.ts"
 					]
 				},
