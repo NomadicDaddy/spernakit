@@ -1597,7 +1597,7 @@
 					"inputs": [
 						"backend/src/db/schema/**/*.ts",
 						"backend/src/db/schema-pg/**/*.ts",
-						"scripts/check-no-inline-references.ts"
+						"scripts/smokestack/check-no-inline-references.ts"
 					]
 				},
 				"description": "Inline .references() ban (ASSERT-012)",
@@ -1665,10 +1665,10 @@
 						".claude/**"
 					],
 					"inputs": [
-						".githooks/leak-guard.sh",
+						"scripts/smokestack/hooks/leak-guard.sh",
 						"package.json",
-						"scripts/check-leak-guard.sh",
-						"scripts/run-bash.ts"
+						"scripts/smokestack/check-leak-guard.sh",
+						"scripts/smokestack/run-bash.ts"
 					]
 				},
 				"description": "Leak-guard hook self-test (synthetic fixtures)",
@@ -1697,9 +1697,9 @@
 						"bun.lock",
 						"frontend/package.json",
 						"package.json",
-						"scripts/check-license-core.ts",
+						"scripts/smokestack/check-license-core.ts",
 						"scripts/generate-third-party-licenses.ts",
-						"scripts/lib/license-core/**/*.ts",
+						"scripts/smokestack/lib/license-core/**/*.ts",
 						"scripts/lib/third-party-licenses/**/*.ts",
 						"shared/package.json"
 					]
@@ -1994,9 +1994,9 @@
 					],
 					"inputs": [
 						"package.json",
-						"scripts/check-gate-conventions.ts",
-						"scripts/lib/gate/**/*.ts",
-						"scripts/test-gate-conventions.ts"
+						"scripts/smokestack/check-gate-conventions.ts",
+						"scripts/smokestack/lib/gate/**/*.ts",
+						"scripts/smokestack/test-gate-conventions.ts"
 					]
 				},
 				"description": "Gate conventions meta-gate regression self-test",
@@ -2019,7 +2019,7 @@
 						"package.json",
 						"scripts/*.ts",
 						"scripts/gate-conventions-allowlist.json",
-						"scripts/lib/gate/**/*.ts"
+						"scripts/smokestack/lib/gate/**/*.ts"
 					]
 				},
 				"description": "Every gate follows docs/reference/gate-conventions.md",
@@ -2047,10 +2047,10 @@
 						".claude/**"
 					],
 					"inputs": [
-						"scripts/check-destructive-confirmation.ts",
-						"scripts/lib/destructive/comments.ts",
-						"scripts/lib/destructive/evidence.ts",
-						"scripts/lib/destructive/waivers.ts",
+						"scripts/smokestack/check-destructive-confirmation.ts",
+						"scripts/smokestack/lib/destructive/comments.ts",
+						"scripts/smokestack/lib/destructive/evidence.ts",
+						"scripts/smokestack/lib/destructive/waivers.ts",
 						"scripts/test-destructive-comments.ts"
 					]
 				},
@@ -2071,7 +2071,7 @@
 						".claude/**"
 					],
 					"inputs": [
-						"scripts/lib/destructive/evidence.ts",
+						"scripts/smokestack/lib/destructive/evidence.ts",
 						"scripts/test-destructive-evidence.ts"
 					]
 				},
@@ -2093,8 +2093,8 @@
 					],
 					"inputs": [
 						"frontend/src/**/*.tsx",
-						"scripts/check-destructive-confirmation.ts",
-						"scripts/lib/destructive/*.ts"
+						"scripts/smokestack/check-destructive-confirmation.ts",
+						"scripts/smokestack/lib/destructive/*.ts"
 					]
 				},
 				"description": "Destructive mutation confirmation check",
@@ -2139,7 +2139,11 @@
 						"data/**",
 						"screenshots/**"
 					],
-					"inputs": ["**/*.md", "scripts/check-docs.ts", "scripts/lib/docs/*.ts"]
+					"inputs": [
+						"**/*.md",
+						"scripts/smokestack/check-docs.ts",
+						"scripts/smokestack/lib/docs/*.ts"
+					]
 				},
 				"description": "Documentation consistency check",
 				"name": "check:docs",
@@ -2706,9 +2710,9 @@
 						".claude/**"
 					],
 					"inputs": [
-						".githooks/force-push-guard.sh",
-						".githooks/pre-push",
-						".githooks/screenshot-guard.sh",
+						"scripts/smokestack/hooks/force-push-guard.sh",
+						"scripts/smokestack/hooks/pre-push",
+						"scripts/smokestack/hooks/screenshot-guard.sh",
 						"package.json",
 						"scaffolding/.githooks/aidd-history-guard.sh",
 						"scaffolding/.githooks/force-push-guard.sh",
@@ -2781,7 +2785,7 @@
 			{
 				"cache": {
 					"inputs": [
-						"scripts/check-script-targets.ts",
+						"scripts/smokestack/check-script-targets.ts",
 						"scripts/lib/gate-scripts.ts",
 						"scripts/lib/setup/file-updates.ts",
 						"scripts/lib/setup/json-files.ts",
