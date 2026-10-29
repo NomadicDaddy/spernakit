@@ -138,7 +138,7 @@
 		"optimize-images:dry-run": "bun scripts/optimize-images.ts --dry-run",
 		"optimize-images:force": "bun scripts/optimize-images.ts --force",
 		"postinstall": "bun scripts/postinstall.ts",
-		"prepare": "(git config core.hooksPath .githooks && bun ./scripts/smokestack/run-bash.ts scripts/smokestack/hooks/leak-guard-setup.sh) || true",
+		"prepare": "(git config core.hooksPath scripts/smokestack/hooks && bun ./scripts/smokestack/run-bash.ts scripts/smokestack/hooks/leak-guard-setup.sh) || true",
 		"profile:cpu": "bun --cpu-prof-md run --cwd backend start",
 		"profile:heap": "bun --heap-prof-md run --cwd backend start",
 		"qc:fix": "bun run lint:fix && bun run format && bun run smoke:qc",
