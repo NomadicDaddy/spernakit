@@ -27,6 +27,7 @@ function order(findings: Finding[]): Finding[] {
 	// Keys are alphabetical to satisfy the sort rule; the VALUES carry the reporting order, which is
 	// severity: what fails the gate, then what needs a decision, then what the write path will fix.
 	const rank: Record<Finding['kind'], number> = {
+		behind: 5,
 		'diverged-hook': 1,
 		drift: 0,
 		'foreign-hook': 2,

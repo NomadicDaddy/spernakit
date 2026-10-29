@@ -3,13 +3,14 @@
 > **Shared-core file.** smokestack owns this document. Every target carries a byte-identical copy,
 > synced by `scripts/sync-shared-core.ts` under the `gate-conventions` group and enforced by
 > `check:shared-core`. Edit it in smokestack and sync outward; an edit made in a copy shows up as
-> drift, fails that gate, and is overwritten by the next write.
+> drift and fails that gate. A write replaces committed drift but refuses uncommitted edits.
 
 A **gate** is a script that asserts something about the repository and fails the build when the
-assertion does not hold. It is declared by a `check*` task, or by a reasoned entry in that
-repository's `scripts/gate-conventions-allowlist.json` under `gates` for the handful that assert
-under a different verb. aidd and spernakit have roughly sixty of them between them,
-written over two years by whoever needed one, and they disagree on nearly every surface a caller
+assertion does not hold. Discovery recognizes `check`, `check:<name>` and `check-<name>` tasks,
+or a reasoned entry in that repository's `scripts/gate-conventions-allowlist.json` under `gates`
+for the handful that assert
+under a different verb. At the original survey, aidd and spernakit had roughly sixty between them,
+written over two years by whoever needed one, disagreeing on nearly every surface a caller
 touches: how they are invoked, what their exit codes mean, where their findings go, and how a known
 exception is recorded.
 
@@ -26,18 +27,20 @@ overwrite a carrier-local change.
 
 Three costs motivated this, all of them measured rather than assumed.
 
-**Gates nobody can test.** Fifteen gates run their work at module scope, most by calling `main()` on
-the last line. Importing one runs it, so there is nothing a regression test can call, which is
+**Gates nobody can test.** The survey found fifteen gates running their work at module scope, most
+by calling `main()` on the last line. Importing one runs it, so there is nothing a regression
+test can call without that side effect, which is
 exactly why so few of them have one. aidd's `check-artifact-parity.ts` already makes the argument in
 its own header: _"a checker whose own failure paths are never executed is a checker nobody knows
 still works."_
 
-**Exit codes that mean different things in different scripts.** spernakit's gates are uniformly
-binary, so a gate that crashed on a malformed input is indistinguishable from a gate that found a
-real violation. The aidd release family already carries a third code. Rule 2 promotes it fleet-wide.
+**Exit codes that mean different things in different scripts.** spernakit's gates were uniformly
+binary at the survey, so a crash on malformed input was indistinguishable from a real violation.
+The aidd release family already carried a third code. Rule 2 promotes it fleet-wide.
 
-**Fifteen ad-hoc waiver designs.** Ten in aidd, five in spernakit, no two alike, several with no
-place to record why the exception exists. Rule 7 replaces all of them with two forms, both of which
+**Fifteen ad-hoc waiver designs.** The survey found ten in aidd, five in spernakit, no two alike,
+several with no place to record why the exception exists. Rule 7 replaces all of them with two
+forms, both of which
 require a reason.
 
 ## The eight rules
@@ -81,8 +84,8 @@ rejects".
 
 ### 3. Output
 
-Every human-facing line opens with a status tag: `[OK]`, `[FAIL]`, `[WARN]`, or `[SKIP]`. This is
-already the plurality style; the rule makes it universal.
+Human-facing summaries and section headers open with a status tag: `[OK]`, `[FAIL]`, `[WARN]`, or
+`[SKIP]`. Individual finding lines use the form below, including their rule ID when available.
 
 Findings go to **stderr**, one per line, in the form:
 
@@ -108,9 +111,9 @@ output are not terminals.
 or `Bun.argv` by hand is a finding, and so is calling `parseArgs` without an explicit `strict: true`,
 because a non-strict parse silently accepts a typo'd flag and runs with the default.
 
-This also ends the `--` separator confusion. `bun run check:override-deltas -- --target-version X`
-needs a separator that `bun scripts/check-override-deltas.ts --target-version X` does not, and the
-two invocations currently disagree about which flags exist.
+Pass script flags directly, for example `bun run check:gate-conventions --root <dir>` or
+`bun scripts/check-gate-conventions.ts --root <dir>` in smokestack. Both reach the same strict
+parser; the package-script form needs no extra `--` separator.
 
 ### 5. Anti-vacuity
 
@@ -127,10 +130,12 @@ legitimately have nothing to look at, it prints `[SKIP]` with the reason and exi
 
 The count half of this rule is checked statically; the zero-items half is not. Whether a given run
 reached nothing is a property of a code path, but whether the success line states a number is a
-property of its text. `GC5` therefore reports any gate that **discovers** its population -- reads a
-directory, runs a glob, or calls a `find*`/`collect*`-shaped helper -- and whose `[OK]` line
-interpolates no quantity. A gate comparing a fixed pair named in its own source has no count to
-state and is out of scope; requiring one there would produce more waivers than findings.
+property of its text. `GC5` therefore reports a gate that **discovers** its population -- reads a
+directory, runs a glob, or calls a `find*`/`collect*`-shaped helper -- and has `[OK]` literals but
+none interpolating a quantity. One counted success literal satisfies this static check; it does
+not prove that every success path prints that count. A gate comparing a fixed pair named in its
+own source has no count to state and is out of scope; requiring one there would produce more
+waivers than findings.
 
 Name the quantity as a quantity. The check reads the interpolated expression, not the sentence
 around it, and recognizes `.length`, `.size`, `.filter(...)`, and identifiers built from a count
@@ -221,16 +226,26 @@ shows in the text, and a construct the pattern cannot see is a known limit of th
 it has earned. When a limit is found, it is recorded against the gate in smokestack's records and
 fixed there, never patched in a delivered copy.
 
-| ID    | Rule           | Statically enforced                                                        |
-| ----- | -------------- | -------------------------------------------------------------------------- |
-| `GC1` | Entry shape    | Yes: exported `run*`, `import.meta.main` guard, no module-scope statements |
-| `GC2` | Exit codes     | Yes: every `exit(<literal>)` is `0`, `1`, or `2`                           |
-| `GC3` | Output         | Partly: a status tag is present, and no pictographs anywhere               |
-| `GC4` | Arguments      | Yes: no hand-read `argv`, and `parseArgs` carries `strict: true`           |
-| `GC5` | Anti-vacuity   | Partly: a discovering gate's `[OK]` line states a count                    |
-| `GC6` | Rule linkage   | Yes: an `Enforces:` line, and a cited ID resolves where the catalog exists |
-| `GC7` | Waiver forms   | No: reviewed when the gate is migrated                                     |
-| `GC8` | `--json` shape | Yes: if `--json` appears, all four envelope keys appear                    |
+| ID    | Rule           | Statically enforced                                                                                      |
+| ----- | -------------- | -------------------------------------------------------------------------------------------------------- |
+| `GC1` | Entry shape    | Yes: exported `run*`, `import.meta.main` guard, no module-scope statements                               |
+| `GC2` | Exit codes     | Partly: literal `exit(...)`, `process.exit(...)` and `process.exitCode` assignments use `0`, `1`, or `2` |
+| `GC3` | Output         | Partly: a status tag is present, and no pictographs anywhere                                             |
+| `GC4` | Arguments      | Yes: no hand-read `argv`, and `parseArgs` carries `strict: true`                                         |
+| `GC5` | Anti-vacuity   | Partly: a discovering gate's `[OK]` line states a count                                                  |
+| `GC6` | Rule linkage   | Partly: an `Enforces:` line; if IDs are cited and the catalog has IDs, at least one resolves             |
+| `GC7` | Waiver forms   | No: reviewed when the gate is migrated                                                                   |
+| `GC8` | `--json` shape | Yes: if `--json` appears, all four envelope keys appear                                                  |
+
+GC1 scans statements beginning at column zero. It permits ordinary declaration initializers and
+does not prove they are free of side effects; indented module-scope statements are not checked.
+GC2 checks literal codes, not the meaning of each exit path. GC4 reports hand-read `argv` only
+when the source has no `parseArgs` call; it does not validate every use beside that call. GC8
+checks for key text, not the runtime envelope or its value types.
+
+GC6 accepts an `Enforces:` line with no assertion ID. When IDs are cited, resolution is checked
+only if the catalog supplies at least one ID. Review still verifies that a gate cites an existing
+assertion where one applies.
 
 Rule 7 has no static form, and rule 5 has one for half of itself. A waiver design is recognizable
 only by reading it, and whether a gate fails on zero items is a property of a code path rather than
@@ -317,20 +332,27 @@ the **same commit** as the change.
    Include at least one deliberately non-conforming input and assert that it **fails**. A gate that
    is green because it found nothing is indistinguishable from a gate that is green because it looked
    at nothing.
-4. **Classify the step in `scripts/lib/smoke-cache/steps-*.ts`.** Name every input the gate reads. A
-   glob that names today's files rather than the directory lets the cache skip the run that would
-   have seen tomorrow's.
-5. **Add the step to `scripts/smoke.json` and regenerate `scripts/smoke.md`** with
-   `bun run smoke:docs`. In aidd the equivalent is `scripts/lib/smoke-qc/steps.ts`, plus
+4. **Declare the gate's cache inputs in the active runner's configuration.** For smokestack's
+   runner, use the step's `cache` block in `smokestack.json` (at smokestack's root, or
+   `scripts/smokestack/smokestack.json` in a consumer). Name every input the gate reads, or mark it
+   `uncacheable` with a reason. A glob naming only today's files misses tomorrow's additions.
+   Repositories still using the older smoke-cache classifier also update
+   `scripts/lib/smoke-cache/steps-*.ts` where that runner consumes it.
+5. **Add the step to the active runner's step list.** For smokestack's runner, add it under
+   `qc.steps` in that same config, and to `fast.steps` if it belongs in the fast subset. In aidd
+   the equivalent is `scripts/lib/smoke-qc/steps.ts`, plus
    `FAST_QC_STEP_NAMES` in `fast-subset.ts` if the step belongs to the fast subset; the same
    `bun run smoke:docs` regenerates `scripts/smoke-qc.md` from it, and `check:smoke-docs` fails when
-   the two drift.
-6. **Update `scripts/lib/template/classify.ts`** when file ownership changes, so derived apps
-   classify the new files correctly.
+   the two drift. Where a repository also keeps `scripts/smoke.json` and its generated
+   `scripts/smoke.md` runbook, update those and run its `smoke:docs`; they do not replace the
+   smokestack runner's config. smokestack itself has no `smoke:docs` task.
+6. **Update template ownership where applicable.** Repositories with
+   `scripts/lib/template/classify.ts` update it when ownership changes. For a smokestack delivery,
+   update `scripts/shared-core-manifest.json` when the carried file set or paths change.
 
 Part 3 is the one that gets skipped, and parts 1 and 2 exist mostly to make it possible. A gate with
-no `root` seam and no exported runner cannot have a fixture-driven regression, which is why fifteen
-of them do not.
+no `root` seam and no exported runner is harder to exercise against a fixture; the original
+survey found fifteen gates with that entry-shape problem.
 
 ## Adding a new gate
 

@@ -38,6 +38,7 @@ import {
 import { applyHome, type HomeMove, planHome } from './move-home.ts';
 import { applyScriptEdits, planScriptEdits, type ScriptEdit } from './move-scripts.ts';
 import { readShared, resolveSource } from './owner.ts';
+import { type Reference, referenceLines, referencesTo, unreadFiles } from './references.ts';
 import { readScripts } from './targets.ts';
 
 export interface Move {
@@ -52,6 +53,8 @@ export interface Move {
 
 export interface MovePlan {
 	home: HomeMove[];
+	/** The consumer's own files naming a moved path, which its lead changes (references.ts). */
+	leads: { directory: string; references: Reference[] }[];
 	moves: Move[];
 	refusals: string[];
 	scripts: ScriptEdit[];
@@ -60,6 +63,7 @@ export interface MovePlan {
 /** Leaves out every target in `held`: its lock was withheld, so it still names the old paths. */
 export function holdBack(plan: MovePlan, held: Set<string>): void {
 	plan.home = plan.home.filter((move) => !held.has(move.directory));
+	plan.leads = plan.leads.filter((lead) => !held.has(lead.directory));
 	plan.moves = plan.moves.filter((move) => !held.has(move.directory));
 	plan.scripts = plan.scripts.filter((edit) => !held.has(edit.directory));
 }
@@ -146,7 +150,7 @@ export function planMoves(
 	fleetRoot: string,
 	ownerRoot: string,
 ): MovePlan {
-	const plan: MovePlan = { home: [], moves: [], refusals: [], scripts: [] };
+	const plan: MovePlan = { home: [], leads: [], moves: [], refusals: [], scripts: [] };
 	for (const directory of directories) {
 		const root = join(fleetRoot, directory);
 		let lock: Lock | null;
@@ -160,6 +164,22 @@ export function planMoves(
 		const home = planHome(root, directory, lock, moves, groups);
 		plan.home.push(...home.home);
 		plan.refusals.push(...home.refusals);
+		// The lock and the config move as files too; a hooks path is a setting, not a file.
+		const moved = new Map([
+			...moves.map((move): [string, string] => [move.from, move.to]),
+			...home.home
+				.filter((move) => move.kind !== 'hooks-path')
+				.map((move): [string, string] => [move.from, move.to]),
+		]);
+		const references = referencesTo(root, moved);
+		if (references.length > 0) plan.leads.push({ directory, references });
+		if (moved.size > 0) {
+			for (const unread of unreadFiles(root)) {
+				plan.refusals.push(
+					`${directory}: ${unread}; a file naming a moved path could go unseen.`,
+				);
+			}
+		}
 		if (moves.length === 0) continue;
 		for (const move of moves) {
 			const entry = lock.groups[move.group]?.[move.from];
@@ -224,5 +244,7 @@ export function applyMoves(plan: MovePlan, fleetRoot: string, dryRun: boolean): 
 	}
 	lines.push(...applyScriptEdits(plan.scripts, fleetRoot, dryRun));
 	lines.push(...applyHome(plan.home, fleetRoot, dryRun));
+	// Not changed by the write: listed so the lead changes each in the delivery commit.
+	for (const lead of plan.leads) lines.push(...referenceLines(lead.directory, lead.references));
 	return lines;
 }

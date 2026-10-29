@@ -1,7 +1,7 @@
 /**
  * The write half of the shared-core sync.
  *
- * It has no rules of its own. Its entire worklist is the `uncovered` and `drift` findings that
+ * It has no rules of its own. Its worklist is the `uncovered`, `behind` and `drift` findings that
  * check.ts already produced, and it reaches them only through the `source`/`destination` fields
  * that classifier sets — so a foreign hook, a hand-maintained local chain, a repository whose
  * dispatcher is not ours, and a `seeded` file that has since diverged are all unwritable here

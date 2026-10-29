@@ -193,6 +193,7 @@
 			"files": [
 				{ "disposition": "synced", "source": "shared-core-manifest.json" },
 				{ "disposition": "synced", "source": "sync-shared-core.ts" },
+				{ "disposition": "synced", "source": "lib/shared-core/behind.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/check.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/deliveries.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/delivery-check.ts" },
@@ -213,7 +214,10 @@
 				{ "disposition": "synced", "source": "lib/shared-core/old-path.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/origin.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/owner.ts" },
+				{ "disposition": "synced", "source": "lib/shared-core/path-words.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/reaching.ts" },
+				{ "disposition": "synced", "source": "lib/shared-core/read-text.ts" },
+				{ "disposition": "synced", "source": "lib/shared-core/references.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/report.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/requires.ts" },
 				{ "disposition": "synced", "source": "lib/shared-core/roots.ts" },

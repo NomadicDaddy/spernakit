@@ -17,6 +17,7 @@ import { join } from 'node:path';
 import type { Deliveries } from './deliveries.ts';
 import type { SharedCoreGroup } from './manifest.ts';
 
+import { classifyBehind } from './behind.ts';
 import { departedFindings } from './delivery-check.ts';
 import { chainedByHook, runByGit } from './dispatch.ts';
 import { assertPackageIdentity, skipReason } from './eligibility.ts';
@@ -41,6 +42,7 @@ import { readScripts, resolveTargets } from './targets.ts';
 import { wiringFindings } from './wiring.ts';
 
 export type FindingKind =
+	| 'behind'
 	| 'diverged-hook'
 	| 'drift'
 	| 'foreign-hook'
@@ -57,8 +59,8 @@ export type FindingKind =
 	| 'unwired';
 
 /**
- * `destination` and `source` are absolute paths, set only on the two kinds a write path may act on:
- * `uncovered` (deliver it) and `drift` (replace it). Every other kind leaves them undefined, which
+ * `destination` and `source` are absolute paths, set only on kinds a write path may act on:
+ * `uncovered` (deliver it), `behind` (upgrade it) and `drift` (replace it). Other kinds omit them, which
  * is the mechanism rather than a convenience — the writer takes its worklist from these fields and
  * therefore cannot touch a file this checker did not already classify as writable. A foreign hook,
  * a hand-maintained chain, a repository whose dispatcher is not ours, and a guard that repository's
@@ -217,6 +219,8 @@ export function checkGroup(
 			});
 		}
 
+		const classified = classifyBehind(group, target, ownerRoot, report.findings.slice(first));
+		report.findings.splice(first, report.findings.length - first, ...classified);
 		report.findings.push(...wiringFindings(group, target, scripts));
 		// Last, because it is judged against everything this target was just found to hold.
 		const entry = deliveries[target.directory];

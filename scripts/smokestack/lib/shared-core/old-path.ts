@@ -12,9 +12,10 @@
  * An old path is one a tagged release of this repository installed the group at, which the
  * manifest no longer installs at, and which ends with a file's `source`, the same pairing the
  * write moves by. Read from history, because by the time this is asked the lock no longer records
- * it. Only package.json scripts, the owner's delivered hooks and the repository's own hooks they
- * run are read: a consumer's own imports, configs and documents are its lead's to change in the
- * delivery commit.
+ * it. package.json scripts, the owner's delivered hooks and the repository's own hooks they run are
+ * read in full. A consumer's own imports, configs and documents are its lead's to change in the
+ * delivery commit, and the write lists every one (references.ts); of those, only a relative import
+ * that resolves to an old path no longer on disk is a finding here, because it cannot typecheck.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
@@ -27,6 +28,7 @@ import { installedPath } from './lock.ts';
 import { loadManifest, type SharedCoreGroup } from './manifest.ts';
 import { pathPattern } from './move-scripts.ts';
 import { taggedPaths } from './origin.ts';
+import { brokenImports, unreadFiles } from './references.ts';
 import { readScripts } from './targets.ts';
 
 /**
@@ -118,6 +120,19 @@ export function oldPathFindings(
 	}
 	for (const [script, value] of Object.entries(readScripts(target.path) ?? {})) {
 		named(value, `package.json script ${script}`);
+	}
+	if (moved.size > 0) {
+		for (const unread of unreadFiles(target.path)) {
+			findings.push(finding(`${unread}, so its imports of moved paths were not checked`));
+		}
+	}
+	for (const imported of brokenImports(target.path, moved)) {
+		findings.push(
+			finding(
+				`${imported.file}:${String(imported.line)} imports ${imported.from}, ` +
+					`which this release installs at ${imported.to}`,
+			),
+		);
 	}
 	for (const path of hookPaths(ownerRoot)) {
 		const at = join(target.path, path);
