@@ -79,7 +79,7 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					{'timestamp=$(date +%s)\n'}
 					{'nonce=$(openssl rand -hex 16)\n'}
 					{
-						"sig=$(printf '%s\\n%s\\n%s\\n%s\\n%s' \"$timestamp\" \"$nonce\" GET '' '' '' | \\\n"
+						'sig=$(printf \'%s\\n%s\\n%s\\n%s\\n%s\' "$timestamp" "$nonce" GET /users \'\' | \\\n'
 					}
 					{'  openssl dgst -sha256 -hmac "$API_SECRET" | awk \'{print $2}\')\n'}
 					{'\n'}
