@@ -76,9 +76,12 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					plus the four signing headers:
 				</p>
 				<pre className="overflow-x-auto rounded bg-muted/50 p-2 font-mono" translate="no">
+					{
+						'# API_BASE_URL is the bare origin, no trailing slash (e.g. https://app.example.com)\n'
+					}
 					{'timestamp=$(date +%s)\n'}
 					{'nonce=$(openssl rand -hex 16)\n'}
-					{'path=/api/v1/users\n'}
+					{'path=/api/v1/users   # this route requires an admin-scoped key\n'}
 					{
 						'sig=$(printf \'%s\\n%s\\n%s\\n%s\\n%s\' "$timestamp" "$nonce" GET "$path" \'\' | \\\n'
 					}
@@ -87,16 +90,16 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					{'curl -H "X-API-Key: $API_KEY" \\\n'}
 					{'  -H "X-API-Signature: $sig" -H "X-API-Timestamp: $timestamp" \\\n'}
 					{'  -H "X-API-Nonce: $nonce" -H "X-API-Version: 2" \\\n'}
-					{'  -H "X-Workspace-ID: $WORKSPACE_ID" \\\n'}
 					{'  "$API_BASE_URL$path"\n'}
 				</pre>
 				<p>
-					Workspaced routes also need{' '}
+					The key's scope sets what the key may do: a read-scoped key acts as a Viewer, a
+					write-scoped key as an Operator, and the sample route above needs an
+					admin-scoped key. Workspaced routes (this one is not) additionally require{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						X-Workspace-ID
 					</code>
-					, and the key's scope must permit the route (a read-scoped key acts as a
-					Viewer).
+					, whose value is the workspace's numeric id from the workspaces list.
 				</p>
 				<p>
 					The signature is an HMAC-SHA256 over{' '}
