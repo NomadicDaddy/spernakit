@@ -10,6 +10,10 @@ interface SignatureValidationInput {
 	nonce: string;
 	path: string;
 	signature: string;
+	/**
+	 * Unix timestamp in seconds from the strictly-parsed x-api-timestamp header. NaN when the
+	 * header was absent or was not a bare run of digits; the validator refuses it.
+	 */
 	timestamp: number;
 	/** Scheme version from a strictly-parsed x-api-version header; only 2 is accepted. */
 	version: number;
@@ -103,6 +107,12 @@ function recordSingleUseNonce(nonce: string, timestampMs: number): boolean {
  */
 function validateSignature(input: SignatureValidationInput, keySecret: string): boolean {
 	if (input.version !== SIGNATURE_VERSION) return false;
+
+	// The timestamp reaches this validator already strictly parsed (a bare run of digits) or as
+	// NaN; both the absent and the malformed case are refused here rather than coerced. The old
+	// Number.parseInt fallback turned a missing header into 0 and a "2abc" header into 2, so a
+	// signature computed over either of those payloads could validate.
+	if (!Number.isFinite(input.timestamp) || !Number.isSafeInteger(input.timestamp)) return false;
 
 	const timestampMs = input.timestamp * 1000;
 	if (!Number.isFinite(timestampMs)) return false;

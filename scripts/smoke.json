@@ -27,6 +27,10 @@
 					"description": "v2 signed-nonce API-key scheme and reset consumption race regressions"
 				},
 				{
+					"command": "bun run test:api-key-request-signing",
+					"description": "Mandatory API-key request signing: unsigned, missing-header, duplicate-nonce and nonce-substitution requests are refused on the running backend"
+				},
+				{
 					"command": "bun run test:auth-reset-api",
 					"description": "Password reset endpoints reject bad requests on the running backend"
 				},
@@ -343,6 +347,10 @@
 				{
 					"command": "bun run test:auth-before-validation",
 					"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle"
+				},
+				{
+					"command": "bun run test:api-key-request-signing",
+					"description": "Mandatory API-key request signing: a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp are all refused; a correctly signed request authenticates"
 				},
 				{
 					"command": "bun run test:auth-rate-limit-state",

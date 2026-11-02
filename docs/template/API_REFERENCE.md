@@ -87,6 +87,11 @@ Cookie: token=your-jwt-token
 Authorization: Bearer your-jwt-token
 ```
 
+Programmatic API-key access is also supported: an `X-API-Key` header **plus a mandatory
+HMAC-SHA256 request signature** (`X-API-Signature`, `X-API-Timestamp`, `X-API-Nonce`,
+`X-API-Version: 2`). The key alone never authenticates. See
+[API Key Authentication](API_KEY_AUTHENTICATION.md).
+
 ### Role-Based Access Control
 
 The API implements a 5-tier role system:

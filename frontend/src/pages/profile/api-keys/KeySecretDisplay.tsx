@@ -69,40 +69,33 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 			<div className="space-y-2 rounded-md border bg-muted/30 p-3 text-xs text-muted-foreground">
 				<p className="font-medium">Usage</p>
 				<p>
-					Simple mode - send the key in the{' '}
+					Every request must be signed - the key alone never authenticates. Send{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						X-API-Key
 					</code>{' '}
-					header on any authenticated endpoint:
+					plus the four signing headers:
 				</p>
 				<pre className="overflow-x-auto rounded bg-muted/50 p-2 font-mono" translate="no">
-					curl -H &quot;X-API-Key: &lt;api-key&gt;&quot;
-					{' \\\n'}
-					{'  '}$API_BASE_URL/users
+					{'timestamp=$(date +%s)\n'}
+					{'nonce=$(openssl rand -hex 16)\n'}
+					{
+						"sig=$(printf '%s\\n%s\\n%s\\n%s\\n%s' \"$timestamp\" \"$nonce\" GET '' '' '' | \\\n"
+					}
+					{'  openssl dgst -sha256 -hmac "$API_SECRET" | awk \'{print $2}\')\n'}
+					{'\n'}
+					{'curl -H "X-API-Key: $API_KEY" \\\n'}
+					{'  -H "X-API-Signature: $sig" -H "X-API-Timestamp: $timestamp" \\\n'}
+					{'  -H "X-API-Nonce: $nonce" -H "X-API-Version: 2" \\\n'}
+					{'  $API_BASE_URL/users'}
 				</pre>
 				<p>
-					HMAC mode (v2) - additionally send{' '}
-					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
-						X-API-Signature
-					</code>
-					,{' '}
-					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
-						X-API-Timestamp
-					</code>
-					,{' '}
-					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
-						X-API-Nonce
-					</code>{' '}
-					and{' '}
-					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
-						X-API-Version: 2
-					</code>
-					. The signature is an HMAC-SHA256 over{' '}
+					The signature is an HMAC-SHA256 over{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
 						timestamp{'\n'}nonce{'\n'}method{'\n'}path{'\n'}body
 					</code>{' '}
 					using the API Secret; the nonce (letters, digits and hyphen, 16-128 chars) is
-					single-use and part of the signed payload. See the API authentication guide.
+					single-use and part of the signed payload. Requests missing any signing header
+					are rejected as unauthenticated. See the API authentication guide.
 				</p>
 				<p className="text-muted-foreground/80">
 					These user-minted keys are distinct from the app-level{' '}

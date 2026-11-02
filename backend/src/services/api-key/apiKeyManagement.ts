@@ -61,18 +61,16 @@ function recordApiKeyUsage(keyId: number): void {
 type ValidatedApiKey = { ownerRole: UserRole } & ApiKeyValidationData;
 
 /**
- * Validate an API key and return key data if valid.
- * Checks key hash, active status, expiration, owner state (deleted/locked),
- * and optionally HMAC signature.
+ * Validate a signed API-key request and return key data if valid.
+ * Checks key hash, active status, expiration, owner state (deleted/locked), and the HMAC
+ * signature over the request (mandatory since the 2026-10-20 SECURITY audit High: the plain
+ * string-input path that authenticated a key without any signature is gone).
  *
- * @param input - Plain API key string or full validation parameters
+ * @param input - Full validation parameters, including the signature material
  * @returns API key data (with owner's current role) or null if invalid
  */
-async function validateApiKey(
-	input: string | ValidateApiKeyInput,
-): Promise<null | ValidatedApiKey> {
-	const plainApiKey = typeof input === 'string' ? input : input.apiKey;
-	const keyIndexHash = generateKeyIndexHash(plainApiKey);
+async function validateApiKey(input: ValidateApiKeyInput): Promise<null | ValidatedApiKey> {
+	const keyIndexHash = generateKeyIndexHash(input.apiKey);
 
 	const candidate = getDb()
 		.select()
@@ -81,7 +79,7 @@ async function validateApiKey(
 		.get();
 	if (!candidate) return null;
 
-	const matches = await verifyApiKey(plainApiKey, candidate.keyHash);
+	const matches = await verifyApiKey(input.apiKey, candidate.keyHash);
 	if (!matches) return null;
 
 	if (candidate.expiresAt && candidate.expiresAt < new Date()) return null;
@@ -97,11 +95,11 @@ async function validateApiKey(
 	if (!owner || owner.isDeleted) return null;
 	if (owner.lockedUntil && owner.lockedUntil > new Date()) return null;
 
-	if (typeof input !== 'string' && !candidate.keySecret) return null;
-	if (typeof input !== 'string') {
-		const decryptedSecret = await decrypt(candidate.keySecret!);
-		if (!validateSignature(input, decryptedSecret)) return null;
-	}
+	// A stored secret is required: a key minted without one has nothing to verify the HMAC
+	// against, so it can never satisfy mandatory signing.
+	if (!candidate.keySecret) return null;
+	const decryptedSecret = await decrypt(candidate.keySecret);
+	if (!validateSignature(input, decryptedSecret)) return null;
 
 	recordApiKeyUsage(candidate.id);
 	return { ...(candidate as ApiKeyValidationData), ownerRole: validateUserRole(owner.role) };

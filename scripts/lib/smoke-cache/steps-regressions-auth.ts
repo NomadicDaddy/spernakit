@@ -13,6 +13,31 @@ import { COMMON_EXCLUDES } from './globs.ts';
 import { type StepDependencies } from './types.ts';
 
 export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
+	// Mandatory API-key request signing (the residual core of the 2026-10-20 SECURITY audit High):
+	// the gate mints a real key and drives the real application, so the auth plugin chain, the key
+	// minting/validation services and the signature validator all decide the verdict - kept
+	// identical to the runner's smokestack.json inputs.
+	'test:api-key-request-signing': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/*.sql',
+			'backend/src/config/configLoader.ts',
+			'backend/src/create-api-app.ts',
+			'backend/src/db/autoMigrate.ts',
+			'backend/src/db/index.ts',
+			'backend/src/db/schema/apiKeyNonces.ts',
+			'backend/src/db/schema/apiKeys.ts',
+			'backend/src/db/schema/users.ts',
+			'backend/src/plugins/auth.ts',
+			'backend/src/plugins/authRequest.ts',
+			'backend/src/services/api-key/apiKeyGeneration.ts',
+			'backend/src/services/api-key/apiKeyManagement.ts',
+			'backend/src/services/apiKeyService.ts',
+			'backend/src/services/apiKeySignatureService.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-api-key-request-signing.ts',
+		],
+	},
 	// Signs in through the real login route and reads the log back through the real listing, so
 	// its world is the audit writer and reader, the field allowlist they share, and everything the
 	// two requests pass through on the way.

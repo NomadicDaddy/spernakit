@@ -78,13 +78,13 @@ function resolveUserFromRequest(request: Request): AuthPayload | null {
 }
 
 /**
- * Strict integer parse of the x-api-version header. Number.parseInt alone would accept
- * "2abc" as 2, leaking a malformed header through as a valid scheme version.
+ * Strict integer parse of a single-value request header. Number.parseInt alone would accept
+ * "2abc" as 2, leaking a malformed header through as a valid value.
  *
  * @param raw - Raw header value or null when absent
- * @returns The parsed version, or NaN when the value is not a bare run of digits
+ * @returns The parsed integer, or NaN when the value is not a bare run of digits
  */
-function parseStrictVersion(raw: null | string): number {
+function parseStrictInteger(raw: null | string): number {
 	return raw !== null && /^\d+$/.test(raw) ? Number.parseInt(raw, 10) : Number.NaN;
 }
 
@@ -92,29 +92,29 @@ async function resolveApiKeyUser(
 	request: Request,
 	apiKeyHeader: string,
 ): Promise<AuthPayload | null> {
-	const hasHmacHeaders =
-		request.headers.get('x-api-signature') !== null &&
-		request.headers.get('x-api-timestamp') !== null &&
-		request.headers.get('x-api-nonce') !== null;
+	// Request signing is mandatory: an API key alone never authenticates (the 2026-10-20 SECURITY
+	// audit High, residual items 1 and 2). Every signing header must be present AND non-empty;
+	// an empty header is the same missing header, and omitting any of them used to fall back to
+	// unsigned validation of the bare key. There is no fallback: an incomplete signing set is an
+	// invalid request, resolved to no user so requireAuth answers 401.
+	const signature = request.headers.get('x-api-signature');
+	const timestamp = request.headers.get('x-api-timestamp');
+	const nonce = request.headers.get('x-api-nonce');
+	const version = request.headers.get('x-api-version');
+	if (!signature || !timestamp || !nonce || !version) return null;
 
-	let validated;
-	if (hasHmacHeaders) {
-		const timestamp = Number.parseInt(request.headers.get('x-api-timestamp') ?? '0', 10);
-		const url = new URL(request.url);
-		const body = await request.clone().text();
-		validated = await validateApiKey({
-			apiKey: apiKeyHeader,
-			body,
-			method: request.method,
-			nonce: request.headers.get('x-api-nonce') ?? '',
-			path: url.pathname + url.search,
-			signature: request.headers.get('x-api-signature') ?? '',
-			timestamp,
-			version: parseStrictVersion(request.headers.get('x-api-version')),
-		});
-	} else {
-		validated = await validateApiKey(apiKeyHeader);
-	}
+	const url = new URL(request.url);
+	const body = await request.clone().text();
+	const validated = await validateApiKey({
+		apiKey: apiKeyHeader,
+		body,
+		method: request.method,
+		nonce,
+		path: url.pathname + url.search,
+		signature,
+		timestamp: parseStrictInteger(timestamp),
+		version: parseStrictInteger(version),
+	});
 
 	if (!validated) return null;
 

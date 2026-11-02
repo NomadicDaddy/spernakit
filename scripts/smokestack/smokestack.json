@@ -1134,6 +1134,41 @@
 						".claude/**"
 					],
 					"inputs": [
+						"backend/drizzle/*.sql",
+						"backend/src/config/configLoader.ts",
+						"backend/src/create-api-app.ts",
+						"backend/src/db/autoMigrate.ts",
+						"backend/src/db/index.ts",
+						"backend/src/db/schema/apiKeyNonces.ts",
+						"backend/src/db/schema/apiKeys.ts",
+						"backend/src/db/schema/users.ts",
+						"backend/src/plugins/auth.ts",
+						"backend/src/plugins/authRequest.ts",
+						"backend/src/services/api-key/apiKeyGeneration.ts",
+						"backend/src/services/api-key/apiKeyManagement.ts",
+						"backend/src/services/apiKeyService.ts",
+						"backend/src/services/apiKeySignatureService.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-api-key-request-signing.ts"
+					]
+				},
+				"description": "Mandatory API-key request signing: a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp are all refused; a correctly signed request authenticates",
+				"name": "test:api-key-request-signing",
+				"run": ["bun", "run", "test:api-key-request-signing"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"backend/src/config/**",
 						"backend/src/create-api-app.ts",
 						"backend/src/db/seed/**",

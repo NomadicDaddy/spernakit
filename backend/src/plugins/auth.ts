@@ -15,8 +15,8 @@ import {
 
 /**
  * Elysia plugin that derives the authenticated user from HTTP-only JWT cookies
- * OR from a user-minted API key (`X-API-Key` header, optionally paired with
- * HMAC signature headers).
+ * OR from a user-minted API key (`X-API-Key` header with a mandatory
+ * X-API-Signature / X-API-Timestamp / X-API-Nonce / X-API-Version signing set).
  *
  * API-key authentication is folded into this plugin because named plugins with
  * non-scoped onBeforeHandle do not propagate through nested Elysia instances;

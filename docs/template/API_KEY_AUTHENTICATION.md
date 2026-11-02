@@ -2,10 +2,10 @@
 
 ## Overview
 
-Spernakit supports two API key authentication modes, both using the `X-API-Key` header:
-
-1. **Simple mode**: Send API key in X-API-Key header
-2. **Signed mode** (recommended): Sign requests with HMAC-SHA256 for integrity and replay protection
+Spernakit authenticates programmatic requests with an API key in the `X-API-Key` header **plus a
+mandatory HMAC-SHA256 request signature**. The key alone never authenticates: a request without a
+complete, valid signature set is rejected as unauthenticated. Signing gives every request
+cryptographic integrity and replay protection.
 
 ### Scopes and Effective Role
 
@@ -21,19 +21,7 @@ Each key is created with a scope that maps to a role for authorization checks:
 - Keys belonging to soft-deleted or currently locked-out owners are rejected.
 - API-key requests are **exempt from CSRF token validation** (header-based auth cannot be forged cross-origin by a browser), so `write` and `admin` keys work for POST/PUT/DELETE requests.
 
-## Simple Mode
-
-Send the API key directly in the X-API-Key header:
-
-```http
-X-API-Key: <api_key>
-```
-
-Simple mode is suitable for trusted environments or internal API calls. The key is sent in plaintext and can be replayed.
-
-## Signed Mode (Recommended)
-
-Signed mode adds cryptographic integrity and prevents replay attacks.
+## Request Signing (Mandatory)
 
 ### API Key Format
 
@@ -59,7 +47,8 @@ To sign a request (scheme v2):
 
 ### Headers
 
-Include these headers in your request:
+All five headers are required. A request missing (or sending an empty value for) any of them is
+rejected as unauthenticated — there is no unsigned mode:
 
 ```http
 X-API-Key: <api_key>
@@ -270,7 +259,7 @@ users = client.request('GET', '/api/users')
 
 ## Error Codes
 
-All API-key authentication failures (unknown/revoked/expired key, bad signature, stale timestamp, reused nonce, deleted or locked-out owner) resolve to an unauthenticated request. The route guard then returns `401 Unauthorized` with the generic code:
+All API-key authentication failures (unknown/revoked/expired key, missing or incomplete signing headers, bad signature, malformed or stale timestamp, reused nonce, deleted or locked-out owner) resolve to an unauthenticated request. The route guard then returns `401 Unauthorized` with the generic code:
 
 | Error Code           | Description                                         |
 | -------------------- | --------------------------------------------------- |
@@ -293,7 +282,9 @@ All API-key authentication failures (unknown/revoked/expired key, bad signature,
 ### Request fails with signature error
 
 - Verify payload construction: newline-delimited `timestamp + "\n" + nonce + "\n" + method + "\n" + path + "\n" + body` (v2; the nonce is included)
+- Send all five headers (`X-API-Key`, `X-API-Signature`, `X-API-Timestamp`, `X-API-Nonce`, `X-API-Version`); there is no unsigned mode, and a missing or empty header is rejected
 - Send `X-API-Version: 2` - requests without it are rejected outright
+- Send `X-API-Timestamp` as a bare run of digits (Unix seconds); a value like `17abc` or an empty header is rejected rather than partially parsed
 - Ensure body is the exact string sent (including whitespace)
 - Ensure the signature uses HMAC-SHA256 with the key secret, not a plain SHA-256 hash
 - Check that path includes the query string (e.g., `/api/users?page=1`)
