@@ -78,15 +78,16 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 				<pre className="overflow-x-auto rounded bg-muted/50 p-2 font-mono" translate="no">
 					{'timestamp=$(date +%s)\n'}
 					{'nonce=$(openssl rand -hex 16)\n'}
+					{'path=/api/v1/users\n'}
 					{
-						'sig=$(printf \'%s\\n%s\\n%s\\n%s\\n%s\' "$timestamp" "$nonce" GET /users \'\' | \\\n'
+						'sig=$(printf \'%s\\n%s\\n%s\\n%s\\n%s\' "$timestamp" "$nonce" GET "$path" \'\' | \\\n'
 					}
 					{'  openssl dgst -sha256 -hmac "$API_SECRET" | awk \'{print $2}\')\n'}
 					{'\n'}
 					{'curl -H "X-API-Key: $API_KEY" \\\n'}
 					{'  -H "X-API-Signature: $sig" -H "X-API-Timestamp: $timestamp" \\\n'}
 					{'  -H "X-API-Nonce: $nonce" -H "X-API-Version: 2" \\\n'}
-					{'  $API_BASE_URL/users'}
+					{'  "$API_BASE_URL$path"\n'}
 				</pre>
 				<p>
 					The signature is an HMAC-SHA256 over{' '}

@@ -43,7 +43,7 @@ To sign a request (scheme v2):
 
 > **Newline delimiters**: The payload fields are separated by `\n` to prevent ambiguous concatenations (e.g., timestamp digits bleeding into the method). The nonce is restricted to characters that cannot appear as delimiters so it cannot shift the field boundaries.
 
-> **Path construction**: The path must include the query string if present. For example, `/api/users?page=1` not just `/api/users`.
+> **Path construction**: The path must include the query string if present. For example, `/api/v1/users?page=1` not just `/api/v1/users`.
 
 ### Headers
 
@@ -68,7 +68,7 @@ import { createHmac } from 'node:crypto';
 const apiKey = 'a1b2c3d4e5f6...';
 const apiKeySecret = 'x9y8z7w6v5u4t3s2...';
 const method = 'GET';
-const path = '/api/users/1';
+const path = '/api/v1/users/1';
 const body = '';
 const timestamp = Math.floor(Date.now() / 1000);
 const nonce = crypto.randomUUID();
@@ -96,7 +96,7 @@ import { createHmac } from 'node:crypto';
 const apiKey = 'a1b2c3d4e5f6...';
 const apiKeySecret = 'x9y8z7w6v5u4t3s2...';
 const method = 'POST';
-const path = '/api/users';
+const path = '/api/v1/users';
 const body = JSON.stringify({ username: 'newuser', password: 'secure123' });
 const timestamp = Math.floor(Date.now() / 1000);
 const nonce = crypto.randomUUID();
@@ -206,7 +206,7 @@ class ApiKeyClient {
 // Usage
 const client = new ApiKeyClient('a1b2c3d4e5f6...', 'x9y8z7w6v5u4t3s2...', 'http://localhost:3331');
 
-const users = await client.get('/api/users');
+const users = await client.get('/api/v1/users');
 ```
 
 ### Python Client
@@ -254,7 +254,7 @@ client = ApiKeyClient(
     'http://localhost:3331'
 )
 
-users = client.request('GET', '/api/users')
+users = client.request('GET', '/api/v1/users')
 ```
 
 ## Error Codes
@@ -287,7 +287,7 @@ All API-key authentication failures (unknown/revoked/expired key, missing or inc
 - Send `X-API-Timestamp` as a bare run of digits (Unix seconds); a value like `17abc` or an empty header is rejected rather than partially parsed
 - Ensure body is the exact string sent (including whitespace)
 - Ensure the signature uses HMAC-SHA256 with the key secret, not a plain SHA-256 hash
-- Check that path includes the query string (e.g., `/api/users?page=1`)
+- Check that path includes the query string (e.g., `/api/v1/users?page=1`)
 - Verify signature is hex-encoded
 
 ### Request rejected due to timestamp
