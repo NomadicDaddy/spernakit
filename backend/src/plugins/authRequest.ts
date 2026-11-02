@@ -88,20 +88,42 @@ function parseStrictInteger(raw: null | string): number {
 	return raw !== null && /^\d+$/.test(raw) ? Number.parseInt(raw, 10) : Number.NaN;
 }
 
-async function resolveApiKeyUser(
-	request: Request,
-	apiKeyHeader: string,
-): Promise<AuthPayload | null> {
-	// Request signing is mandatory: an API key alone never authenticates (the 2026-10-20 SECURITY
-	// audit High, residual items 1 and 2). Every signing header must be present AND non-empty;
-	// an empty header is the same missing header, and omitting any of them used to fall back to
-	// unsigned validation of the bare key. There is no fallback: an incomplete signing set is an
-	// invalid request, resolved to no user so requireAuth answers 401.
+/**
+ * The four signing headers a request must carry alongside X-API-Key. `null` from `header()` means
+ * the set is incomplete - a missing header or an empty value, which is the same missing header.
+ */
+interface SigningHeaders {
+	nonce: string;
+	signature: string;
+	timestamp: string;
+	version: string;
+}
+
+/**
+ * Read the mandatory signing headers, or null when any is missing or empty.
+ *
+ * Request signing is mandatory (the 2026-10-20 SECURITY audit High, residual items 1 and 2): an
+ * API key alone never authenticates, and there is no unsigned fallback to fall back to. An
+ * incomplete set is an invalid request, resolved to no user so requireAuth answers 401.
+ *
+ * @param request - The request carrying the X-API-Key header
+ * @returns All four header values, or null when the signing set is incomplete
+ */
+function readSigningHeaders(request: Request): null | SigningHeaders {
 	const signature = request.headers.get('x-api-signature');
 	const timestamp = request.headers.get('x-api-timestamp');
 	const nonce = request.headers.get('x-api-nonce');
 	const version = request.headers.get('x-api-version');
 	if (!signature || !timestamp || !nonce || !version) return null;
+	return { nonce, signature, timestamp, version };
+}
+
+async function resolveApiKeyUser(
+	request: Request,
+	apiKeyHeader: string,
+): Promise<AuthPayload | null> {
+	const signing = readSigningHeaders(request);
+	if (!signing) return null;
 
 	const url = new URL(request.url);
 	const body = await request.clone().text();
@@ -109,11 +131,11 @@ async function resolveApiKeyUser(
 		apiKey: apiKeyHeader,
 		body,
 		method: request.method,
-		nonce,
+		nonce: signing.nonce,
 		path: url.pathname + url.search,
-		signature,
-		timestamp: parseStrictInteger(timestamp),
-		version: parseStrictInteger(version),
+		signature: signing.signature,
+		timestamp: parseStrictInteger(signing.timestamp),
+		version: parseStrictInteger(signing.version),
 	});
 
 	if (!validated) return null;

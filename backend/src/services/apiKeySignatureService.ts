@@ -98,6 +98,25 @@ function recordSingleUseNonce(nonce: string, timestampMs: number): boolean {
 }
 
 /**
+ * Validate the timestamp as a whole, parseable seconds value and return it in milliseconds.
+ *
+ * The timestamp reaches this validator already strictly parsed (a bare run of digits) or as NaN;
+ * both the absent and the malformed case are refused here rather than coerced. The old
+ * Number.parseInt fallback turned a missing header into 0 and a "2abc" header into 2, so a
+ * signature computed over either of those payloads could validate.
+ *
+ * @param timestamp - Unix seconds from the strictly-parsed x-api-timestamp header
+ * @returns Whole milliseconds inside the freshness window, or null when refused
+ */
+function freshTimestampMs(timestamp: number): null | number {
+	if (!Number.isSafeInteger(timestamp)) return null;
+	const timestampMs = timestamp * 1000;
+	const timestampAge = Date.now() - timestampMs;
+	if (Math.abs(timestampAge) > MAX_TIMESTAMP_AGE_MS) return null;
+	return timestampMs;
+}
+
+/**
  * Validate an HMAC signature against the expected value using timing-safe comparison.
  * Also checks timestamp freshness, scheme version, and nonce uniqueness.
  *
@@ -108,17 +127,8 @@ function recordSingleUseNonce(nonce: string, timestampMs: number): boolean {
 function validateSignature(input: SignatureValidationInput, keySecret: string): boolean {
 	if (input.version !== SIGNATURE_VERSION) return false;
 
-	// The timestamp reaches this validator already strictly parsed (a bare run of digits) or as
-	// NaN; both the absent and the malformed case are refused here rather than coerced. The old
-	// Number.parseInt fallback turned a missing header into 0 and a "2abc" header into 2, so a
-	// signature computed over either of those payloads could validate.
-	if (!Number.isFinite(input.timestamp) || !Number.isSafeInteger(input.timestamp)) return false;
-
-	const timestampMs = input.timestamp * 1000;
-	if (!Number.isFinite(timestampMs)) return false;
-
-	const timestampAge = Date.now() - timestampMs;
-	if (Math.abs(timestampAge) > MAX_TIMESTAMP_AGE_MS) return false;
+	const timestampMs = freshTimestampMs(input.timestamp);
+	if (timestampMs === null) return false;
 
 	if (!NONCE_PATTERN.test(input.nonce)) return false;
 

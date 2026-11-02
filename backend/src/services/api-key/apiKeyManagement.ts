@@ -60,6 +60,55 @@ function recordApiKeyUsage(keyId: number): void {
 /** Validated API key data enriched with the owner's current role. */
 type ValidatedApiKey = { ownerRole: UserRole } & ApiKeyValidationData;
 
+/** The api_keys row shape validateApiKey reads, without Drizzle's table metadata. */
+type ApiKeyCandidate = ApiKeyValidationData;
+
+/**
+ * Look up the active key row for a plain API key and verify its bcrypt hash.
+ *
+ * Split from validateApiKey to keep both under the function-size ratchet. Every null return here is
+ * a reason a request cannot even reach signature validation: unknown key, wrong key, expired key.
+ *
+ * @param plainApiKey - The key exactly as the caller sent it
+ * @returns The stored row when the key is known, matching and unexpired; null otherwise
+ */
+async function findActiveApiKey(plainApiKey: string): Promise<ApiKeyCandidate | null> {
+	const keyIndexHash = generateKeyIndexHash(plainApiKey);
+
+	const candidate = getDb()
+		.select()
+		.from(apiKeys)
+		.where(and(eq(apiKeys.keyIndexHash, keyIndexHash), eq(apiKeys.isActive, true)))
+		.get();
+	if (!candidate) return null;
+
+	const matches = await verifyApiKey(plainApiKey, candidate.keyHash);
+	if (!matches) return null;
+
+	if (candidate.expiresAt && candidate.expiresAt < new Date()) return null;
+
+	return candidate as ApiKeyCandidate;
+}
+
+/**
+ * The key owner as validation needs them: present, not soft-deleted, not currently locked out,
+ * carrying their CURRENT role so the auth layer can cap the key's effective role at the owner's
+ * present privilege level (a key can never out-rank its owner).
+ *
+ * @param ownerId - The api_keys.createdBy to read
+ * @returns The owner's current role, or null when that owner must not authenticate
+ */
+function findEligibleOwnerRole(ownerId: number): null | UserRole {
+	const owner = getDb()
+		.select({ isDeleted: users.isDeleted, lockedUntil: users.lockedUntil, role: users.role })
+		.from(users)
+		.where(eq(users.id, ownerId))
+		.get();
+	if (!owner || owner.isDeleted) return null;
+	if (owner.lockedUntil && owner.lockedUntil > new Date()) return null;
+	return validateUserRole(owner.role);
+}
+
 /**
  * Validate a signed API-key request and return key data if valid.
  * Checks key hash, active status, expiration, owner state (deleted/locked), and the HMAC
@@ -70,30 +119,11 @@ type ValidatedApiKey = { ownerRole: UserRole } & ApiKeyValidationData;
  * @returns API key data (with owner's current role) or null if invalid
  */
 async function validateApiKey(input: ValidateApiKeyInput): Promise<null | ValidatedApiKey> {
-	const keyIndexHash = generateKeyIndexHash(input.apiKey);
-
-	const candidate = getDb()
-		.select()
-		.from(apiKeys)
-		.where(and(eq(apiKeys.keyIndexHash, keyIndexHash), eq(apiKeys.isActive, true)))
-		.get();
+	const candidate = await findActiveApiKey(input.apiKey);
 	if (!candidate) return null;
 
-	const matches = await verifyApiKey(input.apiKey, candidate.keyHash);
-	if (!matches) return null;
-
-	if (candidate.expiresAt && candidate.expiresAt < new Date()) return null;
-
-	// Reject API keys whose owning user has been soft-deleted or is locked out.
-	// The owner's CURRENT role is returned so the auth layer can cap the key's
-	// effective role at the owner's present privilege level.
-	const owner = getDb()
-		.select({ isDeleted: users.isDeleted, lockedUntil: users.lockedUntil, role: users.role })
-		.from(users)
-		.where(eq(users.id, candidate.createdBy))
-		.get();
-	if (!owner || owner.isDeleted) return null;
-	if (owner.lockedUntil && owner.lockedUntil > new Date()) return null;
+	const ownerRole = findEligibleOwnerRole(candidate.createdBy);
+	if (!ownerRole) return null;
 
 	// A stored secret is required: a key minted without one has nothing to verify the HMAC
 	// against, so it can never satisfy mandatory signing.
@@ -102,7 +132,7 @@ async function validateApiKey(input: ValidateApiKeyInput): Promise<null | Valida
 	if (!validateSignature(input, decryptedSecret)) return null;
 
 	recordApiKeyUsage(candidate.id);
-	return { ...(candidate as ApiKeyValidationData), ownerRole: validateUserRole(owner.role) };
+	return { ...candidate, ownerRole };
 }
 
 /**
