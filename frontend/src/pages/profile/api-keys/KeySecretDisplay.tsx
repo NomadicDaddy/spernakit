@@ -87,8 +87,17 @@ function KeySecretDisplay({ result }: { result: ApiKeyCreateResponse }) {
 					{'curl -H "X-API-Key: $API_KEY" \\\n'}
 					{'  -H "X-API-Signature: $sig" -H "X-API-Timestamp: $timestamp" \\\n'}
 					{'  -H "X-API-Nonce: $nonce" -H "X-API-Version: 2" \\\n'}
+					{'  -H "X-Workspace-ID: $WORKSPACE_ID" \\\n'}
 					{'  "$API_BASE_URL$path"\n'}
 				</pre>
+				<p>
+					Workspaced routes also need{' '}
+					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
+						X-Workspace-ID
+					</code>
+					, and the key's scope must permit the route (a read-scoped key acts as a
+					Viewer).
+				</p>
 				<p>
 					The signature is an HMAC-SHA256 over{' '}
 					<code className="rounded bg-muted px-1 py-0.5 font-mono" translate="no">
