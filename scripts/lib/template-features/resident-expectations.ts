@@ -11,6 +11,7 @@ import { readJson, removePath, runSync, TEMPLATE_VERSION, writeJson } from './fi
 
 const PROBE = 'remediation-20991231-probe';
 const GAMMA = '.aidd/features/gamma-feature/feature.json';
+const PROCESS_PROBE = 'template-feature-sync';
 
 /** The leak half: a copy of a template process record is wrong at every version, template or not. */
 function expectLeakedRecordFails(templateRoot: string, appRoot: string): void {
@@ -97,11 +98,39 @@ function expectAppAuthoredProcessRecordsPass(templateRoot: string, appRoot: stri
 }
 
 /**
+ * A stamped copy of a durable template-process record leaks exactly like a timestamped artifact,
+ * and `TEMPLATE_PROCESS` names are template-owned vocabulary: with a template checkout the corpus
+ * branch convicts even an unstamped copy, because the template carries the directory.
+ */
+function expectLeakedProcessRecordFails(templateRoot: string, appRoot: string): void {
+	writeJson(appRoot, `.aidd/features/${PROCESS_PROBE}/feature.json`, {
+		id: PROCESS_PROBE,
+	});
+	let run = runSync(appRoot, ['--template', templateRoot, '--check']);
+	assert(
+		run.exitCode === 1 && run.text.includes(PROCESS_PROBE),
+		`A template-process copy must fail with a checkout, stamped or not:\n${run.text}`,
+	);
+	// The stamp alone convicts when no template resolves, same as the ephemeral shape.
+	writeJson(appRoot, `.aidd/features/${PROCESS_PROBE}/feature.json`, {
+		id: PROCESS_PROBE,
+		spernakit_version: TEMPLATE_VERSION,
+	});
+	run = runSync(appRoot, ['--template', `${appRoot}/absent-template`, '--check']);
+	assert(
+		run.exitCode === 1 && run.text.includes(PROCESS_PROBE),
+		`A stamped template-process copy must fail with no checkout:\n${run.text}`,
+	);
+	removePath(appRoot, `.aidd/features/${PROCESS_PROBE}`);
+}
+
+/**
  * The version-independent defects, checked ahead of every skip. Expects a fully-synced app at
  * parity, and leaves it in that state.
  */
 export function expectResidentTier(templateRoot: string, appRoot: string): void {
 	expectLeakedRecordFails(templateRoot, appRoot);
+	expectLeakedProcessRecordFails(templateRoot, appRoot);
 	expectAppAuthoredProcessRecordsPass(templateRoot, appRoot);
 
 	// `spernakit_version` marks the version that introduced a record and is never bumped on

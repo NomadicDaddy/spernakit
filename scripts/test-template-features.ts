@@ -153,8 +153,9 @@ try {
 	);
 	assert(
 		readText(appRoot, feature('stale-template-copy')) === null &&
-			readText(appRoot, feature('remediation-20991231-probe')) === null,
-		'A stranded template copy and a leaked finding are both pruned.',
+			readText(appRoot, feature('remediation-20991231-probe')) === null &&
+			readText(appRoot, feature('template-feature-sync')) === null,
+		'A stranded template copy, a leaked finding and a template-process record are all pruned.',
 	);
 	assert(
 		readText(appRoot, '.aidd/features/stale-blocked-copy/NOTES.md') !== null,
@@ -169,7 +170,8 @@ try {
 	assert(
 		roadmap.features['beta-feature']?.milestone === 'polish' &&
 			Bun.deepEquals(roadmap.features['beta-feature']?.dependencies, ['alpha-feature']),
-		'An existing entry keeps its milestone and takes the template dependencies.',
+		'An existing entry keeps its milestone and takes the template dependencies, with a' +
+			' template-process edge dropped like an ephemeral one.',
 	);
 	assert(
 		Bun.deepEquals(roadmap.features['alpha-feature']?.dependencies, ['gamma-feature']),
@@ -180,8 +182,9 @@ try {
 		'A new entry lands on the milestone the ladder resolved.',
 	);
 	assert(
-		!Object.hasOwn(roadmap.features, 'stale-template-copy'),
-		'A pruned directory must leave no orphan roadmap entry.',
+		!Object.hasOwn(roadmap.features, 'stale-template-copy') &&
+			!Object.hasOwn(roadmap.features, 'template-feature-sync'),
+		'A pruned directory must leave no orphan roadmap entry, template-process records included.',
 	);
 	assert(
 		Object.hasOwn(roadmap.features, 'stale-blocked-copy') &&

@@ -44,7 +44,7 @@
  */
 import type { FeatureCorpus } from './types.ts';
 
-import { isEphemeralDir } from './source.ts';
+import { isEphemeralDir, isTemplateProcessDir } from './source.ts';
 
 export interface ResidentDefect {
 	detail: string;
@@ -68,7 +68,10 @@ export function auditResidentRecords(
 	const defects: ResidentDefect[] = [];
 
 	for (const dirName of app.dirs) {
-		if (!isEphemeralDir(dirName)) continue;
+		// `TEMPLATE_PROCESS` names are template-owned vocabulary, so with a template checkout a
+		// copy is provenance-flagged even unstamped; the stamp signal alone convicts when no
+		// checkout resolves, exactly as for the timestamped artifacts.
+		if (!isEphemeralDir(dirName) && !isTemplateProcessDir(dirName)) continue;
 		const inTemplate = template !== null && template.dirs.includes(dirName);
 		const marked = stampOf(app, dirName) !== undefined;
 		// Neither signal fires: the application authored this finding itself, which it may.

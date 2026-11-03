@@ -31,7 +31,7 @@ const HEADING: Readonly<Record<SyncAction, string>> = {
 	adopted: 'Adopted (unmarked app copy, no authored text lost)',
 	'adopted-with-loss': 'ADOPTED WITH LOSS (unmarked app copy carrying app-authored text)',
 	'prune-blocked': 'PRUNE BLOCKED (directory holds more than feature.json)',
-	pruned: 'Pruned (template no longer ships this record)',
+	pruned: 'Pruned (a record the app must not carry)',
 	unchanged: 'Unchanged',
 	updated: 'Updated (template-owned fields differ)',
 };

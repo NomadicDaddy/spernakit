@@ -27,7 +27,7 @@ import type {
 	RoadmapMilestone,
 } from './types.ts';
 
-import { isEphemeralDir } from './source.ts';
+import { isEphemeralDir, isTemplateProcessDir } from './source.ts';
 
 export interface MilestoneChoice {
 	milestone: string;
@@ -82,7 +82,10 @@ function templateDependencies(templateEntry: RoadmapEntry): string[] | undefined
 	if (!Object.hasOwn(templateEntry, 'dependencies')) return undefined;
 	const raw = templateEntry.dependencies;
 	if (!Array.isArray(raw)) return [];
-	return raw.filter((name): name is string => typeof name === 'string' && !isEphemeralDir(name));
+	return raw.filter(
+		(name): name is string =>
+			typeof name === 'string' && !isEphemeralDir(name) && !isTemplateProcessDir(name),
+	);
 }
 
 export interface RoadmapMergeInput {
@@ -103,7 +106,7 @@ function seedRoadmap(template: RoadmapDocument, corpus: FeatureCorpus): RoadmapD
 	const seeded = structuredClone(template);
 	seeded.features = {};
 	for (const dirName of corpus.dirs) {
-		if (isEphemeralDir(dirName)) continue;
+		if (isEphemeralDir(dirName) || isTemplateProcessDir(dirName)) continue;
 		const templateEntry = template.features[dirName];
 		if (templateEntry === undefined) continue;
 		const dependencies = templateDependencies(templateEntry);

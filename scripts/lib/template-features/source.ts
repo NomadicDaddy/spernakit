@@ -31,6 +31,39 @@ export function isEphemeralDir(dirName: string): boolean {
 	return EPHEMERAL.test(dirName);
 }
 
+/**
+ * Durable template-process records: real template machinery whose subject is the template's own
+ * scaffolding, gates and delivery process, never a capability a derived app inherits. Unlike the
+ * EPHEMERAL artifacts these are permanent residents of the template's own corpus and roadmap, so
+ * they carry stable names instead of timestamps; like them they never propagate to an app, and a
+ * stamped copy sitting in an app is a leak the sync prunes.
+ *
+ * Membership is an owner decision with recorded provenance, never a name pattern: this set was
+ * fixed by Phillip's Yes at Room #32626 on control #32613 (2026-11-03) from the Deeper
+ * process-record review (scratch/shared/carl/deeper-process-feature-review-20261103.md). Do not
+ * add a name without the same process-only test — a capability record listed here would silently
+ * stop syncing to every app — and do not remove one while any app still carries a stamped copy.
+ */
+export const TEMPLATE_PROCESS: ReadonlySet<string> = new Set([
+	'derived-app-scaffold',
+	'eslint-and-prettier-configuration',
+	'fresh-release-baseline-gate',
+	'github-pages-site',
+	'portable-app-initializer',
+	'pre-commit-leak-guard',
+	'project-scaffolding',
+	'release-capture-evidence-chain',
+	'release-screenshot-artifact-guard',
+	'smokeqc-quality-gate-scripts',
+	'spernakit-20260816-lockfile-closure-traversal-complexity',
+	'template-feature-sync',
+	'version-reference-consistency-check',
+]);
+
+export function isTemplateProcessDir(dirName: string): boolean {
+	return TEMPLATE_PROCESS.has(dirName);
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -94,9 +127,11 @@ export function loadCorpus(root: string): FeatureCorpus {
 	return corpus;
 }
 
-/** Template directories the sync propagates: everything that is not a process artifact. */
+/** Template directories the sync propagates: neither a process artifact nor template-process machinery. */
 export function durableDirs(corpus: FeatureCorpus): string[] {
-	return corpus.dirs.filter((dirName) => !isEphemeralDir(dirName));
+	return corpus.dirs.filter(
+		(dirName) => !isEphemeralDir(dirName) && !isTemplateProcessDir(dirName),
+	);
 }
 
 function validateRoadmapCoverage(corpus: FeatureCorpus, problems: string[]): void {

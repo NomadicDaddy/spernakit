@@ -58,6 +58,8 @@ function templateRecord(id: string, extra: Record_ = {}): Record_ {
  * `audit-logs` is durable despite its prefix and `remediation-20991231-probe` is not: telling those
  * two apart is the entire job of the `EPHEMERAL` pattern, so both live in the same corpus.
  * `theta-feature` carries `shippedVersion` upstream, which a new app copy must never inherit.
+ * `template-feature-sync` is a real member of `TEMPLATE_PROCESS` carried here so the durable
+ * exclusion and the prune of a stamped app copy are both exercised against the shipped set.
  */
 const TEMPLATE_FEATURES: Readonly<Record<string, Record_>> = {
 	'alpha-feature': templateRecord('alpha-feature', { priority: 3 }),
@@ -72,6 +74,7 @@ const TEMPLATE_FEATURES: Readonly<Record<string, Record_>> = {
 	'gamma-feature': templateRecord('gamma-feature'),
 	'iota-feature': templateRecord('iota-feature'),
 	'remediation-20991231-probe': templateRecord('remediation-20991231-probe'),
+	'template-feature-sync': templateRecord('template-feature-sync'),
 	'theta-feature': templateRecord('theta-feature', { shippedVersion: '9.0.0' }),
 	'zeta-feature': templateRecord('zeta-feature'),
 };
@@ -128,6 +131,7 @@ const APP_FEATURES: Readonly<Record<string, Record_>> = {
 	'remediation-20991231-probe': appCopy('remediation-20991231-probe'),
 	'stale-blocked-copy': appOwned('stale-blocked-copy', { spernakit_version: '8.0.0' }),
 	'stale-template-copy': appOwned('stale-template-copy', { spernakit_version: '8.0.0' }),
+	'template-feature-sync': appCopy('template-feature-sync'),
 	'zeta-feature': unmarked(appCopy('zeta-feature')),
 };
 
@@ -141,13 +145,19 @@ const TEMPLATE_ROADMAP = {
 		},
 		'audit-logs': { milestone: 'MVP' },
 		'audit-perf-1784357475-slow-queries': { milestone: 'MVP' },
-		'beta-feature': { dependencies: ['alpha-feature'], milestone: 'MVP' },
+		'beta-feature': {
+			// A template-process edge must be dropped alongside the ephemeral one: neither can
+			// ever resolve in an app, because neither directory syncs there.
+			dependencies: ['alpha-feature', 'template-feature-sync'],
+			milestone: 'MVP',
+		},
 		'delta-feature': { milestone: 'MVP' },
 		'epsilon-feature': { milestone: 'MVP' },
 		'eta-feature': { milestone: 'MVP' },
 		'gamma-feature': { milestone: 'MVP' },
 		'iota-feature': { milestone: 'polish' },
 		'remediation-20991231-probe': { milestone: 'MVP' },
+		'template-feature-sync': { milestone: 'MVP' },
 		'theta-feature': { milestone: 'Enhancement' },
 		'zeta-feature': { milestone: 'MVP' },
 	},
@@ -177,6 +187,7 @@ const APP_ROADMAP = {
 		'remediation-20991231-probe': { milestone: 'mvp-foundation' },
 		'stale-blocked-copy': { milestone: 'mvp-foundation' },
 		'stale-template-copy': { milestone: 'mvp-foundation' },
+		'template-feature-sync': { milestone: 'mvp-foundation' },
 		'zeta-feature': { milestone: 'mvp-foundation' },
 	},
 	milestones: {

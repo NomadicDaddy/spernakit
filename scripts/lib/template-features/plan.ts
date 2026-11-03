@@ -10,7 +10,7 @@
  * owns this" would declare a conflict on records the app never authored. The marker is evidence
  * about how a copy arrived, which is what separates `updated` from `adopted` — not authority.
  */
-import { isEphemeralDir } from './source.ts';
+import { isEphemeralDir, isTemplateProcessDir } from './source.ts';
 import {
 	AUTHORED_FIELDS,
 	type FeatureCorpus,
@@ -159,7 +159,12 @@ function planPrunes(
 		// An unmarked directory is app-owned by construction: nothing ever claimed it for the
 		// template, so the sync has no standing to delete it.
 		if (appRecord === undefined || !isMarked(appRecord)) continue;
-		if (template.features.has(dirName) && !isEphemeralDir(dirName)) continue;
+		if (
+			template.features.has(dirName) &&
+			!isEphemeralDir(dirName) &&
+			!isTemplateProcessDir(dirName)
+		)
+			continue;
 		if (!prune) continue;
 
 		if (app.featureOnlyDirs.has(dirName)) {
@@ -171,7 +176,9 @@ function planPrunes(
 					[],
 					isEphemeralDir(dirName)
 						? 'a template process artifact that leaked downstream'
-						: 'the template no longer ships this record',
+						: isTemplateProcessDir(dirName)
+							? 'a template-process record the sync never propagates to apps'
+							: 'the template no longer ships this record',
 				),
 			);
 			continue;
@@ -203,7 +210,7 @@ export function planFeatures(input: FeaturePlanInput): FeaturePlanEntry[] {
 	const entries: FeaturePlanEntry[] = [];
 
 	for (const dirName of template.dirs) {
-		if (isEphemeralDir(dirName)) continue;
+		if (isEphemeralDir(dirName) || isTemplateProcessDir(dirName)) continue;
 		const templateRecord = template.features.get(dirName);
 		if (templateRecord === undefined) continue;
 

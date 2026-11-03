@@ -51,6 +51,7 @@ const EXPECTED_ACTIONS: Readonly<Record<string, string>> = {
 	'remediation-20991231-probe': 'pruned',
 	'stale-blocked-copy': 'prune-blocked',
 	'stale-template-copy': 'pruned',
+	'template-feature-sync': 'pruned',
 	'theta-feature': 'added',
 	'zeta-feature': 'adopted',
 };
