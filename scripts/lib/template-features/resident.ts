@@ -117,22 +117,29 @@ export function printResidentDefects(appLabel: string, defects: ResidentDefect[]
 
 	if (defects.some((defect) => defect.kind === 'leaked-process-record')) {
 		console.error(
-			"   These are copies of the template's own process records and belong upstream. Read",
+			"   These are copies of the template's own process records and belong upstream.",
 		);
 		console.error(
-			'   each one, confirm its content already lives in a durable feature, then delete the',
-		);
-		console.error('   directory and its `.aidd/roadmap.json` entry.');
-		console.error(
-			'   A timestamped finding this application authored itself is not reported here,',
+			'   For a timestamped finding: read it, confirm its content already lives in a durable',
 		);
 		console.error(
-			'   whatever it is named. A `TEMPLATE_PROCESS` name is different: the name itself is',
+			'   feature, then delete the directory and its `.aidd/roadmap.json` entry - a finding',
 		);
 		console.error(
-			'   template-owned vocabulary, so a copy is a leak even unstamped - delete the directory',
+			'   this application authored itself is not reported here, whatever it is named.',
 		);
-		console.error('   and its roadmap entry the same way; these records never sync to an app.');
+		console.error(
+			'   For a `TEMPLATE_PROCESS` record: it is template-only machinery, so no app feature',
+		);
+		console.error(
+			'   is expected to hold its content - review the copy for any app-authored text worth',
+		);
+		console.error(
+			'   keeping, then delete the directory and its roadmap entry the same way. These',
+		);
+		console.error(
+			'   records never sync to an application, so the deletion is durable after this point.',
+		);
 	}
 	if (defects.some((defect) => defect.kind === 'stamp-mismatch')) {
 		console.error(
