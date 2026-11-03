@@ -46,7 +46,7 @@ const EXPECTED_ACTIONS: Readonly<Record<string, string>> = {
 	'delta-feature': 'unchanged',
 	'epsilon-feature': 'unchanged',
 	'eta-feature': 'adopted-with-loss',
-	'gamma-feature': 'unchanged',
+	'gamma-feature': 'updated',
 	'iota-feature': 'added',
 	'remediation-20991231-probe': 'pruned',
 	'stale-blocked-copy': 'prune-blocked',
@@ -95,6 +95,10 @@ function expectClassification(plan: PlanJson, byDir: Map<string, PlanEntry>, run
 	assert(
 		Bun.deepEquals(byDir.get('beta-feature')?.lossFields, ['spec']),
 		'An overwritten spec must be reported as app text at risk.',
+	);
+	assert(
+		byDir.get('gamma-feature')?.changedFields.includes('dependencies') === true,
+		'An app copy with raw process edges must be planned for a dependency rewrite.',
 	);
 	assert(
 		byDir.get('eta-feature')?.reason?.includes('refused without --adopt') === true,

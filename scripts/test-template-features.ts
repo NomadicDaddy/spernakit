@@ -104,13 +104,9 @@ try {
 
 	// --- The write ---------------------------------------------------------------------------------
 	const untouched = new Map(
-		[
-			'app-only-feature',
-			'audit-change-history',
-			'delta-feature',
-			'epsilon-feature',
-			'gamma-feature',
-		].map((dirName) => [dirName, readText(appRoot, feature(dirName))]),
+		['app-only-feature', 'audit-change-history', 'delta-feature', 'epsilon-feature'].map(
+			(dirName) => [dirName, readText(appRoot, feature(dirName))],
+		),
 	);
 	expectGuardedWrite(templateRoot, appRoot);
 
