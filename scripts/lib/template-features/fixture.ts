@@ -58,8 +58,8 @@ function templateRecord(id: string, extra: Record_ = {}): Record_ {
  * `audit-logs` is durable despite its prefix and `remediation-20991231-probe` is not: telling those
  * two apart is the entire job of the `EPHEMERAL` pattern, so both live in the same corpus.
  * `theta-feature` carries `shippedVersion` upstream, which a new app copy must never inherit.
- * `template-feature-sync` is a real member of `TEMPLATE_PROCESS` carried here so the durable
- * exclusion and the prune of a stamped app copy are both exercised against the shipped set.
+ * `template-feature-sync` is a real `TEMPLATE_PROCESS` member exercising the durable exclusion,
+ * the stamped-copy prune, and the dependency filter against the shipped set.
  */
 const TEMPLATE_FEATURES: Readonly<Record<string, Record_>> = {
 	'alpha-feature': templateRecord('alpha-feature', { priority: 3 }),
@@ -71,7 +71,10 @@ const TEMPLATE_FEATURES: Readonly<Record<string, Record_>> = {
 	'delta-feature': templateRecord('delta-feature'),
 	'epsilon-feature': templateRecord('epsilon-feature', { notes: ['Note one.', 'Note two.'] }),
 	'eta-feature': templateRecord('eta-feature', { spec: ['Eta spec line.'] }),
-	'gamma-feature': templateRecord('gamma-feature'),
+	// Raw ephemeral + TEMPLATE_PROCESS edges: neither may reach an app copy or its roadmap.
+	'gamma-feature': templateRecord('gamma-feature', {
+		dependencies: ['delta-feature', 'remediation-20991231-probe', 'template-feature-sync'],
+	}),
 	'iota-feature': templateRecord('iota-feature'),
 	'remediation-20991231-probe': templateRecord('remediation-20991231-probe'),
 	'template-feature-sync': templateRecord('template-feature-sync'),
@@ -127,7 +130,7 @@ const APP_FEATURES: Readonly<Record<string, Record_>> = {
 	'eta-feature': unmarked(
 		appCopy('eta-feature', { spec: ['Eta spec line, edited by the app.'] }),
 	),
-	'gamma-feature': appCopy('gamma-feature'),
+	'gamma-feature': appCopy('gamma-feature', { dependencies: ['delta-feature'] }),
 	'remediation-20991231-probe': appCopy('remediation-20991231-probe'),
 	'stale-blocked-copy': appOwned('stale-blocked-copy', { spernakit_version: '8.0.0' }),
 	'stale-template-copy': appOwned('stale-template-copy', { spernakit_version: '8.0.0' }),
@@ -146,8 +149,6 @@ const TEMPLATE_ROADMAP = {
 		'audit-logs': { milestone: 'MVP' },
 		'audit-perf-1784357475-slow-queries': { milestone: 'MVP' },
 		'beta-feature': {
-			// A template-process edge must be dropped alongside the ephemeral one: neither can
-			// ever resolve in an app, because neither directory syncs there.
 			dependencies: ['alpha-feature', 'template-feature-sync'],
 			milestone: 'MVP',
 		},

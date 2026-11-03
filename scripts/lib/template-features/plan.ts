@@ -47,6 +47,22 @@ function normalizeField(field: string, value: unknown): unknown {
 }
 
 /**
+ * The `dependencies` payload an app copy may carry. A template edge naming a process artifact or
+ * a `TEMPLATE_PROCESS` record would dangle in every app, because neither directory ever syncs
+ * there — and aidd's `roadmap:apply` aborts an entire run on an entry whose directory is absent.
+ * The roadmap merge drops the same names from `roadmap.json` edges; this keeps the feature.json
+ * payload consistent with it. Filtering at comparison time too is what keeps a filtered copy
+ * reading as `unchanged` instead of perpetually `updated` against the raw template value.
+ */
+function appDependencies(value: unknown): unknown {
+	if (!Array.isArray(value)) return value;
+	return value.filter(
+		(name): name is string =>
+			typeof name === 'string' && !isEphemeralDir(name) && !isTemplateProcessDir(name),
+	);
+}
+
+/**
  * Template-owned fields whose value differs, comparing normalized. A field present on one side and
  * absent on the other counts: the sync deletes fields the template dropped.
  */
@@ -60,7 +76,10 @@ export function changedTemplateFields(template: FeatureRecord, app: FeatureRecor
 			changed.push(field);
 			continue;
 		}
-		const left = normalizeField(field, template[field]);
+		const left =
+			field === 'dependencies'
+				? appDependencies(template[field])
+				: normalizeField(field, template[field]);
 		const right = normalizeField(field, app[field]);
 		if (!Bun.deepEquals(left, right)) changed.push(field);
 	}
@@ -79,8 +98,10 @@ export function changedTemplateFields(template: FeatureRecord, app: FeatureRecor
 export function mergeRecord(template: FeatureRecord, app: FeatureRecord | null): FeatureRecord {
 	const merged: FeatureRecord = app === null ? {} : { ...app };
 	for (const field of TEMPLATE_OWNED_FIELDS) {
-		if (Object.hasOwn(template, field)) merged[field] = template[field];
-		else delete merged[field];
+		if (Object.hasOwn(template, field)) {
+			merged[field] =
+				field === 'dependencies' ? appDependencies(template[field]) : template[field];
+		} else delete merged[field];
 	}
 	if (app === null) {
 		for (const field of SEEDED_FIELDS) {

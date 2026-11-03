@@ -152,6 +152,12 @@ try {
 		'audit-logs is a capability record and must survive the ephemeral filter.',
 	);
 	assert(
+		Bun.deepEquals(readJson(appRoot, feature('gamma-feature'))['dependencies'], [
+			'delta-feature',
+		]),
+		'An app copy never carries template edges naming a process artifact or template-process record.',
+	);
+	assert(
 		readText(appRoot, feature('stale-template-copy')) === null &&
 			readText(appRoot, feature('remediation-20991231-probe')) === null &&
 			readText(appRoot, feature('template-feature-sync')) === null,
