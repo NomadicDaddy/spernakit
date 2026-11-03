@@ -124,8 +124,15 @@ export function printResidentDefects(appLabel: string, defects: ResidentDefect[]
 		);
 		console.error('   directory and its `.aidd/roadmap.json` entry.');
 		console.error(
-			'   A finding this application authored itself is not reported here, whatever it is named.',
+			'   A timestamped finding this application authored itself is not reported here,',
 		);
+		console.error(
+			'   whatever it is named. A `TEMPLATE_PROCESS` name is different: the name itself is',
+		);
+		console.error(
+			'   template-owned vocabulary, so a copy is a leak even unstamped - delete the directory',
+		);
+		console.error('   and its roadmap entry the same way; these records never sync to an app.');
 	}
 	if (defects.some((defect) => defect.kind === 'stamp-mismatch')) {
 		console.error(
