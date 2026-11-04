@@ -494,7 +494,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-alert-dialog@1.2.0
+### @radix-ui/react-alert-dialog@1.2.1
 
 License: MIT
 
@@ -550,7 +550,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-avatar@1.3.0
+### @radix-ui/react-avatar@1.3.1
 
 License: MIT
 
@@ -578,7 +578,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-checkbox@1.4.0
+### @radix-ui/react-checkbox@1.4.1
 
 License: MIT
 
@@ -690,7 +690,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-dialog@1.3.0
+### @radix-ui/react-dialog@1.3.1
 
 License: MIT
 
@@ -746,7 +746,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-dismissable-layer@1.2.0
+### @radix-ui/react-dismissable-layer@1.2.1
 
 License: MIT
 
@@ -774,7 +774,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-dropdown-menu@2.2.0
+### @radix-ui/react-dropdown-menu@2.2.1
 
 License: MIT
 
@@ -830,7 +830,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-focus-scope@1.3.0
+### @radix-ui/react-focus-scope@1.3.1
 
 License: MIT
 
@@ -914,7 +914,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-menu@2.2.0
+### @radix-ui/react-menu@2.2.1
 
 License: MIT
 
@@ -942,7 +942,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-popover@1.3.0
+### @radix-ui/react-popover@1.3.1
 
 License: MIT
 
@@ -1082,7 +1082,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-progress@1.2.0
+### @radix-ui/react-progress@1.2.1
 
 License: MIT
 
@@ -1110,7 +1110,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-roving-focus@1.2.0
+### @radix-ui/react-roving-focus@1.2.1
 
 License: MIT
 
@@ -1138,7 +1138,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-select@2.4.0
+### @radix-ui/react-select@2.4.1
 
 License: MIT
 
@@ -1222,7 +1222,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-switch@1.4.0
+### @radix-ui/react-switch@1.4.1
 
 License: MIT
 
@@ -1250,7 +1250,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-tabs@1.2.0
+### @radix-ui/react-tabs@1.2.1
 
 License: MIT
 
@@ -1278,7 +1278,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @radix-ui/react-tooltip@1.4.0
+### @radix-ui/react-tooltip@1.4.1
 
 License: MIT
 
@@ -1818,7 +1818,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/query-core@5.104.2
+### @tanstack/query-core@5.105.3
 
 License: MIT
 
@@ -1846,7 +1846,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-query@5.104.2
+### @tanstack/react-query@5.105.3
 
 License: MIT
 
@@ -1902,7 +1902,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-table@9.2.8
+### @tanstack/react-table@9.3.1
 
 License: MIT
 
@@ -1930,7 +1930,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-virtual@3.14.17
+### @tanstack/react-virtual@3.14.26
 
 License: MIT
 
@@ -1986,7 +1986,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/table-core@9.2.8
+### @tanstack/table-core@9.3.1
 
 License: MIT
 
@@ -2014,7 +2014,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/virtual-core@3.19.2
+### @tanstack/virtual-core@3.19.11
 
 License: MIT
 
@@ -2294,7 +2294,7 @@ MIT License
     SOFTWARE
 ```
 
-### @types/node@26.6.5
+### @types/node@26.6.6
 
 License: MIT
 
@@ -4403,7 +4403,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.55.0
+### lucide-react@1.67.0
 
 License: ISC
 
@@ -4523,7 +4523,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@10.1.4
+### nodemailer@10.3.1
 
 License: MIT-0
 
@@ -5307,7 +5307,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react@19.3.0
+### react@19.3.1
 
 License: MIT
 
@@ -5335,7 +5335,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react-dom@19.3.0
+### react-dom@19.3.1
 
 License: MIT
 
@@ -5535,7 +5535,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react-router@8.4.0
+### react-router@8.5.1
 
 License: MIT
 
@@ -6653,7 +6653,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### zustand@5.0.15
+### zustand@5.0.16
 
 License: MIT
 
