@@ -18,6 +18,8 @@ const OLD_KEY = '10'.repeat(32);
 const NEW_KEY = '20'.repeat(32);
 const plaintexts = [
 	'smtp-pass',
+	'oauth-client-secret',
+	'generic-setting',
 	'access-token',
 	'refresh-token',
 	'totp-secret',
@@ -51,11 +53,11 @@ async function run(): Promise<void> {
 
 	const encrypted = await encryptedFixtures();
 	const setting = required(encrypted, 0);
-	const access = required(encrypted, 1);
-	const refresh = required(encrypted, 2);
-	const mfaSecret = required(encrypted, 3);
-	const backupCodes = required(encrypted, 4);
-	const apiSecret = required(encrypted, 5);
+	const access = required(encrypted, 3);
+	const refresh = required(encrypted, 4);
+	const mfaSecret = required(encrypted, 5);
+	const backupCodes = required(encrypted, 6);
+	const apiSecret = required(encrypted, 7);
 	const now = new Date();
 	getDb()
 		.insert(users)
@@ -68,7 +70,35 @@ async function run(): Promise<void> {
 		.run();
 	getDb()
 		.insert(settings)
-		.values({ isEncrypted: true, key: 'smtp.password', value: setting })
+		.values({
+			isEncrypted: true,
+			key: 'smtp_config',
+			// The real smtpConfigService shape: plaintext JSON, only the nested password encrypted.
+			value: JSON.stringify({
+				host: 'smtp.example.com',
+				password: setting,
+				port: 587,
+				username: 'mailer',
+			}),
+		})
+		.run();
+	getDb()
+		.insert(settings)
+		.values({
+			isEncrypted: true,
+			key: 'oauth.github',
+			// The real oauthProviderSettingsService shape: nested clientSecret alone encrypted.
+			value: JSON.stringify({
+				callbackUrlOverride: null,
+				clientId: 'github-client-id',
+				clientSecret: required(encrypted, 1),
+				enabled: true,
+			}),
+		})
+		.run();
+	getDb()
+		.insert(settings)
+		.values({ isEncrypted: true, key: 'session.secret', value: required(encrypted, 2) })
 		.run();
 	getDb()
 		.insert(oauthAccounts)
@@ -111,31 +141,68 @@ async function run(): Promise<void> {
 		'previous-key fallback did not decrypt old data',
 	);
 	const result = await rotateFieldEncryption({ current: NEW_KEY, previous: OLD_KEY });
-	assert(result.processed === 6, `expected six rotated fields, got ${result.processed}`);
+	assert(result.processed === 8, `expected eight rotated fields, got ${result.processed}`);
 	delete security.encryptionKeyPrevious;
 
+	const settingsRows = getDb().select().from(settings).all();
+	const byKey = new Map(settingsRows.map((row) => [row.key, row]));
+
+	const smtpRow = byKey.get('smtp_config');
+	assert(smtpRow !== undefined, 'smtp_config row disappeared');
+	if (smtpRow?.value) {
+		const smtpJson = JSON.parse(smtpRow.value) as Record<string, unknown>;
+		assert(smtpJson.host === 'smtp.example.com', 'smtp host changed during rotation');
+		assert(smtpJson.port === 587, 'smtp port changed during rotation');
+		assert(smtpJson.username === 'mailer', 'smtp username changed during rotation');
+		assert(
+			typeof smtpJson.password === 'string' &&
+				(await decrypt(smtpJson.password)) === required(plaintexts, 0),
+			'smtp nested password did not rotate to the new key',
+		);
+	}
+
+	const oauthRow = byKey.get('oauth.github');
+	assert(oauthRow !== undefined, 'oauth.github row disappeared');
+	if (oauthRow?.value) {
+		const oauthJson = JSON.parse(oauthRow.value) as Record<string, unknown>;
+		assert(oauthJson.clientId === 'github-client-id', 'oauth clientId changed during rotation');
+		assert(oauthJson.enabled === true, 'oauth enabled changed during rotation');
+		assert(
+			typeof oauthJson.clientSecret === 'string' &&
+				(await decrypt(oauthJson.clientSecret)) === required(plaintexts, 1),
+			'oauth nested clientSecret did not rotate to the new key',
+		);
+	}
+
+	const genericRow = byKey.get('session.secret');
+	assert(
+		genericRow?.value !== undefined &&
+			genericRow?.value !== null &&
+			(await decrypt(genericRow.value)) === required(plaintexts, 2),
+		'whole-value settings row did not rotate to the new key',
+	);
+
 	const rotated = [
-		getDb().select().from(settings).get()?.value,
 		getDb().select().from(oauthAccounts).get()?.accessTokenEncrypted,
 		getDb().select().from(oauthAccounts).get()?.refreshTokenEncrypted,
 		getDb().select().from(mfaSettings).get()?.secretEncrypted,
 		getDb().select().from(mfaSettings).get()?.backupCodesEncrypted,
 		getDb().select().from(apiKeys).get()?.keySecret,
 	];
-	for (const [index, ciphertext] of rotated.entries()) {
+	for (const [offset, ciphertext] of rotated.entries()) {
 		assert(
 			ciphertext !== undefined && ciphertext !== null,
-			`rotated field ${index} disappeared`,
+			`rotated field ${offset} disappeared`,
 		);
 		if (ciphertext) {
 			assert(
-				(await decrypt(ciphertext)) === required(plaintexts, index),
-				`field ${index} changed`,
+				(await decrypt(ciphertext)) === required(plaintexts, offset + 3),
+				`field ${offset} changed`,
 			);
 		}
 	}
 
-	const stableCiphertext = rotated[5];
+	const stableCiphertext = rotated[4];
 	getDb().update(settings).set({ value: 'corrupt' }).run();
 	security.encryptionKeyPrevious = OLD_KEY;
 	let rejected = false;

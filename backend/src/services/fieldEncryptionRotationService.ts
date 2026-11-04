@@ -6,6 +6,7 @@ import { mfaSettings } from '../db/schema/mfaSettings.ts';
 import { oauthAccounts } from '../db/schema/oauthAccounts.ts';
 import { settings } from '../db/schema/settings.ts';
 import { decryptWithKeys, encryptWithKey } from '../utils/encryption.ts';
+import { OAUTH_PROVIDER_NAMES, settingsKey } from './oauth/oauthProviderSettingsStore.ts';
 import { settingsCache } from './settings/settingsQueries.ts';
 
 interface RotationKeys {
@@ -24,6 +25,37 @@ async function rotateValue(value: null | string, keys: RotationKeys): Promise<nu
 }
 
 /**
+ * Settings rows stored as plaintext JSON whose single nested field is the ciphertext: the SMTP
+ * configuration (nested `password`) and every OAuth provider row (nested `clientSecret`) keep
+ * `isEncrypted` set for API masking, so rotation must re-encrypt only the nested field and leave
+ * the surrounding JSON untouched. Whole-value rotation on these rows cannot parse the JSON as
+ * ciphertext and would abort the entire rotation.
+ */
+const HYBRID_SECRET_FIELDS: Readonly<Record<string, string>> = {
+	smtp_config: 'password',
+	...Object.fromEntries(
+		OAUTH_PROVIDER_NAMES.map((provider) => [settingsKey(provider), 'clientSecret']),
+	),
+};
+
+async function rotateHybridValue(
+	value: null | string,
+	secretField: string,
+	keys: RotationKeys,
+): Promise<null | string> {
+	if (value === null || value === '') return value;
+	const parsed: unknown = JSON.parse(value);
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+		throw new Error(`Hybrid settings row is not a JSON object (secret field: ${secretField})`);
+	}
+	const record = parsed as Record<string, unknown>;
+	const secret = record[secretField];
+	if (typeof secret !== 'string' || secret === '') return value;
+	record[secretField] = await rotateValue(secret, keys);
+	return JSON.stringify(record);
+}
+
+/**
  * Re-encrypt every field protected by security.encryptionKey in one database transaction.
  *
  * @param keys - Current write key and previous read key
@@ -35,7 +67,7 @@ async function rotateFieldEncryption(keys: RotationKeys): Promise<RotationResult
 	}
 	const db = getDb();
 	const settingRows = db
-		.select({ id: settings.id, value: settings.value })
+		.select({ id: settings.id, key: settings.key, value: settings.value })
 		.from(settings)
 		.where(eq(settings.isEncrypted, true))
 		.all();
@@ -60,7 +92,13 @@ async function rotateFieldEncryption(keys: RotationKeys): Promise<RotationResult
 	// Finish every decrypt and encrypt before opening the write transaction. Any corrupt row aborts
 	// without modifying the database; plaintext exists only in these short-lived local promises.
 	const rotatedSettings = await Promise.all(
-		settingRows.map(async (row) => ({ id: row.id, value: await rotateValue(row.value, keys) })),
+		settingRows.map(async (row) => {
+			const hybridField = HYBRID_SECRET_FIELDS[row.key];
+			const value = hybridField
+				? await rotateHybridValue(row.value, hybridField, keys)
+				: await rotateValue(row.value, keys);
+			return { id: row.id, value };
+		}),
 	);
 	const rotatedOauth = await Promise.all(
 		oauthRows.map(async (row) => ({
