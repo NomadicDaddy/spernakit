@@ -43,17 +43,22 @@ async function rotateHybridValue(
 	value: null | string,
 	secretField: string,
 	keys: RotationKeys,
-): Promise<null | string> {
-	if (value === null || value === '') return value;
+): Promise<{ rotated: boolean; value: null | string }> {
+	if (value === null || value === '') return { rotated: false, value };
 	const parsed: unknown = JSON.parse(value);
 	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
 		throw new Error(`Hybrid settings row is not a JSON object (secret field: ${secretField})`);
 	}
 	const record = parsed as Record<string, unknown>;
 	const secret = record[secretField];
-	if (typeof secret !== 'string' || secret === '') return value;
+	if (secret === undefined || secret === '') return { rotated: false, value };
+	if (typeof secret !== 'string') {
+		throw new Error(
+			`Hybrid settings row carries a non-string ${secretField}; refusing to treat malformed data as rotated`,
+		);
+	}
 	record[secretField] = await rotateValue(secret, keys);
-	return JSON.stringify(record);
+	return { rotated: true, value: JSON.stringify(record) };
 }
 
 /**
@@ -95,10 +100,13 @@ async function rotateFieldEncryption(keys: RotationKeys): Promise<RotationResult
 	const rotatedSettings = await Promise.all(
 		settingRows.map(async (row) => {
 			const hybridField = HYBRID_SECRET_FIELDS[row.key];
-			const value = hybridField
-				? await rotateHybridValue(row.value, hybridField, keys)
-				: await rotateValue(row.value, keys);
-			return { id: row.id, value };
+			if (hybridField) {
+				const hybrid = await rotateHybridValue(row.value, hybridField, keys);
+				return { id: row.id, rotated: hybrid.rotated, value: hybrid.value };
+			}
+			// A whole-value row rotates exactly when it carries ciphertext to rewrite.
+			const value = await rotateValue(row.value, keys);
+			return { id: row.id, rotated: value !== null && value !== '', value };
 		}),
 	);
 	const rotatedOauth = await Promise.all(
@@ -144,7 +152,7 @@ async function rotateFieldEncryption(keys: RotationKeys): Promise<RotationResult
 	});
 	settingsCache.clear();
 	const processed =
-		rotatedSettings.filter((row) => row.value).length +
+		rotatedSettings.filter((row) => row.rotated).length +
 		rotatedOauth.flatMap((row) => [row.access, row.refresh]).filter(Boolean).length +
 		rotatedMfa.flatMap((row) => [row.secret, row.backup]).filter(Boolean).length +
 		rotatedApiKeys.filter((row) => row.secret).length;

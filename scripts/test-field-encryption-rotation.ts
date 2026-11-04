@@ -100,6 +100,21 @@ async function run(): Promise<void> {
 		.insert(settings)
 		.values({ isEncrypted: true, key: 'session.secret', value: required(encrypted, 2) })
 		.run();
+	// A hybrid row with nothing to rotate: an empty clientSecret must not count as a rewritten
+	// field (settings.key is unique, so the smtp case is covered by the same empty-string path).
+	getDb()
+		.insert(settings)
+		.values({
+			isEncrypted: true,
+			key: 'oauth.google',
+			value: JSON.stringify({
+				callbackUrlOverride: null,
+				clientId: 'google-client-id',
+				clientSecret: '',
+				enabled: false,
+			}),
+		})
+		.run();
 	getDb()
 		.insert(oauthAccounts)
 		.values({
@@ -181,6 +196,20 @@ async function run(): Promise<void> {
 			(await decrypt(genericRow.value)) === required(plaintexts, 2),
 		'whole-value settings row did not rotate to the new key',
 	);
+
+	const emptyOauthRow = byKey.get('oauth.google');
+	assert(emptyOauthRow !== undefined, 'empty-secret oauth.google row disappeared');
+	if (emptyOauthRow?.value) {
+		const parsed = JSON.parse(emptyOauthRow.value) as Record<string, unknown>;
+		assert(
+			parsed.clientSecret === '',
+			'empty clientSecret must stay empty, not gain ciphertext',
+		);
+		assert(
+			parsed.clientId === 'google-client-id',
+			'empty-secret row body changed during rotation',
+		);
+	}
 
 	const rotated = [
 		getDb().select().from(oauthAccounts).get()?.accessTokenEncrypted,
