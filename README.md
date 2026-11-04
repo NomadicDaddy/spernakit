@@ -150,7 +150,6 @@ spernakit/
 ├── scaffolding/      # Dotfiles copied into derived apps at init (.gitignore, .githooks)
 ├── docs/             # Template documentation
 ├── licenses/         # License texts, base-image inventory, and distribution guidance
-├── site/             # Static landing page published to GitHub Pages
 └── spernakit.psd1.example # Fleet manifest template (copy to spernakit.psd1)
 ```
 
