@@ -6,7 +6,7 @@ import { logger } from '../../utils/logger.ts';
 import { parseSettingsJson } from '../../utils/validation.ts';
 import { getByKeyRaw, seedDefault, update } from '../settingsService.ts';
 
-const SMTP_CONFIG_KEY = 'smtp_config';
+const SMTP_CONFIG_KEY = 'smtp_config' as const;
 
 const SmtpConfigSchema = Type.Object({
 	fromAddress: Type.Optional(Type.String()),

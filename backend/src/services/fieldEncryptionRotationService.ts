@@ -8,6 +8,7 @@ import { settings } from '../db/schema/settings.ts';
 import { decryptWithKeys, encryptWithKey } from '../utils/encryption.ts';
 import { OAUTH_PROVIDER_NAMES, settingsKey } from './oauth/oauthProviderSettingsStore.ts';
 import { settingsCache } from './settings/settingsQueries.ts';
+import { SMTP_CONFIG_KEY } from './smtp/smtpConfigService.ts';
 
 interface RotationKeys {
 	current: string;
@@ -32,7 +33,7 @@ async function rotateValue(value: null | string, keys: RotationKeys): Promise<nu
  * ciphertext and would abort the entire rotation.
  */
 const HYBRID_SECRET_FIELDS: Readonly<Record<string, string>> = {
-	smtp_config: 'password',
+	[SMTP_CONFIG_KEY]: 'password',
 	...Object.fromEntries(
 		OAUTH_PROVIDER_NAMES.map((provider) => [settingsKey(provider), 'clientSecret']),
 	),
