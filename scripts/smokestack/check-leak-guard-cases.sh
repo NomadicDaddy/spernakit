@@ -5,7 +5,14 @@
 #
 # smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
 # smokestack; every repository that takes it holds a byte-identical copy.
-# shellcheck shell=bash
+#
+# SC2154 is off for this file only: the eight variables it reads unassigned (aws_key, b64_run,
+# guard, guard_repo, hook, pem_header, synthetic, tmp) are set by check-leak-guard.sh before it
+# sources this file, and a consumer that lints each file alone with shellcheck would otherwise fail
+# on all of them. A misspelt name still fails the self-test, through the parent's set -u. A
+# disable placed before the first command applies to the whole file; it is kept file-wide rather
+# than narrowed behind a dummy command.
+# shellcheck shell=bash disable=SC2154
 
 # 13. A refusal names the file and counts the lines, and never repeats what it refused. The guard
 # has just stopped that text from being committed; printing it would copy the secret into the

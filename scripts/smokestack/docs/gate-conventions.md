@@ -354,6 +354,28 @@ Part 3 is the one that gets skipped, and parts 1 and 2 exist mostly to make it p
 no `root` seam and no exported runner is harder to exercise against a fixture; the original
 survey found fifteen gates with that entry-shape problem.
 
+## What belongs in the fast subset
+
+Under team rule R22, a normal change is checked with the fast subset (`smoke:qc:fast`) plus the
+focused tests for what changed, and the full gate (`smoke:qc`) runs before a release. The fast
+subset is therefore the gate most commits actually pass, so it must still catch a broken behaviour,
+not just a broken format.
+
+- **In the fast subset:** the static checks (line cap, typecheck, lint, format) and every local
+  behaviour test that runs in seconds: unit tests, self-tests and fixture checks that need no
+  network, no build and no long-running server or browser. Spawning a short child process, such
+  as `git` or the gate under test, is fine.
+- **Full gate only:** builds and bundles, network calls (dependency audits, package doctors),
+  end-to-end and browser suites, and test suites that take minutes.
+- **Decide by measuring.** Time each candidate on its own before leaving it out. On 2026-11-03,
+  review found fast gates in five repositories that dropped cheap behaviour tests to save
+  seconds, and each was corrected. Leave a check out because it is slow, never because it is a test.
+
+smokestack's own fast subset follows this. Beside the statics it runs every `check:*` step that
+takes about a second, plus `test:gate-conventions` (about 1 s) and `test:shared-core` (about 16 s).
+It leaves three steps to `smoke:qc`: the full `test` suite (minutes), `check:leak-guard` (about
+38 s) and `check:shared-core` (about 27 s, which reads every consumer repository).
+
 ## Adding a new gate
 
 A new gate conforms from the start; there is no grace period and no allowlist entry for it. That is

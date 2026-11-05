@@ -199,8 +199,9 @@ printf '%s\n' '\bzzz-synthetic-app\b' '\bzzz-sibling-app\b' >"$tmp/patterns-pair
 guard_repo="$tmp/repo"
 
 # Cases 11 to 18 are in check-leak-guard-cases.sh beside this file. It is sourced so it shares the
-# scratch repositories, helpers and failure count above.
-# shellcheck source=check-leak-guard-cases.sh
+# scratch repositories, helpers and failure count above. shellcheck -x follows it from any
+# directory through SCRIPTDIR; plain shellcheck, which follows no sourced file, skips it (SC1091).
+# shellcheck source-path=SCRIPTDIR source=check-leak-guard-cases.sh disable=SC1091
 . "$self_dir/check-leak-guard-cases.sh"
 
 if [ "$failures" -gt 0 ]; then
