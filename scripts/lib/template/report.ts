@@ -272,12 +272,12 @@ export function printRetainedDeletions(
 			hookRetained,
 			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
 		);
-		console.log('     Re-point git at the managed hooks BEFORE deleting anything:');
-		console.log('       git config core.hooksPath scripts/smokestack/hooks');
-		console.log('     Confirm scripts/smokestack/hooks/pre-commit exists first (the upgrade');
-		console.log('     delivers it), and keep any app-owned .githooks checks in the managed');
-		console.log('     hooks. Then delete: deleting while core.hooksPath still names .githooks');
-		console.log('     silently disables every hook.');
+		console.log('     1. Confirm scripts/smokestack/hooks/pre-commit exists (the upgrade');
+		console.log('        delivers it); re-pointing before that lands leaves git hookless.');
+		console.log('     2. git config core.hooksPath scripts/smokestack/hooks');
+		console.log('     3. Keep any app-owned .githooks/pre-commit or pre-push (executable,');
+		console.log('        minus the old leak-guard call) and delete the rest: deleting them');
+		console.log('        while core.hooksPath still names .githooks disables every hook.');
 		console.log('');
 	}
 
