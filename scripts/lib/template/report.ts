@@ -275,9 +275,9 @@ export function printRetainedDeletions(
 		console.log('     1. Confirm scripts/smokestack/hooks/pre-commit and pre-push exist (the');
 		console.log('        upgrade delivers them; re-pointing before that leaves git hookless);');
 		console.log('     2. git config core.hooksPath scripts/smokestack/hooks');
-		console.log('     3. Keep any app-owned .githooks/pre-commit or pre-push (executable,');
-		console.log('        minus the old leak-guard call) and delete the rest: deleting them');
-		console.log('        while core.hooksPath still names .githooks disables every hook.');
+		console.log('     3. Keep app-owned .githooks/pre-commit or pre-push (executable,');
+		console.log('        minus the old leak-guard call); delete the LISTED template files,');
+		console.log('        and review any other app-owned .githooks name before deleting it.');
 		console.log('');
 	}
 
