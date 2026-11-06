@@ -1,9 +1,9 @@
 # Gate Conventions
 
-> **Shared-core file.** smokestack owns this document. Every target carries a byte-identical copy,
-> synced by `scripts/sync-shared-core.ts` under the `gate-conventions` group and enforced by
-> `check:shared-core`. Edit it in smokestack and sync outward; an edit made in a copy shows up as
-> drift and fails that gate. A write replaces committed drift but refuses uncommitted edits.
+> **Shared-core file.** smokestack owns this file and delivers it with `bun run shared-core:write`
+> under the `gate-conventions` group. Every target carries a byte-identical copy, enforced by
+> `check:shared-core`. Edit it in smokestack and deliver it outward; an edit made in a copy shows up
+> as drift and fails that gate. A write replaces committed drift but refuses uncommitted edits.
 
 A **gate** is a script that asserts something about the repository and fails the build when the
 assertion does not hold. Discovery recognizes `check`, `check:<name>` and `check-<name>` tasks,

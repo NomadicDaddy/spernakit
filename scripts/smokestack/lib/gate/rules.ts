@@ -4,6 +4,9 @@
  * Each function takes one gate and returns its findings. They are pure over `Gate`, with the single
  * exception of GC6, which is handed the assertion IDs its caller already read, so that every rule
  * stays testable against synthetic sources rather than against the repository it happens to run in.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 import { scanTopLevel } from './toplevel.ts';

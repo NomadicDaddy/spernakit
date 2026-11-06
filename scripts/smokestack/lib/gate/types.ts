@@ -5,6 +5,9 @@
  * document this code enforces. Seven of the eight rules are statically decidable, and rule 5 only
  * in half: its count half is a property of the success line's text, while its zero-items half is a
  * property of a code path and stays a review item, alongside rule 7's waiver forms.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 /** The statically enforced rules. Deliberately sparse: 7 has no static form, and 5 has half of one. */

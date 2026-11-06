@@ -12,6 +12,9 @@
  * The allowlist cases matter just as much. The allowlist is what lets the gate be adopted at all,
  * so its two failure modes -- suppressing a violation it should not, and holding an entry that no
  * longer describes anything -- both have a case here.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';

@@ -19,6 +19,9 @@
  * - **Suppresses nothing.** This is "the list can only shrink" applied to the in-source form. Once
  *   the link a marker covered resolves, the marker is a standing exemption for a violation that is
  *   no longer there, and the next broken link written on that line inherits it in silence.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 export const WAIVER_MARKER = 'check-docs-allow:';

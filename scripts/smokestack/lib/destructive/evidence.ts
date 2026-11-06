@@ -22,6 +22,9 @@
  * applies trivial plans straight through. Only reading `milestonePlanNeedsReview` shows that
  * deletes never take the second path, and a gate that resolved two hops would have asserted it
  * without looking.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 /**

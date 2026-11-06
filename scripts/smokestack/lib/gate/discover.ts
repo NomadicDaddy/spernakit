@@ -21,6 +21,9 @@
  * both files. Non-TypeScript targets are not gates for this purpose; a `.sh` guard has none of the
  * eight rules' surfaces. Files that are reached only as a shim (`run-bash.ts`) or as a dispatcher
  * shared with non-gate tasks are removed by the allowlist's `excluded` map, with a reason each.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 /**

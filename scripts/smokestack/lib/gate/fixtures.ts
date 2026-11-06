@@ -5,6 +5,9 @@
  * of cases buried in the synthetic gates they run against. Every source here is written as an array
  * of lines joined at the end: the fixtures are gates, and a gate written as one long template
  * literal cannot carry the backticks and quote characters several of these cases exist to exercise.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 /** A scratch gate satisfying GC1, GC2, GC3, GC4, GC6 and GC8, over a population fixed in source. */

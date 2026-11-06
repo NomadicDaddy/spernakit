@@ -1,3 +1,6 @@
+// smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+// smokestack; every repository that takes it holds a byte-identical copy.
+
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative, sep } from 'node:path';
 import { cwd, exit } from 'node:process';

@@ -14,14 +14,14 @@
  * intentionally not flagged: the flag belongs on the helper's own spawn call, which this check
  * sees at that call site.
  *
- * This file is delivered by `sync-shared-core.ts`, so `SCAN_ROOTS` is the union across carriers and
- * a root that does not exist here is skipped rather than failed. The union is load-bearing rather
+ * smokestack owns this file and delivers it with `bun run shared-core:write`, a byte-identical copy
+ * in each carrier, so `SCAN_ROOTS` is the union across carriers and a root that does not exist here
+ * is skipped rather than failed. The union is load-bearing rather
  * than tidy: a single carrier's own root list can miss a whole top-level directory (`skills/`,
  * say) holding a real unhidden spawn, and two hand-kept lists drift apart. Widen this list rather
  * than narrowing it.
  *
- * Usage:
- *   bun scripts/check-git-window-hide.ts
+ * Usage: bun scripts/check-git-window-hide.ts
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';

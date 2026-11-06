@@ -12,6 +12,9 @@
  * interpolates a count or it does not. Six vacuous passes were found by hand, one gate at a time,
  * before anyone asked whether the class had a static form. Not one of the six printed a number, so
  * every one of them would have been caught here, at the line that reported the pass.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 /**

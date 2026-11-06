@@ -21,6 +21,9 @@
  * The check is deliberately narrow about what counts as a file reference. Only tokens that end in a
  * script extension are resolved, so output paths, globs, and inline `bun -e` code cannot produce a
  * finding. A rule that guesses is a rule that gets waived.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 import { existsSync, readFileSync } from 'node:fs';

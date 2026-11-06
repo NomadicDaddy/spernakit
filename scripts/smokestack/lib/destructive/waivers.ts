@@ -21,6 +21,9 @@
  * - **A dispatcher shared with non-destructive work.** aidd's `MilestonesTab.tsx` applies every
  *   milestone plan through one function. Deletes always stop at the plan dialog first, but the
  *   proof of that is in `milestonePlanNeedsReview`, not at the call site.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 export const WAIVER_MARKER = 'destructive-confirmation-allow:';

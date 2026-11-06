@@ -9,6 +9,9 @@
  * Regex literals are not optional to handle. `scripts/check-artifact-parity.ts` in aidd carries a
  * backtick inside a character class, which without regex awareness opens a template literal that
  * never closes and silently masks the rest of the file.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 export interface LineContext {

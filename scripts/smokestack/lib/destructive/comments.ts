@@ -1,6 +1,9 @@
 /**
  * A code-only view of a source file, for the gate that reads confirmation evidence out of one.
  *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
+ *
  * `check-destructive-confirmation` matched its patterns against raw lines, so prose counted as
  * code. Four separate faults came out of that, and the ordering matters: the first is silent.
  *

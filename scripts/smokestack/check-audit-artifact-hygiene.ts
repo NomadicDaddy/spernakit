@@ -21,6 +21,9 @@
  * legitimately has nothing here, and that is the one case the anti-vacuity rule exempts. It is
  * `[SKIP]` rather than `[OK]` so the distinction stays visible -- an `[OK]` over zero reports is
  * indistinguishable from an `[OK]` over a clean 300.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';

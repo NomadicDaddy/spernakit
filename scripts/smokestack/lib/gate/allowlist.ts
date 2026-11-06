@@ -14,6 +14,9 @@
  * What makes the list shrink rather than sit is the stale-entry check. A waived path whose rule now
  * passes is itself a finding, so a gate cannot be fixed and left waived, and the file cannot
  * quietly accumulate entries that no longer describe anything.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 import { type Finding, type Gate, type RuleId, STATIC_RULES } from './types.ts';

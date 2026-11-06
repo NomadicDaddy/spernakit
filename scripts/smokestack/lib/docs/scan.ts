@@ -4,6 +4,9 @@
  *
  * Split from check-docs.ts so the gate and `collectDocsInputs`, which tells a cache what the gate
  * reads, find the same files by one rule.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 import { readdirSync } from 'node:fs';

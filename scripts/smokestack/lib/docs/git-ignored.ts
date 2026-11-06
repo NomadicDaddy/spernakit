@@ -15,6 +15,9 @@
  * A tracked file that happens to match an ignore rule is not reported, because `check-ignore`
  * consults the index. That is the answer this gate wants: the question is whether a fresh clone
  * would have the file, not whether a pattern matches its name.
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 
 import { relative, sep } from 'node:path';

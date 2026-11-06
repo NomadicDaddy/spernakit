@@ -22,6 +22,9 @@
  * checks, and is the shape every gate is migrating toward.
  *
  * Run: bun run check:gate-conventions [--root <dir>] [--json] [--list-waived]
+ *
+ * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
+ * smokestack; every repository that takes it holds a byte-identical copy.
  */
 import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
