@@ -245,18 +245,39 @@ export function printRetainedDeletions(
 ): number {
 	const retained = deletions.filter((d) => d.status === 'retained');
 	const suppressed = deletions.filter((d) => d.status === 'suppressed');
+	// Legacy hook copies are the one removal whose naive remedy is destructive: every pre-0.6.8
+	// derived app points core.hooksPath at .githooks, so deleting these files on the upgrade
+	// path silently disables every hook, the leak guard included. They get their own remedy -
+	// re-point first, delete second - never the raw FAILING delete instruction.
+	const hookRetained = retained.filter((d) => d.filePath.startsWith('.githooks/'));
+	const plainRetained = retained.filter((d) => !d.filePath.startsWith('.githooks/'));
 
 	console.log(`Template Deletion Report (v${recordedVersion} -> v${targetVersion})`);
 	console.log('');
 
-	if (retained.length > 0) {
-		console.log(`   REMOVED FROM TEMPLATE (${retained.length} file(s), FAILING):`);
+	if (plainRetained.length > 0) {
+		console.log(`   REMOVED FROM TEMPLATE (${plainRetained.length} file(s), FAILING):`);
 		printFileList(
-			retained,
+			plainRetained,
 			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
 		);
 		console.log('     Delete these files, or acknowledge an intentional retention with a');
 		console.log('     DELETED line in .templateoverrides to suppress it.');
+		console.log('');
+	}
+
+	if (hookRetained.length > 0) {
+		console.log(
+			`   REMOVED FROM TEMPLATE (${hookRetained.length} legacy hook file(s), RE-POINT FIRST):`,
+		);
+		printFileList(
+			hookRetained,
+			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
+		);
+		console.log('     Re-point git at the managed hooks BEFORE deleting anything:');
+		console.log('       git config core.hooksPath scripts/smokestack/hooks');
+		console.log('     Then delete these files. Deleting them while core.hooksPath still names');
+		console.log('     .githooks silently disables every hook, the leak guard included.');
 		console.log('');
 	}
 
