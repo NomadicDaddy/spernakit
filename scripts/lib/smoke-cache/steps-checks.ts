@@ -180,11 +180,14 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'check:leak-guard': {
 		excludes: COMMON_EXCLUDES,
+		// The guard, the decoder it sources and the check with its cases, all smokestack's since
+		// v0.6.0. These globs named the pre-move paths, which no longer exist, so a leak-guard change
+		// could replay a cached pass instead of re-running the check.
 		globs: [
-			'.githooks/leak-guard.sh',
 			'package.json',
-			'scripts/check-leak-guard.sh',
-			'scripts/run-bash.ts',
+			'scripts/smokestack/check-leak-guard*.sh',
+			'scripts/smokestack/hooks/leak-guard*.sh',
+			'scripts/smokestack/run-bash.ts',
 		],
 	},
 	'check:licenses': {

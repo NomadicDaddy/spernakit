@@ -11,6 +11,9 @@ import { join } from 'node:path';
 
 import { assert, run, write } from './harness.ts';
 
+/** The app's commit hook: smokestack's managed copy, which the template tree carries. */
+const PRE_COMMIT = 'scripts/smokestack/hooks/pre-commit';
+
 /** Runs the scaffolded pre-commit against a leaky and a clean staged change, in that order. */
 export function assertCommitChain(appDir: string, bash: string): void {
 	// The leak guard diffs the index against HEAD, so the fixture needs one commit to diff against.
@@ -36,9 +39,10 @@ export function assertCommitChain(appDir: string, bash: string): void {
 	assert(baseline.exitCode === 0, `Fixture app baseline commit failed:\n${baseline.output}`);
 
 	// Tier 2 of the leak guard reads private literals from a file outside the repo by design. Point
-	// it at an empty file inside the fixture so this asserts the tracked tier-1 rules alone and does
-	// not depend on what the developer running the suite happens to have seeded locally.
-	write(appDir, 'leak-guard-patterns', '');
+	// it at a fixture file holding one literal nothing here contains, so the result rests on the
+	// tracked tier-1 rules and not on what the developer running the suite has seeded locally. It
+	// cannot be empty: the managed guard fails closed on a pattern file with no pattern in it.
+	write(appDir, 'leak-guard-patterns', 'fixture-private-literal-not-in-any-file\n');
 	const leakEnv = { LEAK_GUARD_PATTERNS: join(appDir, 'leak-guard-patterns') };
 
 	// Assembled at runtime. Writing the literal would put a string this repository's own leak guard
@@ -47,7 +51,7 @@ export function assertCommitChain(appDir: string, bash: string): void {
 	write(appDir, 'src/leaky.ts', `export const token = '${syntheticKey}';\n`);
 	const stagedLeak = run(['git', 'add', 'src/leaky.ts'], appDir);
 	assert(stagedLeak.exitCode === 0, `Fixture secret staging failed:\n${stagedLeak.output}`);
-	const blocked = run([bash, '.githooks/pre-commit'], appDir, undefined, leakEnv);
+	const blocked = run([bash, PRE_COMMIT], appDir, undefined, leakEnv);
 	assert(blocked.exitCode !== 0, `A staged secret must block the commit:\n${blocked.output}`);
 	assert(
 		blocked.output.includes('pre-commit: leak-guard') &&
@@ -70,7 +74,7 @@ export function assertCommitChain(appDir: string, bash: string): void {
 	write(appDir, 'src/clean.ts', 'export const token = process.env.API_TOKEN;\n');
 	const stagedClean = run(['git', 'add', 'src/clean.ts'], appDir);
 	assert(stagedClean.exitCode === 0, `Fixture clean staging failed:\n${stagedClean.output}`);
-	const allowed = run([bash, '.githooks/pre-commit'], appDir, undefined, leakEnv);
+	const allowed = run([bash, PRE_COMMIT], appDir, undefined, leakEnv);
 	assert(
 		allowed.exitCode === 0,
 		`A clean commit must pass the scaffolded hook:\n${allowed.output}`,

@@ -17,18 +17,18 @@ import { SECURITY_INFRASTRUCTURE_FILES } from './security.ts';
 /**
  * Map an app-relative path to the template path it should be compared against.
  *
- * spernakit is a PUBLISHED repo; a derived app is private and has no remote. Their ignore files and
- * hooks are therefore opposites, not copies:
- *   - spernakit's .gitignore hides .aidd/ wholesale; an app must TRACK its .aidd/ blueprint.
- *   - spernakit's pre-commit runs the leak-guard, which exists to stop THIS repo committing fleet
- *     codenames; in a private app that names itself it only ever fires as a false positive.
- * Comparing an app against spernakit's own copies asks it to adopt the wrong side of both. The
- * scaffolding/ tree holds the derived-app versions, and init.ps1 seeds from exactly there — so
- * drift must read from there too, or the copier and the checker disagree.
+ * spernakit is a PUBLISHED repo; a derived app is private and has no remote. Their ignore files are
+ * therefore opposites, not copies: spernakit's .gitignore hides .aidd/ wholesale, while an app must
+ * TRACK its .aidd/ blueprint. Comparing an app against spernakit's own copies asks it to adopt the
+ * wrong side. The scaffolding/ tree holds the derived-app versions, and init seeds from exactly
+ * there — so drift must read from there too, or the copier and the checker disagree.
+ *
+ * Hooks are not mapped. An app's hooks are smokestack's managed copies under
+ * scripts/smokestack/hooks, the same bytes the template carries, so they compare at their own path.
+ * The scaffolding/.githooks copy they replaced had drifted from the delivered hooks (#37401).
  */
 export function toTemplatePath(appPath: string): string {
 	if (appPath === '.gitignore' || appPath === '.prettierignore') return `scaffolding/${appPath}`;
-	if (appPath.startsWith('.githooks/')) return `scaffolding/${appPath}`;
 	return appPath;
 }
 

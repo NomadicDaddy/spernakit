@@ -229,7 +229,9 @@ async function main(): Promise<void> {
 		// to sit above the target, or from no repository at all. Formatting lands before the staging
 		// so the index holds the text the gate grades and the commit records exactly that.
 		run(['git', 'init'], target);
-		run(['git', 'config', 'core.hooksPath', '.githooks'], target);
+		// The app's hooks are smokestack's managed copies, which the template tree carries under
+		// scripts/smokestack/hooks (Phillip #37401, #37416). The old .githooks/ layout is never written.
+		run(['git', 'config', 'core.hooksPath', 'scripts/smokestack/hooks'], target);
 		// The new app records its own critical-path budget before any gate grades it. The budget
 		// file is app-owned generated state, so a fresh app copies the template's numbers and, until
 		// now, never replaced them. The template's recorded gzip ceiling sits about a kilobyte above

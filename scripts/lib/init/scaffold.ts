@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
+import { GIT_HOOKS } from '../../smokestack/lib/shared-core/git-hooks.ts';
 import { applyPlan } from '../template-features/apply.ts';
 import { validateTemplateCorpus } from '../template-features/source.ts';
 import { buildSyncPlan } from '../template-features/sync.ts';
@@ -175,17 +176,23 @@ export async function seedTemplateFeatures(source: string, target: string): Prom
 	return result.written.length;
 }
 
+/** Where an app's hooks live: smokestack's managed copies, carried by the template tree. */
+const HOOKS_DIR = 'scripts/smokestack/hooks';
+const GIT_HOOK_NAMES: ReadonlySet<string> = new Set(GIT_HOOKS);
+
 /**
  * Re-stage every hook as executable. `git add -A` records hooks 100644 under core.fileMode=false,
  * and POSIX git refuses to run a non-executable hook — so without this the commit bakes in hooks
  * that never fire. The index --chmod is the only part that survives a clone.
  */
 export function chmodHooks(target: string): void {
-	const hookDir = join(target, '.githooks');
+	const hookDir = join(target, HOOKS_DIR);
 	if (!existsSync(hookDir)) return;
 	for (const entry of readdirSync(hookDir, { withFileTypes: true })) {
-		if (entry.isFile()) {
-			run(['git', 'update-index', '--chmod=+x', `.githooks/${entry.name}`], target);
+		// Only the hooks git runs. The guard bodies beside them are sourced by bash, and smokestack
+		// delivers them 100644; making them executable here would differ from every delivery.
+		if (entry.isFile() && GIT_HOOK_NAMES.has(entry.name)) {
+			run(['git', 'update-index', '--chmod=+x', `${HOOKS_DIR}/${entry.name}`], target);
 		}
 	}
 }

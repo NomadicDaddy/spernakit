@@ -1,4 +1,4 @@
-// The fast static subset (`bun run smoke:qc:fast`, also what `.githooks/pre-commit` runs):
+// The fast static subset (`bun run smoke:qc:fast`, also what the managed pre-commit runs):
 // formatting, line-limit, types, and lint — no build, no crawl, no slow project checks. This is
 // the fail-fast inner-loop gate: it stops at the first failure, so run it repeatedly while fixing
 // errors, then run the aggregate full `bun run smoke:qc` once before commit.

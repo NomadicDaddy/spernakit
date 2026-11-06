@@ -71,7 +71,7 @@ function git(cwd: string, args: string[]): null | string {
  * True when the path belongs to the surface a template upgrade copies over.
  *
  * Mirrors how `enumerateTemplateFiles` builds that surface: everything the drift checker manages,
- * plus the scaffold-mapped paths (`.gitignore`, `.prettierignore`, `.githooks/*`) which
+ * plus the scaffold-mapped paths (`.gitignore`, `.prettierignore`) which
  * `isFileExcluded` rejects at their app location because the template keeps them under
  * `scaffolding/`.
  */

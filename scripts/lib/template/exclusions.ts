@@ -128,10 +128,9 @@ export function isInitExcluded(filePath: string): boolean {
 	// docs/template/ is template-managed and ships to every app.
 	if (filePath.startsWith('docs/template/')) return false;
 
-	// spernakit's OWN ignore files and hooks are its own — the app-facing versions live in
-	// scaffolding/ and are re-introduced under their app paths (see toTemplatePath).
+	// spernakit's OWN ignore files are its own — the app-facing versions live in scaffolding/ and
+	// are re-introduced under their app paths (see toTemplatePath).
 	if (filePath === '.gitignore' || filePath === '.prettierignore') return true;
-	if (filePath.startsWith('.githooks/')) return true;
 
 	for (const dir of INIT_EXCLUDED_DIRS) {
 		if (filePath.startsWith(dir)) return true;
