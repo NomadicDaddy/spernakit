@@ -245,10 +245,8 @@ export function printRetainedDeletions(
 ): number {
 	const retained = deletions.filter((d) => d.status === 'retained');
 	const suppressed = deletions.filter((d) => d.status === 'suppressed');
-	// Legacy hook copies are the one removal whose naive remedy is destructive: every pre-0.6.8
-	// derived app points core.hooksPath at .githooks, so deleting these files on the upgrade
-	// path silently disables every hook, the leak guard included. They get their own remedy -
-	// re-point first, delete second - never the raw FAILING delete instruction.
+	// Legacy hook copies: deleting them while core.hooksPath names .githooks silently
+	// disables every hook, so they get re-point-first, never the raw FAILING delete.
 	const hookRetained = retained.filter((d) => d.filePath.startsWith('.githooks/'));
 	const plainRetained = retained.filter((d) => !d.filePath.startsWith('.githooks/'));
 
@@ -276,8 +274,10 @@ export function printRetainedDeletions(
 		);
 		console.log('     Re-point git at the managed hooks BEFORE deleting anything:');
 		console.log('       git config core.hooksPath scripts/smokestack/hooks');
-		console.log('     Then delete these files. Deleting them while core.hooksPath still names');
-		console.log('     .githooks silently disables every hook, the leak guard included.');
+		console.log('     Confirm scripts/smokestack/hooks/pre-commit exists first (the upgrade');
+		console.log('     delivers it), and keep any app-owned .githooks checks in the managed');
+		console.log('     hooks. Then delete: deleting while core.hooksPath still names .githooks');
+		console.log('     silently disables every hook.');
 		console.log('');
 	}
 
