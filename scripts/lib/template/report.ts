@@ -272,8 +272,8 @@ export function printRetainedDeletions(
 			hookRetained,
 			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
 		);
-		console.log('     1. Confirm scripts/smokestack/hooks/pre-commit exists (the upgrade');
-		console.log('        delivers it); re-pointing before that lands leaves git hookless.');
+		console.log('     1. Confirm scripts/smokestack/hooks/pre-commit and pre-push exist (the');
+		console.log('        upgrade delivers them; re-pointing before that leaves git hookless);');
 		console.log('     2. git config core.hooksPath scripts/smokestack/hooks');
 		console.log('     3. Keep any app-owned .githooks/pre-commit or pre-push (executable,');
 		console.log('        minus the old leak-guard call) and delete the rest: deleting them');

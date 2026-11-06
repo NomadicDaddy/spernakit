@@ -2751,7 +2751,6 @@
 						"scripts/smokestack/hooks/force-push-guard.sh",
 						"scripts/smokestack/hooks/pre-push",
 						"scripts/smokestack/hooks/screenshot-guard.sh",
-						"scripts/smokestack/hooks/screenshot-guard.sh",
 						"package.json",
 						"scripts/smokestack/hooks/**/*",
 						"scripts/check-template-drift.ts",
