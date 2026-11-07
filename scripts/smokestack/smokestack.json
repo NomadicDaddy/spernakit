@@ -14,6 +14,19 @@
 			},
 			{
 				"cache": {
+					"inputs": [
+						"frontend/src/**/*",
+						"package.json",
+						"bun.lock",
+						"scripts/check-lucide-imports.ts"
+					]
+				},
+				"description": "Named lucide-react imports resolve to icons the installed package ships",
+				"name": "check:lucide-imports",
+				"run": ["bun", "run", "check:lucide-imports"]
+			},
+			{
+				"cache": {
 					"uncacheable": "no smoke-cache classification exists for this step"
 				},
 				"description": "Runbook carries every template smoke step at this app's template version",
