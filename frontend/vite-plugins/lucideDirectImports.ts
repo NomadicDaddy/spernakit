@@ -51,8 +51,10 @@ const lucideDirectImportsPlugin = (): Plugin => {
 					}
 					// Handle aliased imports: "Server as ServerIcon"
 					const asMatch = trimmed.match(/^(\w+(?:\d+)?)\s+as\s+(\w+(?:\d+)?)$/);
-					if (asMatch) {
-						valueImports.push({ alias: asMatch[2], originalName: asMatch[1] });
+					const originalName = asMatch?.[1];
+					const alias = asMatch?.[2];
+					if (originalName !== undefined && alias !== undefined) {
+						valueImports.push({ alias, originalName });
 					} else if (trimmed.length > 0) {
 						valueImports.push({ alias: trimmed, originalName: trimmed });
 					}
