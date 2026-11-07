@@ -143,6 +143,10 @@
 					"description": "Named lucide-react imports resolve to icons the installed package ships"
 				},
 				{
+					"command": "bun run test:lucide-names",
+					"description": "Lucide icon-name mapping matches the import-rewrite plugin"
+				},
+				{
 					"command": "bun run check:smoke-steps",
 					"description": "Runbook carries every template smoke step at this app's template version"
 				},

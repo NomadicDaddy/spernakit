@@ -27,6 +27,18 @@
 			},
 			{
 				"cache": {
+					"inputs": [
+						"shared/src/lucideNames.ts",
+						"scripts/test-lucide-names.ts",
+						"package.json"
+					]
+				},
+				"description": "Lucide icon-name mapping matches the import-rewrite plugin",
+				"name": "test:lucide-names",
+				"run": ["bun", "run", "test:lucide-names"]
+			},
+			{
+				"cache": {
 					"uncacheable": "no smoke-cache classification exists for this step"
 				},
 				"description": "Runbook carries every template smoke step at this app's template version",
