@@ -3,8 +3,13 @@
  * plugin-local mapping disagreed with the gate (Room #37805): digit boundaries.
  */
 
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { lucideDirectImportsPlugin } from '../frontend/vite-plugins/lucideDirectImports.ts';
 import { lucideIconKebab } from '../shared/src/lucideNames.ts';
+import { checkLucideImports } from './check-lucide-imports.ts';
 
 let checks = 0;
 
@@ -54,5 +59,56 @@ assert(
 	code.includes('lucide-react/dist/esm/icons/grid-2-x-2'),
 	`transform must rewrite Grid2X2 to grid-2-x-2, got: ${code}`,
 );
+
+// Two-version negative control (Room #37854): with two lucide-react versions present, the
+// gate must read the FRONTEND-LINKED one - an icon only the linked version ships passes,
+// and an icon only the OTHER store version ships fails.
+const scratch = join(tmpdir(), `lucide-two-version-${process.pid}`);
+const linkedIcons = join(
+	scratch,
+	'frontend',
+	'node_modules',
+	'lucide-react',
+	'dist',
+	'esm',
+	'icons',
+);
+const storeIcons = join(
+	scratch,
+	'node_modules',
+	'.bun',
+	'lucide-react@0.0.0-test',
+	'node_modules',
+	'lucide-react',
+	'dist',
+	'esm',
+	'icons',
+);
+mkdirSync(linkedIcons, { recursive: true });
+mkdirSync(storeIcons, { recursive: true });
+writeFileSync(join(linkedIcons, 'linked-only.mjs'), 'export {};\n');
+writeFileSync(join(storeIcons, 'store-only.mjs'), 'export {};\n');
+mkdirSync(join(scratch, 'frontend', 'src'), { recursive: true });
+writeFileSync(
+	join(scratch, 'frontend', 'src', 'sample.tsx'),
+	"import { LinkedOnly, StoreOnly } from 'lucide-react';\nexport const x = [LinkedOnly, StoreOnly];\n",
+);
+try {
+	const result = checkLucideImports(scratch);
+	assert(
+		result.iconsDir === linkedIcons,
+		`gate must read the frontend-linked icons directory, got ${result.iconsDir}`,
+	);
+	assert(
+		result.unresolved.some((line) => line.includes('StoreOnly')),
+		'an icon shipped only by the other store version must fail',
+	);
+	assert(
+		!result.unresolved.some((line) => line.includes('LinkedOnly')),
+		'an icon shipped by the linked version must pass',
+	);
+} finally {
+	rmSync(scratch, { force: true, recursive: true });
+}
 
 console.log(`Lucide name mapping test passed (${checks} assertions).`);

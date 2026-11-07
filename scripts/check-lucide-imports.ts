@@ -13,7 +13,13 @@ import { join, relative } from 'node:path';
 
 import { lucideIconKebab } from '../shared/src/lucideNames.ts';
 
-function resolveIconsDir(root: string): null | string {
+export interface LucideImportCheckResult {
+	checked: number;
+	iconsDir: null | string;
+	unresolved: string[];
+}
+
+export function resolveIconsDir(root: string): null | string {
 	// The pinned install the frontend actually builds against (frontend/node_modules link)
 	// wins; the bun store scan is only a fallback for layouts without the link.
 	const linked = join(root, 'frontend', 'node_modules', 'lucide-react', 'dist', 'esm', 'icons');
@@ -37,59 +43,65 @@ function resolveIconsDir(root: string): null | string {
 	return null;
 }
 
-const root = process.cwd();
-const iconsDir = resolveIconsDir(root);
-if (iconsDir === null) {
-	console.error(
-		'[FAIL] lucide icon imports: no installed lucide-react icons directory found - install first',
+export function checkLucideImports(root: string): LucideImportCheckResult {
+	const iconsDir = resolveIconsDir(root);
+	if (iconsDir === null) return { checked: 0, iconsDir: null, unresolved: [] };
+	const shipped = new Set(
+		readdirSync(iconsDir)
+			.filter((file) => file.endsWith('.mjs'))
+			.map((file) => file.slice(0, -4)),
 	);
-	process.exit(1);
-}
-const shipped = new Set(
-	readdirSync(iconsDir)
-		.filter((file) => file.endsWith('.mjs'))
-		.map((file) => file.slice(0, -4)),
-);
 
-const unresolved: string[] = [];
-let checked = 0;
+	const unresolved: string[] = [];
+	let checked = 0;
 
-function walk(dir: string): void {
-	for (const entry of readdirSync(dir, { withFileTypes: true })) {
-		const path = join(dir, entry.name);
-		if (entry.isDirectory()) walk(path);
-		else if (!/\.tsx?$/.test(entry.name)) continue;
-		else {
-			const source = readFileSync(path, 'utf8');
-			for (const match of source.matchAll(
-				/import\s*\{([^}]*)\}\s*from\s*['"]lucide-react['"]/g,
-			)) {
-				const named = match[1] ?? '';
-				for (const raw of named.split(',')) {
-					const name = raw
-						.trim()
-						.split(/\s+as\s+/)[0]
-						?.replace(/^type\s+/, '');
-					if (!name || raw.trim().startsWith('type ')) continue;
-					checked++;
-					if (!shipped.has(lucideIconKebab(name))) {
-						unresolved.push(
-							`${relative(root, path)}: ${name} -> ${lucideIconKebab(name)}`,
-						);
+	function walk(dir: string): void {
+		for (const entry of readdirSync(dir, { withFileTypes: true })) {
+			const path = join(dir, entry.name);
+			if (entry.isDirectory()) walk(path);
+			else if (!/\.tsx?$/.test(entry.name)) continue;
+			else {
+				const source = readFileSync(path, 'utf8');
+				for (const match of source.matchAll(
+					/import\s*\{([^}]*)\}\s*from\s*['"]lucide-react['"]/g,
+				)) {
+					const named = match[1] ?? '';
+					for (const raw of named.split(',')) {
+						const trimmed = raw.trim();
+						const name = trimmed.split(/\s+as\s+/)[0]?.replace(/^type\s+/, '');
+						if (!name || trimmed.startsWith('type ')) continue;
+						checked++;
+						if (!shipped.has(lucideIconKebab(name))) {
+							unresolved.push(
+								`${relative(root, path)}: ${name} -> ${lucideIconKebab(name)}`,
+							);
+						}
 					}
 				}
 			}
 		}
 	}
+
+	walk(join(root, 'frontend', 'src'));
+	return { checked, iconsDir, unresolved };
 }
 
-walk(join(root, 'frontend', 'src'));
-
-if (unresolved.length > 0) {
-	console.error(
-		`[FAIL] lucide icon imports: ${unresolved.length} of ${checked} named imports resolve to no shipped icon`,
+if (import.meta.main) {
+	const result = checkLucideImports(process.cwd());
+	if (result.iconsDir === null) {
+		console.error(
+			'[FAIL] lucide icon imports: no installed lucide-react icons directory found - install first',
+		);
+		process.exit(1);
+	}
+	if (result.unresolved.length > 0) {
+		console.error(
+			`[FAIL] lucide icon imports: ${result.unresolved.length} of ${result.checked} named imports resolve to no shipped icon`,
+		);
+		for (const line of result.unresolved) console.error(`  ${line}`);
+		process.exit(1);
+	}
+	console.log(
+		`[OK] Lucide icon imports: ${result.checked} named import(s) all resolve to shipped icons`,
 	);
-	for (const line of unresolved) console.error(`  ${line}`);
-	process.exit(1);
 }
-console.log(`[OK] Lucide icon imports: ${checked} named import(s) all resolve to shipped icons`);
