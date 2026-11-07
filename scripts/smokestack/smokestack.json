@@ -30,6 +30,7 @@
 					"inputs": [
 						"shared/src/lucideNames.ts",
 						"scripts/test-lucide-names.ts",
+						"scripts/check-lucide-imports.ts",
 						"frontend/vite-plugins/lucideDirectImports.ts",
 						"package.json"
 					]
