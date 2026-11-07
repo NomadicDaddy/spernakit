@@ -78,6 +78,7 @@
 		"check:git-window-hide": "bun scripts/smokestack/check-git-window-hide.ts",
 		"check:max-lines": "bun scripts/check-max-lines.ts",
 		"check:lucide-imports": "bun scripts/check-lucide-imports.ts",
+		"test:lucide-names": "bun scripts/test-lucide-names.ts",
 		"check:function-size": "bun scripts/check-function-size.ts",
 		"check:no-inline-references": "bun scripts/smokestack/check-no-inline-references.ts",
 		"check:nginx-security": "bun scripts/check-nginx-security.ts",

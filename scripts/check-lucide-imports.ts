@@ -3,35 +3,38 @@
  * actually ships. The package's type layer exports names the icon file tree does not carry,
  * so typecheck, lint and the build all pass an import that only fails when the page loads -
  * a derived app shipped exactly that (found in the 2026-11-06 sweep, #37787). The check
- * walks frontend/src the way the dev-server import rewrite does: every named import maps
- * PascalCase -> kebab-case and must exist as a file under the installed icons directory.
+ * walks frontend/src using the shared lucideIconKebab mapping (the same one the vite
+ * import-rewrite plugin uses, from spernakit-shared) and requires every named import to
+ * exist as a file under the installed icons directory.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-const ICONS_SEGMENTS = ['node_modules', 'lucide-react', 'dist', 'esm', 'icons'];
+import { lucideIconKebab } from '../shared/src/lucideNames.ts';
 
 function resolveIconsDir(root: string): null | string {
+	// The pinned install the frontend actually builds against (frontend/node_modules link)
+	// wins; the bun store scan is only a fallback for layouts without the link.
+	const linked = join(root, 'frontend', 'node_modules', 'lucide-react', 'dist', 'esm', 'icons');
+	if (statSync(linked, { throwIfNoEntry: false })?.isDirectory()) return linked;
 	const bunDir = join(root, 'node_modules', '.bun');
 	if (statSync(bunDir, { throwIfNoEntry: false })?.isDirectory()) {
 		for (const entry of readdirSync(bunDir)) {
 			if (!entry.startsWith('lucide-react@')) continue;
-			const candidate = join(bunDir, entry, ...ICONS_SEGMENTS);
+			const candidate = join(
+				bunDir,
+				entry,
+				'node_modules',
+				'lucide-react',
+				'dist',
+				'esm',
+				'icons',
+			);
 			if (statSync(candidate, { throwIfNoEntry: false })?.isDirectory()) return candidate;
 		}
 	}
-	const direct = join(root, ...ICONS_SEGMENTS);
-	return statSync(direct, { throwIfNoEntry: false })?.isDirectory() ? direct : null;
-}
-
-function kebab(name: string): string {
-	return name
-		.replace(/Icon$/, '')
-		.replace(/([a-z0-9])([A-Z])/g, '$1-$2')
-		.replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-		.replace(/([a-zA-Z])([0-9])/g, '$1-$2')
-		.toLowerCase();
+	return null;
 }
 
 const root = process.cwd();
@@ -69,8 +72,10 @@ function walk(dir: string): void {
 						?.replace(/^type\s+/, '');
 					if (!name || raw.trim().startsWith('type ')) continue;
 					checked++;
-					if (!shipped.has(kebab(name))) {
-						unresolved.push(`${relative(root, path)}: ${name} -> ${kebab(name)}`);
+					if (!shipped.has(lucideIconKebab(name))) {
+						unresolved.push(
+							`${relative(root, path)}: ${name} -> ${lucideIconKebab(name)}`,
+						);
 					}
 				}
 			}

@@ -139,6 +139,10 @@
 					"description": "Template drift check"
 				},
 				{
+					"command": "bun run check:lucide-imports",
+					"description": "Named lucide-react imports resolve to icons the installed package ships"
+				},
+				{
 					"command": "bun run check:smoke-steps",
 					"description": "Runbook carries every template smoke step at this app's template version"
 				},

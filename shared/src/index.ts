@@ -36,6 +36,8 @@ export type { ErrorCode } from './errorCodes.ts';
 export { HEALTH_ALERT_SEVERITIES, HEALTH_STATUSES } from './healthStatus.ts';
 export type { HealthAlertSeverity, HealthStatus } from './healthStatus.ts';
 
+export { lucideIconKebab } from './lucideNames.ts';
+
 export { MFA_METHODS } from './mfaMethods.ts';
 export type { MfaMethod } from './mfaMethods.ts';
 

@@ -1,26 +1,16 @@
 import type { Plugin } from 'vite';
 
-/**
- * Converts PascalCase icon names to kebab-case file names for lucide-react direct imports.
- * Handles the Icon suffix that some exports have (e.g., "CheckIcon" -> "check", "CircleCheckIcon" -> "circle-check").
- * Also handles numeric suffixes like "Loader2" -> "loader-2".
- * Example: "ChevronDown" -> "chevron-down", "ArrowLeft" -> "arrow-left", "CheckIcon" -> "check", "Loader2" -> "loader-2"
- */
-function toKebabCase(name: string): string {
-	// Remove the "Icon" suffix if present (lucide exports both Bell and BellIcon)
-	const baseName = name.endsWith('Icon') ? name.slice(0, -4) : name;
-
-	return baseName
-		.replace(/([a-z])([A-Z])/g, '$1-$2')
-		.replace(/([A-Z])([A-Z][a-z])/g, '$1-$2')
-		.replace(/([a-zA-Z])(\d)/g, '$1-$2') // Handle numeric suffixes: "Loader2" -> "Loader-2"
-		.toLowerCase();
-}
+import { lucideIconKebab } from 'spernakit-shared';
 
 /**
  * Vite plugin that transforms lucide-react barrel imports to direct icon imports.
  * This improves build performance and reduces bundle size by avoiding the large
  * lucide-react barrel file that loads all 1500+ icons.
+ *
+ * The PascalCase -> kebab-case mapping is shared with the check:lucide-imports gate
+ * (spernakit-shared lucideIconKebab) so the rewrite and the gate can never disagree;
+ * it splits after a digit before a capital too, which matters for names like
+ * Columns3Cog and Grid2X2 (Room #37805).
  *
  * Transforms:
  *   import { Bell, LogOut } from 'lucide-react';
@@ -73,7 +63,7 @@ const lucideDirectImportsPlugin = (): Plugin => {
 
 				// Generate individual direct imports for value imports
 				const lines = valueImports.map(({ alias, originalName }) => {
-					const kebabName = toKebabCase(originalName);
+					const kebabName = lucideIconKebab(originalName);
 					return `import { default as ${alias} } from 'lucide-react/dist/esm/icons/${kebabName}';`;
 				});
 
