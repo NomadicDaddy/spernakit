@@ -1,5 +1,9 @@
 # Spernakit Changelog
 
+## 2026-11-07 - Release convention (interim)
+
+Spernakit's own version history is this file (docs/template/CHANGELOG.md); template releases are cut by spernakit-bump under the dance, and derived-app releases ride their dance legs. Recorded per Room #38864 class E (name-mismatch row, descriptive only).
+
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
