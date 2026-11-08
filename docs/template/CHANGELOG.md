@@ -17,6 +17,12 @@ Accepted the v0.7.0 delivery (Alice #39503): 12 files plus the lock, covering th
 and the 0.6.8-to-0.7.0 shared-core changes; check:shared-core verifies 102 files in 10 groups
 against the v0.7.0 tag. Commit b5d92ae.
 
+### Smokestack v0.7.1 shared-core delivery
+
+Accepted the v0.7.1 delivery: scripts/smokestack/lib/shared-core/departed.ts plus the lock. The
+delivered departed.ts no longer exports the two functions only smokestack itself calls, so
+knip passes on it. Delivered by Alice as Edgar's cover while Edgar is out (Steward #40065).
+
 ## [3.47.6] - 2026-10-20
 
 Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both
