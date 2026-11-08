@@ -1,11 +1,21 @@
 # Spernakit Changelog
 
-## 2026-11-07 - Release convention (interim)
-
-Spernakit's own version history is this file (docs/template/CHANGELOG.md); template releases are cut by spernakit-bump under the dance, and derived-app releases ride their dance legs. Recorded per Room #38864 class E (name-mismatch row, descriptive only).
-
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
+
+## [Unreleased]
+
+### Release convention (interim)
+
+Spernakit's own version history is this file (docs/template/CHANGELOG.md), and template releases
+are cut by spernakit-bump under the dance. Derived apps are independent apps whose releases are
+their own cuts, not Spernakit's (ruled Phillip #38922). Recorded per Room #38864 class E.
+
+### Smokestack v0.7.0 shared-core delivery
+
+Accepted the v0.7.0 delivery (Alice #39503): 12 files plus the lock, covering the history guard
+and the 0.6.8-to-0.7.0 shared-core changes; check:shared-core verifies 102 files in 10 groups
+against the v0.7.0 tag. Commit b5d92ae.
 
 ## [3.47.6] - 2026-10-20
 
