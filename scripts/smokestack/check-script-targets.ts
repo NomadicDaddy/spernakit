@@ -108,6 +108,8 @@ function fileReferences(tokens: string[]): string[] {
  * can ask this module which file a task runs instead of carrying a second, weaker parser: the
  * question "which task points at a file this app will not receive" is the same one this gate
  * answers, and the two drifting apart is what shipped three unrunnable tasks to every new app.
+ *
+ * @public
  */
 export function commandFileReferences(command: string): string[] {
 	return segments(command).flatMap(fileReferences);

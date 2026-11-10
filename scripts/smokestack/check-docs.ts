@@ -173,6 +173,8 @@ function checkFile(
  * its presence is the input, not its content. A cache keyed on these instead of on every markdown
  * file replays only what the gate would decide again. A target that does not resolve is absent
  * because the gate fails on it, and a failure is not replayed.
+ *
+ * @public
  */
 export function collectDocsInputs(projectRoot = DEFAULT_PROJECT_ROOT): string[] {
 	const files = markdownFiles(projectRoot);
