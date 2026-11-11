@@ -5,11 +5,11 @@ this release.
 
 ## [3.48.0] - 2026-11-11
 
-### Release convention (interim)
+### Release convention
 
-Spernakit's own version history is this file (docs/template/CHANGELOG.md), and template releases
-are cut by spernakit-bump under the dance. Derived apps are independent apps whose releases are
-their own cuts, not Spernakit's (ruled Phillip #38922). Recorded per Room #38864 class E.
+Spernakit releases through the standard cut-release path, the same one every repository uses
+(R1, Room #42560); the dance only propagates released versions to derived apps. Derived apps
+are independent apps whose releases are their own cuts, not Spernakit's (ruled Phillip #38922).
 
 ### Breaking: API-key requests must be signed
 
