@@ -11,6 +11,78 @@ Spernakit's own version history is this file (docs/template/CHANGELOG.md), and t
 are cut by spernakit-bump under the dance. Derived apps are independent apps whose releases are
 their own cuts, not Spernakit's (ruled Phillip #38922). Recorded per Room #38864 class E.
 
+### Breaking: API-key requests must be signed
+
+API-key authentication no longer accepts a bare `X-API-Key`. Every API-key request must carry
+`X-API-Signature`, `X-API-Timestamp`, `X-API-Nonce` and `X-API-Version`, signed with the key's
+secret under the v2 scheme 3.47.6 introduced; a request missing any of them, or sending one empty,
+is refused, and there is no unsigned fallback. The timestamp must be a whole number. 3.47.6 kept
+the unsigned path and said its removal would land separately; this is that change. A derived app
+with an integration that sends only the key must move it to signed requests before taking this
+release. API_KEY_AUTHENTICATION.md drops Simple Mode, and API_REFERENCE.md and the key-secret
+screen teach the five-header protocol, with a curl example that signs the routed `/api/v1` path.
+A new gate step, test:api-key-request-signing, drives the real app with a minted key and refuses
+a bare key, each missing or empty header, a reused nonce, a nonce-substitution replay and a
+malformed timestamp (9e98391, with the documentation fixes 922df0b, 444fb26, eee2409, 1576a0a).
+
+### Key rotation handles settings rows with a nested secret
+
+Encryption-key rotation decrypted the whole value of every encrypted settings row, but the SMTP
+configuration and every OAuth provider row store plain JSON with only one nested field encrypted
+(the SMTP password and the client secret). Rotation failed on those rows before its transaction,
+so it could not run at all once SMTP or any OAuth provider was configured. It now rotates the
+nested field in those rows and leaves the rest of the JSON as it is, and its count of rotated
+values includes only ciphertext it actually rewrote (8cc1f66, 85d9782, 58f4811).
+
+### Template sync leaves template-process records behind
+
+Thirteen feature records describe how the template itself is built and released, not what a
+derived app does. Sync no longer copies them into an app, removes a copy an app already has along
+with its roadmap entry, and drops dependency edges that name them, so an app's records stop
+pointing at records it does not have. DEVELOPMENT.md describes the set (d9a4623, dc39962,
+c8f9471, 11147d8, ea8fecd).
+
+### New gate: every lucide-react icon import must exist
+
+lucide-react's types export icon names that the package does not ship as files, so an import of
+one passed typecheck, lint and the build and failed only when the page loaded. A new qc step,
+check:lucide-imports, maps each named import the way the Vite import rewrite does and fails on
+any icon the installed package does not ship. The gate and the rewrite now share one name
+mapping in shared/src/lucideNames.ts, pinned by test:lucide-names (99374ec, 5c9bb0f, f3afbe7,
+2e2c0d0, 3d34c62, 889d5e7).
+
+### New apps get smokestack's hooks, and removing the old ones is safe
+
+`init` now points a new app's git hooks at scripts/smokestack/hooks, the delivered copies, instead
+of a separate scaffolding/.githooks copy that had drifted; that copy is gone (ee38286). `prepare`
+sets the same hook path on a fresh clone (9b094d6). An app made before this still points its hooks
+at .githooks, so when a template upgrade lists .githooks files for removal, the report now tells
+you to re-point the hook path first and never to delete those files while they are in use;
+otherwise the leak guard and every other hook would stop running silently (679fcac, 3c0ab29,
+8aebacb, 345b077, 099efa6).
+
+### GitHub Pages mini-site retired
+
+The template's Pages workflow and site/ folder are removed; that content now lives on beazley.org
+(6a490a1, 6360a8f).
+
+### Dependencies
+
+- nodemailer 10.1.4 and zod resolutions at 4.6.7 close their advisories (32d1682). zod 3.25.76
+  stays installed under @elysiajs/swagger for development; see "Swagger loads only in development"
+  below for why production no longer loads it.
+- The 2026-11-03 and 2026-11-11 fleet dependency targets, with typescript held at 6.0.3, and the
+  critical-path budget regenerated for the new set (c0ebf7d, ae2058b, acddf49).
+
+### Smokestack 0.6.0 to 0.6.7
+
+Smokestack 0.6.0 moved everything it delivers under scripts/smokestack/ (the gate runner and its
+config, the shared gates, the leak-guard check and the hooks), and package.json scripts follow
+it (28a0210, 064b4b8, 1a791df). The 0.6.1, 0.6.4, 0.6.6 and 0.6.7 deliveries followed, with
+cache inputs moved to the new paths (d806622, 177a7fd, bee111f, eceed75, 9dd9293, 8841da1,
+00bccca). New apps get a single `/.aidd/` ignore rule, and init's seeds stay local and untracked
+(ff02268, 662d9d7). API-key validation helpers were split under the function-size limit (fe61d07).
+
 ### Smokestack v0.7.0 shared-core delivery
 
 Accepted the v0.7.0 delivery (Alice #39503): 12 files plus the lock, covering the history guard
@@ -22,6 +94,12 @@ against the v0.7.0 tag. Commit b5d92ae.
 Accepted the v0.7.1 delivery: scripts/smokestack/lib/shared-core/departed.ts plus the lock. The
 delivered departed.ts no longer exports the two functions only smokestack itself calls, so
 knip passes on it. Delivered by Alice as Edgar's cover while Edgar is out (Steward #40065).
+
+### Smokestack v0.7.2 and v0.7.3 deliveries
+
+Accepted the v0.7.2 delivery (Phillip #40935; c586cce) and the v0.7.3 delivery (Phillip #41387;
+37a8067). Only scripts/smokestack/ changes; among them, the leak-guard check moves its setup into
+check-leak-guard-setup.sh. check:shared-core verifies the files against each tag.
 
 ### Backend dev reload follows shared/ edits
 
