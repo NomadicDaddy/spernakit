@@ -96,10 +96,11 @@ RUN bunx tsc -p tsconfig.build.json && bunx vite build
 FROM oven/bun:1.4.3-alpine@sha256:629e17411f1f129dbec3af78d5af9c9f2a937435c80349437206c6b0b7422373 AS production
 
 # Install runtime dependencies (pinned to minor version for reproducible builds).
-# Also upgrade the OpenSSL libs past the base image's pinned digest to pick up
-# security fixes (e.g. CVE-2026-45447) without waiting for a new base image.
+# Also upgrade base-image libraries past the pinned digest to pick up security fixes without
+# waiting for a new base image: the OpenSSL libs (e.g. CVE-2026-45447), musl and musl-utils
+# (CVE-2026-107891) and zlib (CVE-2026-85091). CI's Trivy scan fails the image on any of them.
 RUN apk add --no-cache nginx~=1.30 nginx-mod-http-brotli supervisor~=4.3 gettext~=1.0 \
-    && apk add --no-cache --upgrade libcrypto3 libssl3
+    && apk add --no-cache --upgrade libcrypto3 libssl3 musl musl-utils zlib
 
 WORKDIR /app
 
