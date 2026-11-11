@@ -73,9 +73,10 @@ The template's Pages workflow and site/ folder are removed; that content now liv
   below for why production no longer loads it.
 - The 2026-11-03 and 2026-11-11 fleet dependency targets, with typescript held at 6.0.3, and the
   critical-path budget regenerated for the new set (c0ebf7d, ae2058b, acddf49).
-- The production image upgrades musl and musl-utils (CVE-2026-107891, fixed in 1.2.6-r3) and zlib
-  (CVE-2026-85091, fixed in 1.3.2-r1) past the pinned base image, the way it already upgrades the
-  OpenSSL libraries. CI's Trivy scan failed the 3.48.0 release commit on both.
+- The production image upgrades musl and musl-utils to 1.2.6-r3 (CVE-2026-107891) and zlib to 1.4
+  (CVE-2026-85091, fixed from 1.3.2-r1; the repository serves 1.4, a minor-version step from the
+  base image's 1.3.2) past the pinned base image, the way it already upgrades the OpenSSL
+  libraries. CI's Trivy scan failed the 3.48.0 release commit on both.
 
 ### Smokestack 0.6.0 to 0.6.7
 

@@ -159,7 +159,7 @@ Derived applications inherit template-managed files from spernakit. Over time, t
 
 **Acknowledging an intentional security-infrastructure change**: If a derived app genuinely must diverge from the template's security baseline, record the change in that app's `.templateoverrides` (a `SKIP` or `KEEP` entry with a reason). The file then reports as `suppressed` instead of failing - the divergence stays explicit and auditable rather than silently green. (`DRIFT_REQUIRED=1` is unrelated: it only turns precondition _skips_, e.g. a missing template repo, into failures for dance runs.)
 
-**Maintaining the manifest**: When adding, removing, or reclassifying template-managed files in spernakit, update `scripts/template-manifest.json` in the same commit. To mark a new file security-critical, add it to `SECURITY_INFRASTRUCTURE_FILES` in `scripts/lib/template/classify.ts` (not the manifest). The release path (`cut-release`) includes this as a checklist item.
+**Maintaining the manifest**: When adding, removing, or reclassifying template-managed files in spernakit, update `scripts/template-manifest.json` in the same commit. To mark a new file security-critical, add it to `SECURITY_INFRASTRUCTURE_FILES` in `scripts/lib/template/classify.ts` (not the manifest). Nothing at a template release checks it: the dance's Phase 0 validates every path in the manifest against the filesystem before it upgrades any app.
 
 ### Feature Integration Check
 
