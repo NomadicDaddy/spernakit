@@ -3,7 +3,7 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
-## [Unreleased]
+## [3.48.0] - 2026-11-11
 
 ### Release convention (interim)
 
