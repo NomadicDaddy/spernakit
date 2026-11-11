@@ -369,6 +369,10 @@
 					"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded"
 				},
 				{
+					"command": "bun run test:swagger-dev-only",
+					"description": "Production loads neither swagger nor the zod it carries; the docs load only through a dynamic import in development and in the spec extractor"
+				},
+				{
 					"command": "bun run test:bug-report-supersede",
 					"description": "A corrected bug report can name the one that replaced it, both reports read the link back, the default inbox stops counting the superseded one as open work, and a link that is circular, self-referential, or points at nothing is refused"
 				},

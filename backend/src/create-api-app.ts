@@ -1,8 +1,6 @@
-import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
-import { readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+
+import type { SwaggerDocs } from './swaggerDocs.ts';
 
 import { getConfig } from './config/configLoader.ts';
 import { HTTP_STATUS } from './constants/httpStatus.ts';
@@ -47,8 +45,6 @@ import {
 import { logger } from './utils/logger.ts';
 import { describeValidationError } from './utils/validationErrorMessage.ts';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
 /** Bundles all route plugins into a single Elysia instance. */
 const routePlugins = new Elysia({ name: 'routes' })
 	.use(auditRoutes)
@@ -68,8 +64,12 @@ const routePlugins = new Elysia({ name: 'routes' })
 	.use(workspaceRoutes);
 
 interface CreateApiAppOptions {
-	/** Mount swagger regardless of nodeEnv (for build-time spec extraction scripts). */
-	forceSwagger?: boolean;
+	/**
+	 * The OpenAPI docs plugin from swaggerDocs.ts, mounted at /api/v1/docs when given. Callers
+	 * that serve docs (the development server, the build-time spec extractor) import that module
+	 * dynamically and pass the plugin, so production never loads swagger or the zod it carries.
+	 */
+	docs?: SwaggerDocs;
 }
 
 /**
@@ -80,11 +80,6 @@ interface CreateApiAppOptions {
  */
 function createApiApp(options?: CreateApiAppOptions) {
 	const config = getConfig();
-	const { version } = JSON.parse(
-		readFileSync(join(__dirname, '..', '..', 'package.json'), 'utf8'),
-	) as {
-		version: string;
-	};
 	const isDev = config.server.nodeEnv === 'development';
 
 	const app = new Elysia({ name: 'api-v1', prefix: '/api/v1' })
@@ -106,21 +101,8 @@ function createApiApp(options?: CreateApiAppOptions) {
 		.use(workspacePlugin)
 		.use(auditPlugin);
 
-	// Expose Swagger/OpenAPI docs in development mode (or when forced for spec extraction)
-	if (isDev || options?.forceSwagger) {
-		app.use(
-			swagger({
-				documentation: {
-					info: {
-						description: config.app.description,
-						title: config.app.name,
-						version,
-					},
-				},
-				path: '/docs',
-			}),
-		);
-	}
+	// Swagger/OpenAPI docs only when the caller supplies the plugin (development, spec extraction).
+	if (options?.docs) app.use(options.docs);
 
 	return app
 		.onError(({ code, error, requestId, set }) => {

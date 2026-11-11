@@ -22,7 +22,8 @@ export async function extractOpenAPISpec(): Promise<{
 		// Disable rate limiting for spec extraction — no database is available and
 		// rate limiting is irrelevant when extracting the OpenAPI schema.
 		getConfig().rateLimit.enabled = false;
-		const app = createApiApp({ forceSwagger: true });
+		const { swaggerDocs } = await import('../../../backend/src/swaggerDocs.ts');
+		const app = createApiApp({ docs: swaggerDocs() });
 
 		const response = await app.handle(new Request('http://localhost/api/v1/docs/json'));
 

@@ -213,7 +213,10 @@ async function run(): Promise<void> {
 	// beforeHandle: left set, an authenticated probe would be refused for an unrelated reason.
 	getDb().update(users).set({ requiresPasswordChange: false }).run();
 
-	const app = createApiApp();
+	// The development surface includes the OpenAPI docs, listed as public on purpose; app.ts mounts
+	// them in development from a dynamic import, and this mirrors it.
+	const { swaggerDocs } = await import('../backend/src/swaggerDocs.ts');
+	const app = createApiApp({ docs: swaggerDocs() });
 	const registered = (app as unknown as { routes: RegisteredRoute[] }).routes.filter((route) => {
 		const method = route.method.toUpperCase();
 		return method !== 'OPTIONS' && method !== 'HEAD';

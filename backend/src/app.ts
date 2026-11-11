@@ -118,8 +118,14 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 		}
 	}
 
-	// Create API routes with /api/v1 prefix (versioned API)
-	const apiApp = createApiApp();
+	// Create API routes with /api/v1 prefix (versioned API). Swagger docs are served in
+	// development only, and swaggerDocs.ts is imported dynamically so production never loads
+	// swagger or the zod it carries (swagger-dev-only-loading).
+	const apiApp = createApiApp(
+		config.server.nodeEnv === 'development'
+			? { docs: (await import('./swaggerDocs.ts')).swaggerDocs() }
+			: {},
+	);
 
 	// Root app: mounts API routes and WebSocket at root level
 	// Registration order below is load-bearing; see the comment on .onError.

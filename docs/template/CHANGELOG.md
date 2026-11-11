@@ -37,6 +37,21 @@ backend.log (the names don't collide, and .gitignore covers both). Docker and th
 unchanged. Derived apps take this through the normal template sync (Carl #41624, Steward
 #41629; log path, Morticia L-1 #41632).
 
+### Swagger loads only in development
+
+Production no longer loads @elysiajs/swagger, or the zod 3 it pulls in through @scalar/types
+(bun audit High GHSA-mrhx-c7xc-m3w5, zod below 4.6.6). The docs were already mounted only in
+development, but create-api-app.ts imported swagger at the top, so every production start loaded
+the chain anyway. The plugin now lives in backend/src/swaggerDocs.ts, and createApiApp takes it
+as a `docs` option in place of `forceSwagger`. app.ts imports it dynamically in development, and
+the build-time spec extractor and the public-route test do the same, so /api/v1/docs and
+check:api-types behave as before. A new gate step, test:swagger-dev-only, walks the import graph
+Bun resolves from app.ts and fails if a static edge reaches swagger or zod; the walk from
+swaggerDocs.ts must reach both. No dependency changes. This is deeper's fix (7ff1c34, 2e50ea8)
+taken into the template, and it closes the residual accepted at #25402 (Phillip #42002 on
+Steward #41994). In a derived app, any caller of createApiApp that expects the docs must pass
+them the same way.
+
 ## [3.47.6] - 2026-10-20
 
 Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both

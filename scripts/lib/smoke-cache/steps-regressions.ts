@@ -155,6 +155,7 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/guards/**',
 			'backend/src/plugins/**',
 			'backend/src/routes/**',
+			'backend/src/swaggerDocs.ts',
 			'scripts/lib/public-routes.ts',
 			'scripts/test-public-route-surface.ts',
 		],
@@ -163,6 +164,18 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:retention-zero': {
 		excludes: COMMON_EXCLUDES,
 		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-retention-zero.ts'],
+	},
+	// Walks the bundler's import graph from app.ts, so its world is all backend source, the
+	// lockfile that resolves the packages it reaches, and the spec extractor it reads.
+	'test:swagger-dev-only': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**',
+			'bun.lock',
+			'package.json',
+			'scripts/lib/api-types/spec-extract.ts',
+			'scripts/test-swagger-dev-only.ts',
+		],
 	},
 	// Runs in process against the loaded configuration: what it asserts moves when the file
 	// validation service, the request-body ceiling, or the configured MIME allowlist and size

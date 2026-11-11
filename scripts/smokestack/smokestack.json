@@ -1235,6 +1235,7 @@
 						"backend/src/guards/**",
 						"backend/src/plugins/**",
 						"backend/src/routes/**",
+						"backend/src/swaggerDocs.ts",
 						"scripts/lib/public-routes.ts",
 						"scripts/test-public-route-surface.ts"
 					]
@@ -1242,6 +1243,30 @@
 				"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded",
 				"name": "test:public-route-surface",
 				"run": ["bun", "run", "test:public-route-surface"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/src/**",
+						"bun.lock",
+						"package.json",
+						"scripts/lib/api-types/spec-extract.ts",
+						"scripts/test-swagger-dev-only.ts"
+					]
+				},
+				"description": "Production loads neither swagger nor the zod it carries; the docs load only through a dynamic import in development and in the spec extractor",
+				"name": "test:swagger-dev-only",
+				"run": ["bun", "run", "test:swagger-dev-only"]
 			},
 			{
 				"cache": {

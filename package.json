@@ -220,6 +220,7 @@
 		"test:prettier-cache": "bun scripts/test-prettier-cache.ts",
 		"test:function-size-gate": "bun scripts/test-function-size-gate.ts",
 		"test:public-route-surface": "bun scripts/test-public-route-surface.ts",
+		"test:swagger-dev-only": "bun scripts/test-swagger-dev-only.ts",
 		"test:refresh-sessions": "bun scripts/test-refresh-sessions.ts",
 		"test:reset-packages": "bun scripts/test-reset-packages.ts",
 		"test:retention-zero": "bun scripts/test-retention-zero.ts",
