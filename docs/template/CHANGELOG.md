@@ -23,6 +23,16 @@ Accepted the v0.7.1 delivery: scripts/smokestack/lib/shared-core/departed.ts plu
 delivered departed.ts no longer exports the two functions only smokestack itself calls, so
 knip passes on it. Delivered by Alice as Edgar's cover while Edgar is out (Steward #40065).
 
+### Backend dev reload follows shared/ edits
+
+`bun run dev` now restarts the backend when a file under shared/ changes. The backend's dev
+script started `bun --watch` inside backend/, and Bun watches only files under the directory it
+starts in, so it skipped the shared workspace with a "not in the project directory" warning and
+a shared edit needed a manual restart. The script now starts the watcher from the repository
+root (`cd .. && bun --watch backend/src/app.ts`). The backend resolves its files from its own
+module path, so the working-directory change affects nothing else. Derived apps take this
+through the normal template sync (Carl #41624, Steward #41629).
+
 ## [3.47.6] - 2026-10-20
 
 Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both
