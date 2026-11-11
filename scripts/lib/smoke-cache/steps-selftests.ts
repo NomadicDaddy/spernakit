@@ -135,6 +135,17 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-override-deltas.ts',
 		],
 	},
+	// Runs resetPassword against a migrated temp database, so its world is the migrations, all
+	// backend source the reset path reaches, the auth-key helper and the gate itself.
+	'test:password-reset-consumption': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-password-reset-consumption.ts',
+		],
+	},
 	'test:security-fixes': {
 		// The v2 signing scheme and the reset consumption race (v3.47.6): every module the
 		// test imports and the fixes lean on, plus the migrations it applies, decide the

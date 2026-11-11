@@ -2871,6 +2871,29 @@
 			},
 			{
 				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-password-reset-consumption.ts"
+					]
+				},
+				"description": "A password reset fails, and leaves the account as changed, when its token expires, the account is deleted, the password changes or the token is replaced during hashing; exactly one of two concurrent resets wins",
+				"name": "test:password-reset-consumption",
+				"run": ["bun", "run", "test:password-reset-consumption"]
+			},
+			{
+				"cache": {
 					"inputs": [
 						"scripts/smokestack/check-script-targets.ts",
 						"scripts/lib/gate-scripts.ts",

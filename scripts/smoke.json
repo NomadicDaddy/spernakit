@@ -27,6 +27,10 @@
 					"description": "v2 signed-nonce API-key scheme and reset consumption race regressions"
 				},
 				{
+					"command": "bun run test:password-reset-consumption",
+					"description": "A password reset fails, and leaves the account as changed, when its token expires, the account is deleted, the password changes or the token is replaced during hashing; exactly one of two concurrent resets wins"
+				},
+				{
 					"command": "bun run test:api-key-request-signing",
 					"description": "Mandatory API-key request signing: unsigned, missing-header, duplicate-nonce and nonce-substitution requests are refused on the running backend"
 				},

@@ -59,6 +59,19 @@ check:lucide-imports (added 2026-11-06, 3d34c62) had no `Enforces:` line and ran
 on rules GC1 and GC6 and the full gate was red. It now has both; what it checks and its exit
 codes are unchanged.
 
+### Password reset re-checks the account when it claims the token
+
+A password reset checks the token's expiry and the account before it awaits the password-history
+check and hashing. The claiming UPDATE re-checked only the token itself, so an account deleted, a
+token that expired, or a password changed in that window could still be reset. The UPDATE now
+also requires an unexpired token, an account that is not deleted, and the same password hash the
+history check read; if any of them changed, the reset fails with the usual invalid-token answer
+and the row keeps the newer state. It is the same single transaction, not a second one. A new
+gate step, test:password-reset-consumption, makes each change mid-reset through resetPassword
+itself, plus a positive control and a concurrent pair; on the previous predicate the expiry,
+deletion and password-change cases fail. These are the residuals accepted at 3.47.6 (#17382) on
+the 2026-10-20 audit High.
+
 ## [3.47.6] - 2026-10-20
 
 Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both

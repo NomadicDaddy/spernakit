@@ -82,17 +82,19 @@ Steps (in order):
     - Wait for frontend to be ready.
 6. `bun run test:security-fixes`
     - v2 signed-nonce API-key scheme and reset consumption race regressions.
-7. `bun run test:api-key-request-signing`
+7. `bun run test:password-reset-consumption`
+    - A password reset fails, and leaves the account as changed, when its token expires, the account is deleted, the password changes or the token is replaced during hashing; exactly one of two concurrent resets wins.
+8. `bun run test:api-key-request-signing`
     - Mandatory API-key request signing: unsigned, missing-header, duplicate-nonce and nonce-substitution requests are refused on the running backend.
-8. `bun run test:auth-reset-api`
+9. `bun run test:auth-reset-api`
     - Password reset endpoints reject bad requests on the running backend.
-9. `bun run test:auth-reset-ui-dev`
+10. `bun run test:auth-reset-ui-dev`
     - Test auth reset UI (dev).
-10. `bun scripts/crawltest.ts --mode dev`
+11. `bun scripts/crawltest.ts --mode dev`
     - Crawl test (dev).
-11. `bun run verify-compression --mode dev`
+12. `bun run verify-compression --mode dev`
     - Verify gzip compression on backend responses (warn-only in dev).
-12. `bun run stop`
+13. `bun run stop`
     - Stop services.
 
 ### 2. Preview

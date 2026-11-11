@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gt } from 'drizzle-orm';
 
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
@@ -14,6 +14,12 @@ const RESET_TOKEN_CONSUMED = 'RESET_TOKEN_CONSUMED';
  * AND resetToken = tokenHash - the 2026-10-20 SECURITY audit High fix, v3.47.6) and
  * refresh-session revocation, atomically. Throws RESET_TOKEN_CONSUMED on a lost claim so
  * the transaction rolls back with the history row.
+ *
+ * The UPDATE also re-checks, in the same statement, everything resetPassword checked before
+ * its awaited history check and hashing: the token has not expired, the account is not
+ * deleted, and the password hash is still the one the history check read. A change to any of
+ * them in that window loses the claim instead of being overwritten (audit record
+ * audit-security-1792503686, its transaction-predicate and expiry-race residuals).
  *
  * @param user - Pre-update user row selected by reset token
  * @param tokenHash - Hash of the reset token being consumed
@@ -42,7 +48,15 @@ function runConsumptionTransaction(
 				resetTokenExpiresAt: null,
 				updatedAt: new Date(),
 			})
-			.where(and(eq(users.id, user.id), eq(users.resetToken, tokenHash)))
+			.where(
+				and(
+					eq(users.id, user.id),
+					eq(users.resetToken, tokenHash),
+					gt(users.resetTokenExpiresAt, new Date()),
+					eq(users.isDeleted, false),
+					eq(users.passwordHash, user.passwordHash),
+				),
+			)
 			.returning({ id: users.id })
 			.all();
 		if (consumedRows.length !== 1) {
