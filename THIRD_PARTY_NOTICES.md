@@ -1818,7 +1818,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/query-core@5.105.3
+### @tanstack/query-core@5.107.1
 
 License: MIT
 
@@ -1846,7 +1846,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-query@5.105.3
+### @tanstack/react-query@5.107.1
 
 License: MIT
 
@@ -4403,7 +4403,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.67.0
+### lucide-react@1.72.0
 
 License: ISC
 
@@ -4523,7 +4523,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@10.3.1
+### nodemailer@10.5.0
 
 License: MIT-0
 
@@ -6653,7 +6653,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### zustand@5.0.16
+### zustand@5.1.0
 
 License: MIT
 
