@@ -6,10 +6,14 @@
  * walks frontend/src using the shared lucideIconKebab mapping (the same one the vite
  * import-rewrite plugin uses, from spernakit-shared) and requires every named import to
  * exist as a file under the installed icons directory.
+ *
+ * Enforces: every named lucide-react import in frontend/src resolves to an icon file the installed
+ * package ships. No assertion ID: the catalog states none for icon imports.
  */
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { exit } from 'node:process';
 
 import { lucideIconKebab } from '../shared/src/lucideNames.ts';
 
@@ -86,22 +90,30 @@ export function checkLucideImports(root: string): LucideImportCheckResult {
 	return { checked, iconsDir, unresolved };
 }
 
-if (import.meta.main) {
-	const result = checkLucideImports(process.cwd());
+/**
+ * Runs the check from `root` and reports it.
+ *
+ * @returns 0 when every named import resolves, 1 when one does not or nothing is installed.
+ */
+export function runLucideImports(root: string = process.cwd()): number {
+	const result = checkLucideImports(root);
 	if (result.iconsDir === null) {
 		console.error(
 			'[FAIL] lucide icon imports: no installed lucide-react icons directory found - install first',
 		);
-		process.exit(1);
+		return 1;
 	}
 	if (result.unresolved.length > 0) {
 		console.error(
 			`[FAIL] lucide icon imports: ${result.unresolved.length} of ${result.checked} named imports resolve to no shipped icon`,
 		);
 		for (const line of result.unresolved) console.error(`  ${line}`);
-		process.exit(1);
+		return 1;
 	}
 	console.log(
 		`[OK] Lucide icon imports: ${result.checked} named import(s) all resolve to shipped icons`,
 	);
+	return 0;
 }
+
+if (import.meta.main) exit(runLucideImports());

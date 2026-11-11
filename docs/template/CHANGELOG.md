@@ -52,6 +52,13 @@ taken into the template, and it closes the residual accepted at #25402 (Phillip 
 Steward #41994). In a derived app, any caller of createApiApp that expects the docs must pass
 them the same way.
 
+### Full gate passes check:gate-conventions again
+
+check:lucide-imports (added 2026-11-06, 3d34c62) had no `Enforces:` line and ran its work in the
+`import.meta.main` block instead of an exported `run*` function, so check:gate-conventions failed
+on rules GC1 and GC6 and the full gate was red. It now has both; what it checks and its exit
+codes are unchanged.
+
 ## [3.47.6] - 2026-10-20
 
 Patch release: fixes for both demonstrated attacks from the 2026-10-20 SECURITY audit. Both
