@@ -29,9 +29,13 @@ knip passes on it. Delivered by Alice as Edgar's cover while Edgar is out (Stewa
 script started `bun --watch` inside backend/, and Bun watches only files under the directory it
 starts in, so it skipped the shared workspace with a "not in the project directory" warning and
 a shared edit needed a manual restart. The script now starts the watcher from the repository
-root (`cd .. && bun --watch backend/src/app.ts`). The backend resolves its files from its own
-module path, so the working-directory change affects nothing else. Derived apps take this
-through the normal template sync (Carl #41624, Steward #41629).
+root (`cd .. && bun --watch backend/src/app.ts`). The database and backup paths resolve from
+the project root, so they don't move. The one thing that does is the dev file log: the default
+`logging.file.path` of `./logs/app.log` is relative to the working directory, so under `bun run
+dev` it is now written to the root logs/ folder instead of backend/logs/, beside dev-with-logs'
+backend.log (the names don't collide, and .gitignore covers both). Docker and the start scripts are
+unchanged. Derived apps take this through the normal template sync (Carl #41624, Steward
+#41629; log path, Morticia L-1 #41632).
 
 ## [3.47.6] - 2026-10-20
 
