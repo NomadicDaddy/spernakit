@@ -350,8 +350,8 @@ If you run scripts in a derived application repo, ensure:
 - **Run**
     - `bun run fleet-manifest:sync`
 - **When**
-    - In the template release (`spernakit-bump`): immediately after `package.json` is bumped and
-      before the release commit.
+    - In a template release (`cut-release`): immediately after the version is stamped in
+      `package.json` and before the release commit.
     - In a derived-app upgrade (`template-upgrade` Phase 10): immediately after the app's
       `spernakit_version` is stamped and before the upgrade commit.
     - `spernakit.psd1` is gitignored, so nothing else keeps it current; reconciling it by hand after

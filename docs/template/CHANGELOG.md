@@ -3,6 +3,13 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [Unreleased]
+
+### Changed
+
+- The scripts guide names `cut-release` as the template release step that runs
+  `fleet-manifest:sync`, in place of the retired `spernakit-bump` skill.
+
 ## [3.48.0] - 2026-11-11
 
 ### Release convention
