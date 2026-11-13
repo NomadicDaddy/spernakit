@@ -53,6 +53,18 @@ async function seed(): Promise<void> {
 		logDatabase('warn', 'Running seed in production - only default accounts will be created');
 	}
 
+	// Users-exists is checked BEFORE any password is generated, so a console rerun over an
+	// already-seeded database prints nothing it does not apply (Roger #46412/#46415 Medium).
+	const existingUsers = db.select().from(users).limit(1).all();
+	if (existingUsers.length > 0) {
+		logDatabase(
+			'info',
+			'Users already exist - seeding skipped. No credentials were generated or displayed; ' +
+				'use the password-reset flow to recover access.',
+		);
+		return;
+	}
+
 	const seedUserList = getSeedUsersWithPasswords(isProduction);
 	const credentials = isProduction
 		? seedUserList.map((u) => ({ password: u.password, username: u.username }))
