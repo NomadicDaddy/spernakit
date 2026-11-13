@@ -556,6 +556,10 @@
 					"description": "Documentation consistency check"
 				},
 				{
+					"command": "bun run test:seed-credentials-never-logged",
+					"description": "Seed credentials never reach a log file: display is a TTY-gated direct console write"
+				},
+				{
 					"command": "bun run check:version-refs",
 					"description": "Current-state version claims in docs match package.json",
 					"templateOnly": true

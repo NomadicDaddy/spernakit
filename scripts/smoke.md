@@ -359,63 +359,65 @@ Steps (in order):
      - Database-admin mutation-denylist assertion (api_keys, audit_logs, token_blacklist, users).
 101. `bun run check:docs`
      - Documentation consistency check.
-102. `bun run check:version-refs`
+102. `bun run test:seed-credentials-never-logged`
+     - Seed credentials never reach a log file: display is a TTY-gated direct console write.
+103. `bun run check:version-refs`
      - Current-state version claims in docs match package.json.
-103. `bun run check:crawl-route-coverage`
+104. `bun run check:crawl-route-coverage`
      - Every page the router registers is one the crawl is required to visit, or is exempt with a reason.
-104. `bun run check:smoke-docs`
+105. `bun run check:smoke-docs`
      - Smoke runbook matches scripts/smoke.json.
-105. `bun run typecheck`
+106. `bun run typecheck`
      - Typecheck.
-106. `bun run lint`
+107. `bun run lint`
      - Lint.
-107. `bun run build`
+108. `bun run build`
      - Build.
-108. `bun run verify-minification`
+109. `bun run verify-minification`
      - Verify bundle minification and total size budget.
-109. `bun run check:critical-path`
+110. `bun run check:critical-path`
      - Verify critical-path size, React runtime placement, and no preload waterfall.
-110. `bun run check:api-types`
+111. `bun run check:api-types`
      - API type contract validation.
-111. `bun run check:feature-integration`
+112. `bun run check:feature-integration`
      - Feature integration check.
-112. `bun run test:feature-integration`
+113. `bun run test:feature-integration`
      - Feature integration rejects unmounted flat route modules.
-113. `bun run check:schema-parity`
+114. `bun run check:schema-parity`
      - SQLite/PG schema parity check.
-114. `bun run test:backup-compression`
+115. `bun run test:backup-compression`
      - Backup decompression guard rejects high-ratio archives and cleans up.
-115. `bun run test:bundle-budget`
+116. `bun run test:bundle-budget`
      - Bundle budget stays app-owned and is only enforced with matching provenance.
-116. `bun run test:crawl-credentials`
+117. `bun run test:crawl-credentials`
      - Crawl login resolves from the seed account and never from a tracked config file.
-117. `bun run test:critical-path-budget`
+118. `bun run test:critical-path-budget`
      - Critical-path budget stays app-owned and regenerates both recorded limits.
-118. `bun run test:lost-lines`
+119. `bun run test:lost-lines`
      - Upgrade audit reports app-authored lines the template copy deleted.
-119. `bun run test:override-deltas`
+120. `bun run test:override-deltas`
      - Override report names the template content each .templateoverrides entry withholds.
-120. `bun run test:smoke-steps`
+121. `bun run test:smoke-steps`
      - Smoke step comparison names a template step a derived app's runbook lost.
-121. `bun run test:reset-packages`
+122. `bun run test:reset-packages`
      - Package reset preserves dependencies when the frozen-install preflight fails.
-122. `bun run test:clear-logs`
+123. `bun run test:clear-logs`
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-123. `bun run test:scaffolded-hooks`
+124. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-124. `bun run test:gate-scripts`
+125. `bun run test:gate-scripts`
      - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
-125. `bun run test:template-drift`
+126. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-126. `bun run format:check`
+127. `bun run format:check`
      - Format check.
-127. `bun run test:aidd-format`
+128. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-128. `bun run check:aidd-format`
+129. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-129. `bun run check-deps`
+130. `bun run check-deps`
      - Check dependency versions.
-130. `bun run check:dead-code`
+131. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

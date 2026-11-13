@@ -45,11 +45,24 @@ async function runAutoSeed(config: AppConfig): Promise<void> {
 	});
 
 	if (createdUsers) {
-		logger.info(formatCredentialsForDisplay(credentials));
+		// Credential plaintext never goes through the logger: log files are the exact place it
+		// must not live. The display is written directly to the interactive console (TTY only),
+		// which is the documented first-run channel; a non-interactive environment sees the
+		// pointer line only. remediation-20261113-seed-credentials-logged-plaintext.
+		const consoleIsInteractive = process.stdout.isTTY === true;
+		if (consoleIsInteractive) {
+			process.stdout.write(formatCredentialsForDisplay(credentials));
+		} else if (isProduction) {
+			logger.warn(
+				'Production seed credentials were generated but stdout is not an interactive console; ' +
+					're-run seeding from a console to display them, or use the password-reset flow. ' +
+					'Credentials are never written to log files.',
+			);
+		}
 		logger.info(`Auto-seed complete: ${createdUsers.length} users created`);
 		if (isProduction) {
 			logger.warn(
-				'IMPORTANT: Save these production credentials now - they cannot be retrieved later.',
+				'IMPORTANT: Save the displayed production credentials now - they cannot be retrieved later.',
 			);
 		}
 	}
