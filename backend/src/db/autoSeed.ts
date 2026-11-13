@@ -1,7 +1,6 @@
 import type { AppConfig } from '../config/configSchema.ts';
 
 import {
-	formatCredentialsForDisplay,
 	getCredentials,
 	getSeedUsersWithPasswords,
 	resolveCrawlEmail,
@@ -11,6 +10,7 @@ import { getDb } from './index.ts';
 import { users } from './schema/users.ts';
 import { resetDevSeedPasswords } from './seed/index.ts';
 import { executeSeedOrchestration } from './seed/orchestration.ts';
+import { printSeedCredentialsToConsole } from './seedCredentialDisplay.ts';
 
 /**
  * Auto-seed on startup when the users table is empty (SQLite only).
@@ -46,12 +46,12 @@ async function runAutoSeed(config: AppConfig): Promise<void> {
 
 	if (createdUsers) {
 		// Credential plaintext never goes through the logger: log files are the exact place it
-		// must not live. The display is written directly to the interactive console (TTY only),
-		// which is the documented first-run channel; a non-interactive environment sees the
-		// pointer line only. remediation-20261113-seed-credentials-logged-plaintext.
+		// must not live. The display is the TTY-gated direct write (the documented first-run
+		// console channel); a non-interactive environment sees the pointer line only.
+		// remediation-20261113-seed-credentials-logged-plaintext.
 		const consoleIsInteractive = process.stdout.isTTY === true;
 		if (consoleIsInteractive) {
-			process.stdout.write(formatCredentialsForDisplay(credentials));
+			printSeedCredentialsToConsole(credentials);
 		} else if (isProduction) {
 			logger.warn(
 				'Production seed credentials were generated but stdout is not an interactive console; ' +

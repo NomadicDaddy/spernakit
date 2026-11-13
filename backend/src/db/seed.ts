@@ -12,7 +12,6 @@ import { resolve } from 'node:path';
 import { initializeConfig } from '../config/configLoader.ts';
 import { projectRoot } from '../config/configUtils.ts';
 import {
-	formatCredentialsForDisplay,
 	getCredentials,
 	getSeedUsersWithPasswords,
 	resolveCrawlEmail,
@@ -22,6 +21,7 @@ import { closeDatabase, initializeDatabase } from './index.ts';
 import { users } from './schema/users.ts';
 import { workspaceMembers } from './schema/workspaces.ts';
 import { executeSeedOrchestration } from './seed/orchestration.ts';
+import { printSeedCredentialsToConsole } from './seedCredentialDisplay.ts';
 
 const config = initializeConfig();
 configureLogger(config);
@@ -58,12 +58,12 @@ async function seed(): Promise<void> {
 		? seedUserList.map((u) => ({ password: u.password, username: u.username }))
 		: getCredentials();
 	if (!isProduction) {
-		logDatabase('info', formatCredentialsForDisplay(credentials));
+		printSeedCredentialsToConsole(credentials);
 	} else {
-		logDatabase('info', formatCredentialsForDisplay(credentials));
+		printSeedCredentialsToConsole(credentials);
 		logDatabase(
 			'warn',
-			'IMPORTANT: Save these production credentials now - they cannot be retrieved later. ' +
+			'IMPORTANT: Save the displayed production credentials now - they cannot be retrieved later. ' +
 				'All accounts require password change on first login.',
 		);
 	}

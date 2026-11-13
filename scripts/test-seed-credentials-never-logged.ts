@@ -27,15 +27,17 @@ assert(
 	'formatter must carry the credential when explicitly invoked (display channel)',
 );
 
-// 2. Static proof: autoSeed.ts contains no logger call whose argument is the credential display.
-const autoSeedSource = await Bun.file(
-	`${import.meta.dir.replace(/\\[^\\]+$/, '')}/backend/src/db/autoSeed.ts`,
-).text();
+// 2. Static proof: neither seed path contains a logger call whose argument is the credential
+//    display; both print through the shared TTY-gated helper.
+const dbDir = `${import.meta.dir.replace(/\\[^\\]+$/, '')}/backend/src/db`;
+const autoSeedSource = await Bun.file(`${dbDir}/autoSeed.ts`).text();
+const seedSource = await Bun.file(`${dbDir}/seed.ts`).text();
+const helperSource = await Bun.file(`${dbDir}/seedCredentialDisplay.ts`).text();
 assert(
 	!/(logger\.(info|warn|error|debug|trace)\([^)]*formatCredentialsForDisplay)/s.test(
 		autoSeedSource,
-	),
-	'no logger call may receive formatCredentialsForDisplay output',
+	) && !/logDatabase\([^)]*formatCredentialsForDisplay/.test(seedSource),
+	'no logger call may receive formatCredentialsForDisplay output (autoSeed or the manual seed)',
 );
 assert(
 	!/logger\.(info|warn|error|debug|trace)\([^)]*(cred|password)/s.test(autoSeedSource) ||
@@ -43,11 +45,18 @@ assert(
 	'no logger call may interpolate a credential field',
 );
 assert(
-	autoSeedSource.includes('process.stdout.write(formatCredentialsForDisplay(credentials))'),
-	'the display must go through the direct console write, not a logger',
+	helperSource.includes('process.stdout.write(formatCredentialsForDisplay(credentials))') &&
+		helperSource.includes('process.stdout.isTTY'),
+	'the display must be the helper TTY-gated direct write, not a logger',
 );
 assert(
-	autoSeedSource.includes('process.stdout.isTTY'),
+	autoSeedSource.includes('printSeedCredentialsToConsole(credentials)') &&
+		seedSource.includes('printSeedCredentialsToConsole(credentials)'),
+	'both seed paths must print through the helper',
+);
+assert(
+	autoSeedSource.includes('consoleIsInteractive') ||
+		helperSource.includes('process.stdout.isTTY'),
 	'the console write must be gated on an interactive TTY',
 );
 
