@@ -55,9 +55,9 @@ async function runAutoSeed(config: AppConfig): Promise<void> {
 		} else if (isProduction) {
 			logger.warn(
 				'Production seed credentials were generated but stdout is not an interactive console. ' +
-					'To display them, reset and re-seed from a console: bun scripts/reset-database.ts ' +
-					'--force && bun run db:setup (this database holds no data to preserve pre-v1). ' +
-					'Otherwise use the password-reset flow. Credentials are never written to log files.',
+					'They are displayed only on first start from an interactive console; on an already ' +
+					'running installation use the password-reset flow. Credentials are never written to ' +
+					'log files.',
 			);
 		}
 		logger.info(`Auto-seed complete: ${createdUsers.length} users created`);

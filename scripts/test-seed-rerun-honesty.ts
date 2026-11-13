@@ -30,8 +30,9 @@ assert(
 // 2. Static: autoSeed non-TTY pointer names the working reset, not a bare db:seed rerun.
 const autoSource = readFileSync(`${root}/backend/src/db/autoSeed.ts`, 'utf8');
 assert(
-	autoSource.includes('reset-database.ts') && autoSource.includes('db:setup'),
-	'the non-TTY pointer names reset-database + db:setup as the display path',
+	autoSource.includes('displayed only on first start') &&
+		autoSource.includes('password-reset flow'),
+	'the non-TTY pointer is first-start-only and names the password-reset flow',
 );
 assert(!autoSource.includes('re-run seeding from a console'), 'the bare rerun advice is gone');
 
@@ -76,4 +77,4 @@ if (failures.length > 0) {
 	for (const f of failures) console.error(`  - ${f}`);
 	process.exit(1);
 }
-console.log('[OK] Seed rerun prints only what it applies; non-TTY pointer names the reset');
+console.log('[OK] Seed rerun prints only what it applies; non-TTY pointer is first-start-only');
