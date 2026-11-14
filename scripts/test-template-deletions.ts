@@ -2,15 +2,9 @@
 /**
  * Regression test for detecting files the TEMPLATE removed but a derived app still carries.
  *
- * The drift checker only ever asked "does the app match what the template ships?". When the
- * template removes a file, that path stops being enumerated, so the app carrying it looks clean —
- * no drift, no missing file, nothing to fix. `backend/src/routes/auth/mfa-rate-limit.ts` rode three
- * derived apps from their init commits to v3.31.2 in exactly that blind spot and was found by hand.
- *
- * These assertions drive the shipped CLI against real git tags rather than the detector function
- * alone, because the blind spot was never in the set arithmetic — it was in the fact that nothing
- * ever performed it. A unit test of `detectRetainedDeletions` would have passed on the day the bug
- * shipped. The fixture harness lives in `lib/template/deletions-fixture.ts`.
+ * Removed template paths once vanished from drift enumeration while derived apps still carried them.
+ * These assertions drive the shipped CLI against real Git tags, including owner-hook readiness.
+ * The fixture harness lives in `lib/template/deletions-fixture.ts`.
  *
  * The fixture app is byte-identical to the template at its recorded version, so ordinary drift is
  * zero and every non-zero exit below is attributable to the deletion check alone. Assertion 8 makes
@@ -87,6 +81,18 @@ try {
 		`The deletion report must withhold the delete instruction until owner move: ${beforeOwnerMove.output}`,
 	);
 	fixture.setHooksPath('scripts/smokestack/hooks');
+	const missingHooks = fixture.runDrift(['--target-version', '9.1.0']);
+	assert(
+		missingHooks.output.includes('Re-point Git hooks first') &&
+			!missingHooks.output.includes('Delete these files'),
+		`A configured path without delivered hooks must withhold deletion advice: ${missingHooks.output}`,
+	);
+	fixture.deliverHooks();
+	const deliveredHooks = fixture.runDrift(['--target-version', '9.1.0']);
+	assert(
+		deliveredHooks.output.includes('Delete these files'),
+		`Delivered executable hooks must permit deletion advice: ${deliveredHooks.output}`,
+	);
 
 	// ===== 3. Scaffold-mapped paths are compared through toTemplatePath, in both directions. =====
 	assert(

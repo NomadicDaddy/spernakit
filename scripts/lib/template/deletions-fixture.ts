@@ -36,6 +36,8 @@ export interface DriftRun {
 
 export interface DeletionFixture {
 	cleanup: () => void;
+	/** Add both delivered hooks with executable Git index modes. */
+	deliverHooks: () => void;
 	/** Delete an app-relative path. */
 	remove: (relPath: string) => void;
 	/** Restore an app path to the template's v9.0.0 bytes. */
@@ -131,6 +133,14 @@ export function createDeletionFixture(repoRoot: string): DeletionFixture {
 
 	return {
 		cleanup: (): void => rmSync(fixtureRoot, { force: true, recursive: true }),
+		deliverHooks: (): void => {
+			const hooks = ['pre-commit', 'pre-push'].map(
+				(name) => `scripts/smokestack/hooks/${name}`,
+			);
+			for (const hook of hooks) write(hook, '#!/bin/sh\nexit 0\n');
+			appGit('add', '--', ...hooks);
+			appGit('update-index', '--chmod=+x', '--', ...hooks);
+		},
 		remove: (relPath): void => rmSync(join(appDir, relPath)),
 		restore,
 		/**
