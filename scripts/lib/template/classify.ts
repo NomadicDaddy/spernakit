@@ -23,9 +23,8 @@ import { SECURITY_INFRASTRUCTURE_FILES } from './security.ts';
  * wrong side. The scaffolding/ tree holds the derived-app versions, and init seeds from exactly
  * there — so drift must read from there too, or the copier and the checker disagree.
  *
- * Hooks are not mapped. An app's hooks are smokestack's managed copies under
- * scripts/smokestack/hooks, the same bytes the template carries, so they compare at their own path.
- * The scaffolding/.githooks copy they replaced had drifted from the delivered hooks (#37401).
+ * Hooks are not mapped. Smokestack delivers them directly under scripts/smokestack/hooks; the
+ * template excludes that owner tree from its packet and drift comparison.
  */
 export function toTemplatePath(appPath: string): string {
 	if (appPath === '.gitignore' || appPath === '.prettierignore') return `scaffolding/${appPath}`;

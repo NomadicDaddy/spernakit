@@ -145,6 +145,10 @@ export function isFileExcluded(filePath: string): boolean {
 	// Everything init excludes, drift excludes too.
 	if (isInitExcluded(filePath)) return true;
 
+	// Smokestack delivers its own code, hooks and lock to each derived app. The app-owned runbook
+	// lives at scripts/smoke.json; neither a sync packet nor drift compares this owner tree.
+	if (filePath.startsWith('scripts/smokestack/')) return true;
+
 	// docs/template/ is template-managed and must NOT be excluded even though docs/ is
 	// (the DRIFT_EXCLUDED_DIRS loop below would otherwise catch it under docs/).
 	if (filePath.startsWith('docs/template/')) return false;

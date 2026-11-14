@@ -69,7 +69,11 @@ try {
 	const target = join(workDir, 'probe-app');
 	// Point the manifest write at a copy so the fleet registry in this checkout is untouched.
 	const manifestCopy = join(workDir, 'spernakit.psd1');
-	copyFileSync(join(repoRoot, 'spernakit.psd1'), manifestCopy);
+	const localManifest = join(repoRoot, 'spernakit.psd1');
+	copyFileSync(
+		existsSync(localManifest) ? localManifest : `${localManifest}.example`,
+		manifestCopy,
+	);
 
 	const init = Bun.spawnSync(
 		[
