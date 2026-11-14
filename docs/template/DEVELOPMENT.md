@@ -79,10 +79,10 @@ Spernakit separates concerns across three layers - shared code, frontend, and ba
 
 ### Quality Verification Workflow
 
-Run `bun run smoke:qc` before committing. The QC pipeline runs these steps automatically:
+Run `bun run smoke:qc` when preparing an approved public release. The QC pipeline runs these steps automatically:
 
-During implementation, `bun run smoke:qc:fast` runs the cached max-lines, typecheck, format, and
-lint subset. The full gate remains required before completion.
+During implementation, `bun run smoke:qc:fast` checks template smoke-step parity, then runs the
+cached max-lines, typecheck, format, and lint subset. The full gate remains required before release.
 
 1. `bun run check:drift` - Template drift check
 2. `bun run check:config` - Config invariants check
@@ -296,7 +296,7 @@ Two other sections matter as much as the deltas. **WITHHOLDING NOTHING** names e
 
 A derived app that overrides `scripts/smoke.json` keeps its own copy of the runbook, and the override suppresses drift detection for that path, so every step the template adds afterwards is invisible. The release still delivers the scripts behind those steps and their cache entries, because neither file is overridden, while the steps that would run them are never merged. The app then runs a shorter gate list and reports green. Nothing compared the two files: `scripts/smoke-cache.ts` throws for a step with no cache entry, which is the opposite direction, and a step simply absent from the runbook never runs and nothing complains.
 
-**Running**: `bun run check:smoke-steps` from the derived app. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). It is a qc step, so `bun run smoke:qc` runs it, and in spernakit itself it skips because there is nothing to compare against.
+**Running**: `bun run check:smoke-steps` from the derived app. `--template <path>` overrides the spernakit location (otherwise `SPERNAKIT_PATH`, then `../spernakit`). It runs first in `smoke:qc:fast` and also runs in the full `smoke:qc`; in spernakit itself it skips because there is nothing to compare against.
 
 **What it compares**: the template side is read with `git show v{version}:scripts/smoke.json` at the version the app's own `package.json` declares, never from the template checkout's working tree. Between a template release and the dance that upgrades an app, the tip legitimately carries steps the app is not expected to have yet, and that is where the whole fleet sits for most of a release cycle. Every mode is compared, not qc alone, and a command that appears twice is compared by count.
 

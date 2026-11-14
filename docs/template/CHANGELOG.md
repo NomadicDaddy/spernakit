@@ -20,6 +20,9 @@ this release.
 
 ### Fixed
 
+- Fast QC now runs derived-app smoke-step parity before cached static checks in both the template's
+  Smokestack config and the scaffolded apps' smoke runner. A missing runbook command fails during
+  pre-commit when the app's template tag is available.
 - Destructive-confirmation test cache inputs now follow the delivered Smokestack gate and evidence
   files, so changes to those files invalidate the cached checks.
 - Initial seed passwords bypass the application logger and display only on an interactive console

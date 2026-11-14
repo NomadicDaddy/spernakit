@@ -1,7 +1,7 @@
-// The fast static subset (`bun run smoke:qc:fast`, also what the managed pre-commit runs):
-// formatting, line-limit, types, and lint — no build, no crawl, no slow project checks. This is
-// the fail-fast inner-loop gate: it stops at the first failure, so run it repeatedly while fixing
-// errors, then run the aggregate full `bun run smoke:qc` once before commit.
+// The derived-app fast static subset (`bun run smoke:qc:fast`, also what pre-commit runs):
+// smoke-step parity, line-limit, types, formatting, and lint — no build, crawl, or slow project
+// checks. It stops at the first failure. Spernakit itself uses the matching fast list in
+// `scripts/smokestack/smokestack.json`; a full `smoke:qc` runs for an approved public release.
 //
 // These are `smoke.json` commands rather than step names because that file is the single source of
 // truth for what a qc step is; `selectFastQcSteps` throws if any entry here stops matching, so the
@@ -28,7 +28,10 @@
 //
 // leak-guard is not part of this subset: it scans the staged index diff (runtime state), so it is
 // uncacheable-by-design and the hook keeps it as a direct call ahead of `smoke:qc:fast`.
+// check:smoke-steps goes first: three local template runs took 0.28–0.39s on 2026-11-14, and a
+// missing template step must fail before cached checks. Its failure rate is not in the old sample.
 export const FAST_QC_COMMANDS = [
+	'bun run check:smoke-steps',
 	'bun run check:max-lines',
 	'bun run typecheck',
 	'bun run format:check',
