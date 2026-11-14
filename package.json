@@ -246,7 +246,7 @@
 		"test:step-up-password-message": "bun scripts/test-step-up-password-message.ts",
 		"test:swagger-dev-only": "bun scripts/test-swagger-dev-only.ts",
 		"test:template-deletions": "bun scripts/test-template-deletions.ts",
-		"test:template-drift": "bun scripts/test-template-drift.ts && bun scripts/test-template-deletions.ts && bun scripts/test-shared-core-governed.ts && bun scripts/test-template-owner-exclusions.ts",
+		"test:template-drift": "bun scripts/test-template-drift.ts && bun scripts/test-template-deletions.ts && bun scripts/test-template-owner-exclusions.ts",
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
 		"test:upload-validation": "bun scripts/test-upload-validation.ts",

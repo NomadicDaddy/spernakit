@@ -245,39 +245,18 @@ export function printRetainedDeletions(
 ): number {
 	const retained = deletions.filter((d) => d.status === 'retained');
 	const suppressed = deletions.filter((d) => d.status === 'suppressed');
-	// Legacy hook copies: deleting them while core.hooksPath names .githooks silently
-	// disables every hook, so they get re-point-first, never the raw FAILING delete.
-	const hookRetained = retained.filter((d) => d.filePath.startsWith('.githooks/'));
-	const plainRetained = retained.filter((d) => !d.filePath.startsWith('.githooks/'));
 
 	console.log(`Template Deletion Report (v${recordedVersion} -> v${targetVersion})`);
 	console.log('');
 
-	if (plainRetained.length > 0) {
-		console.log(`   REMOVED FROM TEMPLATE (${plainRetained.length} file(s), FAILING):`);
+	if (retained.length > 0) {
+		console.log(`   REMOVED FROM TEMPLATE (${retained.length} file(s), FAILING):`);
 		printFileList(
-			plainRetained,
+			retained,
 			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
 		);
 		console.log('     Delete these files, or acknowledge an intentional retention with a');
 		console.log('     DELETED line in .templateoverrides to suppress it.');
-		console.log('');
-	}
-
-	if (hookRetained.length > 0) {
-		console.log(
-			`   REMOVED FROM TEMPLATE (${hookRetained.length} legacy hook file(s), RE-POINT FIRST):`,
-		);
-		printFileList(
-			hookRetained,
-			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
-		);
-		console.log('     1. Confirm scripts/smokestack/hooks/pre-commit and pre-push exist (the');
-		console.log('        upgrade delivers them; re-pointing before that leaves git hookless);');
-		console.log('     2. git config core.hooksPath scripts/smokestack/hooks');
-		console.log('     3. Keep app-owned .githooks/pre-commit or pre-push (executable,');
-		console.log('        minus the old leak-guard call); delete the LISTED template files,');
-		console.log('        and review any other app-owned .githooks name before deleting it.');
 		console.log('');
 	}
 

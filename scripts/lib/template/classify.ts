@@ -63,10 +63,11 @@ export function enumerateTemplateFiles(spernakitPath: string, version: string): 
 
 /**
  * The app-relative files that constitute a freshly-initialized derived app, enumerated from the
- * template's WORKING TREE (git-tracked files). Mirrors enumerateTemplateFiles but uses the COPY
- * predicate (isInitExcluded) and `git ls-files` rather than the drift predicate and a tagged commit
- * — so init.ts copies exactly what the drift checker will later hold the app to, sourced from the
- * current checkout. Map each returned path back to its template source with toTemplatePath().
+ * template's WORKING TREE (git-tracked files). It uses the COPY predicate (isInitExcluded) and
+ * `git ls-files`, while enumerateTemplateFiles uses the drift predicate and a tagged commit.
+ * Owner-delivered paths may be present in an init copy but excluded from template drift; callers
+ * must not treat these two enumerations as the same set. Map each returned path back to its
+ * template source with toTemplatePath().
  */
 export function enumerateInitFiles(sourcePath: string): string[] {
 	const result = Bun.spawnSync(['git', '-C', sourcePath, 'ls-files'], {
@@ -82,7 +83,8 @@ export function enumerateInitFiles(sourcePath: string): string[] {
 	const appFiles = allFiles.filter((f) => !isInitExcluded(f));
 
 	// Re-introduce the scaffold under the app paths it maps to (scaffolding/.gitignore → .gitignore),
-	// matching enumerateTemplateFiles so the copier and the drift checker enumerate the same set.
+	// The scaffold mappings are shared with enumerateTemplateFiles even though the two predicates
+	// deliberately cover different path sets.
 	const scaffolded = allFiles
 		.filter((f) => f.startsWith('scaffolding/'))
 		.map((f) => f.slice('scaffolding/'.length))

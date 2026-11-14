@@ -106,12 +106,11 @@ export function commandLines(hookText: string): string {
 }
 
 /**
- * Every `.sh` a hook chains, as the hook itself spells it. Covers both call shapes in use —
- * `bash .githooks/leak-guard.sh` from pre-commit and `bash "$hooks_dir/screenshot-guard.sh"` from
- * pre-push — so the set is whatever the hooks actually run, not whatever this suite knows about.
+ * Every `.sh` a hook chains through its own directory, as the delivered hooks spell it. The set
+ * comes from executable hook lines, not from a hard-coded list of guard names.
  */
 export function referencedGuards(hookText: string): string[] {
-	const pattern = /(?:\.githooks|\$\{?hooks_dir\}?)\/([A-Za-z0-9._-]+\.sh)/g;
+	const pattern = /\$\{?hooks_dir\}?\/([A-Za-z0-9._-]+\.sh)/g;
 	return [...new Set([...hookText.matchAll(pattern)].map((match) => match[1] as string))].sort(
 		(left, right) => left.localeCompare(right),
 	);

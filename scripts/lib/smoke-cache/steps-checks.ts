@@ -99,8 +99,8 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'frontend/src/**/*.tsx',
-			'scripts/check-destructive-confirmation.ts',
-			'scripts/lib/destructive/*.ts',
+			'scripts/smokestack/check-destructive-confirmation.ts',
+			'scripts/smokestack/lib/destructive/*.ts',
 		],
 	},
 	'check:docs': {
@@ -108,7 +108,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		// (excluding the dirs listed below). A narrow glob list would let the
 		// cache skip the step when an unlisted .md file gains a broken link.
 		excludes: [...COMMON_EXCLUDES, '.github/**', 'coverage/**', 'data/**', 'screenshots/**'],
-		globs: ['**/*.md', 'scripts/check-docs.ts', 'scripts/lib/docs/*.ts'],
+		globs: ['**/*.md', 'scripts/smokestack/check-docs.ts', 'scripts/smokestack/lib/docs/*.ts'],
 	},
 	// check:drift has no static entry because it compares every template file from git.
 	// A stale glob list once skipped real drift; missing entries intentionally always run.
@@ -156,7 +156,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'package.json',
 			'scripts/*.ts',
 			'scripts/gate-conventions-allowlist.json',
-			'scripts/lib/gate/**/*.ts',
+			'scripts/smokestack/lib/gate/**/*.ts',
 		],
 	},
 	'check:gates-wired': {
@@ -202,9 +202,10 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'bun.lock',
 			'frontend/package.json',
 			'package.json',
-			'scripts/check-license-core.ts',
+			'scripts/smokestack/check-license-core.ts',
 			'scripts/generate-third-party-licenses.ts',
-			'scripts/lib/license-core/**/*.ts',
+			'scripts/smokestack/lib/license-core/**/*.ts',
+			'scripts/smokestack/lib/third-party-licenses/resolve.ts',
 			'scripts/lib/third-party-licenses/**/*.ts',
 			'shared/package.json',
 		],
@@ -227,7 +228,7 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'backend/src/db/schema/**/*.ts',
 			'backend/src/db/schema-pg/**/*.ts',
-			'scripts/check-no-inline-references.ts',
+			'scripts/smokestack/check-no-inline-references.ts',
 		],
 	},
 	'check:process-env': {

@@ -256,7 +256,6 @@ try {
 		'A DELETED line with no reason must still suppress the retention',
 	);
 
-	// Legacy hook removals get the re-point-first remedy, never a raw delete (M-1 #37453).
 	const captureReport = (deletions: RetainedDeletion[]): string => {
 		const lines: string[] = [];
 		const originalLog = console.log;
@@ -270,23 +269,10 @@ try {
 		}
 		return lines.join('\n');
 	};
-	const hookReport = captureReport([
-		{ filePath: '.githooks/pre-commit', status: 'retained' },
-		{ filePath: '.githooks/leak-guard.sh', status: 'retained' },
-	]);
-	assert(
-		hookReport.includes('RE-POINT FIRST') &&
-			hookReport.includes('git config core.hooksPath scripts/smokestack/hooks'),
-		'Legacy hook removals must carry the re-point-first remedy with the exact git config command',
-	);
-	assert(
-		!hookReport.includes('Delete these files'),
-		'Legacy hook removals must never receive the raw delete instruction',
-	);
 	const plainReport = captureReport([{ filePath: 'site/og.png', status: 'retained' }]);
 	assert(
-		plainReport.includes('Delete these files') && !plainReport.includes('RE-POINT FIRST'),
-		'Non-hook removals keep the ordinary delete remedy and gain no hook instruction',
+		plainReport.includes('Delete these files') && plainReport.includes('site/og.png'),
+		'Retained template deletions must name the file and the operator remedy',
 	);
 
 	console.log(`Template deletion detection test passed (${checks} assertions).`);

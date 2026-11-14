@@ -35,7 +35,7 @@ export function assertSecurityRanking(assert: Assert, dockerfile: string): void 
 		isSecurityRelevantPath('docker/nginx.conf') &&
 			isSecurityRelevantPath('backend/src/plugins/csrf.ts') &&
 			isSecurityRelevantPath('backend/src/guards/role.ts') &&
-			isSecurityRelevantPath('.githooks/leak-guard.sh'),
+			isSecurityRelevantPath('scripts/smokestack/hooks/leak-guard.sh'),
 		'docker/, plugin, and guard paths must rank as security-relevant',
 	);
 	assert(
