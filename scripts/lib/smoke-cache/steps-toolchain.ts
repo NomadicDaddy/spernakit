@@ -88,16 +88,17 @@ export const TOOLCHAIN_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	'test:destructive-comments': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'scripts/check-destructive-confirmation.ts',
-			'scripts/lib/destructive/comments.ts',
-			'scripts/lib/destructive/evidence.ts',
-			'scripts/lib/destructive/waivers.ts',
+			'scripts/smokestack/check-destructive-confirmation.ts',
+			'scripts/smokestack/lib/destructive/*.ts',
 			'scripts/test-destructive-comments.ts',
 		],
 	},
 	'test:destructive-evidence': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['scripts/lib/destructive/evidence.ts', 'scripts/test-destructive-evidence.ts'],
+		globs: [
+			'scripts/smokestack/lib/destructive/evidence.ts',
+			'scripts/test-destructive-evidence.ts',
+		],
 	},
 	'test:mutation-denylist': {
 		excludes: COMMON_EXCLUDES,

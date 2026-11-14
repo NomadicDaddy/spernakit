@@ -18,6 +18,8 @@ this release.
 
 ### Fixed
 
+- Destructive-confirmation test cache inputs now follow the delivered Smokestack gate and evidence
+  files, so changes to those files invalidate the cached checks.
 - Initial seed passwords bypass the application logger and display only on an interactive console
   (41ef892, 6684136). The manual seed command now checks for existing users before generating
   passwords (4833224); the non-interactive production message says display is first-start-only and

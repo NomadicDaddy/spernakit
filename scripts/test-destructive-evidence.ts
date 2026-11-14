@@ -1,7 +1,7 @@
 /**
  * Standalone verification for the destructive-confirmation evidence resolver.
  *
- * Exercises the real `scripts/lib/destructive/evidence.ts` exports (enclosingFunction,
+ * Exercises the real `scripts/smokestack/lib/destructive/evidence.ts` exports (enclosingFunction,
  * hasConfirmationEvidence, EVIDENCE_WINDOW_LINES) against fixtures built here, so no repository
  * file has to hold a shape just to be measured. `check:destructive-confirmation` reports on the
  * eight call sites this repository happens to have; this asserts the resolver behind it.
