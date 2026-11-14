@@ -7,6 +7,8 @@ this release.
 
 ### Changed
 
+- Updated approved, exact dependency pins for Prettier, ESLint, eslint-plugin-jsdoc, Puppeteer,
+  lucide-react, Elysia, and otpauth; TypeScript remains at 6.0.3.
 - The root ESLint config ignores gitignored `.aidd/` metadata, including scripts that sit outside
   the app's TypeScript project. Derived apps receive this ignore on their next template sync.
 - The scripts guide names `cut-release` as the template release step that runs

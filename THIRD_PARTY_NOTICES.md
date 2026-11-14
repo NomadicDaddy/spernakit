@@ -3567,7 +3567,7 @@ Apache License
    limitations under the License.
 ```
 
-### elysia@1.4.30
+### elysia@1.4.32
 
 License: MIT
 
@@ -3641,7 +3641,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### exact-mirror@0.2.7
+### exact-mirror@0.2.9
 
 License: MIT
 
@@ -4403,7 +4403,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.72.0
+### lucide-react@1.73.0
 
 License: ISC
 
@@ -4630,7 +4630,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 ```
 
-### otpauth@9.5.2
+### otpauth@9.6.0
 
 License: MIT
 

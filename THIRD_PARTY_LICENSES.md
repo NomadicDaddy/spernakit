@@ -22,11 +22,11 @@ by license family, and it does not inventory the Alpine base system.
 | [@zxcvbn-ts/core](https://www.npmjs.com/package/@zxcvbn-ts/core)                       | 4.2.0   | MIT           |
 | [@zxcvbn-ts/language-common](https://www.npmjs.com/package/@zxcvbn-ts/language-common) | 4.1.3   | MIT           |
 | [drizzle-orm](https://www.npmjs.com/package/drizzle-orm)                               | 0.45.4  | Apache-2.0    |
-| [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.30  | MIT           |
+| [elysia](https://www.npmjs.com/package/elysia)                                         | 1.4.32  | MIT           |
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.3  | BlueOak-1.0.0 |
 | [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.5.0  | MIT-0         |
-| [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.5.2   | MIT           |
+| [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.6.0   | MIT           |
 | [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.1  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                                             | 10.4.0  | MIT           |
 | [pino-roll](https://www.npmjs.com/package/pino-roll)                                   | 4.0.0   | MIT           |
@@ -57,7 +57,7 @@ by license family, and it does not inventory the Alpine base system.
 | [class-variance-authority](https://www.npmjs.com/package/class-variance-authority)           | 0.7.1   | Apache-2.0 |
 | [clsx](https://www.npmjs.com/package/clsx)                                                   | 2.1.1   | MIT        |
 | [cmdk](https://www.npmjs.com/package/cmdk)                                                   | 1.1.1   | MIT        |
-| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.72.0  | ISC        |
+| [lucide-react](https://www.npmjs.com/package/lucide-react)                                   | 1.73.0  | ISC        |
 | [qrcode](https://www.npmjs.com/package/qrcode)                                               | 1.5.4   | MIT        |
 | [react](https://www.npmjs.com/package/react)                                                 | 19.3.1  | MIT        |
 | [react-dom](https://www.npmjs.com/package/react-dom)                                         | 19.3.1  | MIT        |
