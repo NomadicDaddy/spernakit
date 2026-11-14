@@ -3,11 +3,10 @@
  *
  * Stops running spernakit processes by:
  * 1. Reading PID files from logs/ directory (written by start.ts and dev-with-logs.ts)
- * 2. Falling back to port-based detection if PID files are missing. The fallback is not
- *    dependable: on at least one Windows host both netstat and Get-NetTCPConnection reported
- *    no listener while both ports answered HTTP, so a stack with no PID files can be reported
- *    as not running while it serves. `dev:quick` and the bare workspace dev scripts write no
- *    PID files and rely on this fallback.
+ * 2. Falling back to port-based detection if PID files are missing. An HTTP probe checks
+ *    for listeners the OS port table misses; an answering port with no discoverable PID
+ *    makes this command fail explicitly. `dev:quick` and the bare workspace dev scripts
+ *    write no PID files and rely on this fallback.
  * 3. Running docker-compose down if Docker containers are running
  *
  * Usage:
@@ -23,9 +22,8 @@ import { execSync, spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import { killProcess } from './lib/process/kill.ts';
-import { isProcessAlive, readPidFileOrCleanup, removePidFile } from './lib/process/pid-files.ts';
 import { findPidOnPortUnix, findPidOnPortWindows } from './lib/process/ports.ts';
+import { stopService } from './lib/process/stop-service.ts';
 import { loadJsonConfig } from './load-json-config.ts';
 
 const repoRoot = path.resolve(import.meta.dirname, '..');
@@ -45,11 +43,6 @@ const { values } = parseArgs({
 // If neither flag is set, stop both
 const stopBackend = values.backend || (!values.backend && !values.frontend);
 const stopFrontend = values.frontend || (!values.backend && !values.frontend);
-
-// Tracks whether any service had a stale PID file pointing at a dead process.
-// Surfaced at the end of the run so a silent backend crash produces a visible hint
-// (and a non-zero exit) instead of a misleading "No running processes found".
-let sawStalePid = false;
 
 /**
  * Check if Docker containers are running for this app.
@@ -90,53 +83,6 @@ function stopDocker(): void {
 	}
 }
 
-/**
- * Stop a single service by name. Kills the recorded parent via PID file, then
- * scans the port for orphaned children that survived (e.g. vite spawned by the
- * bun shim — on Windows `taskkill /F /T` does not always reach grandchildren
- * detached from the parent's job object). Retries the port scan a few times
- * to handle slow OS port release and respawns.
- */
-function stopService(name: string, port: number): boolean {
-	const isWindows = process.platform === 'win32';
-	const findPid = isWindows ? findPidOnPortWindows : findPidOnPortUnix;
-	let killedAny = false;
-	let killedViaPidFile = false;
-
-	const filePid = readPidFileOrCleanup(logsDir, name);
-	if (filePid !== null) {
-		if (isProcessAlive(filePid)) {
-			console.log(`   Found ${name} via PID file (PID: ${filePid})`);
-			if (killProcess(filePid, `${name} port ${port}`)) {
-				killedAny = true;
-				killedViaPidFile = true;
-			}
-		} else {
-			console.log(
-				`   ⚠ Stale PID file for ${name} (PID ${filePid} not running) — cleaning up`,
-			);
-			sawStalePid = true;
-		}
-		removePidFile(logsDir, name);
-	}
-
-	for (let attempt = 0; attempt < 3; attempt++) {
-		const portPid = findPid(port);
-		if (!portPid) break;
-		if (attempt === 0 && !killedViaPidFile) {
-			console.log(`   Found ${name} on port ${port} (PID: ${portPid})`);
-		} else {
-			console.log(`   Orphan ${name} listener on port ${port} (PID: ${portPid})`);
-		}
-		if (killProcess(portPid, `${name} port ${port}`)) {
-			killedAny = true;
-		}
-		spawnSync('sleep', ['0.3']);
-	}
-
-	return killedAny;
-}
-
 // Main execution
 const { appSlug, config } = loadJsonConfig(repoRoot);
 const frontendPort = config.server?.frontendPort ?? 3330;
@@ -153,20 +99,44 @@ if (stopBackend && stopFrontend && isDockerRunning()) {
 	console.log('🔍 Looking for processes...');
 
 	let killedAny = false;
+	let sawStalePid = false;
+	let failed = false;
+	let unresolvedListener = false;
+	const findPidOnPort = process.platform === 'win32' ? findPidOnPortWindows : findPidOnPortUnix;
 
 	if (stopFrontend) {
-		if (stopService('frontend', frontendPort)) {
-			killedAny = true;
-		}
+		const result = await stopService({
+			findPidOnPort,
+			logsDir,
+			name: 'frontend',
+			port: frontendPort,
+		});
+		killedAny ||= result.killed;
+		sawStalePid ||= result.stalePid;
+		failed ||= result.failed;
+		unresolvedListener ||= result.unresolvedListener;
 	}
 
 	if (stopBackend) {
-		if (stopService('backend', backendPort)) {
-			killedAny = true;
-		}
+		const result = await stopService({
+			findPidOnPort,
+			logsDir,
+			name: 'backend',
+			port: backendPort,
+		});
+		killedAny ||= result.killed;
+		sawStalePid ||= result.stalePid;
+		failed ||= result.failed;
+		unresolvedListener ||= result.unresolvedListener;
 	}
 
-	if (killedAny) {
+	if (unresolvedListener) {
+		console.error(
+			'❌ A port still answers HTTP; its listener could not be resolved or stopped.',
+		);
+	} else if (failed) {
+		console.error('❌ Could not stop every detected process.');
+	} else if (killedAny) {
 		console.log('✅ Processes stopped.');
 	} else {
 		const portList = [
@@ -187,4 +157,5 @@ if (stopBackend && stopFrontend && isDockerRunning()) {
 		);
 		process.exit(1);
 	}
+	if (unresolvedListener || failed) process.exit(1);
 }

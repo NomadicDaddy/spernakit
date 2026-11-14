@@ -54,6 +54,22 @@ export function findPidOnPortUnix(port: number): null | string {
 	}
 }
 
+/** A response from either loopback address proves that an HTTP service still occupies the port. */
+export async function probeHttpPort(port: number): Promise<boolean> {
+	for (const host of ['127.0.0.1', 'localhost']) {
+		try {
+			const response = await fetch(`http://${host}:${port}/`, {
+				signal: AbortSignal.timeout(750),
+			});
+			await response.body?.cancel();
+			return true;
+		} catch {
+			// Refused connection or a non-HTTP listener; try the other loopback address.
+		}
+	}
+	return false;
+}
+
 /**
  * How long a service that is still running may take to start listening. A cold backend start
  * (right after an install or build, on a loaded machine) spends well over ten seconds loading
