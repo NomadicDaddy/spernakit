@@ -242,6 +242,7 @@ export function printRetainedDeletions(
 	deletions: RetainedDeletion[],
 	recordedVersion: string,
 	targetVersion: string,
+	hooksPathReady: boolean,
 ): number {
 	const retained = deletions.filter((d) => d.status === 'retained');
 	const suppressed = deletions.filter((d) => d.status === 'suppressed');
@@ -255,8 +256,17 @@ export function printRetainedDeletions(
 			retained,
 			() => `shipped at v${recordedVersion}, absent at v${targetVersion}`,
 		);
-		console.log('     Delete these files, or acknowledge an intentional retention with a');
-		console.log('     DELETED line in .templateoverrides to suppress it.');
+		if (hooksPathReady) {
+			console.log('     Delete these files, or acknowledge an intentional retention with a');
+			console.log('     DELETED line in .templateoverrides to suppress it.');
+		} else {
+			console.log(
+				'     Re-point Git hooks first through Smokestack owner delivery and install:move.',
+			);
+			console.log(
+				'     Review these deletions after core.hooksPath is scripts/smokestack/hooks.',
+			);
+		}
 		console.log('');
 	}
 

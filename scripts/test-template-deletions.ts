@@ -78,6 +78,15 @@ try {
 		detected.output.includes('No template drift detected'),
 		'Ordinary drift must be zero here, or the exit code proves nothing about deletions',
 	);
+	fixture.setHooksPath('old-hooks');
+	const beforeOwnerMove = fixture.runDrift(['--target-version', '9.1.0']);
+	assert(
+		beforeOwnerMove.exitCode !== 0 &&
+			beforeOwnerMove.output.includes('Re-point Git hooks first') &&
+			!beforeOwnerMove.output.includes('Delete these files'),
+		`The deletion report must withhold the delete instruction until owner move: ${beforeOwnerMove.output}`,
+	);
+	fixture.setHooksPath('scripts/smokestack/hooks');
 
 	// ===== 3. Scaffold-mapped paths are compared through toTemplatePath, in both directions. =====
 	assert(
@@ -263,7 +272,7 @@ try {
 			lines.push(args.map(String).join(' '));
 		};
 		try {
-			printRetainedDeletions(deletions, '3.47.6', '3.48.0');
+			printRetainedDeletions(deletions, '3.47.6', '3.48.0', true);
 		} finally {
 			console.log = originalLog;
 		}

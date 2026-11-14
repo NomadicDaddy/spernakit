@@ -41,6 +41,7 @@ import path from 'node:path';
 import { exit } from 'node:process';
 import { parseArgs } from 'node:util';
 
+import { hasSmokestackHooksPath } from './lib/template/hooks-path.ts';
 import {
 	applyTemplateOverrides,
 	checkFile,
@@ -252,7 +253,14 @@ async function report(options: TemplateDriftOptions): Promise<number> {
 
 	// The reverse direction: paths the target version no longer ships that the app still has.
 	const retained =
-		scan === null ? 0 : printRetainedDeletions(scan.deletions, version, scan.targetVersion);
+		scan === null
+			? 0
+			: printRetainedDeletions(
+					scan.deletions,
+					version,
+					scan.targetVersion,
+					hasSmokestackHooksPath(repoRoot),
+				);
 
 	return totalDrift + retained > 0 ? 1 : 0;
 }

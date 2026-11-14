@@ -42,6 +42,8 @@ export interface DeletionFixture {
 	restore: (appPath: string, templatePath?: string) => void;
 	/** Run the real drift CLI from inside the fixture app. */
 	runDrift: (args: string[], env?: Record<string, string>) => DriftRun;
+	/** Change the fixture app's actual Git hook configuration. */
+	setHooksPath: (value: string) => void;
 	/** Write an app-relative path. */
 	write: (relPath: string, content: string) => void;
 }
@@ -103,6 +105,19 @@ export function createDeletionFixture(repoRoot: string): DeletionFixture {
 	restore(REMOVED_SCAFFOLD, 'scaffolding/.prettierignore');
 	write('package.json', '{"name": "fixture-app", "spernakit_version": "9.0.0"}\n');
 	write(APP_ONLY_FILE, 'export const AppOnly = () => null;\n');
+	const appGit = (...args: string[]): void => {
+		const result = Bun.spawnSync(['git', '-C', appDir, ...args], {
+			stderr: 'pipe',
+			stdout: 'pipe',
+			windowsHide: true,
+		});
+		if (result.exitCode !== 0) {
+			throw new Error(`app git ${args.join(' ')} failed: ${result.stderr.toString().trim()}`);
+		}
+	};
+	appGit('init', '-b', 'main');
+	const setHooksPath = (value: string): void => appGit('config', 'core.hooksPath', value);
+	setHooksPath('scripts/smokestack/hooks');
 	// Branding resolution loads (and would otherwise auto-create) config/{slug}.json. Supplying it
 	// keeps the fixture from generating fresh keys on every run. config/ is drift-excluded, so this
 	// file never enters either comparison.
@@ -137,6 +152,7 @@ export function createDeletionFixture(repoRoot: string): DeletionFixture {
 				output: `${result.stdout.toString()}${result.stderr.toString()}`,
 			};
 		},
+		setHooksPath,
 		write,
 	};
 }
