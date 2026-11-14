@@ -100,7 +100,8 @@ bun run lint:fix
 bun run typecheck
 ```
 
-**Quality Gate Pipeline** (`smoke:qc` - run for an approved public release):
+**Quality Gate Pipeline** (`smoke:qc` - run for an approved public release or before merging a
+gate-pipeline change):
 
 The full ordered step list lives in `scripts/smoke.md`, which is generated from `scripts/smoke.json`
 by `bun run smoke:docs` and guarded by `check:smoke-docs` inside qc. Read it there rather than here:

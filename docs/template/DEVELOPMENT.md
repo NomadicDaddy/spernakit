@@ -79,7 +79,8 @@ Spernakit separates concerns across three layers - shared code, frontend, and ba
 
 ### Quality Verification Workflow
 
-Run `bun run smoke:qc` when preparing an approved public release. The QC pipeline runs these steps automatically:
+Run `bun run smoke:qc` when preparing an approved public release or before merging a change to the
+gate pipeline itself. The QC pipeline runs these steps automatically:
 
 During implementation, `bun run smoke:qc:fast` checks template smoke-step parity, then runs the
 cached max-lines, typecheck, format, and lint subset. The full gate remains required before release.
