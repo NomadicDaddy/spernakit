@@ -3039,6 +3039,7 @@
 						"backend/src/db/autoSeed.ts",
 						"backend/src/db/seed.ts",
 						"backend/src/db/seedCredentialDisplay.ts",
+						"backend/src/utils/auth/passwordGenerator.ts",
 						"scripts/test-seed-rerun-honesty.ts",
 						"package.json"
 					]

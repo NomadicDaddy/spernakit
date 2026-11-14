@@ -10,6 +10,14 @@ this release.
 - The scripts guide names `cut-release` as the template release step that runs
   `fleet-manifest:sync`, in place of the retired `spernakit-bump` skill.
 
+### Fixed
+
+- Initial seed passwords bypass the application logger and display only on an interactive console
+  (41ef892, 6684136). The manual seed command now checks for existing users before generating
+  passwords (4833224); the non-interactive production message says display is first-start-only and
+  directs an existing installation to password reset (999c066). The seed rerun regression is now a
+  QC step (0dbe4e0).
+
 ## [3.48.0] - 2026-11-11
 
 ### Release convention
