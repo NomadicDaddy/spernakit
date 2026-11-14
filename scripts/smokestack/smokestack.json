@@ -3032,6 +3032,20 @@
 				"description": "Seed credentials never reach a log file: display is a TTY-gated direct console write",
 				"name": "test:seed-credentials-never-logged",
 				"run": ["bun", "run", "test:seed-credentials-never-logged"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/src/db/autoSeed.ts",
+						"backend/src/db/seed.ts",
+						"backend/src/db/seedCredentialDisplay.ts",
+						"scripts/test-seed-rerun-honesty.ts",
+						"package.json"
+					]
+				},
+				"description": "Seed reruns display only credentials they apply and the non-TTY pointer is first-start-only",
+				"name": "test:seed-rerun-honesty",
+				"run": ["bun", "run", "test:seed-rerun-honesty"]
 			}
 		]
 	},

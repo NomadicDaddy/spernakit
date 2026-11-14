@@ -560,6 +560,10 @@
 					"description": "Seed credentials never reach a log file: display is a TTY-gated direct console write"
 				},
 				{
+					"command": "bun run test:seed-rerun-honesty",
+					"description": "Seed reruns display only credentials they apply and the non-TTY pointer is first-start-only"
+				},
+				{
 					"command": "bun run check:version-refs",
 					"description": "Current-state version claims in docs match package.json",
 					"templateOnly": true
