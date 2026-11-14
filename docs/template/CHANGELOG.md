@@ -7,6 +7,8 @@ this release.
 
 ### Changed
 
+- The root ESLint config ignores gitignored `.aidd/` metadata, including scripts that sit outside
+  the app's TypeScript project. Derived apps receive this ignore on their next template sync.
 - The scripts guide names `cut-release` as the template release step that runs
   `fleet-manifest:sync`, in place of the retired `spernakit-bump` skill.
 - Template update packets and drift checks leave `scripts/smokestack/` owner files to Smokestack.

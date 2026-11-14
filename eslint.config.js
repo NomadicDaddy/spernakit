@@ -31,7 +31,15 @@ const noDefaultExportPlugin = {
 // eslint-disable-next-line import/no-default-export
 export default defineConfig([
 	{
-		ignores: ['**/*.min.js', '**/dist/**', '**/node_modules/**', 'backups/**', 'logs/**'],
+		// Root .aidd metadata is gitignored and outside the TypeScript project.
+		ignores: [
+			'.aidd/**',
+			'**/*.min.js',
+			'**/dist/**',
+			'**/node_modules/**',
+			'backups/**',
+			'logs/**',
+		],
 	},
 	{
 		extends: [js.configs.recommended, ...tseslint.configs.recommended],
