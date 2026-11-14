@@ -69,10 +69,8 @@ async function seed(): Promise<void> {
 	const credentials = isProduction
 		? seedUserList.map((u) => ({ password: u.password, username: u.username }))
 		: getCredentials();
-	if (!isProduction) {
-		printSeedCredentialsToConsole(credentials);
-	} else {
-		printSeedCredentialsToConsole(credentials);
+	printSeedCredentialsToConsole(credentials);
+	if (isProduction) {
 		logDatabase(
 			'warn',
 			'IMPORTANT: Save the displayed production credentials now - they cannot be retrieved later. ' +
