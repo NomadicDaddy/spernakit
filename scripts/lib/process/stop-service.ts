@@ -5,6 +5,7 @@ import { probeHttpPort } from './ports.ts';
 
 export interface StopServiceOptions {
 	findPidOnPort: (port: number) => null | string;
+	kill?: (pid: number | string, label: string) => boolean;
 	logsDir: string;
 	name: string;
 	port: number;
@@ -19,6 +20,7 @@ export interface StopServiceResult {
 
 export async function stopService(options: StopServiceOptions): Promise<StopServiceResult> {
 	const { findPidOnPort, logsDir, name, port } = options;
+	const kill = options.kill ?? killProcess;
 	const result: StopServiceResult = {
 		failed: false,
 		killed: false,
@@ -31,9 +33,9 @@ export async function stopService(options: StopServiceOptions): Promise<StopServ
 	if (filePid !== null) {
 		if (isProcessAlive(filePid)) {
 			console.log(`   Found ${name} via PID file (PID: ${filePid})`);
-			killedViaPidFile = killProcess(filePid, `${name} port ${port}`);
+			killedViaPidFile = kill(filePid, `${name} port ${port}`);
 			result.killed = killedViaPidFile;
-			result.failed = !killedViaPidFile;
+			result.failed = !killedViaPidFile && isProcessAlive(filePid);
 		} else {
 			console.log(
 				`   ⚠ Stale PID file for ${name} (PID ${filePid} not running) — cleaning up`,
@@ -51,9 +53,9 @@ export async function stopService(options: StopServiceOptions): Promise<StopServ
 				? `   Found ${name} on port ${port} (PID: ${portPid})`
 				: `   Orphan ${name} listener on port ${port} (PID: ${portPid})`,
 		);
-		if (killProcess(portPid, `${name} port ${port}`)) {
+		if (kill(portPid, `${name} port ${port}`)) {
 			result.killed = true;
-		} else {
+		} else if (isProcessAlive(Number(portPid))) {
 			result.failed = true;
 		}
 		await Bun.sleep(300);
@@ -65,9 +67,9 @@ export async function stopService(options: StopServiceOptions): Promise<StopServ
 		const portPid = findPidOnPort(port);
 		if (portPid) {
 			console.log(`   Found ${name} answering HTTP on port ${port} (PID: ${portPid})`);
-			if (killProcess(portPid, `${name} port ${port}`)) {
+			if (kill(portPid, `${name} port ${port}`)) {
 				result.killed = true;
-			} else {
+			} else if (isProcessAlive(Number(portPid))) {
 				result.failed = true;
 			}
 		}

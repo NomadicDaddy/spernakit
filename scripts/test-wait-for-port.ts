@@ -155,6 +155,20 @@ async function run(): Promise<void> {
 			!absent.killed && !absent.unresolvedListener,
 			'an absent listener must remain absent',
 		);
+		let deadLookups = 0;
+		let deadKillAttempts = 0;
+		const alreadyExited = await stopService({
+			findPidOnPort: () => (++deadLookups === 1 ? String(deadPid) : null),
+			kill: () => {
+				deadKillAttempts++;
+				return false;
+			},
+			logsDir,
+			name: 'backend',
+			port: await freePort(),
+		});
+		assert(deadKillAttempts === 1, 'the exited-PID race must exercise a failed kill');
+		assert(!alreadyExited.failed, 'a process that exits before kill must not fail stop');
 	} finally {
 		rmSync(logsDir, { force: true, recursive: true });
 	}

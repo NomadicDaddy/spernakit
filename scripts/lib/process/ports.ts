@@ -59,6 +59,7 @@ export async function probeHttpPort(port: number): Promise<boolean> {
 	for (const host of ['127.0.0.1', 'localhost']) {
 		try {
 			const response = await fetch(`http://${host}:${port}/`, {
+				redirect: 'manual',
 				signal: AbortSignal.timeout(750),
 			});
 			await response.body?.cancel();
