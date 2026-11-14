@@ -9,6 +9,10 @@ this release.
 
 - The scripts guide names `cut-release` as the template release step that runs
   `fleet-manifest:sync`, in place of the retired `spernakit-bump` skill.
+- Template update packets and drift checks leave `scripts/smokestack/` owner files to Smokestack.
+  Template hook tests and cache inputs use the delivered paths, and retained-deletion guidance
+  waits until the app's local `core.hooksPath` points to `scripts/smokestack/hooks` before advising
+  removal of old files.
 
 ### Fixed
 
