@@ -147,16 +147,14 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		],
 	},
 	'check:gate-conventions': {
-		// Every gate's own source is an input, because the gate reads all of them. `scripts/*.ts` is
-		// deliberately the whole directory rather than the current gate list: a task added to
-		// package.json changes the population, and a glob list naming today's gates would let the
-		// cache skip the run that would have seen the new one.
+		// Every gate's source is an input, including delivered gates under scripts/smokestack/.
+		// A list naming only today's gates could miss a new task added to package.json.
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'package.json',
-			'scripts/*.ts',
+			'scripts/**/*.ts',
 			'scripts/gate-conventions-allowlist.json',
-			'scripts/smokestack/lib/gate/**/*.ts',
+			'scripts/smokestack/docs/gate-conventions.md',
 		],
 	},
 	'check:gates-wired': {

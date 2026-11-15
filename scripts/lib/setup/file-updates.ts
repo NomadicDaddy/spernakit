@@ -14,9 +14,9 @@ import { updateFile, updateJsonFile } from './json-files.ts';
 
 /**
  * The scaffold's scripts-block transform, extracted so its ORDER is testable (v3.47.6):
- * the two gate tasks are rewritten to the app's shipped-gate commands BEFORE the missing-file
- * pruning runs, because the runner file the template's commands name never reaches a derived
- * app - without the rewrite-first order the prune deletes the app's gate entirely
+ * the two gate tasks are rewritten to the new app's bootstrap smoke.ts commands BEFORE the
+ * missing-file pruning runs, because init withholds the runner for a later direct delivery -
+ * without the rewrite-first order the prune deletes the app's gate entirely
  * (Morticia #16566 Low, Roger 877403c8 Low). `fileArrived` answers from the tree setup copied.
  */
 export function rewriteGateScriptsThenPrune(

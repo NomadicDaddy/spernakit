@@ -30,12 +30,9 @@ export function normalizePackageJson(
 		delete pkg['homepage'];
 		delete pkg['repository'];
 
-		// The gate entrypoint is a legitimate template/app difference (v3.47.6): the template runs
-		// the smokestack runner (`bun scripts/smokestack.ts`), which its smokestack.lock wires,
-		// while a derived app is not on the smokestack roster and keeps the shipped gate
-		// (`bun scripts/smoke.ts --mode qc`). Both mean "run the qc gate"; the sanctioned forms
-		// live in one shared table (lib/gate-scripts.ts) that setup's scaffold rewrite also
-		// reads, and anything else in these two scripts is real drift and stays compared.
+		// A newly initialized app uses smoke.ts until smokestack is delivered directly to it.
+		// During that bootstrap, its gate commands differ from the template's delivered runner.
+		// Recognize only the two forms in gate-scripts.ts; other commands remain real drift.
 		const scripts = pkg['scripts'] as Record<string, string> | undefined;
 		if (scripts) {
 			for (const [key, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {

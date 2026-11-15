@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
 /**
- * Regression test for the sanctioned gate-command mapping (v3.47.6).
+ * Regression test for a new app's bootstrap gate-command mapping.
  *
- * The template runs its gate through the smokestack runner; a derived app keeps the shipped
- * smoke.ts gate because the runner files are init-excluded. The two script tasks differ by
- * exactly that: scripts/lib/gate-scripts.ts is the one table both sides read - setup rewrites
- * the runner forms into a new app before its missing-file pruning, and the drift normalizer maps
- * both forms to a common token. This pins all three properties so the table cannot drift: the
- * rewrite fires only on the exact template forms, the app forms pass through, and the drift
- * comparison sees both sides as equal while a rogue command stays different (Roger 88317845).
+ * Init withholds the smokestack runner until direct delivery, so setup temporarily rewrites
+ * the template's two gate commands to smoke.ts before pruning absent script targets. Once
+ * delivered, the app uses the runner. Both sanctioned forms normalize together for drift;
+ * unrelated commands remain visible (Roger 88317845).
  */
+import { readFileSync } from 'node:fs';
 import { exit } from 'node:process';
 
 import { applyGateScriptRewrites, GATE_SCRIPT_REWRITES } from './lib/gate-scripts.ts';
@@ -19,13 +17,23 @@ import { normalizePackageJson } from './lib/template/branding-normalizers.ts';
 const failures: string[] = [];
 
 const templateScripts: Record<string, string> = {
-	'smoke:qc': 'bun scripts/smokestack.ts',
-	'smoke:qc:fast': 'bun scripts/smokestack.ts --fast',
+	'smoke:qc': 'bun scripts/smokestack/smokestack.ts',
+	'smoke:qc:fast': 'bun scripts/smokestack/smokestack.ts --fast',
 };
 const appScripts: Record<string, string> = {
 	'smoke:qc': 'bun scripts/smoke.ts --mode qc',
 	'smoke:qc:fast': 'bun scripts/smoke.ts --mode qc --fast',
 };
+const liveScripts = (
+	JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+		scripts: Record<string, string>;
+	}
+).scripts;
+for (const [task, command] of Object.entries(templateScripts)) {
+	if (liveScripts[task] !== command) {
+		failures.push(`${task} template command drifted from package.json`);
+	}
+}
 
 for (const [task, rewrite] of Object.entries(GATE_SCRIPT_REWRITES)) {
 	const templateForm = templateScripts[task];

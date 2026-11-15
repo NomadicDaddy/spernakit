@@ -89,9 +89,9 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'package.json',
-			'scripts/check-gate-conventions.ts',
-			'scripts/lib/gate/**/*.ts',
-			'scripts/test-gate-conventions.ts',
+			'scripts/smokestack/check-gate-conventions.ts',
+			'scripts/smokestack/lib/gate/**/*.ts',
+			'scripts/smokestack/test-gate-conventions.ts',
 		],
 	},
 	'test:gate-scripts': {
@@ -100,7 +100,7 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		// and the json-files writer) all decide the verdict (v3.47.6; Morticia #16625).
 		excludes: COMMON_EXCLUDES,
 		globs: [
-			'scripts/check-script-targets.ts',
+			'scripts/smokestack/check-script-targets.ts',
 			'scripts/lib/gate-scripts.ts',
 			'scripts/lib/setup/file-updates.ts',
 			'scripts/lib/setup/json-files.ts',
