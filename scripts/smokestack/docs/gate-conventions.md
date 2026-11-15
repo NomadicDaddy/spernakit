@@ -231,7 +231,7 @@ fixed there, never patched in a delivered copy.
 | `GC1` | Entry shape    | Yes: exported `run*`, `import.meta.main` guard, no module-scope statements                               |
 | `GC2` | Exit codes     | Partly: literal `exit(...)`, `process.exit(...)` and `process.exitCode` assignments use `0`, `1`, or `2` |
 | `GC3` | Output         | Partly: a status tag is present, and no pictographs anywhere                                             |
-| `GC4` | Arguments      | Yes: no hand-read `argv`, and `parseArgs` carries `strict: true`                                         |
+| `GC4` | Arguments      | Partly: hand-read `argv` where the file has no `parseArgs` call, and `parseArgs` carries `strict: true`  |
 | `GC5` | Anti-vacuity   | Partly: a discovering gate's `[OK]` line states a count                                                  |
 | `GC6` | Rule linkage   | Partly: an `Enforces:` line; if IDs are cited and the catalog has IDs, at least one resolves             |
 | `GC7` | Waiver forms   | No: reviewed when the gate is migrated                                                                   |
