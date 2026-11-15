@@ -38,7 +38,7 @@ More development guides live in `docs/template/`:
 this repository's tooling cites resolve locally.
 
 - `gate-conventions.md` - the eight rules every `check*` gate follows, and the six-part shape for
-  changing one. Canonical copy: `aidd/docs/reference/gate-conventions.md`. Enforced here by
+  changing one. Canonical copy: `smokestack/docs/reference/gate-conventions.md`. Enforced here by
   `bun run check:gate-conventions`.
 
 **Audience**: anyone writing or changing a gate in this repository.
