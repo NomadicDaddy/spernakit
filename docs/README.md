@@ -32,10 +32,10 @@ More development guides live in `docs/template/`:
 
 - `DEVELOPMENT.md` - core development patterns and workflows
 
-### `reference/` - Fleet Reference Documents
+### `scripts/smokestack/docs/` - Delivered Fleet References
 
-`reference/` holds documents that are canonical somewhere else in the fleet and mirrored here so
-the paths this repository's tooling cites resolve locally.
+`scripts/smokestack/docs/` holds fleet reference documents delivered by smokestack so the paths
+this repository's tooling cites resolve locally.
 
 - `gate-conventions.md` - the eight rules every `check*` gate follows, and the six-part shape for
   changing one. Canonical copy: `aidd/docs/reference/gate-conventions.md`. Enforced here by
@@ -45,8 +45,10 @@ the paths this repository's tooling cites resolve locally.
 
 ## Pathing Conventions
 
-- **Template documentation**: always referenced with the `docs/template/` prefix
-- **Mirrored fleet references**: referenced with the `docs/reference/` prefix
+Repository paths in prose start at the repository root: `docs/template/` holds template guides and
+`scripts/smokestack/docs/` holds delivered fleet references. Markdown link targets are relative to
+the file containing the link, so use `docs/template/` from the root README and `template/` from this
+file.
 
 ## Maintenance Guidelines
 
@@ -66,11 +68,13 @@ When updating the template:
 
 ### Cross-Documentation References
 
-Always use full paths when linking to other docs:
+Resolve each link from the document that contains it:
 
-- ✅ Correct: `See [Security Guide](docs/template/SECURITY.md)`
-- ❌ Incorrect: `See [Security Guide](../template/SECURITY.md)`
-- ❌ Incorrect: `See [Security Guide](SECURITY.md)`
+- From root `README.md`: `See [Security Guide](docs/template/SECURITY.md)`
+- From this `docs/README.md`: `See [Security Guide](template/SECURITY.md)`
+- From `docs/template/DEVELOPMENT.md`: `See [Security Guide](SECURITY.md)`
+- From this file to a delivered reference:
+  `See [Gate Conventions](../scripts/smokestack/docs/gate-conventions.md)`
 
 ### Link Checking
 
