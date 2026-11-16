@@ -23,6 +23,9 @@ this release.
 
 ### Fixed
 
+- The stop command probes HTTP when PID files and port tables miss a server. It stops the
+  listener when its PID can be resolved, or exits nonzero naming the answering port. A process
+  that exits before the kill attempt no longer causes a false stop failure.
 - New apps receive the complete locked Smokestack tree, including the tools their hooks and local
   verification need. Init tests verify copied bytes and locked hashes and reject a corrupted hook.
   Shared-core and gate-conventions checks run in derived apps through their existing smoke runner.
