@@ -7,6 +7,9 @@ this release.
 
 ### Changed
 
+- Knip treats delivered `scripts/smokestack/*.ts` CLIs as entries, including the alternative runner
+  that derived apps retain without invoking. Libraries unreachable from every entry remain checked.
+  Phillip approved this coverage change at Room #52755 on #52742.
 - Updated approved, exact dependency pins for Prettier, ESLint, eslint-plugin-jsdoc, Puppeteer,
   lucide-react, Elysia, and otpauth; TypeScript remains at 6.0.3.
 - The root ESLint config ignores gitignored `.aidd/` metadata, including scripts that sit outside
@@ -20,6 +23,11 @@ this release.
 
 ### Fixed
 
+- The derived smoke cache classifies `check:lucide-imports`, `test:lucide-names`,
+  `test:seed-credentials-never-logged`, and `test:seed-rerun-honesty` as always-run checks. Its
+  regression test now rejects any QC step without a cache classification.
+- Port-readiness test listeners receive only `STOP_TEST_PORT`, removing two unnecessary inherited
+  environment spreads rejected by the env-spread guard.
 - Fast QC now runs derived-app smoke-step parity before cached static checks in both the template's
   Smokestack config and the scaffolded apps' smoke runner. A missing runbook command fails during
   pre-commit when the app's template tag is available.
