@@ -1,9 +1,11 @@
+import { resolve } from 'node:path';
 import pino from 'pino';
 
 import type { AppConfig } from '../config/configSchema.ts';
 
 import { getConfig } from '../config/configLoader.ts';
 import { configLogger } from '../config/configLogger.ts';
+import { projectRoot } from '../config/configUtils.ts';
 import { LogCategory, type LogCategoryType } from './logCategories.ts';
 import { REDACT_PATHS } from './logRedactPaths.ts';
 import { LOG_SECRET_REDACTION_HOOKS, registerLogSecretValues } from './logSecretRedaction.ts';
@@ -49,6 +51,8 @@ function buildErrorStreamTarget(
  * current file exceeds `logging.file.maxSize`, whichever comes first, and prunes old rolls beyond
  * `logging.file.maxFiles`. pino-roll appends a rotation-index suffix to the configured path
  * (e.g. `app.1.log`, `app.2.log`), so log-aggregator globs should target `app.*.log`.
+ * Relative paths start at the application root, including when a CLI runs from backend/.
+ * Absolute paths keep their configured destination.
  * @param config - Application configuration
  * @returns Transport target for the rotated file, or undefined when file logging is off
  */
@@ -62,7 +66,7 @@ function buildFileTarget(config: AppConfig): pino.TransportTargetOptions | undef
 	return {
 		level: config.logging.level,
 		options: {
-			file: fileConfig.path,
+			file: resolve(projectRoot, fileConfig.path),
 			frequency: 'daily',
 			limit: { count: fileConfig.maxFiles },
 			mkdir: true,

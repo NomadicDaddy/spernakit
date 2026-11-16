@@ -63,6 +63,8 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		excludes: COMMON_EXCLUDES,
 		globs: [
 			'backend/src/**',
+			'scripts/lib/logger-file-fixture.ts',
+			'scripts/lib/smoke/env.ts',
 			'scripts/test-logger-configured.ts',
 			'scripts/test-logger-fallback.ts',
 		],

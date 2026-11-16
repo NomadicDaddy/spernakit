@@ -22,6 +22,7 @@ WORKDIR /app
 # fails the install outright on an entry file it cannot resolve. postinstall.ts skips itself here
 # rather than pulling scripts/lib/third-party-licenses/ into this layer; see its header.
 COPY package.json bun.lock bunfig.toml ./
+COPY patches/ patches/
 COPY scripts/require-bun.ts scripts/postinstall.ts scripts/
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
@@ -50,6 +51,7 @@ FROM oven/bun:1.4.3-alpine@sha256:629e17411f1f129dbec3af78d5af9c9f2a937435c80349
 WORKDIR /app
 
 COPY package.json bun.lock bunfig.toml ./
+COPY patches/ patches/
 COPY backend/package.json backend/
 COPY frontend/package.json frontend/
 COPY shared/package.json shared/

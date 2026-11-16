@@ -509,6 +509,8 @@
 					],
 					"inputs": [
 						"backend/src/**",
+						"scripts/lib/logger-file-fixture.ts",
+						"scripts/lib/smoke/env.ts",
 						"scripts/test-logger-configured.ts",
 						"scripts/test-logger-fallback.ts"
 					]
@@ -1175,11 +1177,13 @@
 						"backend/src/services/api-key/apiKeyManagement.ts",
 						"backend/src/services/apiKeyService.ts",
 						"backend/src/services/apiKeySignatureService.ts",
+						"patches/elysia@1.4.32.patch",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-api-key-request-signing.ts"
+						"scripts/test-api-key-request-signing.ts",
+						"scripts/test-elysia-native-params.ts"
 					]
 				},
-				"description": "Mandatory API-key request signing: a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp are all refused; a correctly signed request authenticates",
+				"description": "Native ESM/CJS numeric-parameter validation and encoded paths pass; mandatory API-key signing refuses missing or malformed headers and replayed nonces while correctly signed requests authenticate",
 				"name": "test:api-key-request-signing",
 				"run": ["bun", "run", "test:api-key-request-signing"]
 			},

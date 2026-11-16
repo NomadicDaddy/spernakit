@@ -1,0 +1,26 @@
+diff --git a/dist/adapter/bun/compose.js b/dist/adapter/bun/compose.js
+index 8c640ea8ed1594265f64f54fec46967142006b53..a9689392118ea263891a8f607e07907e516f7b32 100644
+--- a/dist/adapter/bun/compose.js
++++ b/dist/adapter/bun/compose.js
+@@ -22,7 +22,7 @@ var import_handler = require('./handler.js'), import_sucrose = require('../../su
+ const allocateIf = (value, condition) => condition ? value : "", preserveEncodedSlashes = (params) => {
+   for (const key of Object.keys(params))
+     params[key].includes("/") && (params[key] = params[key].replaceAll("/", "%2F"));
+-  return params;
++  return { ...params };
+ }, createContext = (app, route, inference, isInline = !1) => {
+   let fnLiteral = "";
+   const defaultHeaders = app.setHeaders, hasTrace = !!app.event.trace?.length;
+diff --git a/dist/adapter/bun/compose.mjs b/dist/adapter/bun/compose.mjs
+index ea0d0e5c7512a98882b3d0be91e7aacf5a9ed4cc..2fdb9ff0b0ba59e887fe654052cf279dc0633cc7 100644
+--- a/dist/adapter/bun/compose.mjs
++++ b/dist/adapter/bun/compose.mjs
+@@ -7,7 +7,7 @@ import { ELYSIA_TRACE } from "../../trace.mjs";
+ const allocateIf = (value, condition) => condition ? value : "", preserveEncodedSlashes = (params) => {
+   for (const key of Object.keys(params))
+     params[key].includes("/") && (params[key] = params[key].replaceAll("/", "%2F"));
+-  return params;
++  return { ...params };
+ }, createContext = (app, route, inference, isInline = !1) => {
+   let fnLiteral = "";
+   const defaultHeaders = app.setHeaders, hasTrace = !!app.event.trace?.length;

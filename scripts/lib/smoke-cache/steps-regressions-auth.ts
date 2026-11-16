@@ -17,6 +17,7 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 	// the gate mints a real key and drives the real application, so the auth plugin chain, the key
 	// minting/validation services and the signature validator all decide the verdict - kept
 	// identical to the runner's smokestack.json inputs.
+	// Its native Elysia preflight also guards the patched params/defaulting boundary in both builds.
 	'test:api-key-request-signing': {
 		excludes: COMMON_EXCLUDES,
 		globs: [
@@ -34,8 +35,10 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'backend/src/services/api-key/apiKeyManagement.ts',
 			'backend/src/services/apiKeyService.ts',
 			'backend/src/services/apiKeySignatureService.ts',
+			'patches/elysia@1.4.32.patch',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-api-key-request-signing.ts',
+			'scripts/test-elysia-native-params.ts',
 		],
 	},
 	// Signs in through the real login route and reads the log back through the real listing, so

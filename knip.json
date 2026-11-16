@@ -14,6 +14,7 @@
 			"entry": [
 				"scripts/*.ts",
 				"scripts/smokestack/*.ts",
+				"scripts/lib/logger-file-fixture.ts",
 				"scripts/lib/process/error-log-probe.ts"
 			],
 			"ignoreBinaries": ["icacls", "netstat", "setfacl"],

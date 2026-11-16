@@ -29,6 +29,15 @@ this release.
 
 ### Fixed
 
+- Native Bun route parameters are copied before Elysia applies defaults, fixing HTTP 500 responses
+  on numeric-parameter routes such as API-key listing. A tracked patch covers Elysia 1.4.32's ESM
+  and CJS Bun adapters under Phillip's bounded exception at Room #53327 on #53324. Validation stays
+  enabled; native numeric, invalid, encoded-slash and wildcard cases are regression checks. Remove
+  the patch when an upstream release passes that native contract. Docker dependency stages carry
+  the patch before frozen installs, and initialized apps receive it with the manifest and lockfile.
+- File logging resolves relative destinations from the application root, so a seed command started
+  in `backend/` writes to the mounted root logs directory rather than the read-only backend tree.
+  Absolute log destinations, rotation, redaction and stderr output keep their existing behavior.
 - The stop command probes HTTP when PID files and port tables miss a server. It stops the
   listener when its PID can be resolved, or exits nonzero naming the answering port. A process
   that exits before the kill attempt no longer causes a false stop failure.

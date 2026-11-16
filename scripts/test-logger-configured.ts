@@ -7,17 +7,21 @@
  * bootstrap logger for the life of the process: `logging.level`, the rotated file, the stderr copy
  * that fills `logs/<name>.error.log`, and the redaction of email addresses never applied.
  *
- * Holds three properties: an importer that bound `logger` before configuration loaded sees the
+ * Holds four properties: an importer that bound `logger` before configuration loaded sees the
  * configured logger after `configureLogger`; the configured logger is not the bootstrap one; and
- * every entry point under backend/src that loads configuration also configures the logger.
+ * every entry point under backend/src that loads configuration also configures the logger; and
+ * configured log files keep their destination when a CLI starts from another working directory.
  */
-import { readdirSync, readFileSync } from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { initializeConfig } from '../backend/src/config/configLoader.ts';
 import { configLogger } from '../backend/src/config/configLogger.ts';
 import * as loggerModule from '../backend/src/utils/logger.ts';
+import { createChildEnv } from './lib/smoke/env.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const backendSrc = join(repoRoot, 'backend', 'src');
@@ -77,8 +81,56 @@ function checkEveryEntryPointConfiguresTheLogger(): void {
 	);
 }
 
+/** Exercise the real transport when a CLI starts outside the application root. */
+function checkFilePathsIgnoreWorkingDirectory(): void {
+	const temporaryRoot = mkdtempSync(join(tmpdir(), 'logger-working-directory-'));
+	const relativeDirectory = join('logs', `logger-working-directory-${randomUUID()}`);
+	const expectedRelativeDirectory = resolve(repoRoot, relativeDirectory);
+	const absoluteDirectory = join(temporaryRoot, 'absolute');
+	const fixture = join(import.meta.dir, 'lib', 'logger-file-fixture.ts');
+	const logsRoot = resolve(repoRoot, 'logs') + sep;
+	if (!expectedRelativeDirectory.startsWith(logsRoot)) {
+		throw new Error('Logger fixture cleanup escaped the application logs directory');
+	}
+	const temporaryParent = resolve(tmpdir()) + sep;
+	if (!resolve(temporaryRoot).startsWith(temporaryParent)) {
+		throw new Error('Logger fixture cleanup escaped the temporary directory');
+	}
+	try {
+		for (const [label, configuredPath, expectedDirectory] of [
+			['relative', join(relativeDirectory, 'app.log'), expectedRelativeDirectory],
+			['absolute', join(absoluteDirectory, 'app.log'), absoluteDirectory],
+		] as const) {
+			const child = Bun.spawnSync([process.execPath, fixture, '--file', configuredPath], {
+				cwd: temporaryRoot,
+				env: createChildEnv(),
+				stderr: 'pipe',
+				stdout: 'pipe',
+				timeout: 10_000,
+			});
+			check(child.exitCode === 0, `${label} file logger exits successfully`);
+			const logged = existsSync(expectedDirectory)
+				? readdirSync(expectedDirectory).some((name) =>
+						readFileSync(join(expectedDirectory, name), 'utf8').includes(
+							'logger working-directory fixture',
+						),
+					)
+				: false;
+			check(logged, `${label} configured path receives the real log entry`);
+		}
+		check(
+			!existsSync(join(temporaryRoot, relativeDirectory)),
+			'A relative log path never creates a directory beneath the CLI working directory',
+		);
+	} finally {
+		rmSync(expectedRelativeDirectory, { force: true, recursive: true });
+		rmSync(temporaryRoot, { force: true, recursive: true });
+	}
+}
+
 checkLiveBinding();
 checkEveryEntryPointConfiguresTheLogger();
+checkFilePathsIgnoreWorkingDirectory();
 
 if (failures.length === 0) {
 	console.log(`Configured-logger checks passed (${String(checks)} assertions).`);

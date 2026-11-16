@@ -7,6 +7,7 @@
       "devDependencies": {
         "@eslint/js": "10.0.1",
         "@types/bun": "1.4.4",
+        "elysia": "1.4.32",
         "eslint": "10.15.0",
         "eslint-plugin-jsdoc": "65.4.6",
         "eslint-plugin-perfectionist": "5.13.0",
@@ -110,6 +111,9 @@
     "shared": {
       "name": "spernakit-shared",
     },
+  },
+  "patchedDependencies": {
+    "elysia@1.4.32": "patches/elysia@1.4.32.patch",
   },
   "overrides": {
     "esbuild": "0.25.12",

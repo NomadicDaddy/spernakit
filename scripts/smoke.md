@@ -85,7 +85,7 @@ Steps (in order):
 7. `bun run test:password-reset-consumption`
     - A password reset fails, and leaves the account as changed, when its token expires, the account is deleted, the password changes or the token is replaced during hashing; exactly one of two concurrent resets wins.
 8. `bun run test:api-key-request-signing`
-    - Mandatory API-key request signing: unsigned, missing-header, duplicate-nonce and nonce-substitution requests are refused on the running backend.
+    - Native ESM/CJS numeric-parameter validation and encoded paths pass before mandatory API-key signing checks refuse unsigned, missing-header, duplicate-nonce and nonce-substitution requests on the running backend.
 9. `bun run test:auth-reset-api`
     - Password reset endpoints reject bad requests on the running backend.
 10. `bun run test:auth-reset-ui-dev`
@@ -266,7 +266,7 @@ Steps (in order):
 54. `bun run test:auth-before-validation`
     - A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle.
 55. `bun run test:api-key-request-signing`
-    - Mandatory API-key request signing: a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp are all refused; a correctly signed request authenticates.
+    - Native ESM/CJS numeric parameters preserve transformation, invalid values are rejected, and encoded and wildcard paths retain their behavior. Mandatory API-key request signing then refuses a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp; a correctly signed request authenticates.
 56. `bun run test:auth-rate-limit-state`
     - Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule.
 57. `bun run test:public-route-surface`
