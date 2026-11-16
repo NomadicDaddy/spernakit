@@ -4,6 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { isKnownSmokeCacheStep } from './lib/smoke-cache/dependencies.ts';
 import {
 	canSkipStep,
 	getCacheStatus,
@@ -26,6 +27,11 @@ function assert(condition: boolean, message: string): void {
 const projectRoot = join(import.meta.dir, '..');
 const config = (await Bun.file(join(import.meta.dir, 'smoke.json')).json()) as SmokeConfig;
 const steps = config.modes.qc.steps.map(({ command }) => stepKey(command));
+const unclassified = steps.filter((step) => !isKnownSmokeCacheStep(step));
+assert(
+	unclassified.length === 0,
+	`Every QC step needs a cache classification: ${unclassified.join(', ')}`,
+);
 
 // The status path only hashes files for steps with a recorded pass to verify. A cold cache
 // (a fresh CI runner restoring a per-commit smoke cache) has none. Seed one recorded pass

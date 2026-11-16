@@ -11,7 +11,11 @@
 	},
 	"workspaces": {
 		".": {
-			"entry": ["scripts/*.ts", "scripts/lib/process/error-log-probe.ts"],
+			"entry": [
+				"scripts/*.ts",
+				"scripts/smokestack/*.ts",
+				"scripts/lib/process/error-log-probe.ts"
+			],
 			"ignoreBinaries": ["icacls", "netstat", "setfacl"],
 			"project": ["scripts/**/*.ts"]
 		},

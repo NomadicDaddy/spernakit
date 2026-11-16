@@ -86,7 +86,7 @@ async function run(): Promise<void> {
 	try {
 		const port = await freePort();
 		const listener = Bun.spawn([process.execPath, '-e', listenerCode], {
-			env: { ...process.env, STOP_TEST_PORT: String(port) },
+			env: { STOP_TEST_PORT: String(port) },
 			stderr: 'pipe',
 			stdout: 'pipe',
 		});
@@ -120,7 +120,7 @@ async function run(): Promise<void> {
 
 		const unresolvedPort = await freePort();
 		const unresolved = Bun.spawn([process.execPath, '-e', listenerCode], {
-			env: { ...process.env, STOP_TEST_PORT: String(unresolvedPort) },
+			env: { STOP_TEST_PORT: String(unresolvedPort) },
 			stderr: 'pipe',
 			stdout: 'pipe',
 		});

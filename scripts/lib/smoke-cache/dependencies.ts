@@ -31,6 +31,8 @@ export const UNCACHEABLE_STEPS = new Set([
 	'check:drift',
 	'check:fleet-manifest',
 	'check:fresh-release',
+	// Installed icon files can change independently of tracked source and the lockfile.
+	'check:lucide-imports',
 	// Its inputs are up to 32 sibling checkouts, not this tree. Hashing this repository's files
 	// answers "did the owner change", never "did a target drift" — and a target drifting is the only
 	// thing it checks. A cached pass here would be the presence-over-content failure it exists to
@@ -55,6 +57,11 @@ export const UNCACHEABLE_STEPS = new Set([
 	// It initializes from the live HEAD tree, so every template file is an input; only a full-tree
 	// hash would be honest, and the copy itself is the cost the cache would need to skip.
 	'test:init-exclusions',
+	// Exercises the installed Vite plugin and icon checker; cheap enough to run every time.
+	'test:lucide-names',
+	// Small seed-security fixtures always run; the rerun test also starts a disposable process.
+	'test:seed-credentials-never-logged',
+	'test:seed-rerun-honesty',
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
