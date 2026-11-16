@@ -7,6 +7,12 @@ this release.
 
 ### Changed
 
+- Carries Smokestack 0.9.0, including the 0.8.0 delivery, in place of 0.7.3. Hooks refuse staged
+  `.aidd/` metadata, shell checks work without following sourced files, and leak-guard self-tests
+  report early failures. A first empty lock passes fast preflight while the full gate still
+  requires delivery. Delivery verifies hook modes and refuses moves that would leave another
+  checkout without hooks or break retained imports. Writes remove retired files only when they
+  remain tracked, unchanged and equal to their locked bytes; the timeout-leads helper is retired.
 - Knip treats delivered `scripts/smokestack/*.ts` CLIs as entries, including the alternative runner
   that derived apps retain without invoking. Libraries unreachable from every entry remain checked.
   Phillip approved this coverage change at Room #52755 on #52742.
