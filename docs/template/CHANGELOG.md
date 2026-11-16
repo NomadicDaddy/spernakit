@@ -29,6 +29,8 @@ this release.
 
 ### Fixed
 
+- Seed regression checks resolve source paths with platform-aware path handling, so Linux CI
+  retains its absolute repository root and finds the same seed modules as Windows.
 - Native Bun route parameters are copied before Elysia applies defaults, fixing HTTP 500 responses
   on numeric-parameter routes such as API-key listing. A tracked patch covers Elysia 1.4.32's ESM
   and CJS Bun adapters under Phillip's bounded exception at Room #53327 on #53324. Validation stays

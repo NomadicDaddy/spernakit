@@ -7,14 +7,14 @@
 import { readFileSync } from 'node:fs';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
 }
 
-const root = new URL('..', import.meta.url).pathname.replace(/^\//, '');
+const root = resolve(import.meta.dir, '..');
 
 // 1. Static: the users-exists guard runs BEFORE getSeedUsersWithPasswords in seed.ts.
 const seedSource = readFileSync(`${root}/backend/src/db/seed.ts`, 'utf8');

@@ -11,6 +11,8 @@
  * remediation-20261113-seed-credentials-logged-plaintext (Phillip #45911 security exception).
  */
 
+import { resolve } from 'node:path';
+
 import { formatCredentialsForDisplay } from '../backend/src/utils/auth/passwordGenerator.ts';
 
 const failures: string[] = [];
@@ -29,7 +31,7 @@ assert(
 
 // 2. Static proof: neither seed path contains a logger call whose argument is the credential
 //    display; both print through the shared TTY-gated helper.
-const dbDir = `${import.meta.dir.replace(/\\[^\\]+$/, '')}/backend/src/db`;
+const dbDir = resolve(import.meta.dir, '../backend/src/db');
 const autoSeedSource = await Bun.file(`${dbDir}/autoSeed.ts`).text();
 const seedSource = await Bun.file(`${dbDir}/seed.ts`).text();
 const helperSource = await Bun.file(`${dbDir}/seedCredentialDisplay.ts`).text();
