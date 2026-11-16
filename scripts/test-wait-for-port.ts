@@ -21,8 +21,14 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { killProcess } from './lib/process/kill.ts';
 import { isProcessAlive } from './lib/process/pid-files.ts';
-import { PORT_CHECK_TIMEOUT_MS, waitForPort } from './lib/process/ports.ts';
+import {
+	parseUnixPortPid,
+	parseWindowsListeningPid,
+	PORT_CHECK_TIMEOUT_MS,
+	waitForPort,
+} from './lib/process/ports.ts';
 import { stopService } from './lib/process/stop-service.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -42,6 +48,30 @@ async function freePort(): Promise<number> {
 }
 
 async function run(): Promise<void> {
+	assert(isProcessAlive(process.pid), 'the current positive PID must be alive');
+	for (const pid of [0, -1, 0.5, Number.NaN]) {
+		assert(!isProcessAlive(pid), `invalid service PID ${String(pid)} must not be alive`);
+		assert(!killProcess(pid, 'invalid PID control'), 'invalid PIDs must be refused by kill');
+	}
+	assert(!killProcess('', 'empty PID control'), 'an empty PID must never become a group kill');
+	assert(parseUnixPortPid('0\n-1\n1.5\n') === null, 'lsof must provide a positive integer');
+	assert(
+		parseUnixPortPid(`0\n-1\n${process.pid}\n`) === String(process.pid),
+		'lsof invalid rows must not hide a valid positive owner',
+	);
+	const listeningRow = (port: number, pid: number): string =>
+		`  TCP    127.0.0.1:${port}    0.0.0.0:0    LISTENING    ${pid}\r\n`;
+	assert(
+		parseWindowsListeningPid(listeningRow(12345, 0), 12345) === null,
+		'a PID-zero Windows row must not identify a service',
+	);
+	assert(
+		parseWindowsListeningPid(
+			listeningRow(12345, 0) + listeningRow(12345, process.pid),
+			12345,
+		) === String(process.pid),
+		'PID-zero rows must not hide a real positive listener PID',
+	);
 	// --- 1. an exited process fails fast ---
 	const finished = spawnSync(process.execPath, ['-e', 'process.exit(0)']);
 	const deadPid = finished.pid ?? 0;
@@ -129,14 +159,21 @@ async function run(): Promise<void> {
 				timeoutMs: 5_000,
 			});
 			assert(ready === 'listening', 'the unresolved-test child must start listening');
+			let unresolvedKillAttempts = 0;
 			const result = await stopService({
-				findPidOnPort: () => null,
+				findPidOnPort: () =>
+					parseWindowsListeningPid(listeningRow(unresolvedPort, 0), unresolvedPort),
+				kill: () => {
+					unresolvedKillAttempts++;
+					return false;
+				},
 				logsDir,
 				name: 'backend',
 				port: unresolvedPort,
 			});
 			assert(result.unresolvedListener, 'an answering port without a PID must be refused');
 			assert(!result.killed, 'an unresolved listener must not be reported stopped');
+			assert(unresolvedKillAttempts === 0, 'a PID-zero row must never trigger a kill');
 			assert(
 				isProcessAlive(unresolved.pid),
 				'the unresolved listener must not be killed blindly',
@@ -155,6 +192,24 @@ async function run(): Promise<void> {
 			!absent.killed && !absent.unresolvedListener,
 			'an absent listener must remain absent',
 		);
+		const zeroPort = await freePort();
+		let zeroKillAttempts = 0;
+		const zeroOwner = await stopService({
+			findPidOnPort: () =>
+				parseWindowsListeningPid(
+					listeningRow(zeroPort, 0) + listeningRow(zeroPort, -1),
+					zeroPort,
+				),
+			kill: () => {
+				zeroKillAttempts++;
+				return false;
+			},
+			logsDir,
+			name: 'backend',
+			port: zeroPort,
+		});
+		assert(zeroKillAttempts === 0, 'an absent PID-zero owner must never be signalled');
+		assert(!zeroOwner.failed, 'a PID-zero row without HTTP must not fail teardown');
 		// The earlier child PID can be reused while the real listener checks run. Use a positive
 		// signed-32-bit sentinel and verify it is absent instead of relying on that old PID.
 		const absentPid = 2_147_483_647;

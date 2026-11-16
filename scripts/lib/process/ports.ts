@@ -6,6 +6,16 @@
 import { spawnSync } from 'node:child_process';
 import net from 'node:net';
 
+/** Read a Windows listening row for the requested local port. */
+export function parseWindowsListeningPid(output: string, port: number): null | string {
+	for (const line of output.split('\n')) {
+		const match = line.match(new RegExp(`:\\s*${port}\\s+.*LISTENING\\s+(\\d+)`));
+		if (match?.[1] && Number.isSafeInteger(Number(match[1])) && Number(match[1]) > 0)
+			return match[1];
+	}
+	return null;
+}
+
 /**
  * Find process ID using a port (Windows).
  */
@@ -20,22 +30,23 @@ export function findPidOnPortWindows(port: number): null | string {
 			return null;
 		}
 
-		const lines = result.stdout.split('\n');
-		for (const line of lines) {
-			const match = line.match(new RegExp(`:\\s*${port}\\s+.*LISTENING\\s+(\\d+)`));
-			if (match?.[1]) {
-				return match[1];
-			}
-		}
-		return null;
+		return parseWindowsListeningPid(result.stdout, port);
 	} catch {
 		return null;
 	}
 }
 
-/**
- * Find process ID using a port (Unix/Linux/macOS).
- */
+/** Read a positive process owner from lsof output. */
+export function parseUnixPortPid(output: string): null | string {
+	for (const line of output.split('\n')) {
+		const pid = line.trim();
+		if (/^\d+$/.test(pid) && Number.isSafeInteger(Number(pid)) && Number(pid) > 0)
+			return String(Number(pid));
+	}
+	return null;
+}
+
+/** Find a positive process owner from lsof's port lookup. */
 export function findPidOnPortUnix(port: number): null | string {
 	try {
 		const result = spawnSync('lsof', ['-ti', `:${port}`], {
@@ -47,8 +58,7 @@ export function findPidOnPortUnix(port: number): null | string {
 			return null;
 		}
 
-		const pid = result.stdout.trim().split('\n')[0];
-		return pid || null;
+		return parseUnixPortPid(result.stdout);
 	} catch {
 		return null;
 	}

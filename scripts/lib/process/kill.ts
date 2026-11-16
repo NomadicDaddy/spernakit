@@ -32,7 +32,11 @@ const GRACEFUL_EXIT_TIMEOUT_MS = 15_000;
 export function killProcess(pid: number | string, label: string): boolean {
 	const isWindows = process.platform === 'win32';
 	const pidNum = Number(pid);
-	const pidStr = String(pid);
+	if (!Number.isSafeInteger(pidNum) || pidNum <= 0) {
+		console.log(`   Cannot stop an invalid process ID (${label})`);
+		return false;
+	}
+	const pidStr = String(pidNum);
 
 	try {
 		if (isWindows) {

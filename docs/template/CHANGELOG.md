@@ -45,6 +45,10 @@ this release.
   that exits before the kill attempt no longer causes a false stop failure.
   Its regression uses a checked absent PID rather than a reusable former child PID, and verifies
   that a refused kill of a live process still fails.
+  Windows PID-zero socket rows no longer identify a service, and liveness checks accept only
+  positive integer process IDs; an answering HTTP listener without a valid PID still fails stop.
+  Process termination also rejects invalid IDs directly, preventing POSIX group-wide signals
+  from zero or negative IDs even if a process finder returns one.
 - New apps receive the complete locked Smokestack tree, including the tools their hooks and local
   verification need. Init tests verify copied bytes and locked hashes and reject a corrupted hook.
   Shared-core and gate-conventions checks run in derived apps through their existing smoke runner.

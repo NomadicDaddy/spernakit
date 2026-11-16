@@ -13,6 +13,7 @@ import path from 'node:path';
  * Check if a process with a given PID is alive.
  */
 export function isProcessAlive(pid: number): boolean {
+	if (!Number.isSafeInteger(pid) || pid <= 0) return false;
 	try {
 		process.kill(pid, 0);
 		return true;
