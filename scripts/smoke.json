@@ -32,7 +32,7 @@
 				},
 				{
 					"command": "bun run test:api-key-request-signing",
-					"description": "Mandatory API-key request signing: unsigned, missing-header, duplicate-nonce and nonce-substitution requests are refused on the running backend"
+					"description": "Native ESM/CJS numeric-parameter validation and encoded paths pass before mandatory API-key signing checks refuse unsigned, missing-header, duplicate-nonce and nonce-substitution requests on the running backend"
 				},
 				{
 					"command": "bun run test:auth-reset-api",
@@ -362,7 +362,7 @@
 				},
 				{
 					"command": "bun run test:api-key-request-signing",
-					"description": "Mandatory API-key request signing: a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp are all refused; a correctly signed request authenticates"
+					"description": "Native ESM/CJS numeric parameters preserve transformation, invalid values are rejected, and encoded and wildcard paths retain their behavior. Mandatory API-key request signing then refuses a bare key, each missing signing header, an empty header, a duplicate nonce, a nonce-substitution replay and a malformed timestamp; a correctly signed request authenticates"
 				},
 				{
 					"command": "bun run test:auth-rate-limit-state",
