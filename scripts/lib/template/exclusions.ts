@@ -68,9 +68,8 @@ const INIT_EXCLUDED_PATTERNS = [
 	/^scripts\/check-fresh-release\.ts$/,
 	/^scripts\/lib\/fresh-release\//,
 	/^scripts\/test-fresh-release\.ts$/,
-	// The init-from-HEAD exclusion control itself: it drives THIS template's init and reads its
-	// live tree, so in a derived app it can only fail.
-	/^scripts\/test-init-exclusions\.ts$/,
+	// These controls exercise THIS template's copier and workspace branding, not an app workflow.
+	/^scripts\/test-init-(?:exclusions|lockfile-branding)\.ts$/,
 	// Init copies the complete locked Smokestack tree. Apps verify those delivered copies locally;
 	// holding the tools grants no owner-delivery authority. Apps still run scripts/smoke.ts.
 	/^smoke-cache\.json$/,

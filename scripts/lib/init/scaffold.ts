@@ -43,6 +43,12 @@ export function run(
 	}
 }
 
+/** Branding changes workspace identities; record them before checking frozen reproducibility. */
+export function installBrandedDependencies(target: string): void {
+	run(['bun', 'install'], target);
+	run(['bun', 'install', '--frozen-lockfile'], target);
+}
+
 /** Title-case a slug: "my-cool_app" → "My Cool App". Mirrors init.ps1 ConvertTo-DefaultAppName. */
 export function defaultAppName(slug: string): string {
 	return slug

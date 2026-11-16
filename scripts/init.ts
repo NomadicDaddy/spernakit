@@ -31,6 +31,7 @@ import {
 	chmodHooks,
 	copyTemplateTree,
 	defaultAppName,
+	installBrandedDependencies,
 	log,
 	prepareTarget,
 	readTemplateVersion,
@@ -206,6 +207,7 @@ async function main(): Promise<void> {
 			target,
 			{ allowFailure: true },
 		);
+		installBrandedDependencies(target);
 		run(['bun', 'run', 'db:migrate'], target);
 		run(['bun', 'run', '--cwd', 'backend', 'db:seed'], target);
 		run(['bun', 'run', 'licenses:generate'], target);

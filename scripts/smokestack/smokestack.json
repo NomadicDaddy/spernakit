@@ -65,6 +65,14 @@
 			},
 			{
 				"cache": {
+					"uncacheable": "initializes from the complete live template tree"
+				},
+				"description": "Initializing an app copies the locked Smokestack tree without retired paths and refreshes branded workspace identities before frozen installation",
+				"name": "test:init-exclusions",
+				"run": ["bun", "run", "test:init-exclusions"]
+			},
+			{
+				"cache": {
 					"excludes": [
 						"**/node_modules/**",
 						"**/dist/**",

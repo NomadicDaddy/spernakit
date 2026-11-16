@@ -21,7 +21,7 @@ import { isInitExcluded } from './lib/template/exclusions.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 
-/** Retired paths must not reappear beside the delivered tree. */
+/** Retired and template-only paths must not appear beside the delivered tree. */
 const forbidden = [
 	'scripts/smokestack.ts',
 	'scripts/lib/smokestack',
@@ -30,6 +30,8 @@ const forbidden = [
 	'scripts/sync-shared-core.ts',
 	'smokestack.json',
 	'smokestack.lock',
+	'scripts/test-init-exclusions.ts',
+	'scripts/test-init-lockfile-branding.ts',
 ];
 
 /** App-facing smokestack files the template owes every initialized app. */
@@ -134,7 +136,7 @@ try {
 	const landed = forbidden.filter((path) => existsSync(join(target, path)));
 	assert(
 		landed.length === 0,
-		`init from HEAD seeded retired paths into a new app: ${landed.join(
+		`init from HEAD seeded retired or template-only paths into a new app: ${landed.join(
 			', ',
 		)}. The exclusion list in scripts/lib/template/exclusions.ts is stale against HEAD.`,
 	);

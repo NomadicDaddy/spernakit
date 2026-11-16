@@ -166,7 +166,7 @@
 				},
 				{
 					"command": "bun run test:init-exclusions",
-					"description": "Initializing an app copies the complete locked Smokestack tree without retired paths",
+					"description": "Initializing an app copies the locked Smokestack tree without retired paths and refreshes branded workspace identities before frozen installation",
 					"templateOnly": true
 				},
 				{

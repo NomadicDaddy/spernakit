@@ -170,7 +170,7 @@ Steps (in order):
 6. `bun run test:fresh-release`
     - The fresh-release validator rejects stale baseline content, and the release workflow and sync-plan floor still match the baseline version.
 7. `bun run test:init-exclusions`
-    - Initializing an app copies the complete locked Smokestack tree without retired paths.
+    - Initializing an app copies the locked Smokestack tree without retired paths and refreshes branded workspace identities before frozen installation.
 8. `bun run check:feature-id-directory`
     - Feature id matches its directory.
 9. `bun run check:template-feature-versions`
