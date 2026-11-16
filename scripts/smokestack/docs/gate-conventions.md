@@ -357,8 +357,8 @@ survey found fifteen gates with that entry-shape problem.
 ## What belongs in the fast subset
 
 Under team rule R22, a normal change is checked with the fast subset (`smoke:qc:fast`) plus the
-focused tests for what changed, and the full gate (`smoke:qc`) runs before a release. The fast
-subset is therefore the gate most commits actually pass, so it must still catch a broken behaviour,
+focused tests for what changed. The full gate (`smoke:qc`) runs before a release, and before
+merging a change to the gate pipeline (Phillip #50195). The fast subset is therefore the gate most commits actually pass, so it must still catch a broken behaviour,
 not just a broken format.
 
 - **In the fast subset:** the static checks (line cap, typecheck, lint, format) and every local
