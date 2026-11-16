@@ -155,10 +155,14 @@ async function run(): Promise<void> {
 			!absent.killed && !absent.unresolvedListener,
 			'an absent listener must remain absent',
 		);
+		// The earlier child PID can be reused while the real listener checks run. Use a positive
+		// signed-32-bit sentinel and verify it is absent instead of relying on that old PID.
+		const absentPid = 2_147_483_647;
+		assert(!isProcessAlive(absentPid), 'the synthetic exited-PID fixture must be absent');
 		let deadLookups = 0;
 		let deadKillAttempts = 0;
 		const alreadyExited = await stopService({
-			findPidOnPort: () => (++deadLookups === 1 ? String(deadPid) : null),
+			findPidOnPort: () => (++deadLookups === 1 ? String(absentPid) : null),
 			kill: () => {
 				deadKillAttempts++;
 				return false;
@@ -169,6 +173,16 @@ async function run(): Promise<void> {
 		});
 		assert(deadKillAttempts === 1, 'the exited-PID race must exercise a failed kill');
 		assert(!alreadyExited.failed, 'a process that exits before kill must not fail stop');
+		let liveLookups = 0;
+		const stillAlive = await stopService({
+			findPidOnPort: () => (++liveLookups === 1 ? String(process.pid) : null),
+			// Never kill the test process: a refused kill of a known-live PID must stay a failure.
+			kill: () => false,
+			logsDir,
+			name: 'backend',
+			port: await freePort(),
+		});
+		assert(stillAlive.failed, 'a failed kill of a live process must fail stop');
 	} finally {
 		rmSync(logsDir, { force: true, recursive: true });
 	}
