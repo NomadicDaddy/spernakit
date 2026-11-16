@@ -35,6 +35,8 @@ this release.
   enabled; native numeric, invalid, encoded-slash and wildcard cases are regression checks. Remove
   the patch when an upstream release passes that native contract. Docker dependency stages carry
   the patch before frozen installs, and initialized apps receive it with the manifest and lockfile.
+  Existing-app upgrades must copy `patches/`, merge `patchedDependencies` and the root Elysia
+  devDependency, keep that pin equal to the backend's, and reinstall from the updated lockfile.
 - File logging resolves relative destinations from the application root, so a seed command started
   in `backend/` writes to the mounted root logs directory rather than the read-only backend tree.
   Absolute log destinations, rotation, redaction and stderr output keep their existing behavior.
