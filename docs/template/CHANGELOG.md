@@ -51,6 +51,15 @@ this release.
   directs an existing installation to password reset (999c066). The seed rerun regression is now a
   QC step (0dbe4e0).
 
+### Known advisories
+
+- Zod 3 remains in the Swagger/Scalar dependency tree with High advisory GHSA-mrhx-c7xc-m3w5.
+  Phillip accepted it with its reachability record at Room #25402 on #25389. The backend now
+  imports Swagger only in development; production does not load that chain. The dependency
+  remains until its upstream migration is compatible.
+- The minimatch Moderate advisory GHSA-g3hv-75wg-m249 remains in ESLint tooling. It is accepted
+  under the team's development-tooling rule and does not ship in the application runtime.
+
 ## [3.48.0] - 2026-11-11
 
 ### Release convention
