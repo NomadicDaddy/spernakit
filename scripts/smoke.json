@@ -166,7 +166,7 @@
 				},
 				{
 					"command": "bun run test:init-exclusions",
-					"description": "Initializing a throwaway app from HEAD seeds no delivery-managed smokestack or shared-core files, by directory and by the retired pre-v0.6.0 paths",
+					"description": "Initializing an app copies the complete locked Smokestack tree without retired paths",
 					"templateOnly": true
 				},
 				{
@@ -462,8 +462,7 @@
 				},
 				{
 					"command": "bun run check:shared-core",
-					"description": "Shared-core files in sibling repositories match their owning repository (when present)",
-					"templateOnly": true
+					"description": "Delivered shared-core files match their locked owner release"
 				},
 				{
 					"command": "bun run test:fleet-manifest",
@@ -523,13 +522,11 @@
 				},
 				{
 					"command": "bun run test:gate-conventions",
-					"description": "Gate conventions meta-gate regression self-test",
-					"templateOnly": true
+					"description": "Gate conventions meta-gate regression self-test"
 				},
 				{
 					"command": "bun run check:gate-conventions",
-					"description": "Every gate follows docs/reference/gate-conventions.md",
-					"templateOnly": true
+					"description": "Every gate follows scripts/smokestack/docs/gate-conventions.md"
 				},
 				{
 					"command": "bun run check-application",

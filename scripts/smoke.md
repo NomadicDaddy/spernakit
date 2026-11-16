@@ -170,7 +170,7 @@ Steps (in order):
 6. `bun run test:fresh-release`
     - The fresh-release validator rejects stale baseline content, and the release workflow and sync-plan floor still match the baseline version.
 7. `bun run test:init-exclusions`
-    - Initializing a throwaway app from HEAD seeds no delivery-managed smokestack or shared-core files, by directory and by the retired pre-v0.6.0 paths.
+    - Initializing an app copies the complete locked Smokestack tree without retired paths.
 8. `bun run check:feature-id-directory`
     - Feature id matches its directory.
 9. `bun run check:template-feature-versions`
@@ -316,7 +316,7 @@ Steps (in order):
 79. `bun run check:licenses`
     - Third-party license inventory matches the installed graph.
 80. `bun run check:shared-core`
-    - Shared-core files in sibling repositories match their owning repository (when present).
+    - Delivered shared-core files match their locked owner release.
 81. `bun run test:fleet-manifest`
     - Fleet manifest validator regression self-test.
 82. `bun run test:fleet-manifest-sync`
@@ -346,7 +346,7 @@ Steps (in order):
 94. `bun run test:gate-conventions`
     - Gate conventions meta-gate regression self-test.
 95. `bun run check:gate-conventions`
-    - Every gate follows docs/reference/gate-conventions.md.
+    - Every gate follows scripts/smokestack/docs/gate-conventions.md.
 96. `bun run check-application`
     - Application check.
 97. `bun run test:destructive-comments`

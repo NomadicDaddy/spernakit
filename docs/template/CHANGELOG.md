@@ -23,6 +23,9 @@ this release.
 
 ### Fixed
 
+- New apps receive the complete locked Smokestack tree, including the tools their hooks and local
+  verification need. Init tests verify copied bytes and locked hashes and reject a corrupted hook.
+  Shared-core and gate-conventions checks run in derived apps through their existing smoke runner.
 - The derived smoke cache classifies `check:lucide-imports`, `test:lucide-names`,
   `test:seed-credentials-never-logged`, and `test:seed-rerun-honesty` as always-run checks. Its
   regression test now rejects any QC step without a cache classification.

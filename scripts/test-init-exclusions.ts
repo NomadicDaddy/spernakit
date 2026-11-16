@@ -1,18 +1,19 @@
 #!/usr/bin/env bun
 /**
- * Init-from-HEAD exclusion control. The fresh-release tests validate init against the last tag,
- * so a path that moves on HEAD between releases is invisible to every gate until the next tag -
- * exactly how the smokestack v0.6.0 move left the old-path exclusions matching nothing while the
- * template-only set became copyable into every new app (shadow review 2026-10-23, Medium). This
- * control initializes a throwaway app from the live HEAD checkout (copy only: --no-install) and
- * asserts three things: the template-only set never lands, the app-facing smokestack files do
- * land, and the copied tree is self-consistent - every relative import in scripts/**.ts resolves
- * inside the probe, and every package.json script target exists - so the app a new repository
- * receives typechecks and runs its own gates rather than merely lacking the excluded files
- * (reviews #20481/#20486/#20487).
+ * Init-from-HEAD copy control: a new app receives the complete locked Smokestack delivery,
+ * excludes retired paths, and keeps its copied consumer imports and script targets consistent.
  */
 import { strict as assert } from 'node:assert';
-import { copyFileSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+	copyFileSync,
+	existsSync,
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
@@ -20,15 +21,8 @@ import { isInitExcluded } from './lib/template/exclusions.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 
-/** Template-only files that must never appear in an initialized app, at their v0.6.0 homes. */
+/** Retired paths must not reappear beside the delivered tree. */
 const forbidden = [
-	'scripts/smokestack/smokestack.ts',
-	'scripts/smokestack/lib/smokestack',
-	'scripts/smokestack/lib/shared-core',
-	'scripts/smokestack/shared-core-manifest.json',
-	'scripts/smokestack/sync-shared-core.ts',
-	'scripts/smokestack/smokestack.json',
-	'scripts/smokestack/smokestack.lock',
 	'scripts/smokestack.ts',
 	'scripts/lib/smokestack',
 	'scripts/lib/shared-core',
@@ -40,6 +34,13 @@ const forbidden = [
 
 /** App-facing smokestack files the template owes every initialized app. */
 const required = [
+	'scripts/smokestack/smokestack.ts',
+	'scripts/smokestack/lib/smokestack',
+	'scripts/smokestack/lib/shared-core',
+	'scripts/smokestack/shared-core-manifest.json',
+	'scripts/smokestack/sync-shared-core.ts',
+	'scripts/smokestack/smokestack.json',
+	'scripts/smokestack/smokestack.lock',
 	'scripts/smokestack/check-leak-guard.sh',
 	'scripts/smokestack/run-bash.ts',
 	'scripts/smokestack/hooks/pre-commit',
@@ -48,6 +49,37 @@ const required = [
 	'scripts/smokestack/check-script-targets.ts',
 	'scripts/smokestack/check-destructive-confirmation.ts',
 ];
+
+function verifyLockedCopy(target: string): void {
+	const listed = Bun.spawnSync(['git', '-C', repoRoot, 'ls-files', 'scripts/smokestack/'], {
+		stderr: 'pipe',
+		stdout: 'pipe',
+		windowsHide: true,
+	});
+	assert.equal(listed.exitCode, 0, listed.stderr.toString());
+	const paths = listed.stdout.toString().trim().split('\n').filter(Boolean);
+	assert(paths.length > 0, 'the source must have a nonempty delivered tree');
+	for (const path of paths) {
+		assert(
+			readFileSync(join(target, path)).equals(readFileSync(join(repoRoot, path))),
+			`init changed or omitted delivered bytes: ${path}`,
+		);
+	}
+	const lockPath = 'scripts/smokestack/smokestack.lock';
+	assert(readFileSync(join(target, lockPath)).equals(readFileSync(join(repoRoot, lockPath))));
+	const lock = JSON.parse(readFileSync(join(target, lockPath), 'utf8')) as {
+		groups: Record<string, { files: Record<string, { sha256: string }> }>;
+	};
+	let checked = 0;
+	for (const group of Object.values(lock.groups)) {
+		for (const [path, file] of Object.entries(group.files)) {
+			const bytes = readFileSync(join(target, path));
+			assert.equal(createHash('sha256').update(bytes).digest('hex'), file.sha256, path);
+			checked++;
+		}
+	}
+	assert(checked > 0, 'the copied lock must verify a nonempty delivery');
+}
 
 function run(args: string[], cwd: string): { exitCode: number; output: string } {
 	const proc = Bun.spawnSync(['bun', ...args], { cwd, stderr: 'pipe', stdout: 'pipe' });
@@ -102,7 +134,7 @@ try {
 	const landed = forbidden.filter((path) => existsSync(join(target, path)));
 	assert(
 		landed.length === 0,
-		`init from HEAD seeded template-only paths into a new app: ${landed.join(
+		`init from HEAD seeded retired paths into a new app: ${landed.join(
 			', ',
 		)}. The exclusion list in scripts/lib/template/exclusions.ts is stale against HEAD.`,
 	);
@@ -112,8 +144,14 @@ try {
 		missing.length === 0,
 		`init from HEAD withheld app-facing smokestack files: ${missing.join(
 			', ',
-		)}. The exclusions name more than the template-only set.`,
+		)}. The delivered tree must be copied as a whole.`,
 	);
+	verifyLockedCopy(target);
+	const hook = join(target, 'scripts/smokestack/hooks/pre-commit');
+	writeFileSync(hook, 'tampered copy');
+	assert.throws(() => verifyLockedCopy(target), 'a corrupted copied hook must be rejected');
+	copyFileSync(join(repoRoot, 'scripts/smokestack/hooks/pre-commit'), hook);
+	verifyLockedCopy(target);
 
 	// Self-consistency of the copy, scoped to the failure class this control exists for: the
 	// consumer files the template copies (license/destructive/setup tooling) must not import a
@@ -169,7 +207,7 @@ try {
 	);
 
 	console.log(
-		'OK init-from-HEAD: template-only set withheld, app-facing files present, imports resolve, script targets check',
+		'OK init-from-HEAD: locked delivery verified, tamper refused, retired paths absent, imports resolve, script targets check',
 	);
 } finally {
 	rmSync(workDir, { force: true, recursive: true });
