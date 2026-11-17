@@ -290,7 +290,7 @@ Steps (in order):
 66. `bun run test:step-up-password-message`
     - A form that asks an already signed-in user for their current password says that the current password is wrong when it is, from every surface that asks for one, and answers with a status that does not send the client off to refresh the session or sign the user out.
 67. `bun run test:unique-constraint-conflicts`
-    - A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again, and a username or email held by a soft-deleted account answers 409 on update, check-username and email change instead of a 500.
+    - A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again; a username or email held by a soft-deleted account answers 409 on user update and email-change confirm instead of a 500, and check-username reports it as not available.
 68. `bun run test:username-parity`
     - The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds.
 69. `bun run test:render-phase-sync`

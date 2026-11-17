@@ -1506,7 +1506,7 @@
 						"scripts/test-unique-constraint-conflicts.ts"
 					]
 				},
-				"description": "A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again, and a username or email held by a soft-deleted account answers 409 on update, check-username and email change instead of a 500",
+				"description": "A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again; a username or email held by a soft-deleted account answers 409 on user update and email-change confirm instead of a 500, and check-username reports it as not available",
 				"name": "test:unique-constraint-conflicts",
 				"run": ["bun", "run", "test:unique-constraint-conflicts"]
 			},
