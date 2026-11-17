@@ -171,6 +171,7 @@
 		"template:sync-plan": "bun scripts/template-sync-plan.ts",
 		"test:admin-reset-email": "bun scripts/test-admin-reset-email.ts",
 		"test:aidd-format": "bun scripts/test-aidd-format.ts",
+		"test:alert-cooldown": "bun scripts/test-alert-cooldown.ts",
 		"test:api-key-request-signing": "bun scripts/test-elysia-native-params.ts && bun scripts/test-api-key-request-signing.ts",
 		"test:audit-outcome-filter": "bun scripts/test-audit-outcome-filter.ts",
 		"test:audit-plugin-lifecycle": "bun scripts/test-audit-plugin-lifecycle.ts",

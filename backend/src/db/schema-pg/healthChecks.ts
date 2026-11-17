@@ -79,6 +79,7 @@ const healthCheckAlerts = pgTable(
 			.$defaultFn(() => new Date()),
 		id: serial('id').primaryKey(),
 		message: text('message').notNull(),
+		notifiedAt: timestamp('notified_at', { mode: 'date' }),
 		resolvedAt: timestamp('resolved_at', { mode: 'date' }),
 		severity: text('severity', { enum: HEALTH_ALERT_SEVERITIES }).notNull(),
 	},

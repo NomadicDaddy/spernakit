@@ -1,3 +1,4 @@
+export { markAlertNotified } from './notification/alertCooldown.ts';
 export { sendAlertWithRetry } from './notification/alertNotificationService.ts';
 export { broadcast, getStatistics } from './notification/notificationBroadcastService.ts';
 export { create, getById, list } from './notification/notificationCrud.ts';

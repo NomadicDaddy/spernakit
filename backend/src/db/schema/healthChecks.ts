@@ -80,6 +80,9 @@ const healthCheckLogs = sqliteTable(
  * - Alert created when health check fails or degrades
  * - acknowledgedAt and acknowledgedBy set when admin marks alert as seen
  * - resolvedAt set when issue is manually resolved or auto-resolved
+ * - notifiedAt set when at least one notification channel delivered the alert; the warning
+ *   cooldown (alerting.cooldownMinutes) is measured from it, not from createdAt, because a new
+ *   row is created every 15 minutes while a check stays degraded, whether or not it was sent
  * - Unresolved alerts (resolvedAt IS NULL) are displayed in System Health UI
  * - Acknowledged but unresolved alerts are still shown with acknowledged status
  *
@@ -88,7 +91,8 @@ const healthCheckLogs = sqliteTable(
  * - idx_health_check_alerts_severity: Filtering by severity level
  * - idx_health_check_alerts_resolved_at: Finding unresolved alerts
  * - idx_health_check_alerts_resolved_created: Unresolved-alert listing ordered by creation time
- * - idx_health_check_alerts_check_resolved_created: Recent-alert deduplication and cooldown checks
+ * - idx_health_check_alerts_check_resolved_created: Recent-alert deduplication, and the check-type
+ *   and unresolved prefix of the cooldown check
  */
 const healthCheckAlerts = sqliteTable(
 	'health_check_alerts',
@@ -101,6 +105,7 @@ const healthCheckAlerts = sqliteTable(
 			.$defaultFn(() => new Date()),
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		message: text('message').notNull(),
+		notifiedAt: integer('notified_at', { mode: 'timestamp' }),
 		resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
 		severity: text('severity', { enum: HEALTH_ALERT_SEVERITIES }).notNull(),
 	},

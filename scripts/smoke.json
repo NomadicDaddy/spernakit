@@ -569,6 +569,10 @@
 					"description": "The production seed notice states the password-change requirement only when the toggle that sets it is on"
 				},
 				{
+					"command": "bun run test:alert-cooldown",
+					"description": "The warning cooldown runs from the last delivered alert, so a check that stays degraded warns again once the window passes, while same-check warnings inside it, other checks, resolved alerts and critical alerts keep their own rules"
+				},
+				{
 					"command": "bun run test:migration-runner-safety",
 					"description": "The CLI and startup migration runners refuse unknown journal hashes and orphaned files, check foreign keys before COMMIT, record content hashes, and refuse startup when a failed migration cannot be restored"
 				},

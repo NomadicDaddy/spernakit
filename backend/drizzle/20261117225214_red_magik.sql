@@ -1,0 +1,1 @@
+ALTER TABLE `health_check_alerts` ADD `notified_at` integer;

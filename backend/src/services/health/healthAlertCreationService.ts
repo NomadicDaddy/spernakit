@@ -3,7 +3,7 @@ import { and, desc, eq, gte, isNull } from 'drizzle-orm';
 import { getDb } from '../../db/index.ts';
 import { healthCheckAlerts } from '../../db/schema/healthChecks.ts';
 import { logger } from '../../utils/logger.ts';
-import { sendAlertWithRetry } from '../notificationService.ts';
+import { markAlertNotified, sendAlertWithRetry } from '../notificationService.ts';
 import { getHealthConfig } from './healthConfigService.ts';
 
 const ALERT_DEDUP_MINUTES = 15;
@@ -80,6 +80,9 @@ async function dispatchAlertNotifications(alert: {
 			message: alert.message,
 			severity: alert.severity as 'critical' | 'warn',
 		});
+		// Only a delivered alert starts the cooldown; one the cooldown skipped (no results) or
+		// every channel failed must not, or the window would never close while a check is down.
+		if (results.some((result) => result.success)) markAlertNotified(alert.id);
 		const failed = results.filter((result) => !result.success);
 		if (failed.length > 0) {
 			logger.warn(

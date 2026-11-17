@@ -50,6 +50,8 @@ export const UNCACHEABLE_STEPS = new Set([
 	// `check:drift` cannot be cached. A local hash would report "unchanged" across a template bump.
 	'check:template-features',
 	'test:aidd-format',
+	// Seeds a throwaway database and runs the real alert path; a second or two, so it always runs.
+	'test:alert-cooldown',
 	// Runs the real deployer into temp roots without Docker; under a second, so it always runs.
 	'test:deploy-local-prod-config',
 	'test:fleet-manifest',
