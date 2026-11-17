@@ -3,6 +3,38 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.49.1] - 2026-11-17
+
+### Fixed
+
+- `deploy:local-prod` now writes `security.cookieSecure=true`, so a fresh local-production deploy
+  passes the production validator instead of stopping at startup. The frontend URL must be HTTPS
+  or plain HTTP on a loopback host (`localhost`, `127.0.0.1`, `[::1]`). Any other plain-HTTP URL
+  is refused before anything is written. Chromium and Firefox accept Secure cookies over loopback
+  HTTP, but Safari has not always, so use HTTPS when Safari has to sign in. The validator is
+  unchanged.
+- When `deploy:local-prod` keeps an existing config that still has `cookieSecure=false`, it now
+  warns that the backend will not start and names the one-field fix. An unparsable kept config
+  is reported and left alone rather than ending the run.
+- The production seed now says that every account must change its password on first login only
+  when the "Require Password Change on First Login" setting is on, which is what the seeded
+  accounts actually follow. Account flags, existing databases and the credential display are
+  unchanged.
+- New always-run checks `test:deploy-local-prod-config` and `test:seed-announcement` cover both
+  fixes. Each includes a control that fails against the old behaviour.
+
+### Removed
+
+- The `deploy:local-prod --cookie-secure` option. Secure cookies are no longer optional, and
+  passing the old flag now stops with an unknown-option error.
+
+### Upgrade notes
+
+- An existing local-prod config with `security.cookieSecure=false` has to be set to `true` by
+  hand. Don't use `--rotate-secrets` for this: it regenerates every key, including the encryption
+  and backup-encryption keys, which signs everyone out and makes encrypted settings and existing
+  backups unreadable.
+
 ## [3.48.1] - 2026-11-15
 
 ### Changed
