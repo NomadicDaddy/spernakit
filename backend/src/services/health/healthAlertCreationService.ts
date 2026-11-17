@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, isNull } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull } from 'drizzle-orm';
 
 import { getDb } from '../../db/index.ts';
 import { healthCheckAlerts } from '../../db/schema/healthChecks.ts';
@@ -15,8 +15,26 @@ interface HealthCheckInput {
 	status: string;
 }
 
-function hasRecentUnresolvedAlert(checkType: string): boolean {
+type AlertSeverity = 'critical' | 'warn';
+
+function alertSeverityFor(status: string): AlertSeverity {
+	return status === 'unhealthy' ? 'critical' : 'warn';
+}
+
+/**
+ * Whether an unresolved alert of this check type, at the candidate's severity or above, was
+ * created in the last 15 minutes. Only same-or-higher rows hold a candidate back, so a check that
+ * escalates from degraded to unhealthy records a critical alert at once, and that alert bypasses
+ * the warning cooldown when it is sent.
+ *
+ * @param checkType - The health check type of the candidate alert
+ * @param severity - The candidate alert's severity
+ * @returns True when the candidate should not be recorded
+ */
+function hasRecentUnresolvedAlert(checkType: string, severity: AlertSeverity): boolean {
 	const cutoff = new Date(Date.now() - ALERT_DEDUP_MINUTES * 60 * 1000);
+	const sameOrHigher: AlertSeverity[] =
+		severity === 'critical' ? ['critical'] : ['critical', 'warn'];
 	return (
 		getDb()
 			.select({ id: healthCheckAlerts.id })
@@ -26,6 +44,7 @@ function hasRecentUnresolvedAlert(checkType: string): boolean {
 					eq(healthCheckAlerts.checkType, checkType),
 					isNull(healthCheckAlerts.resolvedAt),
 					gte(healthCheckAlerts.createdAt, cutoff),
+					inArray(healthCheckAlerts.severity, sameOrHigher),
 				),
 			)
 			.orderBy(desc(healthCheckAlerts.createdAt))
@@ -55,7 +74,7 @@ function shouldCreateAlert(check: HealthCheckInput): boolean {
 		return false;
 	}
 
-	if (hasRecentUnresolvedAlert(check.checkType)) {
+	if (hasRecentUnresolvedAlert(check.checkType, alertSeverityFor(check.status))) {
 		logger.debug(
 			{ checkType: check.checkType },
 			'Skipping alert: recent unresolved alert exists',
@@ -118,7 +137,7 @@ function createAlertAndNotify(check: HealthCheckInput): void {
 		.values({
 			checkType: check.checkType,
 			message: `${check.checkType} check ${check.status}: ${JSON.stringify(check.details)}`,
-			severity: check.status === 'unhealthy' ? 'critical' : 'warn',
+			severity: alertSeverityFor(check.status),
 		})
 		.returning()
 		.get();

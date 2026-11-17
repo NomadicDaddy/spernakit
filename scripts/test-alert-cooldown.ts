@@ -16,7 +16,9 @@
  *  2. Same-or-lower within the window: a warning delivered 10 minutes ago suppresses the next.
  *  3. Independent checks: a delivery for one check type does not suppress another.
  *  4. Resolved then recurring: a resolved alert's delivery does not suppress a new one.
- *  5. Escalation: a critical alert is delivered even inside the window.
+ *  5. Escalation, through the real creation path: a same-severity repeat inside 15 minutes adds no
+ *     row, escalating to unhealthy records a critical alert that is sent inside the warning
+ *     window, and falling back to degraded adds nothing.
  *  6. A real createAlertAndNotify run stamps notifiedAt once a channel delivers, and leaves it
  *     null when every channel is off, so an undelivered row never starts a window.
  */
@@ -31,7 +33,6 @@ import { healthCheckAlerts } from '../backend/src/db/schema/healthChecks.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { createAlertAndNotify } from '../backend/src/services/health/healthAlertCreationService.ts';
 import { hasRecentAlert } from '../backend/src/services/notification/alertCooldown.ts';
-import { sendAlertNotifications } from '../backend/src/services/notification/alertNotificationService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
@@ -111,33 +112,50 @@ function cooldownCases(): void {
 	);
 }
 
-async function escalationCase(): Promise<void> {
-	const id = insertAlert({ checkType: 'memory', createdAt: new Date(), severity: 'critical' });
-	const results = await sendAlertNotifications({
-		checkType: 'memory',
-		createdAt: new Date(),
-		id,
-		message: 'memory fixture',
-		severity: 'critical',
-	});
-	assert(
-		results.some((r) => r.success),
-		'5: a critical alert must be delivered inside the warning window',
-	);
+function rowsFor(checkType: string): (typeof healthCheckAlerts.$inferSelect)[] {
+	return getDb()
+		.select()
+		.from(healthCheckAlerts)
+		.all()
+		.filter((alert) => alert.checkType === checkType);
 }
 
-async function notifiedAtFor(checkType: string): Promise<Date | null | undefined> {
+async function notifiedAtFor(
+	checkType: string,
+	severity: 'critical' | 'warn' = 'warn',
+): Promise<Date | null | undefined> {
 	// createAlertAndNotify dispatches fire-and-forget; give the in-app write time to land.
 	for (let attempt = 0; attempt < 40; attempt++) {
-		const row = getDb()
-			.select()
-			.from(healthCheckAlerts)
-			.all()
-			.find((alert) => alert.checkType === checkType);
+		const row = rowsFor(checkType).find((alert) => alert.severity === severity);
 		if (row?.notifiedAt) return row.notifiedAt;
 		await new Promise((settled) => setTimeout(settled, 50));
 	}
 	return null;
+}
+
+/** Through the real creation path: degraded, a repeat, unhealthy, then degraded again. */
+async function escalationCase(): Promise<void> {
+	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
+	assert(
+		(await notifiedAtFor('escalating')) instanceof Date,
+		'5: the first warning must be sent',
+	);
+	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
+	assert(
+		rowsFor('escalating').length === 1,
+		'5: a same-severity repeat inside 15 minutes adds no row',
+	);
+	createAlertAndNotify({ checkType: 'escalating', status: 'unhealthy' });
+	assert(
+		rowsFor('escalating').filter((a) => a.severity === 'critical').length === 1,
+		'5: escalating to unhealthy inside 15 minutes must record a critical alert',
+	);
+	assert(
+		(await notifiedAtFor('escalating', 'critical')) instanceof Date,
+		'5: the critical alert must be sent inside the warning window',
+	);
+	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
+	assert(rowsFor('escalating').length === 2, '5: falling back to degraded adds no row');
 }
 
 async function dispatchCases(): Promise<void> {

@@ -714,7 +714,7 @@ Controls how health-check alerts are delivered.
 }
 ```
 
-`cooldownMinutes` applies to warnings and is measured from the last alert of the same check that at least one channel delivered. While a check stays degraded, a new alert is recorded every 15 minutes. Those inside the window are recorded but not sent, and the next one after it is sent. So with `cooldownMinutes: 60` a check that stays degraded sends a warning about once an hour, and a value below 15 behaves like 15. Critical alerts ignore the cooldown, a different check is never held back by another's alert, and resolving an alert lets the next one through at once.
+`cooldownMinutes` applies to warnings and is measured from the last alert of the same check that at least one channel delivered. While a check stays degraded, a new alert is recorded every 15 minutes. Those inside the window are recorded but not sent, and the next one after it is sent. So with `cooldownMinutes: 60` a check that stays degraded sends a warning about once an hour, and a value below 15 behaves like 15. Critical alerts ignore the cooldown, so a check that goes from degraded to unhealthy alerts at once, while a repeat at the same or a lower severity inside 15 minutes is not recorded again. A different check is never held back by another's alert, and resolving an alert lets the next one through at once. A check that recovers does not resolve its alerts by itself. So if it recovers and degrades again inside the window, the new warning waits for the window to pass, up to `cooldownMinutes`. Resolve the alert in System Health to let it through sooner.
 
 ### Logging (`logging`)
 
