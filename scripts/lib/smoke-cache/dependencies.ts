@@ -69,6 +69,8 @@ export const UNCACHEABLE_STEPS = new Set([
 	'test:seed-announcement',
 	'test:seed-credentials-never-logged',
 	'test:seed-rerun-honesty',
+	// Seeds a throwaway database and deletes real workspaces; about a second, so it always runs.
+	'test:workspace-deleted-hook',
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {

@@ -683,6 +683,23 @@ db.update(users)
 	.run();
 ```
 
+### **Workspace Deletion Cleanup**
+
+An application that keeps its own data per workspace cleans it up through `onWorkspaceDeleted` (exported from `services/workspaceService.ts`), not by editing the template-owned `workspaceCrud.ts`. Register handlers from your own startup code, such as the module that mounts your domain routes:
+
+```typescript
+import { onWorkspaceDeleted } from '../services/workspaceService.ts';
+
+onWorkspaceDeleted('first-run-state', ({ tx, workspaceId }) => {
+	tx.delete(firstRunState).where(eq(firstRunState.workspaceId, workspaceId)).run();
+});
+```
+
+- `softDelete` runs every handler inside the same transaction as the workspace's own soft delete, after that update and in registration order.
+- A handler gets `workspaceId`, `deletedBy` and the transaction `tx`. Write through `tx` so the cleanup commits or rolls back with the delete.
+- A handler that throws rolls the whole delete back. The error is a `WorkspaceDeletedHandlerError` whose message and `handlerName` name the handler. A handler must be synchronous, and one that returns a promise is refused the same way.
+- Names are unique: registering a taken name throws. With nothing registered, deletion behaves exactly as before.
+
 ---
 
 ## Frontend Development

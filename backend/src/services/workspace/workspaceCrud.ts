@@ -4,6 +4,7 @@ import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { workspaceMembers, workspaces } from '../../db/schema/workspaces.ts';
 import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorResponse.ts';
+import { runWorkspaceDeletedHandlers } from './workspaceDeletedHandlers.ts';
 import {
 	findActive,
 	getById,
@@ -117,24 +118,31 @@ function update(id: number, input: UpdateInput): null | WorkspaceRecord {
  * outside the seed ever writes `isDefault`. Every subsequent registration then
  * silently produced a user with no workspace membership at all.
  *
+ * Every handler registered with onWorkspaceDeleted runs inside the same transaction, after the
+ * soft delete itself and in registration order. A handler that throws rolls the delete back and
+ * surfaces as a WorkspaceDeletedHandlerError naming it.
+ *
  * @param id - Workspace ID
  * @param deletedBy - User performing deletion
  * @returns True if deleted, false if not found or the workspace is the default
+ * @throws WorkspaceDeletedHandlerError when a registered handler fails
  */
 function softDelete(id: number, deletedBy: number): boolean {
 	if (!findActive(id)) return false;
 	if (isDefaultWorkspace(id)) return false;
 
-	const db = getDb();
-	db.update(workspaces)
-		.set({
-			deletedAt: new Date(),
-			deletedBy,
-			isDeleted: true,
-			updatedAt: new Date(),
-		})
-		.where(eq(workspaces.id, id))
-		.run();
+	getDb().transaction((tx) => {
+		tx.update(workspaces)
+			.set({
+				deletedAt: new Date(),
+				deletedBy,
+				isDeleted: true,
+				updatedAt: new Date(),
+			})
+			.where(eq(workspaces.id, id))
+			.run();
+		runWorkspaceDeletedHandlers({ deletedBy, tx, workspaceId: id });
+	});
 
 	return true;
 }

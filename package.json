@@ -264,6 +264,7 @@
 		"test:wait-for-port": "bun scripts/test-wait-for-port.ts",
 		"test:webhook-tls-name": "bun scripts/test-webhook-tls-name.ts",
 		"test:workspace-header-contract": "bun scripts/test-workspace-header-contract.ts",
+		"test:workspace-deleted-hook": "bun scripts/test-workspace-deleted-hook.ts",
 		"test:workspace-role-predicate": "bun scripts/test-workspace-role-predicate.ts",
 		"test:workspace-subresource-existence": "bun scripts/test-workspace-subresource-existence.ts",
 		"typecheck": "bun run --cwd shared typecheck && bun run --cwd backend typecheck && bun run --cwd frontend typecheck && bunx tsc --project scripts/tsconfig.json",
