@@ -561,6 +561,10 @@
 					"description": "Seed reruns display only credentials they apply and the non-TTY pointer is first-start-only"
 				},
 				{
+					"command": "bun run test:deploy-local-prod-config",
+					"description": "deploy:local-prod writes a config the production validator accepts and refuses plain-HTTP non-loopback URLs"
+				},
+				{
 					"command": "bun run check:version-refs",
 					"description": "Current-state version claims in docs match package.json",
 					"templateOnly": true

@@ -10,13 +10,18 @@
  * Usage:
  *   bun scripts/deploy-local-prod.ts [options]
  *
+ * The generated config always sets security.cookieSecure=true, which the production validator
+ * requires. Browsers treat loopback origins (localhost, 127.0.0.0/8, [::1]) as secure contexts and
+ * send Secure cookies to them over plain HTTP, so the frontend URL must be HTTPS or loopback; a
+ * plain-HTTP URL on any other host is refused before anything is written.
+ *
  * Options:
- *   --frontend-url <url>     Browser-facing URL (default: http://localhost:<frontend-port>)
+ *   --frontend-url <url>     Browser-facing URL, HTTPS or loopback HTTP
+ *                            (default: http://localhost:<frontend-port>)
  *   --allowed-origins <csv>  Comma-separated CORS origins (default: <frontend-url>)
  *   --frontend-port <n>      Host port for nginx (default: 3330)
  *   --backend-port <n>       Internal backend port (default: 3331)
  *   --image <reference>      Local image reference (default: <slug>-test:<version>)
- *   --cookie-secure          Set security.cookieSecure=true (requires HTTPS frontendUrl)
  *   --appdata-root <path>    Host path for persistent data (falls back to $APPDATA_ROOT, then
  *                            %ProgramData%\appdata\production on Windows, /opt/appdata elsewhere)
  *   --backups-root <path>    Host path for backups (falls back to $BACKUPS_ROOT, then
@@ -69,7 +74,6 @@ const { values } = parseArgs({
 		'appdata-root': { type: 'string' },
 		'backend-port': { default: '3331', type: 'string' },
 		'backups-root': { type: 'string' },
-		'cookie-secure': { default: false, type: 'boolean' },
 		'frontend-port': { default: '3330', type: 'string' },
 		'frontend-url': { type: 'string' },
 		image: { type: 'string' },
@@ -91,7 +95,32 @@ const allowedOrigins = (values['allowed-origins'] ?? frontendUrl)
 	.split(',')
 	.map((s) => s.trim())
 	.filter(Boolean);
-const cookieSecure = values['cookie-secure'];
+
+/** Whether a hostname is loopback, which browsers treat as a secure context over plain HTTP. */
+function isLoopbackHost(hostname: string): boolean {
+	if (hostname === 'localhost' || hostname.endsWith('.localhost')) return true;
+	if (hostname === '[::1]') return true;
+	return /^127(\.\d{1,3}){3}$/.test(hostname);
+}
+
+let parsedFrontendUrl: URL;
+try {
+	parsedFrontendUrl = new URL(frontendUrl);
+} catch {
+	console.error(`❌ --frontend-url is not a valid URL: ${frontendUrl}`);
+	process.exit(1);
+}
+if (
+	parsedFrontendUrl.protocol !== 'https:' &&
+	!(parsedFrontendUrl.protocol === 'http:' && isLoopbackHost(parsedFrontendUrl.hostname))
+) {
+	console.error(
+		`❌ --frontend-url must be HTTPS, or plain HTTP on a loopback host, got ${frontendUrl}. ` +
+			`Production auth cookies are Secure, so browsers drop them over plain HTTP elsewhere. ` +
+			`Front the deploy with a TLS proxy (Caddy + mkcert) and pass --frontend-url https://...`,
+	);
+	process.exit(1);
+}
 
 // Windows defaults derive from %ProgramData% rather than a drive letter: a hardcoded D: is this
 // machine's layout, not a convention, and an adopter with only C: got a surprising deploy root.
@@ -130,24 +159,7 @@ console.log(`  backups:   ${backupsDir}`);
 console.log(`  frontend:  ${frontendUrl}`);
 console.log(`  image:     ${image}`);
 console.log(`  origins:   ${allowedOrigins.join(', ')}`);
-console.log(
-	`  cookieSec: ${cookieSecure}${
-		cookieSecure ? '' : ' (insecure — only acceptable behind a TLS proxy)'
-	}`,
-);
-
-if (cookieSecure && !frontendUrl.startsWith('https://')) {
-	console.error(
-		`❌ --cookie-secure requires an HTTPS frontendUrl, got ${frontendUrl}. ` +
-			`Front the deploy with a TLS proxy (Caddy + mkcert) and pass --frontend-url https://...`,
-	);
-	process.exit(1);
-}
-if (!cookieSecure && frontendUrl.startsWith('https://')) {
-	console.warn(
-		'⚠ frontendUrl is HTTPS but --cookie-secure not set — auth cookies will not be sent.',
-	);
-}
+console.log('  cookieSec: true');
 
 if (!values['skip-image-check']) {
 	console.log(`\nChecking local image exists: ${image}`);
@@ -218,7 +230,7 @@ if (existsSync(configPath) && !values['rotate-secrets']) {
 	security['backupEncryptionKey'] = generateHexKey(32);
 	security['cookieSecret'] = generateSecureKey(32);
 	security['applicationApiKey'] = generateSecureKey(48);
-	security['cookieSecure'] = cookieSecure;
+	security['cookieSecure'] = true;
 
 	server['nodeEnv'] = 'production';
 	server['frontendUrl'] = frontendUrl;

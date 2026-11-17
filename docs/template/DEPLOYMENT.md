@@ -149,9 +149,11 @@ The `bun run deploy:local-prod` helper scaffolds the deploy with all secrets pre
 
 ```bash
 bun run deploy:local-prod \
-  --frontend-url http://your-domain.example:3330 \
-  --allowed-origins http://your-domain.example:3330
+  --frontend-url https://your-domain.example \
+  --allowed-origins https://your-domain.example
 ```
+
+With no `--frontend-url`, the helper uses `http://localhost:3330`, which works as-is on the host itself.
 
 The helper:
 
@@ -159,7 +161,7 @@ The helper:
 2. Creates the deploy directory tree under `APPDATA_ROOT` and `BACKUPS_ROOT`.
 3. Writes `compose.vars`, copies `docker-compose.production.yml` into the deploy dir as `docker-compose.yml`.
 4. Generates `config/<slug>.json` from `defaults.json` + EC P-256 JWT keypairs, AES-256-GCM encryption + backup-encryption keys, MFA keypair, cookie secret, application API key.
-5. Sets `server.nodeEnv=production`, `server.trustProxy=true`, `server.trustedProxies=[Docker subnet ranges]`, `cors.allowedOrigins` to the values you supplied.
+5. Sets `server.nodeEnv=production`, `security.cookieSecure=true`, `server.trustProxy=true`, `server.trustedProxies=[Docker subnet ranges]`, `cors.allowedOrigins` to the values you supplied.
 6. Refuses to overwrite an existing config (use `--rotate-secrets` for a destructive secret rotation).
 
 Then:
@@ -172,7 +174,7 @@ docker compose --env-file compose.vars logs -f
 
 #### Cookie security gotcha
 
-`security.cookieSecure=true` (the production default) requires HTTPS in front of the container. If you deploy to plain HTTP via the loopback bind (`127.0.0.1:<port>`), leave `--cookie-secure` off - the container still runs production code paths, but the auth cookie is sent over HTTP. For full production parity, front the deploy with a TLS proxy (Caddy + Let's Encrypt or mkcert) and pass both `--frontend-url https://...` and `--cookie-secure`.
+The helper always writes `security.cookieSecure=true`, because the production validator rejects `false` and the backend will not start with it. Browsers send Secure cookies only over HTTPS or to a loopback host (`localhost`, `127.0.0.1`, `[::1]`), which they treat as a secure context even over plain HTTP. So `--frontend-url` must be either an `https://` URL or plain HTTP on a loopback host, and the helper refuses anything else before writing a file. To reach the deploy from other machines, front it with a TLS proxy (Caddy + Let's Encrypt or mkcert) and pass `--frontend-url https://...`.
 
 #### Upgrading
 

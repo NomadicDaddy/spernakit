@@ -194,6 +194,7 @@
 		"test:dashboard-not-found": "bun scripts/test-dashboard-not-found.ts",
 		"test:dashboard-share-revoke": "bun scripts/test-dashboard-share-revoke.ts",
 		"test:date-format-preferences": "bun scripts/test-date-format-preferences.ts",
+		"test:deploy-local-prod-config": "bun scripts/test-deploy-local-prod-config.ts",
 		"test:destructive-comments": "bun scripts/test-destructive-comments.ts",
 		"test:destructive-evidence": "bun scripts/test-destructive-evidence.ts",
 		"test:dialog-focus-return": "bun scripts/test-dialog-focus-return.ts",

@@ -3059,6 +3059,22 @@
 				"description": "Seed reruns display only credentials they apply and the non-TTY pointer is first-start-only",
 				"name": "test:seed-rerun-honesty",
 				"run": ["bun", "run", "test:seed-rerun-honesty"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/src/config/**/*.ts",
+						"backend/src/config/**/*.json",
+						"scripts/deploy-local-prod.ts",
+						"scripts/lib/config-validation.ts",
+						"scripts/lib/crypto-keys.ts",
+						"scripts/test-deploy-local-prod-config.ts",
+						"package.json"
+					]
+				},
+				"description": "deploy:local-prod writes a config the production validator accepts and refuses plain-HTTP non-loopback URLs",
+				"name": "test:deploy-local-prod-config",
+				"run": ["bun", "run", "test:deploy-local-prod-config"]
 			}
 		]
 	},
