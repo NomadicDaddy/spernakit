@@ -30,11 +30,29 @@ const root = resolve(import.meta.dir, '..');
 const defaults = loadDefaults();
 const slug = getAppSlug(defaults);
 
-// Secret env vars would replace generated values during validation and in the deployer's child
-// process; strip them so the test sees exactly what the deployer wrote.
+// Secret env vars would replace generated values during validation; strip them so the test sees
+// exactly what the deployer wrote.
 const envPrefix = `${slug.toUpperCase().replace(/-/g, '_')}_`;
 for (const key of Object.keys(process.env)) {
 	if (key.startsWith(envPrefix)) delete process.env[key];
+}
+
+// The deployer gets its roots from flags, so its child needs only what the OS and Bun need to run.
+// Leaving out APPDATA_ROOT, BACKUPS_ROOT and every app secret proves the flags are what it uses.
+const CHILD_ENV_KEYS = [
+	'PATH',
+	'Path',
+	'PATHEXT',
+	'SystemRoot',
+	'windir',
+	'ComSpec',
+	'TEMP',
+	'TMP',
+];
+const childEnv: Record<string, string> = {};
+for (const key of CHILD_ENV_KEYS) {
+	const value = process.env[key];
+	if (value !== undefined) childEnv[key] = value;
 }
 
 const failures: string[] = [];
@@ -63,7 +81,7 @@ function runDeployer(extraArgs: string[], tempRoot?: string): DeployRun {
 			'--skip-image-check',
 			...extraArgs,
 		],
-		{ cwd: root, encoding: 'utf8', env: { ...process.env } },
+		{ cwd: root, encoding: 'utf8', env: childEnv },
 	);
 	return {
 		configPath: join(appdataRoot, slug, 'config', `${slug}.json`),
