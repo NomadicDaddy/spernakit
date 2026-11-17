@@ -67,13 +67,11 @@ export function validatePreMigration(db: Database): ValidationResult {
 		}
 	}
 
-	try {
-		const fkViolations = db.query<{ count: number }, []>('PRAGMA foreign_key_check').all();
-		if (fkViolations.length > 0) {
-			issues.push(`Foreign key violations: ${fkViolations.length} references broken`);
-		}
-	} catch {
-		// Ignore if pragma fails
+	// Not wrapped: unlike the table-specific checks above, this pragma has no missing-table case
+	// to tolerate, so a failure here is a real error and refuses the run, as it does on startup.
+	const fkViolations = db.query<{ count: number }, []>('PRAGMA foreign_key_check').all();
+	if (fkViolations.length > 0) {
+		issues.push(`Foreign key violations: ${fkViolations.length} references broken`);
 	}
 
 	return { issues, valid: issues.length === 0 };
