@@ -13,12 +13,13 @@
  *     schema issues or error-level security issues.
  *  2. Rejection control: that same config with cookieSecure=false still fails validation on
  *     security.cookieSecure, so the validator was not weakened to make (1) pass.
- *  3. A rerun without --rotate-secrets leaves the existing config byte-identical.
+ *  3. A rerun without --rotate-secrets leaves the existing config byte-identical, and a preserved
+ *     config that still has cookieSecure=false is kept but draws a will-not-start warning.
  *  4. An HTTPS frontend URL and a 127.0.0.1 frontend URL are accepted and validate clean.
  *  5. A plain-HTTP frontend URL on a non-loopback host is refused and writes no config.
  */
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
@@ -131,6 +132,22 @@ try {
 		assert(
 			readFileSync(local.configPath, 'utf8') === before,
 			'rerun leaves the config unchanged',
+		);
+		assert(!rerun.output.includes('cookieSecure=false'), 'a secure config draws no warning');
+
+		// A preserved config from before the fix is kept, but the operator is told it cannot start.
+		chmodSync(local.configPath, 0o600);
+		const legacy = JSON.stringify(insecure, null, '\t');
+		writeFileSync(local.configPath, legacy, 'utf8');
+		const legacyRun = runDeployer([], local.tempRoot);
+		assert(legacyRun.status === 0, `legacy rerun exits 0 (got ${legacyRun.status})`);
+		assert(
+			readFileSync(local.configPath, 'utf8') === legacy,
+			'a preserved cookieSecure=false config is left as the operator wrote it',
+		);
+		assert(
+			legacyRun.output.includes('cookieSecure=false'),
+			'a preserved cookieSecure=false config draws the will-not-start warning',
 		);
 	}
 

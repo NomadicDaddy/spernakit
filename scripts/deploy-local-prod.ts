@@ -11,9 +11,10 @@
  *   bun scripts/deploy-local-prod.ts [options]
  *
  * The generated config always sets security.cookieSecure=true, which the production validator
- * requires. Browsers treat loopback origins (localhost, 127.0.0.0/8, [::1]) as secure contexts and
- * send Secure cookies to them over plain HTTP, so the frontend URL must be HTTPS or loopback; a
- * plain-HTTP URL on any other host is refused before anything is written.
+ * requires. A plain-HTTP URL on a non-loopback host can never carry those cookies, so it is refused
+ * before anything is written; HTTPS and loopback HTTP (localhost, 127.0.0.0/8, [::1]) are accepted.
+ * Chromium and Firefox accept Secure cookies over loopback HTTP; WebKit (Safari) has not always,
+ * so use an HTTPS frontend URL when Safari must sign in.
  *
  * Options:
  *   --frontend-url <url>     Browser-facing URL, HTTPS or loopback HTTP
@@ -207,6 +208,18 @@ if (existsSync(configPath) && !values['rotate-secrets']) {
 		`\n✓ Config already exists at ${configPath} — leaving as-is ` +
 			`(use --rotate-secrets to regenerate).`,
 	);
+	// An operator's config is never rewritten, but one written before secure cookies were enforced
+	// carries cookieSecure=false, which the production validator rejects at startup.
+	const existing = JSON.parse(readFileSync(configPath, 'utf8')) as {
+		security?: { cookieSecure?: unknown };
+	};
+	if (existing.security?.cookieSecure === false) {
+		console.warn(
+			`⚠ ${configPath} has security.cookieSecure=false, which the production validator ` +
+				`rejects, so the backend will not start. Set it to true by hand (HTTPS or loopback ` +
+				`frontend URL), or rerun with --rotate-secrets to regenerate the config.`,
+		);
+	}
 } else {
 	if (existsSync(configPath)) {
 		console.log(`\n⚠ --rotate-secrets: overwriting existing config at ${configPath}`);

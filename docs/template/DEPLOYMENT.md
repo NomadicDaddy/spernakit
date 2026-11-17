@@ -153,7 +153,7 @@ bun run deploy:local-prod \
   --allowed-origins https://your-domain.example
 ```
 
-With no `--frontend-url`, the helper uses `http://localhost:3330`, which works as-is on the host itself.
+With no `--frontend-url`, the helper uses `http://localhost:3330`, for signing in from a browser on the host itself (see the cookie note below for which browsers that covers).
 
 The helper:
 
@@ -174,7 +174,9 @@ docker compose --env-file compose.vars logs -f
 
 #### Cookie security gotcha
 
-The helper always writes `security.cookieSecure=true`, because the production validator rejects `false` and the backend will not start with it. Browsers send Secure cookies only over HTTPS or to a loopback host (`localhost`, `127.0.0.1`, `[::1]`), which they treat as a secure context even over plain HTTP. So `--frontend-url` must be either an `https://` URL or plain HTTP on a loopback host, and the helper refuses anything else before writing a file. To reach the deploy from other machines, front it with a TLS proxy (Caddy + Let's Encrypt or mkcert) and pass `--frontend-url https://...`.
+The helper always writes `security.cookieSecure=true`, because the production validator rejects `false` and the backend will not start with it. A browser never sends a Secure cookie over plain HTTP to an ordinary host, so `--frontend-url` must be either an `https://` URL or plain HTTP on a loopback host (`localhost`, `127.0.0.1`, `[::1]`), and the helper refuses anything else before writing a file. Chromium-based browsers and Firefox accept Secure cookies over loopback HTTP. Safari (WebKit) has not always done so, so use an HTTPS frontend URL if Safari has to sign in. To reach the deploy from other machines, front it with a TLS proxy (Caddy + Let's Encrypt or mkcert) and pass `--frontend-url https://...`.
+
+The helper never rewrites an existing config. If one written by an older helper still has `security.cookieSecure=false`, it warns that the backend will not start. Set the value to `true` by hand, or rerun with `--rotate-secrets` to regenerate the config.
 
 #### Upgrading
 
