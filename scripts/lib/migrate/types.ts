@@ -20,6 +20,8 @@ export interface DrizzleJournal {
 
 /** Migration record from database */
 export interface MigrationRecord {
+	/** Null for rows written before the column existed. */
+	content_hash: null | string;
 	created_at: number;
 	hash: string;
 	id: number;

@@ -565,6 +565,10 @@
 					"description": "The production seed notice states the password-change requirement only when the toggle that sets it is on"
 				},
 				{
+					"command": "bun run test:migration-runner-safety",
+					"description": "The CLI and startup migration runners refuse unknown journal hashes and orphaned files, check foreign keys before COMMIT, record content hashes, and refuse startup when a failed migration cannot be restored"
+				},
+				{
 					"command": "bun run test:deploy-local-prod-config",
 					"description": "deploy:local-prod writes a config the production validator accepts and refuses plain-HTTP non-loopback URLs"
 				},

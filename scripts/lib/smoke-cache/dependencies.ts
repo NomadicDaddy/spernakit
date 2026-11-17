@@ -61,6 +61,8 @@ export const UNCACHEABLE_STEPS = new Set([
 	'test:init-exclusions',
 	// Exercises the installed Vite plugin and icon checker; cheap enough to run every time.
 	'test:lucide-names',
+	// Temp-root SQLite fixtures for both migration runners; under a second, so it always runs.
+	'test:migration-runner-safety',
 	// Small seed-security fixtures always run; the rerun test also starts a disposable process.
 	'test:seed-announcement',
 	'test:seed-credentials-never-logged',

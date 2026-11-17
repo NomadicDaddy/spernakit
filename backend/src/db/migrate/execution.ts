@@ -33,6 +33,11 @@ function tryCreatePreMigrationBackup(db: Database, dbPath: string): string | und
 	}
 }
 
+/**
+ * Refuse startup when the migrated database fails its integrity or foreign-key checks. With a
+ * pre-migration backup the database is restored from it first; the thrown message says whether
+ * that restore succeeded. Without one, startup still refuses (fail-closed, no degraded mode).
+ */
 function assertPostMigrationIntegrity(
 	db: Database,
 	dbPath: string,
@@ -43,7 +48,13 @@ function assertPostMigrationIntegrity(
 	for (const error of postErrors) {
 		logger.error({ error }, 'Post-migration validation failed');
 	}
-	if (!backupPath) return;
+	const detail = postErrors.join('; ');
+	if (!backupPath) {
+		throw new Error(
+			`Post-migration validation failed and no pre-migration backup exists, so nothing was ` +
+				`restored. Startup refused. Manual intervention required. Errors: ${detail}`,
+		);
+	}
 
 	logger.error(
 		'Post-migration validation failed - attempting to restore from pre-migration backup',
@@ -51,15 +62,19 @@ function assertPostMigrationIntegrity(
 	db.close();
 	try {
 		restoreFromBackup(dbPath, backupPath);
-		logger.error('Database restored from pre-migration backup. Manual migration required.');
 	} catch (err) {
-		logger.error(
-			{ err },
-			'Failed to restore from backup - database may be in inconsistent state',
+		logger.error({ err }, 'Failed to restore from backup - database may be inconsistent');
+		throw new Error(
+			`Post-migration validation failed and restoring the pre-migration backup ${backupPath} ` +
+				`FAILED, so the database may be inconsistent. Startup refused. Manual intervention ` +
+				`required. Errors: ${detail}`,
+			{ cause: err },
 		);
 	}
+	logger.error('Database restored from pre-migration backup. Manual migration required.');
 	throw new Error(
-		'Post-migration validation failed. Database restored from backup. Manual intervention required.',
+		`Post-migration validation failed. Database restored from the pre-migration backup. ` +
+			`Startup refused. Manual intervention required. Errors: ${detail}`,
 	);
 }
 

@@ -990,6 +990,7 @@ bun run db:migrate:status
 - **Auto-migration**: SQLite auto-applies pending migrations on startup via `autoMigrate.ts`; PostgreSQL requires explicit `db:migrate`
 - **Schema management (development)**: `db:generate` followed by `db:migrate`
 - **Schema management (production)**: `db:migrate` via custom `scripts/migrate.ts` with transaction-wrapped migrations
+- **Runner safety (both runners)**: the startup runner and `db:migrate` refuse to run when a `.sql` file is missing from `_journal.json`, or when `__drizzle_migrations` holds a hash that matches no journal tag. Each migration is checked for integrity and foreign keys before it commits, so a failed check rolls back the migration and its journal row. Both runners record each migration's `content_hash`, and both warn when an applied file has changed since. If the post-migration check fails on startup, the server refuses to start, and the error says whether a pre-migration backup was restored, failed to restore, or did not exist.
 
 ---
 

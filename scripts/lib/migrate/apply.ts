@@ -6,11 +6,12 @@ import { Database } from 'bun:sqlite';
 
 import type { JournalEntry, Paths, PerformanceMetrics } from './types.ts';
 
+import { assertNoOrphanedMigrations, selectPendingMigrations } from './discovery.ts';
 import { recordMigrationFailure, recordMigrationSuccess } from './history.ts';
-import { computeContentHash, computeHash, readJournal, readMigrationSql } from './journal.ts';
-import { getAppliedMigrations, markMigrationApplied } from './records.ts';
+import { computeContentHash, readJournal, readMigrationSql } from './journal.ts';
+import { markMigrationApplied } from './records.ts';
 import {
-	assertPostMigrationIntegrity,
+	assertMigrationIntegrity,
 	executeStatements,
 	prepareForeignKeys,
 	restoreForeignKeys,
@@ -35,8 +36,9 @@ export function formatDuration(ms: number): string {
 
 /**
  * Apply a single migration inside a transaction.
- * If any statement fails, the entire migration is rolled back so the
- * database never ends up in a partially-applied state.
+ * If any statement fails, or the integrity and foreign-key checks fail before COMMIT, the
+ * whole migration and its journal row are rolled back, so the database never ends up
+ * recorded as migrated in a broken state.
  */
 function applyMigration(
 	db: Database,
@@ -57,10 +59,10 @@ function applyMigration(
 	db.exec('BEGIN');
 	try {
 		statementCount = executeStatements(db, statements);
-		markMigrationApplied(db, entry.tag);
+		assertMigrationIntegrity(db, entry.tag);
+		markMigrationApplied(db, entry.tag, contentHash);
 		db.exec('COMMIT');
 		restoreForeignKeys(db, fkWereDisabled);
-		assertPostMigrationIntegrity(db, entry.tag);
 
 		const durationMs = performance.now() - startTime;
 		console.log(`    ✓ Applied in ${formatDuration(durationMs)}`);
@@ -94,6 +96,7 @@ function applyMigration(
  */
 export function runMigrations(paths: Paths): void {
 	const journal = readJournal(paths.journalPath);
+	assertNoOrphanedMigrations(paths.migrationsDir, journal);
 	const db = new Database(paths.database);
 
 	try {
@@ -118,13 +121,7 @@ export function runMigrations(paths: Paths): void {
 		}
 		console.log('✓ Validation passed\n');
 
-		const applied = getAppliedMigrations(db);
-		const appliedHashes = new Set(applied.map((m) => m.hash));
-
-		const pending = journal.entries.filter((entry) => {
-			const hash = computeHash(entry.tag);
-			return !appliedHashes.has(hash);
-		});
+		const pending = selectPendingMigrations(db, journal, paths.migrationsDir);
 
 		if (pending.length === 0) {
 			console.log('✓ No pending migrations');
@@ -197,17 +194,11 @@ export function runMigrations(paths: Paths): void {
  */
 export function baselineMigration(paths: Paths): void {
 	const journal = readJournal(paths.journalPath);
+	assertNoOrphanedMigrations(paths.migrationsDir, journal);
 	const db = new Database(paths.database);
 
 	try {
-		const applied = getAppliedMigrations(db);
-		const appliedHashes = new Set(applied.map((m) => m.hash));
-
-		// Find migrations that haven't been applied
-		const pending = journal.entries.filter((entry) => {
-			const hash = computeHash(entry.tag);
-			return !appliedHashes.has(hash);
-		});
+		const pending = selectPendingMigrations(db, journal, paths.migrationsDir);
 
 		if (pending.length === 0) {
 			console.log('✓ All migrations already marked as applied');
@@ -218,7 +209,8 @@ export function baselineMigration(paths: Paths): void {
 
 		for (const entry of pending) {
 			console.log(`  Baseline: ${entry.tag}`);
-			markMigrationApplied(db, entry.tag);
+			const sql = readMigrationSql(paths.migrationsDir, entry.tag);
+			markMigrationApplied(db, entry.tag, computeContentHash(sql));
 			console.log(`    ✓ Marked as applied`);
 		}
 

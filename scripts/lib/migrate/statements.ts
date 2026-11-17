@@ -139,19 +139,29 @@ export function executeStatements(db: Database, statements: string[]): number {
 }
 
 /**
- * Post-migration integrity check. Runs after COMMIT because SQLite DDL
- * statements implicitly commit; a partial failure may leave the database in
- * an inconsistent state that a later ROLLBACK cannot undo, so we detect it
- * early rather than carrying forward.
+ * Integrity and foreign-key checks for a migration, run inside its transaction before COMMIT.
+ * A failure throws, so the caller rolls the migration back together with its journal row
+ * instead of committing a broken schema and recording it as applied. foreign_key_check
+ * matters most after a table rebuild that ran with foreign keys off, which SQLite does not
+ * enforce while they are off.
  */
-export function assertPostMigrationIntegrity(db: Database, tag: string): void {
+export function assertMigrationIntegrity(db: Database, tag: string): void {
 	const integrityResult = db.query('PRAGMA integrity_check').get() as {
 		integrity_check: string;
 	} | null;
 	if (integrityResult?.integrity_check !== 'ok') {
 		console.error(
-			`    ❌ Integrity check failed after migration ${tag}: ${integrityResult?.integrity_check ?? 'unknown'}`,
+			`    ❌ Integrity check failed in migration ${tag}: ${integrityResult?.integrity_check ?? 'unknown'}`,
 		);
-		throw new Error(`Database integrity check failed after migration ${tag}`);
+		throw new Error(`Database integrity check failed in migration ${tag}`);
+	}
+	const violations = db.query('PRAGMA foreign_key_check').all();
+	if (violations.length > 0) {
+		console.error(
+			`    ❌ Foreign key check failed in migration ${tag}: ${violations.length} violation(s)`,
+		);
+		throw new Error(
+			`Foreign key check failed in migration ${tag}: ${violations.length} violation(s)`,
+		);
 	}
 }

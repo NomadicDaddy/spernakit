@@ -3092,6 +3092,20 @@
 				"description": "The production seed notice states the password-change requirement only when the toggle that sets it is on",
 				"name": "test:seed-announcement",
 				"run": ["bun", "run", "test:seed-announcement"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/src/db/migrate/**/*.ts",
+						"scripts/lib/migrate/**/*.ts",
+						"scripts/lib/migration-safety-fixtures.ts",
+						"scripts/test-migration-runner-safety.ts",
+						"package.json"
+					]
+				},
+				"description": "The CLI and startup migration runners refuse unknown journal hashes and orphaned files, check foreign keys before COMMIT, record content hashes, and refuse startup when a failed migration cannot be restored",
+				"name": "test:migration-runner-safety",
+				"run": ["bun", "run", "test:migration-runner-safety"]
 			}
 		]
 	},
