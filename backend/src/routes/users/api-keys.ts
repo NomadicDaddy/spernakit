@@ -21,7 +21,12 @@ import { getUserById } from '../../services/userService.ts';
 import { ROLE_HIERARCHY } from '../../types/roles.ts';
 import { dataResponse, successResponse } from '../../utils/apiResponse.ts';
 import { setCacheHeaders } from '../../utils/caching.ts';
-import { conflictError, forbiddenError, notFoundError } from '../../utils/errorResponse.ts';
+import {
+	conflictError,
+	forbiddenError,
+	isRawUniqueViolation,
+	notFoundError,
+} from '../../utils/errorResponse.ts';
 import { createApiKeyDocs, listApiKeysDocs, revokeApiKeyDocs } from './api-keys.docs.ts';
 
 /**
@@ -153,7 +158,20 @@ async function handleCreateApiKey({
 		return conflictError(`API key limit reached (max ${maxPerUser})`);
 	}
 
-	const result = await generateApiKey(input);
+	let result: Awaited<ReturnType<typeof generateApiKey>>;
+	try {
+		result = await generateApiKey(input);
+	} catch (err: unknown) {
+		// The same name claimed between the pre-check and the insert hits the partial unique index.
+		if (
+			isRawUniqueViolation(err, 'api_keys.created_by, api_keys.key_name') ||
+			isRawUniqueViolation(err, 'idx_api_keys_user_key_name')
+		) {
+			set.status = HTTP_STATUS.CONFLICT;
+			return conflictError('An API key with this name already exists');
+		}
+		throw err;
+	}
 	set.status = HTTP_STATUS.CREATED;
 	return dataResponse({
 		apiKey: result.apiKey,

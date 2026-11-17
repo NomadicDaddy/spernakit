@@ -59,6 +59,10 @@ export const apiKeys = sqliteTable(
 		index('idx_api_keys_created_by').on(table.createdBy),
 		index('idx_api_keys_is_active').on(table.isActive),
 		index('idx_api_keys_expires_at').on(table.expiresAt),
-		uniqueIndex('idx_api_keys_user_key_name').on(table.createdBy, table.keyName),
+		// Partial unique index: a name is unique among a user's active keys only, so a revoked
+		// key's name can be used again (revocation sets isActive false and keeps the row).
+		uniqueIndex('idx_api_keys_user_key_name')
+			.on(table.createdBy, table.keyName)
+			.where(sql`${table.isActive} = 1`),
 	],
 );

@@ -28,6 +28,26 @@ interface CreateInput {
 }
 
 /**
+ * Turn a raw users.username or users.email unique-index violation into the UniqueConstraintError
+ * the routes answer 409 with. Anything else is rethrown unchanged. The pre-checks catch the
+ * ordinary case; this covers a value claimed between the pre-check and the write.
+ *
+ * @param err - Error thrown by a users insert or update
+ */
+function rethrowUserUniqueViolation(err: unknown): never {
+	if (
+		isRawUniqueViolation(err, 'users.username') ||
+		isRawUniqueViolation(err, 'users_username')
+	) {
+		throw new UniqueConstraintError('Username already taken');
+	}
+	if (isRawUniqueViolation(err, 'users.email') || isRawUniqueViolation(err, 'users_email')) {
+		throw new UniqueConstraintError('Email already taken');
+	}
+	throw err;
+}
+
+/**
  * Create a new user.
  *
  * @param input - User data
@@ -49,19 +69,7 @@ async function createUser(input: CreateInput): Promise<UserPublic> {
 				})
 				.run();
 		} catch (err: unknown) {
-			if (
-				isRawUniqueViolation(err, 'users.username') ||
-				isRawUniqueViolation(err, 'users_username')
-			) {
-				throw new UniqueConstraintError('Username already taken');
-			}
-			if (
-				isRawUniqueViolation(err, 'users.email') ||
-				isRawUniqueViolation(err, 'users_email')
-			) {
-				throw new UniqueConstraintError('Email already taken');
-			}
-			throw err;
+			rethrowUserUniqueViolation(err);
 		}
 
 		const row = tx
@@ -97,12 +105,17 @@ function updateUser(id: number, input: UpdateInput): null | UserPublic {
 	enforceUserUniqueness(id, input, existing);
 	const updateData = buildUpdateUserPayload(input, existing);
 
-	const [updated] = db
-		.update(users)
-		.set(updateData)
-		.where(eq(users.id, id))
-		.returning(userPublicFields)
-		.all();
+	let updated: undefined | UserPublic;
+	try {
+		[updated] = db
+			.update(users)
+			.set(updateData)
+			.where(eq(users.id, id))
+			.returning(userPublicFields)
+			.all();
+	} catch (err: unknown) {
+		rethrowUserUniqueViolation(err);
+	}
 
 	userCache.delete(id);
 	if (updated) {

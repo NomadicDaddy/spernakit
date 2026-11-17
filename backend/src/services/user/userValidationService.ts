@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
@@ -6,6 +6,11 @@ import { ROLE_HIERARCHY, type UserRole } from '../../types/roles.ts';
 
 /**
  * Generic helper to check if a value exists in a specific column.
+ *
+ * Soft-deleted rows count: the users.email and users.username unique indexes cover every row,
+ * deleted or not, so a value held by a deleted account is not available (see the note in
+ * db/schema/users.ts). Judging a narrower set would answer "available" for a value the insert
+ * then rejects.
  *
  * @param column - The database column to check
  * @param value - The value to look for
@@ -18,8 +23,7 @@ function valueExists(
 	excludeUserId?: number,
 ): boolean {
 	const db = getDb();
-	const condition = and(eq(column, value), eq(users.isDeleted, false));
-	const query = db.select({ id: users.id }).from(users).where(condition);
+	const query = db.select({ id: users.id }).from(users).where(eq(column, value));
 
 	if (excludeUserId) {
 		const existing = query.get();

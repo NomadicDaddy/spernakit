@@ -253,6 +253,7 @@
 		"test:template-drift": "bun scripts/test-template-drift.ts && bun scripts/test-template-deletions.ts && bun scripts/test-template-owner-exclusions.ts",
 		"test:template-feature-versions": "bun scripts/test-template-feature-versions.ts",
 		"test:template-features": "bun scripts/test-template-features.ts",
+		"test:unique-constraint-conflicts": "bun scripts/test-unique-constraint-conflicts.ts",
 		"test:upload-validation": "bun scripts/test-upload-validation.ts",
 		"test:username-parity": "bun scripts/test-username-parity.ts",
 		"test:validation-union-values": "bun scripts/test-validation-union-values.ts",

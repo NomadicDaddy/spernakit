@@ -154,6 +154,19 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'shared/src/errorCodes.ts',
 		],
 	},
+	// Drives the real API key, user update, check-username and email-change routes against a
+	// migrated temp database, so its world is the migrations, the backend sources, the fixture
+	// that boots the API, and the gate itself.
+	'test:unique-constraint-conflicts': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-unique-constraint-conflicts.ts',
+		],
+	},
 	// Puts a corpus of names to the shared validator and to the real create-user route in process,
 	// and then reads both source trees for a rival copy of the rule, so its world is the frontend
 	// and backend sources, the policy module they read, the fixture that boots the API, and the

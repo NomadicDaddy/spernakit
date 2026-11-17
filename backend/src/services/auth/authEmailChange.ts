@@ -8,6 +8,7 @@ import { getDb } from '../../db/index.ts';
 import { emailChangeTokens } from '../../db/schema/emailChangeTokens.ts';
 import { users } from '../../db/schema/users.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
+import { isRawUniqueViolation } from '../../utils/errorResponse.ts';
 import { logAuth } from '../../utils/logger.ts';
 import { verifyPassword } from './authCore.ts';
 
@@ -67,10 +68,12 @@ async function requestEmailChange(
 		return { reason: SERVICE_ERRORS.EMAIL_TAKEN, success: false };
 	}
 
+	// Soft-deleted accounts keep their address in the all-rows users.email unique index, so they
+	// count as holding it.
 	const existing = db
 		.select({ id: users.id })
 		.from(users)
-		.where(and(eq(users.email, normalizedNewEmail), eq(users.isDeleted, false)))
+		.where(eq(users.email, normalizedNewEmail))
 		.get();
 	if (existing) {
 		return { reason: SERVICE_ERRORS.EMAIL_TAKEN, success: false };
@@ -142,38 +145,50 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 		return { reason: SERVICE_ERRORS.TOKEN_INVALID, success: false };
 	}
 
-	const collision = db
-		.select({ id: users.id })
-		.from(users)
-		.where(and(eq(users.email, record.newEmail), eq(users.isDeleted, false)))
-		.get();
-	if (collision && collision.id !== record.userId) {
+	const takenSinceRequest = (): ConfirmEmailChangeResult => {
 		logAuth('warn', 'Email change confirm failed: address taken since request', {
 			userId: record.userId,
 		});
+		db.update(emailChangeTokens)
+			.set({ consumedAt: new Date() })
+			.where(eq(emailChangeTokens.id, record.id))
+			.run();
+		return { reason: SERVICE_ERRORS.EMAIL_TAKEN, success: false };
+	};
+
+	// Soft-deleted accounts hold their address in the all-rows unique index, so they collide too.
+	const collision = db
+		.select({ id: users.id })
+		.from(users)
+		.where(eq(users.email, record.newEmail))
+		.get();
+	if (collision && collision.id !== record.userId) {
+		return takenSinceRequest();
+	}
+
+	try {
 		db.transaction((tx) => {
+			tx.update(users)
+				.set({
+					email: record.newEmail,
+					emailVerified: true,
+					updatedAt: new Date(),
+				})
+				.where(eq(users.id, record.userId))
+				.run();
 			tx.update(emailChangeTokens)
 				.set({ consumedAt: new Date() })
 				.where(eq(emailChangeTokens.id, record.id))
 				.run();
 		});
-		return { reason: SERVICE_ERRORS.EMAIL_TAKEN, success: false };
+	} catch (err: unknown) {
+		// Claimed between the check and the write: the transaction rolled back, so consume the token
+		// on its own instead of leaving it live, and answer EMAIL_TAKEN rather than a 500.
+		if (isRawUniqueViolation(err, 'users.email') || isRawUniqueViolation(err, 'users_email')) {
+			return takenSinceRequest();
+		}
+		throw err;
 	}
-
-	db.transaction((tx) => {
-		tx.update(users)
-			.set({
-				email: record.newEmail,
-				emailVerified: true,
-				updatedAt: new Date(),
-			})
-			.where(eq(users.id, record.userId))
-			.run();
-		tx.update(emailChangeTokens)
-			.set({ consumedAt: new Date() })
-			.where(eq(emailChangeTokens.id, record.id))
-			.run();
-	});
 
 	const refreshTtlMs = parseDurationMs(
 		config.security.jwtRefreshExpiresIn,

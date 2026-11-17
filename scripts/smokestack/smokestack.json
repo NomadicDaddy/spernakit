@@ -1499,6 +1499,30 @@
 						".claude/**"
 					],
 					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-unique-constraint-conflicts.ts"
+					]
+				},
+				"description": "A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again, and a username or email held by a soft-deleted account answers 409 on update, check-username and email change instead of a 500",
+				"name": "test:unique-constraint-conflicts",
+				"run": ["bun", "run", "test:unique-constraint-conflicts"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"backend/src/**",
 						"frontend/src/**",
 						"scripts/lib/auth-ordering-fixture.ts",
