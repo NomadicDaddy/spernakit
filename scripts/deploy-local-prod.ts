@@ -45,6 +45,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 
 import { generateEcKeyPair, generateHexKey, generateSecureKey } from './lib/crypto-keys.ts';
+import { frontendUrlRefusal } from './lib/local-prod-frontend-url.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -97,29 +98,9 @@ const allowedOrigins = (values['allowed-origins'] ?? frontendUrl)
 	.map((s) => s.trim())
 	.filter(Boolean);
 
-/** Whether a hostname is loopback, which browsers treat as a secure context over plain HTTP. */
-function isLoopbackHost(hostname: string): boolean {
-	if (hostname === 'localhost' || hostname.endsWith('.localhost')) return true;
-	if (hostname === '[::1]') return true;
-	return /^127(\.\d{1,3}){3}$/.test(hostname);
-}
-
-let parsedFrontendUrl: URL;
-try {
-	parsedFrontendUrl = new URL(frontendUrl);
-} catch {
-	console.error(`❌ --frontend-url is not a valid URL: ${frontendUrl}`);
-	process.exit(1);
-}
-if (
-	parsedFrontendUrl.protocol !== 'https:' &&
-	!(parsedFrontendUrl.protocol === 'http:' && isLoopbackHost(parsedFrontendUrl.hostname))
-) {
-	console.error(
-		`❌ --frontend-url must be HTTPS, or plain HTTP on a loopback host, got ${frontendUrl}. ` +
-			`Production auth cookies are Secure, so browsers drop them over plain HTTP elsewhere. ` +
-			`Front the deploy with a TLS proxy (Caddy + mkcert) and pass --frontend-url https://...`,
-	);
+const urlRefusal = frontendUrlRefusal(frontendUrl);
+if (urlRefusal !== null) {
+	console.error(`❌ ${urlRefusal}`);
 	process.exit(1);
 }
 
@@ -209,15 +190,23 @@ if (existsSync(configPath) && !values['rotate-secrets']) {
 			`(use --rotate-secrets to regenerate).`,
 	);
 	// An operator's config is never rewritten, but one written before secure cookies were enforced
-	// carries cookieSecure=false, which the production validator rejects at startup.
-	const existing = JSON.parse(readFileSync(configPath, 'utf8')) as {
-		security?: { cookieSecure?: unknown };
-	};
-	if (existing.security?.cookieSecure === false) {
+	// carries cookieSecure=false, which the production validator rejects at startup. The fix is the
+	// one-field hand edit: --rotate-secrets would also replace every key, including the encryption
+	// and backup keys, which loses sessions, encrypted settings and existing backups.
+	let existingCookieSecure: unknown;
+	try {
+		const existing = JSON.parse(readFileSync(configPath, 'utf8')) as {
+			security?: { cookieSecure?: unknown };
+		};
+		existingCookieSecure = existing.security?.cookieSecure;
+	} catch {
+		console.warn(`⚠ ${configPath} is not valid JSON, so its cookie setting was not checked.`);
+	}
+	if (existingCookieSecure === false) {
 		console.warn(
 			`⚠ ${configPath} has security.cookieSecure=false, which the production validator ` +
-				`rejects, so the backend will not start. Set it to true by hand (HTTPS or loopback ` +
-				`frontend URL), or rerun with --rotate-secrets to regenerate the config.`,
+				`rejects, so the backend will not start. Set it to true by hand; the frontend URL ` +
+				`must be HTTPS or loopback.`,
 		);
 	}
 } else {

@@ -149,6 +149,27 @@ try {
 			legacyRun.output.includes('cookieSecure=false'),
 			'a preserved cookieSecure=false config draws the will-not-start warning',
 		);
+		const warning = legacyRun.output
+			.split('\n')
+			.find((line) => line.includes('cookieSecure=false'));
+		assert(
+			warning !== undefined && !warning.includes('--rotate-secrets'),
+			'the warning offers only the hand edit, never the destructive --rotate-secrets',
+		);
+
+		// An unparsable kept config is still left alone, and the rerun still succeeds.
+		const garbled = '{ not json';
+		writeFileSync(local.configPath, garbled, 'utf8');
+		const garbledRun = runDeployer([], local.tempRoot);
+		assert(
+			garbledRun.status === 0,
+			`unparsable-config rerun exits 0 (got ${garbledRun.status})`,
+		);
+		assert(
+			readFileSync(local.configPath, 'utf8') === garbled,
+			'an unparsable kept config is left as it was',
+		);
+		assert(garbledRun.output.includes('not valid JSON'), 'the unparsable config is reported');
 	}
 
 	// 4. HTTPS and 127.0.0.1 frontend URLs.

@@ -3068,6 +3068,7 @@
 						"scripts/deploy-local-prod.ts",
 						"scripts/lib/config-validation.ts",
 						"scripts/lib/crypto-keys.ts",
+						"scripts/lib/local-prod-frontend-url.ts",
 						"scripts/test-deploy-local-prod-config.ts",
 						"package.json"
 					]

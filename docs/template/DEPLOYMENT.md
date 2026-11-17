@@ -176,7 +176,7 @@ docker compose --env-file compose.vars logs -f
 
 The helper always writes `security.cookieSecure=true`, because the production validator rejects `false` and the backend will not start with it. A browser never sends a Secure cookie over plain HTTP to an ordinary host, so `--frontend-url` must be either an `https://` URL or plain HTTP on a loopback host (`localhost`, `127.0.0.1`, `[::1]`), and the helper refuses anything else before writing a file. Chromium-based browsers and Firefox accept Secure cookies over loopback HTTP. Safari (WebKit) has not always done so, so use an HTTPS frontend URL if Safari has to sign in. To reach the deploy from other machines, front it with a TLS proxy (Caddy + Let's Encrypt or mkcert) and pass `--frontend-url https://...`.
 
-The helper never rewrites an existing config. If one written by an older helper still has `security.cookieSecure=false`, it warns that the backend will not start. Set the value to `true` by hand, or rerun with `--rotate-secrets` to regenerate the config.
+The helper never rewrites an existing config. If one written by an older helper still has `security.cookieSecure=false`, it warns that the backend will not start. Set that one value to `true` by hand. Don't use `--rotate-secrets` for this: it regenerates every key, including the encryption and backup-encryption keys. That signs everyone out, and makes encrypted settings and existing backups unreadable.
 
 #### Upgrading
 
