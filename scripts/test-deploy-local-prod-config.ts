@@ -37,7 +37,8 @@ for (const key of Object.keys(process.env)) {
 	if (key.startsWith(envPrefix)) delete process.env[key];
 }
 
-// The deployer gets its roots from flags, so its child needs only what the OS and Bun need to run.
+// The deployer gets its roots from flags, so its child needs only what the OS and Bun need to run,
+// on Windows and on the Linux CI runner (HOME for Bun, TMPDIR for the temp directory).
 // Leaving out APPDATA_ROOT, BACKUPS_ROOT and every app secret proves the flags are what it uses.
 const CHILD_ENV_KEYS = [
 	'PATH',
@@ -48,6 +49,8 @@ const CHILD_ENV_KEYS = [
 	'ComSpec',
 	'TEMP',
 	'TMP',
+	'HOME',
+	'TMPDIR',
 ];
 const childEnv: Record<string, string> = {};
 for (const key of CHILD_ENV_KEYS) {
