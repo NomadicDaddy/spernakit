@@ -239,6 +239,7 @@
 		"test:secret-permissions": "bun scripts/test-secret-permissions.ts",
 		"test:secrets-file": "bun scripts/test-secrets-file.ts",
 		"test:security-fixes": "bun scripts/test-security-fixes.ts",
+		"test:seed-announcement": "bun scripts/test-seed-announcement.ts",
 		"test:seed-credentials-never-logged": "bun scripts/test-seed-credentials-never-logged.ts",
 		"test:seed-rerun-honesty": "bun scripts/test-seed-rerun-honesty.ts",
 		"test:smoke-cache-status": "bun scripts/test-smoke-cache-status.ts",

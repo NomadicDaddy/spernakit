@@ -11,6 +11,7 @@ import { resolve } from 'node:path';
 
 import { initializeConfig } from '../config/configLoader.ts';
 import { projectRoot } from '../config/configUtils.ts';
+import { getAuthSettings } from '../services/authService.ts';
 import {
 	getCredentials,
 	getSeedUsersWithPasswords,
@@ -21,7 +22,7 @@ import { closeDatabase, initializeDatabase } from './index.ts';
 import { users } from './schema/users.ts';
 import { workspaceMembers } from './schema/workspaces.ts';
 import { executeSeedOrchestration } from './seed/orchestration.ts';
-import { printSeedCredentialsToConsole } from './seedCredentialDisplay.ts';
+import { printSeedCredentialsToConsole, productionSeedNotice } from './seedCredentialDisplay.ts';
 
 const config = initializeConfig();
 configureLogger(config);
@@ -71,11 +72,9 @@ async function seed(): Promise<void> {
 		: getCredentials();
 	printSeedCredentialsToConsole(credentials);
 	if (isProduction) {
-		logDatabase(
-			'warn',
-			'IMPORTANT: Save the displayed production credentials now - they cannot be retrieved later. ' +
-				'All accounts require password change on first login.',
-		);
+		// The same toggle seedUsersIfEmpty reads for requiresPasswordChange, so the notice and the
+		// seeded account flags cannot disagree.
+		logDatabase('warn', productionSeedNotice(getAuthSettings().requirePasswordChange));
 	}
 
 	const createdUsers = await executeSeedOrchestration(db, {

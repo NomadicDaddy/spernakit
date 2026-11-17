@@ -3075,6 +3075,22 @@
 				"description": "deploy:local-prod writes a config the production validator accepts and refuses plain-HTTP non-loopback URLs",
 				"name": "test:deploy-local-prod-config",
 				"run": ["bun", "run", "test:deploy-local-prod-config"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/db/**/*.ts",
+						"backend/src/services/auth/**/*.ts",
+						"backend/src/services/authService.ts",
+						"backend/src/utils/auth/passwordGenerator.ts",
+						"scripts/test-seed-announcement.ts",
+						"package.json"
+					]
+				},
+				"description": "The production seed notice states the password-change requirement only when the toggle that sets it is on",
+				"name": "test:seed-announcement",
+				"run": ["bun", "run", "test:seed-announcement"]
 			}
 		]
 	},
