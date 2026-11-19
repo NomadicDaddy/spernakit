@@ -3214,7 +3214,7 @@
 					"inputs": [
 						"scripts/lib/template/hooks-path.ts",
 						"scripts/set-hooks-path.ts",
-						"scripts/smokestack/lib/shared-core/hooks-scope.ts",
+						"scripts/lib/template/git-hooks-scope.ts",
 						"scripts/test-worktree-hooks-path.ts",
 						"package.json"
 					]

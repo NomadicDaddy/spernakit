@@ -15,11 +15,14 @@ this release.
 
 ### Fixed
 
-- Installing in an upgrade worktree no longer points the main checkout's hooks at a folder only
-  the worktree has. With `extensions.worktreeConfig` on, `prepare` (now `scripts/set-hooks-path.ts`)
-  writes `core.hooksPath` to the worktree's own config, so each checkout keeps running its own
-  guards. With it off, `prepare` writes the shared value as before. The template's hooks-path check
-  reads the value git actually uses for that checkout.
+- In a repository with `extensions.worktreeConfig` on, installing in an upgrade worktree no
+  longer points the main checkout's hooks at a folder only the worktree has. `prepare` (now
+  `scripts/set-hooks-path.ts`) writes `core.hooksPath` to the worktree's own config, so each
+  checkout keeps running its own guards. With the extension off, `prepare` writes the shared value
+  as before, so turn it on before upgrading in a worktree. The template's hooks-path check reads
+  the value git actually uses for that checkout. Both use the template's own
+  `scripts/lib/template/git-hooks-scope.ts`, so they work before or after the app takes Smokestack
+  0.10.12.
 - `format:check` no longer reads `.records/`, which is kept out of git and often exists only in
   the canonical checkout.
 
@@ -27,6 +30,8 @@ this release.
 
 - Before creating an upgrade worktree, turn on per-worktree config once per repository with
   `git config extensions.worktreeConfig true`. DEVELOPMENT.md (Template Upgrade) has the details.
+- No Smokestack version is required first: `prepare` and the hooks-path check carry their own
+  scope rules. Smokestack's own hook readers honour the worktree value once the app takes 0.10.12.
 
 ## [3.50.3] - 2026-11-19
 

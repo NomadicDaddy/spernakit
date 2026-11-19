@@ -5,17 +5,20 @@
  *
  * Against a throwaway repository whose main checkout dispatches from `.githooks` and a linked
  * worktree that carries the delivered `scripts/smokestack/hooks`:
- *  1. With `extensions.worktreeConfig` on, running scripts/set-hooks-path.ts (what `prepare` runs)
- *     in the worktree writes the worktree's own value. The main checkout keeps `.githooks`, and
- *     `git hook run pre-commit` in each checkout runs that checkout's own guard, before and after
- *     the install.
+ *  1. With `extensions.worktreeConfig` on, this checkout's real `prepare` script, run with
+ *     `bun run prepare` in the worktree, writes the worktree's own value and leaves the main
+ *     checkout on `.githooks`. `git hook run pre-commit` in each checkout runs that checkout's own
+ *     guard before the install, after it, and after the upgrade branch merges into main.
  *  2. hasSmokestackHooksPath (scripts/lib/template/hooks-path.ts) reads the value git dispatches
  *     from: true in the worktree, false in the main checkout.
- *  3. With the extension off, the script writes the shared value as before (`--local`), and never
- *     turns the extension on itself.
+ *  3. With the extension off, `prepare` writes the shared value as before (`--local`), and never
+ *     turns the extension on.
+ * The fixture copies only the template's own files: `prepare` must not depend on Smokestack's
+ * delivered hooks-scope.ts, which a derived app can receive after the template upgrade.
  */
 import {
 	chmodSync,
+	copyFileSync,
 	existsSync,
 	mkdirSync,
 	mkdtempSync,
@@ -24,12 +27,11 @@ import {
 	writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { hasSmokestackHooksPath } from './lib/template/hooks-path.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
-const SET_HOOKS = join(repoRoot, 'scripts', 'set-hooks-path.ts');
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
@@ -74,9 +76,35 @@ function guardRuns(cwd: string): string {
 		: '';
 }
 
-function setHooks(cwd: string): void {
-	const result = Bun.spawnSync(['bun', SET_HOOKS], { cwd, stderr: 'pipe', stdout: 'pipe' });
-	assert(result.exitCode === 0, `set-hooks-path failed in ${cwd}: ${result.stderr.toString()}`);
+/**
+ * Give a checkout what this template's `prepare` runs: the real `prepare` script from this
+ * checkout's package.json, the real hooks-path setter and its scope module, and a stub for the
+ * Smokestack guard setup, which writes a patterns file outside the repository and has its own tests.
+ */
+function stagePrepare(dir: string): void {
+	const pkg = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
+		scripts: { prepare: string };
+	};
+	writeFileSync(
+		join(dir, 'package.json'),
+		JSON.stringify({ scripts: { prepare: pkg.scripts.prepare } }),
+	);
+	for (const file of ['scripts/set-hooks-path.ts', 'scripts/lib/template/git-hooks-scope.ts']) {
+		mkdirSync(dirname(join(dir, file)), { recursive: true });
+		copyFileSync(join(repoRoot, file), join(dir, file));
+	}
+	mkdirSync(join(dir, 'scripts', 'smokestack'), { recursive: true });
+	writeFileSync(join(dir, 'scripts', 'smokestack', 'run-bash.ts'), 'process.exit(0);\n');
+}
+
+/** Run the checkout's `prepare` exactly as an install does. */
+function runPrepare(cwd: string): void {
+	const result = Bun.spawnSync(['bun', 'run', 'prepare'], {
+		cwd,
+		stderr: 'pipe',
+		stdout: 'pipe',
+	});
+	assert(result.exitCode === 0, `prepare failed in ${cwd}: ${result.stderr.toString()}`);
 }
 
 function repository(dir: string): void {
@@ -94,7 +122,8 @@ function repository(dir: string): void {
 function upgradeWorktree(main: string, worktree: string): void {
 	git(main, 'worktree', 'add', '-q', '-b', 'upgrade', worktree);
 	writeHook(join(worktree, 'scripts', 'smokestack', 'hooks'), 'worktree-guard');
-	git(worktree, 'add', 'scripts');
+	stagePrepare(worktree);
+	git(worktree, 'add', 'scripts', 'package.json');
 	git(
 		worktree,
 		'update-index',
@@ -112,9 +141,9 @@ function worktreeScoped(root: string): void {
 	repository(main);
 	git(main, 'config', 'extensions.worktreeConfig', 'true');
 	upgradeWorktree(main, worktree);
-	assert(guardRuns(main) === 'main-guard', '1: before the install, main must run its own guard');
+	bothGuards(main, worktree, 'before the install', 'main-guard');
 
-	setHooks(worktree);
+	runPrepare(worktree);
 	assert(
 		config(main, '--local', 'core.hooksPath') === '.githooks',
 		'1: the install must leave main on .githooks',
@@ -123,24 +152,31 @@ function worktreeScoped(root: string): void {
 		config(worktree, '--worktree', 'core.hooksPath') === 'scripts/smokestack/hooks',
 		'1: the install must write the worktree its own value',
 	);
-	assert(
-		guardRuns(main) === 'main-guard',
-		`1: after the install, main must run its own guard, got "${guardRuns(main)}"`,
-	);
-	assert(
-		guardRuns(worktree) === 'worktree-guard',
-		`1: the worktree must run its own guard, got "${guardRuns(worktree)}"`,
-	);
-
+	bothGuards(main, worktree, 'after the install', 'worktree-guard');
 	assert(hasSmokestackHooksPath(worktree), '2: the worktree is on the delivered hooks');
 	assert(!hasSmokestackHooksPath(main), '2: the main checkout is not');
+
+	git(main, 'merge', '-q', '--ff-only', 'upgrade');
+	bothGuards(main, worktree, 'after the merge', 'worktree-guard');
+}
+
+/** Main runs its own .githooks guard, and the worktree the guard it should have at this stage. */
+function bothGuards(main: string, worktree: string, stage: string, worktreeGuard: string): void {
+	const mainRan = guardRuns(main);
+	assert(mainRan === 'main-guard', `1: ${stage}, main must run its own guard, got "${mainRan}"`);
+	const worktreeRan = guardRuns(worktree);
+	assert(
+		worktreeRan === worktreeGuard,
+		`1: ${stage}, the worktree must run ${worktreeGuard}, got "${worktreeRan}"`,
+	);
 }
 
 function sharedScope(root: string): void {
 	const main = join(root, 'plain');
 	mkdirSync(main);
 	repository(main);
-	setHooks(main);
+	stagePrepare(main);
+	runPrepare(main);
 	assert(
 		config(main, '--local', 'core.hooksPath') === 'scripts/smokestack/hooks',
 		'3: without the extension the shared value is written',

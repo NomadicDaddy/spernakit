@@ -9,7 +9,7 @@
  * that is a repository-wide setting, made once on purpose before an upgrade worktree is created
  * (worktree-prepare-shared-hook-path, option W).
  */
-import { hooksConfigFlag } from './smokestack/lib/shared-core/hooks-scope.ts';
+import { hooksConfigFlag } from './lib/template/git-hooks-scope.ts';
 
 const HOOKS_DIR = 'scripts/smokestack/hooks';
 

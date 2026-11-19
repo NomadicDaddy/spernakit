@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { effectiveHooksPath } from '../../smokestack/lib/shared-core/hooks-scope.ts';
+import { effectiveHooksPath } from './git-hooks-scope.ts';
 
 const HOOKS = ['pre-commit', 'pre-push'] as const;
 const HOOKS_DIR = 'scripts/smokestack/hooks';
