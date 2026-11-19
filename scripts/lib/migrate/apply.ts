@@ -145,7 +145,7 @@ export function runMigrations(paths: Paths): void {
 				{ cause: err },
 			);
 		}
-		const pruned = prunePreMigrateBackups(paths.database);
+		const pruned = prunePreMigrateBackups(paths.database, backupPath);
 		if (pruned.length > 0) {
 			console.log(`✓ Removed ${pruned.length} older pre-migration backup(s)\n`);
 		}

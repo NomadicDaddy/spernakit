@@ -15,6 +15,8 @@
  *  6. --baseline records content hashes too.
  * 11. A migrating run keeps the newest five timestamped pre-migration backups (both namings) and
  *     leaves the startup runner's fixed-name backup and unrelated files alone.
+ * 12. Retention keeps the backup the run just took even when its timestamp is the oldest, and a
+ *     directory it cannot list makes it warn and delete nothing rather than throw.
  * Startup runner (backend/src/db/migrate/execution.ts assertPostMigrationIntegrity):
  *  7. A failed post-check with no backup refuses startup instead of returning.
  *  8. A failed restore says the restore failed, never that the database was restored.
@@ -26,6 +28,7 @@ import { existsSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 import { assertPostMigrationIntegrity } from '../backend/src/db/migrate/execution.ts';
+import { prunePreMigrateBackups } from './lib/migrate/backups.ts';
 import {
 	ADD_SQL,
 	type ApplyModule,
@@ -90,6 +93,38 @@ function retentionCase(cli: ApplyModule): void {
 		untouched.every((name) => existsSync(join(dir, name))),
 		"11: the startup runner's backup and unrelated files must be left alone",
 	);
+}
+
+/** 12. The just-taken backup always survives, and an unlistable directory never throws. */
+function retentionGuardsCase(): void {
+	const dir = tempRoot('retention-guards');
+	const database = join(dir, 'test.db');
+	const names = [1, 2, 3, 4, 5, 6].map(
+		(day) => `test.db.pre-migrate-2026-02-0${String(day)}T00-00-00-000Z.bak`,
+	);
+	names.forEach((name, index) => {
+		const file = join(dir, name);
+		writeFileSync(file, 'backup');
+		// The first one is the run's own backup, dated oldest as if the clock had gone back.
+		const when = new Date(Date.UTC(2026, 1, index + 1));
+		utimesSync(file, when, when);
+	});
+	const current = join(dir, names[0] ?? '');
+	prunePreMigrateBackups(database, current);
+	assert(existsSync(current), '12: the backup the run just took must never be pruned');
+	const left = readdirSync(dir).filter((name) => name.endsWith('.bak'));
+	assert(left.length === 5, `12: five backups should remain, got ${left.join(', ')}`);
+
+	let threw = false;
+	try {
+		prunePreMigrateBackups(
+			join(dir, 'missing-dir', 'test.db'),
+			join(dir, 'missing-dir', 'x.bak'),
+		);
+	} catch {
+		threw = true;
+	}
+	assert(!threw, '12: an unlistable directory must not throw');
 }
 
 function cliCases(cli: ApplyModule): void {
@@ -247,6 +282,7 @@ try {
 	const cli = await loadCliCopy();
 	cliCases(cli);
 	retentionCase(cli);
+	retentionGuardsCase();
 	startupCases();
 } finally {
 	removeTempRoots();
@@ -257,4 +293,4 @@ if (failures.length > 0) {
 	for (const failure of failures) console.error(`  - ${failure}`);
 	process.exit(1);
 }
-console.log('migration runner safety: all 11 checks passed');
+console.log('migration runner safety: all 12 checks passed');

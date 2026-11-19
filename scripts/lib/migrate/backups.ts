@@ -17,43 +17,62 @@ function escapeRegExp(text: string): string {
 	return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/**
- * Delete all but the newest `keep` timestamped pre-migration backups of `databasePath`: the
- * runner's `<db>.pre-migrate-<ISO time>.bak` and the old entrypoint's `<db>.pre-migrate.<14
- * digits>.bak`. Newest is judged by modification time. A file that cannot be deleted is reported
- * and left, so retention never stops a migration.
- *
- * @param databasePath - The database the backups were taken of
- * @param keep - How many to keep
- * @returns The backups deleted
- */
-export function prunePreMigrateBackups(
-	databasePath: string,
-	keep: number = PRE_MIGRATE_BACKUPS_KEPT,
-): string[] {
+function warn(what: string, err: unknown): void {
+	console.warn(`  ⚠ ${what}: ${err instanceof Error ? err.message : String(err)}`);
+}
+
+/** The other timestamped backups of the database, newest first; empty if they cannot be listed. */
+function olderBackups(databasePath: string, current: string): { file: string; mtime: number }[] {
 	const dir = path.dirname(databasePath);
 	const base = escapeRegExp(path.basename(databasePath));
 	const pattern = new RegExp(
 		`^${base}\\.pre-migrate(?:-\\d{4}-\\d{2}-\\d{2}T[\\d-]+Z|\\.\\d{14})\\.bak$`,
 	);
-	const backups = fs
-		.readdirSync(dir)
-		.filter((name) => pattern.test(name))
-		.map((name) => {
-			const file = path.join(dir, name);
-			return { file, mtime: fs.statSync(file).mtimeMs };
-		})
-		.sort((a, b) => b.mtime - a.mtime);
+	let names: string[];
+	try {
+		names = fs.readdirSync(dir);
+	} catch (err) {
+		warn(`Could not list ${dir} to prune old pre-migration backups`, err);
+		return [];
+	}
+	const backups: { file: string; mtime: number }[] = [];
+	for (const name of names.filter((entry) => pattern.test(entry))) {
+		const file = path.join(dir, name);
+		if (path.resolve(file) === path.resolve(current)) continue;
+		try {
+			backups.push({ file, mtime: fs.statSync(file).mtimeMs });
+		} catch (err) {
+			warn(`Could not read ${file}; leaving it`, err);
+		}
+	}
+	return backups.sort((a, b) => b.mtime - a.mtime);
+}
 
+/**
+ * Delete all but the newest `keep` timestamped pre-migration backups of `databasePath`: the
+ * runner's `<db>.pre-migrate-<ISO time>.bak` and the old entrypoint's `<db>.pre-migrate.<14
+ * digits>.bak`. The backup this run just took always counts as one of the kept, whatever its
+ * timestamp says. Retention is best-effort: a directory that cannot be listed, or a file that
+ * cannot be read or deleted, is reported and left, so retention never stops a migration or a
+ * container start.
+ *
+ * @param databasePath - The database the backups were taken of
+ * @param current - The backup this run just took, which is never deleted
+ * @param keep - How many to keep, the current one included
+ * @returns The backups deleted
+ */
+export function prunePreMigrateBackups(
+	databasePath: string,
+	current: string,
+	keep: number = PRE_MIGRATE_BACKUPS_KEPT,
+): string[] {
 	const deleted: string[] = [];
-	for (const { file } of backups.slice(keep)) {
+	for (const { file } of olderBackups(databasePath, current).slice(Math.max(0, keep - 1))) {
 		try {
 			fs.unlinkSync(file);
 			deleted.push(file);
 		} catch (err) {
-			console.warn(
-				`  ⚠ Could not delete old pre-migration backup ${file}: ${err instanceof Error ? err.message : String(err)}`,
-			);
+			warn(`Could not delete old pre-migration backup ${file}`, err);
 		}
 	}
 	return deleted;
