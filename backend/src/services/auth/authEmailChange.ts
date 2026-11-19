@@ -7,6 +7,7 @@ import { SERVICE_ERRORS } from '../../constants/serviceResults.ts';
 import { getDb } from '../../db/index.ts';
 import { emailChangeTokens } from '../../db/schema/emailChangeTokens.ts';
 import { users } from '../../db/schema/users.ts';
+import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { isRawUniqueViolation } from '../../utils/errorResponse.ts';
 import { logAuth } from '../../utils/logger.ts';
@@ -170,6 +171,7 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 		db.transaction((tx) => {
 			tx.update(users)
 				.set({
+					csrfToken: null,
 					email: record.newEmail,
 					emailVerified: true,
 					updatedAt: new Date(),
@@ -180,6 +182,9 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 				.set({ consumedAt: new Date() })
 				.where(eq(emailChangeTokens.id, record.id))
 				.run();
+			// Revoking access tokens alone leaves every refresh family live, and the refresh route
+			// checks only its own session row, so each browser would simply refresh back in.
+			endAllRefreshSessions(record.userId, tx);
 		});
 	} catch (err: unknown) {
 		// Claimed between the check and the write: the transaction rolled back, so consume the token

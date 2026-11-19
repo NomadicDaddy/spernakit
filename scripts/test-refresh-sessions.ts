@@ -17,6 +17,8 @@
  *  5. Token cleanup deletes only expired rows. It used to clear the refresh credential of anyone
  *     whose last password sign-in was 30 days old, cutting off sessions kept alive by refresh
  *     (`.aidd/features/audit-logic-1790885878-token-cleanup-clears-the-refresh-hash-30-days-after-the-last-login-cutting-off-a`).
+ *  6. A confirmed email change ends every sign-in the user has, as the confirm page says
+ *     (`.aidd/features/audit-logic-1790885878-email-change-confirmation-claims-to-revoke-all-sessions-but-leaves-the-refresh-c`).
  */
 import { Database } from 'bun:sqlite';
 import { mkdtempSync, rmSync } from 'node:fs';
@@ -30,6 +32,10 @@ import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { changeUserPassword, hashPassword } from '../backend/src/services/auth/authCore.ts';
+import {
+	confirmEmailChange,
+	requestEmailChange,
+} from '../backend/src/services/auth/authEmailChange.ts';
 import { tokenCleanupTask } from '../backend/src/services/scheduler/cleanupAuth.ts';
 import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
@@ -42,7 +48,7 @@ const NEW_PASSWORD = 'Batt3ryStaple!7';
  * resolution, so a later case on the same account would see its fresh tokens revoked for reasons
  * that belong to an earlier case.
  */
-const ACCOUNTS = ['two-browsers', 'replay', 'logout', 'password', 'cleanup'] as const;
+const ACCOUNTS = ['two-browsers', 'replay', 'logout', 'password', 'cleanup', 'email'] as const;
 
 type Session = { access: string; csrf: string; refresh: string };
 
@@ -221,6 +227,22 @@ async function run(): Promise<void> {
 		(await refresh(live)).status === 200,
 		'token cleanup must not cut off a live sign-in whose last password login is old',
 	);
+
+	// --- 6. a confirmed email change ends every sign-in ---
+	const home = await signIn('email');
+	const office = await signIn('email');
+	const requested = await requestEmailChange(
+		ACCOUNTS.indexOf('email') + 1,
+		PASSWORD,
+		'email-new@example.com',
+	);
+	assert(requested.success, 'the email change request must succeed');
+	if (requested.success) {
+		const confirmed = confirmEmailChange(requested.token);
+		assert(confirmed.success, 'the email change must confirm');
+	}
+	assert((await refresh(home)).status === 401, 'an email change must end the first sign-in');
+	assert((await refresh(office)).status === 401, 'an email change must end the second sign-in');
 
 	await closeDatabase();
 	try {
