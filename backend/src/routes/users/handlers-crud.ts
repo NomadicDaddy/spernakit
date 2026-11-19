@@ -219,6 +219,33 @@ function handleUpdateUser({
 	}
 }
 
+/**
+ * Soft-delete the target, or say why not: 409 RESOURCE_PROTECTED when the user still owns an
+ * active workspace, 404 when there is no such active user.
+ *
+ * @param targetId - The user to delete
+ * @param actorId - The user performing the delete
+ * @param set - The response status setter
+ * @returns The refusal to send, or null once the user is deleted
+ */
+function softDeleteOrRefuse(
+	targetId: number,
+	actorId: number,
+	set: { status?: number | string },
+): null | ReturnType<typeof conflictError> {
+	let deleted: boolean;
+	try {
+		deleted = softDeleteUser(targetId, actorId);
+	} catch (err) {
+		if (!isResourceProtectedError(err)) throw err;
+		set.status = HTTP_STATUS.CONFLICT;
+		return conflictError(err.message, RESOURCE_ERROR_CODES.RESOURCE_PROTECTED);
+	}
+	if (deleted) return null;
+	set.status = HTTP_STATUS.NOT_FOUND;
+	return notFoundError('User');
+}
+
 function handleDeleteUser({
 	params,
 	set,
@@ -242,18 +269,8 @@ function handleDeleteUser({
 		return forbiddenError('Cannot delete user with equal or higher role level');
 	}
 
-	let deleted: boolean;
-	try {
-		deleted = softDeleteUser(targetId, authUser.id);
-	} catch (err) {
-		if (!isResourceProtectedError(err)) throw err;
-		set.status = HTTP_STATUS.CONFLICT;
-		return conflictError(err.message, RESOURCE_ERROR_CODES.RESOURCE_PROTECTED);
-	}
-	if (!deleted) {
-		set.status = HTTP_STATUS.NOT_FOUND;
-		return notFoundError('User');
-	}
+	const refusal = softDeleteOrRefuse(targetId, authUser.id, set);
+	if (refusal) return refusal;
 
 	// Revoke all tokens and clear stored credentials for the deleted user
 	const config = getConfig();

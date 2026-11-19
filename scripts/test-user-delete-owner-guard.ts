@@ -107,18 +107,25 @@ async function bulkDelete(app: App, admin: Claim): Promise<void> {
 	const body = (await response.json()) as {
 		data?: { results?: { error?: string; id: number; success: boolean }[] };
 	};
-	const results = body.data?.results ?? [];
+	assert(response.status === 200, `2: bulk delete should answer 200, got ${response.status}`);
+	checkBulkItems(body.data?.results ?? [], owner, plain);
+	assert(getUserById(owner) !== null, '2: the owner should stay active');
+	assert(getUserById(plain) === null, '3: a bulk-deleted user should not be served from cache');
+}
+
+function checkBulkItems(
+	results: { error?: string; id: number; success: boolean }[],
+	owner: number,
+	plain: number,
+): void {
 	const ownerResult = results.find((r) => r.id === owner);
 	const plainResult = results.find((r) => r.id === plain);
-	assert(response.status === 200, `2: bulk delete should answer 200, got ${response.status}`);
 	assert(ownerResult?.success === false, "2: the owner's item should fail");
 	assert(
 		ownerResult?.error?.includes('Delete those workspaces') === true,
 		`2: the owner's item should carry the owner message, got ${ownerResult?.error}`,
 	);
 	assert(plainResult?.success === true, "2: the non-owner's item should succeed");
-	assert(getUserById(owner) !== null, '2: the owner should stay active');
-	assert(getUserById(plain) === null, '3: a bulk-deleted user should not be served from cache');
 }
 
 async function bulkRoles(app: App, admin: Claim): Promise<void> {
