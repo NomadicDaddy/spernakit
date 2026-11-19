@@ -6,6 +6,7 @@ import { Database } from 'bun:sqlite';
 
 import type { JournalEntry, Paths, PerformanceMetrics } from './types.ts';
 
+import { prunePreMigrateBackups } from './backups.ts';
 import { assertNoOrphanedMigrations, selectPendingMigrations } from './discovery.ts';
 import { recordMigrationFailure, recordMigrationSuccess } from './history.ts';
 import { computeContentHash, readJournal, readMigrationSql } from './journal.ts';
@@ -143,6 +144,10 @@ export function runMigrations(paths: Paths): void {
 				`Pre-migration backup failed: ${err instanceof Error ? err.message : String(err)}`,
 				{ cause: err },
 			);
+		}
+		const pruned = prunePreMigrateBackups(paths.database);
+		if (pruned.length > 0) {
+			console.log(`✓ Removed ${pruned.length} older pre-migration backup(s)\n`);
 		}
 
 		// Track overall performance

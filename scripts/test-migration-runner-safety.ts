@@ -13,6 +13,8 @@
  *  5. A migration that leaves a foreign-key violation fails before COMMIT: no journal row, no
  *     data. A control proves the fixture really produces a violation foreign_key_check reports.
  *  6. --baseline records content hashes too.
+ * 11. A migrating run keeps the newest five timestamped pre-migration backups (both namings) and
+ *     leaves the startup runner's fixed-name backup and unrelated files alone.
  * Startup runner (backend/src/db/migrate/execution.ts assertPostMigrationIntegrity):
  *  7. A failed post-check with no backup refuses startup instead of returning.
  *  8. A failed restore says the restore failed, never that the database was restored.
@@ -20,7 +22,8 @@
  * 10. A clean database passes.
  */
 import { Database } from 'bun:sqlite';
-import { join } from 'node:path';
+import { existsSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 import { assertPostMigrationIntegrity } from '../backend/src/db/migrate/execution.ts';
 import {
@@ -43,6 +46,50 @@ import {
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
+}
+
+/**
+ * 11. A migrating run keeps the newest five timestamped pre-migration backups, of both the
+ * runner's and the old entrypoint's naming, and leaves the startup runner's fixed-name backup and
+ * unrelated files alone.
+ */
+function retentionCase(cli: ApplyModule): void {
+	const paths = writeMigrations(tempRoot('retention'), { '0001_base': BASE_SQL });
+	const dir = dirname(paths.database);
+	const old = [
+		'test.db.pre-migrate-2026-01-01T00-00-00-000Z.bak',
+		'test.db.pre-migrate.20260102000000.bak',
+		'test.db.pre-migrate-2026-01-03T00-00-00-000Z.bak',
+		'test.db.pre-migrate.20260104000000.bak',
+		'test.db.pre-migrate-2026-01-05T00-00-00-000Z.bak',
+		'test.db.pre-migrate.20260106000000.bak',
+		'test.db.pre-migrate-2026-01-07T00-00-00-000Z.bak',
+	];
+	const untouched = ['test.db.pre-migrate.bak', 'test.db.other.bak'];
+	old.forEach((name, day) => {
+		const file = join(dir, name);
+		writeFileSync(file, 'old backup');
+		const when = new Date(Date.UTC(2026, 0, day + 1));
+		utimesSync(file, when, when);
+	});
+	for (const name of untouched) writeFileSync(join(dir, name), 'keep');
+	cli.runMigrations(paths);
+
+	const timestamped = readdirSync(dir).filter(
+		(name) => /\.pre-migrate[.-].+\.bak$/.test(name) && name !== 'test.db.pre-migrate.bak',
+	);
+	assert(
+		timestamped.length === 5,
+		`11: five backups should remain, got ${timestamped.join(', ')}`,
+	);
+	assert(
+		old.slice(3).every((name) => timestamped.includes(name)),
+		`11: the four newest old backups should be kept, got ${timestamped.join(', ')}`,
+	);
+	assert(
+		untouched.every((name) => existsSync(join(dir, name))),
+		"11: the startup runner's backup and unrelated files must be left alone",
+	);
 }
 
 function cliCases(cli: ApplyModule): void {
@@ -197,7 +244,9 @@ function startupCases(): void {
 }
 
 try {
-	cliCases(await loadCliCopy());
+	const cli = await loadCliCopy();
+	cliCases(cli);
+	retentionCase(cli);
 	startupCases();
 } finally {
 	removeTempRoots();
@@ -208,4 +257,4 @@ if (failures.length > 0) {
 	for (const failure of failures) console.error(`  - ${failure}`);
 	process.exit(1);
 }
-console.log('migration runner safety: all 10 checks passed');
+console.log('migration runner safety: all 11 checks passed');

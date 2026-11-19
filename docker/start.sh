@@ -83,20 +83,9 @@ fi
 # Lock down config file after initial read
 chmod 400 "$CONFIG_FILE" 2>/dev/null || true
 
-# Pre-migration database backup (SQLite DDL auto-commits prevent reliable rollback)
-# Default DB file derives from APP_SLUG discovered above so downstream apps with
-# their own slug (e.g. your-app) don't silently skip the backup step.
-DB_FILE="${DB_FILE:-/app/data/${APP_SLUG}.db}"
-if [ -f "$DB_FILE" ]; then
-    BACKUP_FILE="${DB_FILE}.pre-migrate.$(date +%Y%m%d%H%M%S).bak"
-    if cp "$DB_FILE" "$BACKUP_FILE"; then
-        echo "Pre-migration backup: $BACKUP_FILE"
-    else
-        echo "⚠ Pre-migration backup failed (proceeding anyway)"
-    fi
-fi
-
-# Run database migrations (with retry for transient failures)
+# Run database migrations (with retry for transient failures). db:migrate takes its own
+# consistent VACUUM INTO backup before it applies anything, only when migrations are pending, and
+# keeps the newest five; the entrypoint no longer copies the database on every start.
 MAX_RETRIES=3
 RETRY=0
 until cd /app && bun run db:migrate; do
