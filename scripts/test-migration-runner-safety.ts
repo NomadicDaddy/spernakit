@@ -24,11 +24,10 @@
  * 10. A clean database passes.
  */
 import { Database } from 'bun:sqlite';
-import { existsSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 
 import { assertPostMigrationIntegrity } from '../backend/src/db/migrate/execution.ts';
-import { prunePreMigrateBackups } from './lib/migrate/backups.ts';
+import { retentionCase, retentionGuardsCase } from './lib/migration-retention-cases.ts';
 import {
 	ADD_SQL,
 	type ApplyModule,
@@ -49,82 +48,6 @@ import {
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
-}
-
-/**
- * 11. A migrating run keeps the newest five timestamped pre-migration backups, of both the
- * runner's and the old entrypoint's naming, and leaves the startup runner's fixed-name backup and
- * unrelated files alone.
- */
-function retentionCase(cli: ApplyModule): void {
-	const paths = writeMigrations(tempRoot('retention'), { '0001_base': BASE_SQL });
-	const dir = dirname(paths.database);
-	const old = [
-		'test.db.pre-migrate-2026-01-01T00-00-00-000Z.bak',
-		'test.db.pre-migrate.20260102000000.bak',
-		'test.db.pre-migrate-2026-01-03T00-00-00-000Z.bak',
-		'test.db.pre-migrate.20260104000000.bak',
-		'test.db.pre-migrate-2026-01-05T00-00-00-000Z.bak',
-		'test.db.pre-migrate.20260106000000.bak',
-		'test.db.pre-migrate-2026-01-07T00-00-00-000Z.bak',
-	];
-	const untouched = ['test.db.pre-migrate.bak', 'test.db.other.bak'];
-	old.forEach((name, day) => {
-		const file = join(dir, name);
-		writeFileSync(file, 'old backup');
-		const when = new Date(Date.UTC(2026, 0, day + 1));
-		utimesSync(file, when, when);
-	});
-	for (const name of untouched) writeFileSync(join(dir, name), 'keep');
-	cli.runMigrations(paths);
-
-	const timestamped = readdirSync(dir).filter(
-		(name) => /\.pre-migrate[.-].+\.bak$/.test(name) && name !== 'test.db.pre-migrate.bak',
-	);
-	assert(
-		timestamped.length === 5,
-		`11: five backups should remain, got ${timestamped.join(', ')}`,
-	);
-	assert(
-		old.slice(3).every((name) => timestamped.includes(name)),
-		`11: the four newest old backups should be kept, got ${timestamped.join(', ')}`,
-	);
-	assert(
-		untouched.every((name) => existsSync(join(dir, name))),
-		"11: the startup runner's backup and unrelated files must be left alone",
-	);
-}
-
-/** 12. The just-taken backup always survives, and an unlistable directory never throws. */
-function retentionGuardsCase(): void {
-	const dir = tempRoot('retention-guards');
-	const database = join(dir, 'test.db');
-	const names = [1, 2, 3, 4, 5, 6].map(
-		(day) => `test.db.pre-migrate-2026-02-0${String(day)}T00-00-00-000Z.bak`,
-	);
-	names.forEach((name, index) => {
-		const file = join(dir, name);
-		writeFileSync(file, 'backup');
-		// The first one is the run's own backup, dated oldest as if the clock had gone back.
-		const when = new Date(Date.UTC(2026, 1, index + 1));
-		utimesSync(file, when, when);
-	});
-	const current = join(dir, names[0] ?? '');
-	prunePreMigrateBackups(database, current);
-	assert(existsSync(current), '12: the backup the run just took must never be pruned');
-	const left = readdirSync(dir).filter((name) => name.endsWith('.bak'));
-	assert(left.length === 5, `12: five backups should remain, got ${left.join(', ')}`);
-
-	let threw = false;
-	try {
-		prunePreMigrateBackups(
-			join(dir, 'missing-dir', 'test.db'),
-			join(dir, 'missing-dir', 'x.bak'),
-		);
-	} catch {
-		threw = true;
-	}
-	assert(!threw, '12: an unlistable directory must not throw');
 }
 
 function cliCases(cli: ApplyModule): void {
@@ -281,8 +204,8 @@ function startupCases(): void {
 try {
 	const cli = await loadCliCopy();
 	cliCases(cli);
-	retentionCase(cli);
-	retentionGuardsCase();
+	retentionCase(cli, assert);
+	retentionGuardsCase(assert);
 	startupCases();
 } finally {
 	removeTempRoots();

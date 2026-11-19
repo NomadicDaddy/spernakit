@@ -3170,6 +3170,7 @@
 					"inputs": [
 						"backend/src/db/migrate/**/*.ts",
 						"scripts/lib/migrate/**/*.ts",
+						"scripts/lib/migration-retention-cases.ts",
 						"scripts/lib/migration-safety-fixtures.ts",
 						"scripts/test-migration-runner-safety.ts",
 						"package.json"

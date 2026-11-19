@@ -40,7 +40,10 @@ function olderBackups(databasePath: string, current: string): { file: string; mt
 		const file = path.join(dir, name);
 		if (path.resolve(file) === path.resolve(current)) continue;
 		try {
-			backups.push({ file, mtime: fs.statSync(file).mtimeMs });
+			// Only regular files count, read without following links, so a directory or a link
+			// that happens to match the name never takes a slot from a real backup.
+			const stats = fs.lstatSync(file);
+			if (stats.isFile()) backups.push({ file, mtime: stats.mtimeMs });
 		} catch (err) {
 			warn(`Could not read ${file}; leaving it`, err);
 		}
