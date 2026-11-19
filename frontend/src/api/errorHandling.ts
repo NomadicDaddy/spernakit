@@ -19,7 +19,8 @@ const ERROR_CODE_MESSAGES: Partial<Record<ErrorCode, string>> = {
 		'A resource with that identifier already exists. Use a different name or identifier.',
 	RESOURCE_NOT_FOUND:
 		'The requested resource was not found. It may have been deleted or the URL is incorrect.',
-	RESOURCE_PROTECTED: 'That item is protected and cannot be changed or removed.',
+	// No RESOURCE_PROTECTED entry: each refusal says what protects the item and what to do first
+	// (delete a user's workspaces, keep the default workspace), so its own message is shown.
 	SERVER_INTERNAL_ERROR: 'A server error occurred. Please try again later.',
 };
 

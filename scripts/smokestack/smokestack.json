@@ -1523,6 +1523,30 @@
 						".claude/**"
 					],
 					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-user-delete-owner-guard.ts"
+					]
+				},
+				"description": "Deleting a user who owns an active workspace answers 409 RESOURCE_PROTECTED and says to delete the workspaces first, bulk delete fails that user's item the same way, and bulk delete and bulk role change evict the user cache",
+				"name": "test:user-delete-owner-guard",
+				"run": ["bun", "run", "test:user-delete-owner-guard"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"backend/src/**",
 						"frontend/src/**",
 						"scripts/lib/auth-ordering-fixture.ts",

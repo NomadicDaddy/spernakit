@@ -23,9 +23,11 @@ import {
 	extractErrorMessage,
 	isMfaAlreadyEnabledError,
 	isRawUniqueViolation,
+	isResourceProtectedError,
 	isUniqueConstraintError,
 	MfaAlreadyEnabledError,
 	NotFoundError,
+	ResourceProtectedError,
 	UniqueConstraintError,
 } from './errorTypes.ts';
 import { isPreValidationRejection, PreValidationRejection } from './preValidationRejection.ts';
@@ -53,9 +55,11 @@ export {
 	isMfaAlreadyEnabledError,
 	isPreValidationRejection,
 	isRawUniqueViolation,
+	isResourceProtectedError,
 	isUniqueConstraintError,
 	MfaAlreadyEnabledError,
 	NotFoundError,
 	PreValidationRejection,
+	ResourceProtectedError,
 	UniqueConstraintError,
 };

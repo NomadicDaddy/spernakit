@@ -1,19 +1,24 @@
-import { and, count, eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import type { UserRole } from '../../types/roles.ts';
 
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
-import { workspaces } from '../../db/schema/workspaces.ts';
 import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
-import { isRawUniqueViolation, UniqueConstraintError } from '../../utils/errorResponse.ts';
+import {
+	isRawUniqueViolation,
+	ResourceProtectedError,
+	UniqueConstraintError,
+} from '../../utils/errorResponse.ts';
 import { hashPassword } from '../authService.ts';
 import { bulkDeleteUsers, bulkUpdateUserRoles } from './userBatchService.ts';
 import {
 	buildUpdateUserPayload,
+	countOwnedActiveWorkspaces,
 	enforceUserUniqueness,
 	getExistingUserForUpdate,
 	getUserCache,
+	ownedWorkspacesMessage,
 	type UpdateInput,
 	type UserPublic,
 } from './userCrudHelpers.ts';
@@ -128,14 +133,14 @@ function updateUser(id: number, input: UpdateInput): null | UserPublic {
  * Soft delete a user.
  *
  * Mirrors the hard-delete `restrict` FK on workspaces.ownerId: a user who owns
- * active workspaces cannot be deleted until ownership is transferred. Clears
+ * active workspaces cannot be deleted until those workspaces are deleted. Clears
  * session credentials (refresh token hash, CSRF token) so a soft-deleted user
  * cannot keep refreshing sessions.
  *
  * @param id - User ID
  * @param deletedBy - ID of user performing the delete
  * @returns True if deleted
- * @throws Error when the user owns active workspaces
+ * @throws ResourceProtectedError when the user owns active workspaces
  */
 function softDeleteUser(id: number, deletedBy: number): boolean {
 	const db = getDb();
@@ -148,18 +153,8 @@ function softDeleteUser(id: number, deletedBy: number): boolean {
 
 	if (!existing) return false;
 
-	const ownedWorkspaces = db
-		.select({ count: count() })
-		.from(workspaces)
-		.where(and(eq(workspaces.ownerId, id), eq(workspaces.isDeleted, false)))
-		.get();
-	const ownedCount = ownedWorkspaces?.count ?? 0;
-	if (ownedCount > 0) {
-		throw new Error(
-			`Cannot delete user: user owns ${ownedCount} active workspace(s). ` +
-				'Transfer workspace ownership before deleting this account.',
-		);
-	}
+	const ownedCount = countOwnedActiveWorkspaces([id]).get(id) ?? 0;
+	if (ownedCount > 0) throw new ResourceProtectedError(ownedWorkspacesMessage(ownedCount));
 
 	db.update(users)
 		.set({

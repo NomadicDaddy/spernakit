@@ -86,20 +86,32 @@ function put(
 	return sendJson(app, 'PUT', path, body, claim, csrfToken);
 }
 
+/**
+ * The same request as `post`, sent as a DELETE with no body.
+ *
+ * @param app - The running fixture application.
+ * @param path - The path to request, including the /api/v1 prefix.
+ * @param claim - The identity to sign into a cookie, or nothing for an anonymous request.
+ * @param csrfToken - The CSRF token to send, or nothing to send none.
+ * @returns The application’s response.
+ */
+function del(app: App, path: string, claim?: Claim, csrfToken?: string): Promise<Response> {
+	return sendJson(app, 'DELETE', path, undefined, claim, csrfToken);
+}
+
 /** The one place a signed, CSRF-carrying JSON request is built. */
 function sendJson(
 	app: App,
-	method: 'POST' | 'PUT',
+	method: 'DELETE' | 'POST' | 'PUT',
 	path: string,
 	body: unknown,
 	claim?: Claim,
 	csrfToken?: string,
 ): Promise<Response> {
 	const config = getConfig();
-	const headers: Record<string, string> = {
-		'content-type': 'application/json',
-		origin: config.server.frontendUrl,
-	};
+	const headers: Record<string, string> = { origin: config.server.frontendUrl };
+	// A bodiless DELETE sends no content type, as a browser's fetch would.
+	if (body !== undefined) headers['content-type'] = 'application/json';
 	if (claim) {
 		headers.cookie = `${config.security.authCookieName}=${signAccessToken(claim)}`;
 	}
@@ -171,5 +183,5 @@ async function startFixture(repoRoot: string): Promise<{ app: App; dispose: () =
 	return { app: createApiApp(), dispose };
 }
 
-export { get, post, put, seedUserId, startFixture };
+export { del, get, post, put, seedUserId, startFixture };
 export type { App, Claim };

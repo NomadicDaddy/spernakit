@@ -3,6 +3,11 @@ import { inArray } from 'drizzle-orm';
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
 import { ROLE_HIERARCHY, type UserRole, validateUserRole } from '../../types/roles.ts';
+import {
+	countOwnedActiveWorkspaces,
+	invalidateUserProfileCache,
+	ownedWorkspacesMessage,
+} from './userCrudHelpers.ts';
 import { canDeleteUser, canModifyUserRole } from './userValidationService.ts';
 
 interface BatchItemResult {
@@ -46,9 +51,9 @@ interface UserRecord {
 }
 
 function validateUserForDeletion(
-	id: number,
 	user: undefined | UserRecord,
 	requesterRoleLevel: number,
+	ownedCount: number,
 ): { error?: string; valid: boolean } {
 	if (!user) {
 		return { error: 'User not found', valid: false };
@@ -58,6 +63,10 @@ function validateUserForDeletion(
 	}
 	if (!canDeleteUser(requesterRoleLevel, validateUserRole(user.role))) {
 		return { error: 'Cannot delete user with equal or higher role level', valid: false };
+	}
+	// The same guard as the single delete: an owner would leave an ownerless workspace.
+	if (ownedCount > 0) {
+		return { error: ownedWorkspacesMessage(ownedCount), valid: false };
 	}
 	return { valid: true };
 }
@@ -76,6 +85,7 @@ function executeBulkDelete(validIds: number[], deletedBy: number): BatchItemResu
 		})
 		.where(inArray(users.id, validIds))
 		.run();
+	for (const id of validIds) invalidateUserProfileCache(id);
 
 	return validIds.map((id) => ({ id, success: true }));
 }
@@ -99,10 +109,15 @@ function bulkDeleteUsers(
 		.all();
 
 	const userMap = new Map(existingUsers.map((u) => [u.id, u]));
+	const ownedCounts = countOwnedActiveWorkspaces(idsToQuery);
 	const validIds: number[] = [];
 
 	for (const id of idsToQuery) {
-		const validation = validateUserForDeletion(id, userMap.get(id), requesterRoleLevel);
+		const validation = validateUserForDeletion(
+			userMap.get(id),
+			requesterRoleLevel,
+			ownedCounts.get(id) ?? 0,
+		);
 		if (validation.valid) {
 			validIds.push(id);
 		} else {
@@ -156,6 +171,9 @@ function executeBulkRoleUpdates(updates: { id: number; role: UserRole }[]): Batc
 			tx.update(users).set({ role, updatedAt: now }).where(inArray(users.id, ids)).run();
 		}
 	});
+	// Evict after the commit, so a lookup that ran during the update cannot leave the old role
+	// cached for the cache's five minutes.
+	for (const { id } of updates) invalidateUserProfileCache(id);
 
 	return updates.map(({ id }) => ({ id, success: true }));
 }

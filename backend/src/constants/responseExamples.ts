@@ -132,11 +132,15 @@ function badRequestExample(message: string, code = 'VALIDATION_FAILED'): ErrorRe
 }
 
 /**
- * 409 Conflict — resource already exists.
+ * 409 Conflict — resource already exists, or (with RESOURCE_PROTECTED) is still depended on.
  * @param message
+ * @param code - The error code the route answers with
  * @returns OpenAPI response object for 409 Conflict
  */
-function conflictExample(message: string): ErrorResponseExample {
+function conflictExample(
+	message: string,
+	code: 'RESOURCE_ALREADY_EXISTS' | 'RESOURCE_PROTECTED' = 'RESOURCE_ALREADY_EXISTS',
+): ErrorResponseExample {
 	return {
 		content: {
 			'application/json': {
@@ -144,7 +148,7 @@ function conflictExample(message: string): ErrorResponseExample {
 					conflict: {
 						summary: 'Resource already exists or conflicts',
 						value: {
-							code: 'RESOURCE_ALREADY_EXISTS',
+							code,
 							error: 'Conflict',
 							message,
 						},

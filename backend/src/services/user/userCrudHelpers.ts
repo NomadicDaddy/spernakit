@@ -1,8 +1,9 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq, inArray } from 'drizzle-orm';
 import { LRUCache } from 'lru-cache';
 
 import { getDb } from '../../db/index.ts';
 import { users } from '../../db/schema/users.ts';
+import { workspaces } from '../../db/schema/workspaces.ts';
 import { type UserRole } from '../../types/roles.ts';
 import { UniqueConstraintError } from '../../utils/errorResponse.ts';
 import { emailExists, usernameExists } from './userValidationService.ts';
@@ -176,13 +177,47 @@ function hardDeleteUserForRollback(userId: number): void {
 	userCache.delete(userId);
 }
 
+/**
+ * Count the active workspaces each user owns. Deleting an owner would leave a workspace whose
+ * owner is gone, which the hard-delete `restrict` FK on workspaces.ownerId forbids, so the single
+ * and bulk delete paths both refuse it.
+ *
+ * @param ids - User IDs to check
+ * @returns Owned active workspace count per user; users who own none are absent
+ */
+function countOwnedActiveWorkspaces(ids: number[]): Map<number, number> {
+	if (ids.length === 0) return new Map();
+	const rows = getDb()
+		.select({ count: count(), ownerId: workspaces.ownerId })
+		.from(workspaces)
+		.where(and(inArray(workspaces.ownerId, ids), eq(workspaces.isDeleted, false)))
+		.groupBy(workspaces.ownerId)
+		.all();
+	return new Map(rows.map((row) => [row.ownerId, row.count]));
+}
+
+/**
+ * The refusal shown for deleting a workspace owner.
+ *
+ * @param ownedCount - Number of active workspaces the user owns
+ * @returns A message telling the admin what to do first
+ */
+function ownedWorkspacesMessage(ownedCount: number): string {
+	return (
+		`Cannot delete user: they own ${ownedCount} active workspace(s). ` +
+		'Delete those workspaces before deleting this account.'
+	);
+}
+
 export {
 	buildUpdateUserPayload,
+	countOwnedActiveWorkspaces,
 	enforceUserUniqueness,
 	getExistingUserForUpdate,
 	getUserCache,
 	hardDeleteUserForRollback,
 	invalidateUserProfileCache,
+	ownedWorkspacesMessage,
 	unlockUser,
 };
 export type { ExistingUserForUpdate, UpdateInput, UserPublic };

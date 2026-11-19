@@ -28,8 +28,10 @@ import {
 	badRequestError,
 	conflictError,
 	forbiddenError,
+	isResourceProtectedError,
 	isUniqueConstraintError,
 	notFoundError,
+	RESOURCE_ERROR_CODES,
 } from '../../utils/errorResponse.ts';
 import {
 	parseFields,
@@ -240,7 +242,14 @@ function handleDeleteUser({
 		return forbiddenError('Cannot delete user with equal or higher role level');
 	}
 
-	const deleted = softDeleteUser(targetId, authUser.id);
+	let deleted: boolean;
+	try {
+		deleted = softDeleteUser(targetId, authUser.id);
+	} catch (err) {
+		if (!isResourceProtectedError(err)) throw err;
+		set.status = HTTP_STATUS.CONFLICT;
+		return conflictError(err.message, RESOURCE_ERROR_CODES.RESOURCE_PROTECTED);
+	}
 	if (!deleted) {
 		set.status = HTTP_STATUS.NOT_FOUND;
 		return notFoundError('User');

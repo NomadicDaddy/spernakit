@@ -147,9 +147,10 @@ const deleteUserDocs = {
 	description:
 		'Soft-deletes a user by ID (marks as deleted, does not remove from database). ' +
 		'Cannot delete your own account (returns 400) or users with a role equal to ' +
-		"or higher than your own (returns 403). The deleted user's refresh token is " +
-		'not invalidated - they will be blocked at next token verification. Requires ' +
-		'ADMIN role or higher.',
+		'or higher than your own (returns 403), and refuses a user who owns active ' +
+		'workspaces (returns 409 RESOURCE_PROTECTED; delete those workspaces first). ' +
+		"The deleted user's tokens are revoked and their refresh sessions ended. " +
+		'Requires ADMIN role or higher.',
 	responses: {
 		'200': {
 			content: {
@@ -163,6 +164,10 @@ const deleteUserDocs = {
 		'401': UNAUTHORIZED_EXAMPLE,
 		'403': FORBIDDEN_EXAMPLE,
 		'404': notFoundExample('User'),
+		'409': conflictExample(
+			'Cannot delete user: they own 1 active workspace(s). Delete those workspaces before deleting this account.',
+			'RESOURCE_PROTECTED',
+		),
 	},
 	summary: 'Soft delete user by ID (ADMIN+)',
 };

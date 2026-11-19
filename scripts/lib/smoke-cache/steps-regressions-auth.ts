@@ -167,6 +167,19 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'scripts/test-unique-constraint-conflicts.ts',
 		],
 	},
+	// Drives the real single and bulk user-delete and bulk role routes against a migrated temp
+	// database, so its world is the migrations, the backend sources, the fixture that boots the
+	// API, and the gate itself.
+	'test:user-delete-owner-guard': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-user-delete-owner-guard.ts',
+		],
+	},
 	// Puts a corpus of names to the shared validator and to the real create-user route in process,
 	// and then reads both source trees for a rival copy of the rule, so its world is the frontend
 	// and backend sources, the policy module they read, the fixture that boots the API, and the

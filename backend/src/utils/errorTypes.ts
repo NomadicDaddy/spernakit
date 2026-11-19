@@ -52,6 +52,18 @@ function isMfaAlreadyEnabledError(error: unknown): error is MfaAlreadyEnabledErr
 	return error instanceof MfaAlreadyEnabledError;
 }
 
+/** A delete refused because other records still depend on the resource; answered as HTTP 409. */
+class ResourceProtectedError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'ResourceProtectedError';
+	}
+}
+
+function isResourceProtectedError(error: unknown): error is ResourceProtectedError {
+	return error instanceof ResourceProtectedError;
+}
+
 function extractErrorMessage(err: unknown, fallback: string): string {
 	return err instanceof Error ? err.message : fallback;
 }
@@ -60,8 +72,10 @@ export {
 	extractErrorMessage,
 	isMfaAlreadyEnabledError,
 	isRawUniqueViolation,
+	isResourceProtectedError,
 	isUniqueConstraintError,
 	MfaAlreadyEnabledError,
 	NotFoundError,
+	ResourceProtectedError,
 	UniqueConstraintError,
 };

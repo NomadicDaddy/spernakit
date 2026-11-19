@@ -413,6 +413,10 @@
 					"description": "A uniqueness check judges the same rows as the unique index behind it: a revoked API key name can be used again; a username or email held by a soft-deleted account answers 409 on user update and email-change confirm instead of a 500, and check-username reports it as not available"
 				},
 				{
+					"command": "bun run test:user-delete-owner-guard",
+					"description": "Deleting a user who owns an active workspace answers 409 RESOURCE_PROTECTED and says to delete the workspaces first, bulk delete fails that user's item the same way, and bulk delete and bulk role change evict the user cache"
+				},
+				{
 					"command": "bun run test:username-parity",
 					"description": "The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds"
 				},
