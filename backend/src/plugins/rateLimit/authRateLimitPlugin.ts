@@ -13,7 +13,7 @@ import { type RateLimitCheckResult } from '../../services/rateLimitService.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import { RATE_ERROR_CODES, rateLimitError } from '../../utils/errorResponse.ts';
 import { PreValidationRejection } from '../../utils/preValidationRejection.ts';
-import { parseCookies, verifyRefreshToken } from '../authTokens.ts';
+import { parseCookies, verifyAccessToken, verifyRefreshToken } from '../authTokens.ts';
 import { checkLimit, type RateLimitBackend } from './helpers.ts';
 import { createRateLimitStore } from './store.ts';
 
@@ -26,11 +26,16 @@ const AUTH_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const AUTH_ACCOUNT_PATHS = new Set(['/api/v1/auth/forgot-password', '/api/v1/auth/login']);
 
 /**
- * Paths that keep an existing sign-in going rather than create one. They have a bucket of their
- * own: sharing the per-IP login bucket let a burst of failed logins from one address answer every
- * session behind that address 429 on refresh, which the browser treats as a signed-out session.
+ * Requests that keep an existing sign-in going rather than create one, and the cookie each one
+ * proves its sign-in with: refresh carries the refresh cookie (path-scoped to that route), logout
+ * the access cookie. They have buckets of their own: sharing the per-IP login bucket let a burst
+ * of failed logins from one address answer every session behind it 429 on refresh, which the
+ * browser treats as a signed-out session.
  */
-const AUTH_SESSION_PATHS = new Set(['/api/v1/auth/logout', '/api/v1/auth/refresh']);
+const AUTH_SESSION_ROUTES: Record<string, { cookie: 'access' | 'refresh'; name: string }> = {
+	'/api/v1/auth/logout': { cookie: 'access', name: 'logout' },
+	'/api/v1/auth/refresh': { cookie: 'refresh', name: 'refresh' },
+};
 
 interface AuthBucket {
 	key: string;
@@ -39,13 +44,48 @@ interface AuthBucket {
 }
 
 /**
- * The bucket an auth request counts against. A session request is keyed by the user its refresh
- * cookie belongs to, but only once that token verifies, so nobody can spend another user's budget
- * by naming them; without a valid token it falls back to a per-IP session bucket. Every other
- * auth request counts against the per-IP login bucket the SYSOP settings size.
+ * The path the router will match. Elysia accepts a trailing slash (strictPath is off), so the
+ * limiter compares paths without one; otherwise `/auth/login/` would skip the account limit and
+ * `/auth/refresh/` would land in the login bucket.
+ *
+ * @param pathname - The request's URL path
+ * @returns The path without trailing slashes
+ */
+function routedPath(pathname: string): string {
+	return pathname.replace(/\/+$/, '');
+}
+
+/**
+ * The verified sign-in a session request belongs to: its refresh family when the token names one,
+ * else its user. Keying by the family means a leaked or ended-but-unexpired token spends only its
+ * own sign-in's budget, never the user's other browsers'.
  *
  * @param request - The incoming request
- * @param pathname - Its URL path
+ * @param cookie - Which cookie this route proves its sign-in with
+ * @returns The bucket identity, or null when no token verifies
+ */
+function sessionIdentity(request: Request, cookie: 'access' | 'refresh'): null | string {
+	const header = request.headers.get('cookie');
+	if (!header) return null;
+	const security = getConfig().security;
+	const token =
+		parseCookies(header)[
+			cookie === 'access' ? security.authCookieName : security.refreshCookieName
+		];
+	if (!token) return null;
+	const payload = cookie === 'access' ? verifyAccessToken(token) : verifyRefreshToken(token);
+	if (!payload) return null;
+	return payload.sid ? `sid:${payload.sid}` : `user:${String(payload.id)}`;
+}
+
+/**
+ * The bucket an auth request counts against. A session request is keyed by its verified sign-in,
+ * so nobody can spend another user's budget by naming them; without a valid token it falls back
+ * to that route's own per-IP bucket. Every other auth request counts against the per-IP login
+ * bucket the SYSOP settings size.
+ *
+ * @param request - The incoming request
+ * @param pathname - Its routed path
  * @param settings - The current auth rate-limit settings
  * @returns The bucket key and its limit
  */
@@ -55,18 +95,17 @@ function bucketFor(
 	settings: ReturnType<typeof getAuthSettings>,
 ): AuthBucket {
 	const ip = getClientIp(request);
-	if (!AUTH_SESSION_PATHS.has(pathname)) {
+	const session = AUTH_SESSION_ROUTES[pathname];
+	if (!session) {
 		return {
 			key: `auth:${ip}`,
 			max: settings.authRateLimitMaxRequests,
 			windowMs: settings.authRateLimitWindowMinutes * 60 * 1000,
 		};
 	}
-	const cookie = request.headers.get('cookie');
-	const token = cookie ? parseCookies(cookie)[getConfig().security.refreshCookieName] : undefined;
-	const payload = token ? verifyRefreshToken(token) : null;
+	const identity = sessionIdentity(request, session.cookie);
 	return {
-		key: payload ? `auth:session:user:${String(payload.id)}` : `auth:session:ip:${ip}`,
+		key: `auth:session:${session.name}:${identity ?? `ip:${ip}`}`,
 		max: AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS,
 		windowMs: AUTH_SESSION_RATE_LIMIT_WINDOW_MS,
 	};
@@ -145,9 +184,9 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onTransform(
 	{ as: 'scoped' },
 	async ({ request, set }) => {
 		const config = getConfig();
-		const url = new URL(request.url);
+		const pathname = routedPath(new URL(request.url).pathname);
 
-		if (!url.pathname.startsWith('/api/v1/auth/')) return;
+		if (!pathname.startsWith('/api/v1/auth/')) return;
 		if (AUTH_SAFE_METHODS.has(request.method)) return;
 
 		// The SYSOP-editable setting and the pre-boot config kill-switch both have to be on, and
@@ -159,7 +198,7 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onTransform(
 		authStore.startCleanup();
 
 		const backend = config.rateLimit.backend as RateLimitBackend;
-		const limit = bucketFor(request, url.pathname, authSettings);
+		const limit = bucketFor(request, pathname, authSettings);
 		const ipResult = checkLimit(backend, authStore, limit.key, limit.max, limit.windowMs);
 
 		if (ipResult.limited) {
@@ -171,7 +210,7 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onTransform(
 		set.headers['X-RateLimit-Reset'] = String(Math.ceil(ipResult.resetAt.getTime() / 1000));
 
 		// Account-level rate limit for login/password-reset
-		if (AUTH_ACCOUNT_PATHS.has(url.pathname)) {
+		if (AUTH_ACCOUNT_PATHS.has(pathname)) {
 			const accountResult = await checkAccountRateLimit(request, backend);
 			if (accountResult) {
 				throw rejectAsLimited(accountResult.retryAfter);
