@@ -20,14 +20,9 @@
 import {
 	copyFileSync,
 	existsSync,
-	lstatSync,
 	mkdtempSync,
-	readdirSync,
 	readFileSync,
 	rmSync,
-	statSync,
-	symlinkSync,
-	unlinkSync,
 	writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -116,11 +111,26 @@ function typecheckExtended(target: string, domainSource: string): void {
 	writeFileSync(join(target, 'backend/src/routes/domain.ts'), extended);
 	writeFileSync(join(target, 'backend/src/routes/app.ts'), appRoutesSource());
 	writeFileSync(join(target, 'backend/src/domain-route-probe.ts'), probeSource());
-	// --no-install leaves no dependencies; lend the probe this checkout's, as junctions.
-	for (const dir of ['node_modules', 'backend/node_modules']) {
-		symlinkSync(join(repoRoot, dir), join(target, dir), 'junction');
-	}
-	const tsc = Bun.spawnSync(['bunx', 'tsc', '--noEmit', '-p', 'tsconfig.json'], {
+	// --no-install leaves no dependencies. Resolve them from this checkout through compiler
+	// options alone, so the probe app holds no link into this checkout and a leftover from a
+	// killed run is inert. The workspace package resolves to the probe app's own shared/.
+	const deps = [join(repoRoot, 'backend/node_modules'), join(repoRoot, 'node_modules')];
+	const probeConfig = {
+		compilerOptions: {
+			paths: {
+				// A paths match skips the usual @types lookup, so the @types folders come first.
+				'*': [
+					...deps.map((dir) => `${dir.replaceAll('\\', '/')}/@types/*`),
+					...deps.map((dir) => `${dir.replaceAll('\\', '/')}/*`),
+				],
+				'spernakit-shared': ['../shared/src/index.ts'],
+			},
+			typeRoots: deps.map((dir) => `${dir.replaceAll('\\', '/')}/@types`),
+		},
+		extends: './tsconfig.json',
+	};
+	writeFileSync(join(target, 'backend/tsconfig.probe.json'), JSON.stringify(probeConfig));
+	const tsc = Bun.spawnSync(['bunx', 'tsc', '--noEmit', '-p', 'tsconfig.probe.json'], {
 		cwd: join(target, 'backend'),
 		stderr: 'pipe',
 		stdout: 'pipe',
@@ -132,44 +142,13 @@ function typecheckExtended(target: string, domainSource: string): void {
 	);
 }
 
-const WORK_PREFIX = 'spernakit-domain-routes-';
-const BORROWED = ['probe-app/node_modules', 'probe-app/backend/node_modules'];
-/** A leftover older than this cannot belong to a run still in progress. */
-const STALE_MS = 60 * 60 * 1000;
-
-/**
- * Remove a probe work directory. The borrowed junctions are unlinked first, so the recursive
- * delete can never reach this checkout's dependencies through them. Only a link is unlinked; a
- * real directory in its place keeps the tree from being deleted at all.
- */
-function removeWorkDir(dir: string): void {
-	for (const borrowed of BORROWED) {
-		const link = join(dir, borrowed);
-		if (existsSync(link) && lstatSync(link).isSymbolicLink()) unlinkSync(link);
-	}
-	if (BORROWED.some((borrowed) => existsSync(join(dir, borrowed)))) {
-		console.warn(`domain route aggregator: links remain under ${dir}; remove it by hand`);
-		return;
-	}
-	rmSync(dir, { force: true, maxRetries: 3, recursive: true, retryDelay: 200 });
-}
-
-// A killed run skips its finally and leaves its work directory, junctions included. Clear any
-// such leftover first; recent ones are left alone in case another run is still using them.
-for (const entry of readdirSync(tmpdir())) {
-	const dir = join(tmpdir(), entry);
-	if (entry.startsWith(WORK_PREFIX) && Date.now() - statSync(dir).mtimeMs > STALE_MS) {
-		removeWorkDir(dir);
-	}
-}
-
-const workDir = mkdtempSync(join(tmpdir(), WORK_PREFIX));
+const workDir = mkdtempSync(join(tmpdir(), 'spernakit-domain-routes-'));
 try {
 	const target = initProbeApp(workDir);
 	const domainSource = target === null ? undefined : checkScaffold(target);
 	if (target !== null && domainSource !== undefined) typecheckExtended(target, domainSource);
 } finally {
-	removeWorkDir(workDir);
+	rmSync(workDir, { force: true, maxRetries: 3, recursive: true, retryDelay: 200 });
 }
 
 if (failures.length > 0) {
