@@ -11,8 +11,9 @@ this release.
   application clean up its own per-workspace data without editing `workspaceCrud.ts`. Every
   registered handler runs inside the delete's transaction, after the soft delete and in
   registration order. A handler that throws or returns a promise rolls the delete back with a
-  `WorkspaceDeletedHandlerError` naming it. The transaction handed to handlers is revoked when
-  they return, so deferred work cannot write outside it. DEVELOPMENT.md describes the contract.
+  `WorkspaceDeletedHandlerError` naming it. The transaction handed to handlers, and every
+  statement built from it, closes when they return, so deferred work cannot write outside it.
+  DEVELOPMENT.md describes the contract.
 
 ### Changed
 

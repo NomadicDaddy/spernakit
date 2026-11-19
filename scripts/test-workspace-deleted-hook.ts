@@ -12,8 +12,9 @@
  *  4. A handler that returns a promise is refused the same way, since its work would escape the
  *     transaction.
  *  5. Registering a second handler under a taken name throws.
- *  6. Work a handler defers (an await, a timer) finds the transaction revoked and writes nothing,
- *     whether the delete rolled back or committed.
+ *  6. Work a handler defers (an await, a timer) finds the transaction closed and writes nothing,
+ *     whether the delete rolled back or committed; the refusal names the handler.
+ *  7. So does a statement the handler built or prepared through tx and ran later.
  */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -46,7 +47,9 @@ const calls: { deletedBy: number; name: string; sawDeleted: boolean; workspaceId
 const failFor = new Set<number>();
 const asyncFor = new Set<number>();
 const timerFor = new Set<number>();
-/** What a handler's deferred write did: 'wrote', 'revoked', or any other error. */
+const builtFor = new Set<number>();
+const preparedFor = new Set<number>();
+/** What a handler's deferred write did: 'wrote', 'refused' (closed scope), or any other error. */
 const lateWrites = new Map<number, string>();
 
 function isDeleted(id: number): boolean | undefined {
@@ -82,15 +85,19 @@ function registerHandlers(): void {
 		if (failFor.has(workspaceId)) throw new Error('fixture failure');
 	});
 	onWorkspaceDeleted('third', ({ tx, workspaceId }) => {
-		const lateWrite = (): void => {
+		const row = { key: `late.${String(workspaceId)}`, value: 'late' };
+		const later = (step: () => void): void => {
 			try {
-				tx.insert(settings)
-					.values({ key: `late.${String(workspaceId)}`, value: 'late' })
-					.run();
+				step();
 				lateWrites.set(workspaceId, 'wrote');
 			} catch (err) {
-				lateWrites.set(workspaceId, err instanceof TypeError ? 'revoked' : String(err));
+				const closed =
+					err instanceof WorkspaceDeletedHandlerError && err.handlerName === 'third';
+				lateWrites.set(workspaceId, closed ? 'refused' : String(err));
 			}
+		};
+		const lateWrite = (): void => {
+			later(() => tx.insert(settings).values(row).run());
 		};
 		if (asyncFor.has(workspaceId)) {
 			const deferred = async (): Promise<void> => {
@@ -100,6 +107,14 @@ function registerHandlers(): void {
 			return deferred() as unknown as void;
 		}
 		if (timerFor.has(workspaceId)) setTimeout(lateWrite, 20);
+		if (builtFor.has(workspaceId)) {
+			const statement = tx.insert(settings).values(row);
+			setTimeout(() => later(() => statement.run()), 20);
+		}
+		if (preparedFor.has(workspaceId)) {
+			const prepared = tx.insert(settings).values(row).prepare();
+			setTimeout(() => later(() => prepared.run()), 20);
+		}
 	});
 }
 
@@ -128,6 +143,8 @@ async function run(ownerId: number): Promise<void> {
 	const failing = make('failing');
 	const promised = make('promised');
 	const timed = make('timed');
+	const built = make('built');
+	const prepared = make('prepared');
 
 	// 1. No handlers registered yet.
 	assert(softDelete(plain, ownerId), '1: a workspace should delete with no handlers registered');
@@ -171,19 +188,28 @@ async function run(ownerId: number): Promise<void> {
 
 	// 6. Deferred work cannot write through tx once the handlers have returned: not after the
 	// refused promise's rollback, and not from a timer after a delete that committed.
+	// 7. The same holds for a statement built through tx during the call and run later, plain or
+	// prepared: everything reached through tx closes with it.
 	timerFor.add(timed);
+	builtFor.add(built);
+	preparedFor.add(prepared);
 	assert(softDelete(timed, ownerId), '6: a handler that only schedules work should delete');
+	assert(softDelete(built, ownerId), '7: a handler that defers a built statement should delete');
+	assert(softDelete(prepared, ownerId), '7: a handler that defers a prepared one should delete');
 	await Bun.sleep(100);
-	assert(
-		lateWrites.get(promised) === 'revoked',
-		`6: the refused handler's awaited write should hit a revoked tx, got ${lateWrites.get(promised)}`,
-	);
-	assert(!lateKey(promised), '6: the awaited write should not land after the rollback');
-	assert(
-		lateWrites.get(timed) === 'revoked',
-		`6: the timer's write should hit a revoked tx, got ${lateWrites.get(timed)}`,
-	);
-	assert(!lateKey(timed), '6: the timer write should not land after the commit');
+	const late: [string, number, string][] = [
+		['6', promised, "the refused handler's awaited write"],
+		['6', timed, "the timer's write after the commit"],
+		['7', built, 'a statement built in the call and run later'],
+		['7', prepared, 'a statement prepared in the call and run later'],
+	];
+	for (const [n, id, what] of late) {
+		assert(
+			lateWrites.get(id) === 'refused',
+			`${n}: ${what} should be refused naming "third", got ${lateWrites.get(id)}`,
+		);
+		assert(!lateKey(id), `${n}: ${what} should not land`);
+	}
 
 	// 5. Duplicate names.
 	let duplicate = false;

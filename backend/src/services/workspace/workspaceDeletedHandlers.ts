@@ -9,6 +9,8 @@
  */
 import type { getDb } from '../../db/index.ts';
 
+import { openTransactionScope } from './transactionScope.ts';
+
 type DbTransaction = Parameters<Parameters<ReturnType<typeof getDb>['transaction']>[0]>[0];
 
 interface WorkspaceDeletedContext {
@@ -16,7 +18,8 @@ interface WorkspaceDeletedContext {
 	deletedBy: number;
 	/**
 	 * The delete's transaction; write through it so the cleanup commits or rolls back with it.
-	 * It is revoked when the handlers return, so using it afterwards throws.
+	 * It is closed when the handlers return: using it, or any builder or statement made from it,
+	 * afterwards throws.
 	 */
 	tx: DbTransaction;
 	/** The workspace being deleted. */
@@ -24,9 +27,10 @@ interface WorkspaceDeletedContext {
 }
 
 /**
- * Must finish synchronously: the transaction cannot wait for a promise, and its tx is revoked as
- * soon as the handlers return. Build and run each statement inside the call; a statement built
- * here and run later would bypass the revocation.
+ * Must finish synchronously: the transaction cannot wait for a promise, and its tx is closed as
+ * soon as the handlers return. Deferred work that reaches it afterwards throws a
+ * WorkspaceDeletedHandlerError naming the handler, which nothing catches, so the backend's fatal
+ * handlers end the process. Never defer work from a handler.
  */
 type WorkspaceDeletedHandler = (context: WorkspaceDeletedContext) => void;
 
@@ -66,15 +70,27 @@ function onWorkspaceDeleted(name: string, handler: WorkspaceDeletedHandler): voi
  * @param context - The workspace, the deleting user and the delete's transaction
  */
 function runWorkspaceDeletedHandlers(context: WorkspaceDeletedContext): void {
-	// Handlers get a revocable view of the transaction. Once they have all returned, any later use
-	// of it throws, so work a handler deferred (an await, a timer) cannot write after the commit or
-	// rollback, where the connection is back in autocommit.
-	const { proxy: tx, revoke } = Proxy.revocable(context.tx, {});
+	// Each handler gets its own scoped view of the transaction, closed once every handler has
+	// returned. Work a handler deferred (an await, a timer, a statement built now and run later)
+	// then throws instead of writing after the commit or rollback, where the connection is back in
+	// autocommit.
+	const scopes: (() => void)[] = [];
 	try {
 		for (const [name, handler] of handlers) {
+			const scope = openTransactionScope(
+				context.tx,
+				() =>
+					new WorkspaceDeletedHandlerError(
+						name,
+						new Error(
+							'used the transaction after returning; handlers must not defer work',
+						),
+					),
+			);
+			scopes.push(scope.close);
 			let result: unknown;
 			try {
-				result = handler({ ...context, tx });
+				result = handler({ ...context, tx: scope.view });
 			} catch (err) {
 				throw new WorkspaceDeletedHandlerError(name, err);
 			}
@@ -88,7 +104,7 @@ function runWorkspaceDeletedHandlers(context: WorkspaceDeletedContext): void {
 			}
 		}
 	} finally {
-		revoke();
+		for (const close of scopes) close();
 	}
 }
 

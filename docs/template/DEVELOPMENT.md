@@ -698,7 +698,7 @@ onWorkspaceDeleted('first-run-state', ({ tx, workspaceId }) => {
 - `softDelete` runs every handler inside the same transaction as the workspace's own soft delete, after that update and in registration order.
 - A handler gets `workspaceId`, `deletedBy` and the transaction `tx`. Write through `tx` so the cleanup commits or rolls back with the delete.
 - A handler that throws rolls the whole delete back. The error is a `WorkspaceDeletedHandlerError` whose message and `handlerName` name the handler. A handler must be synchronous, and one that returns a promise is refused the same way.
-- `tx` is revoked as soon as the handlers return, so anything a handler defers (an `await`, a timer) throws when it reaches `tx` instead of writing outside the transaction. Build and run each statement inside the handler call.
+- `tx` closes as soon as the handlers return, and so does every builder or prepared statement made from it. Anything a handler defers (an `await`, a timer, a statement built now and run later) throws a `WorkspaceDeletedHandlerError` naming the handler instead of writing outside the transaction. Nothing catches that error, so the backend's fatal handlers end the process. Never defer work from a handler.
 - Names are unique: registering a taken name throws. With nothing registered, deletion behaves exactly as before.
 
 ---
