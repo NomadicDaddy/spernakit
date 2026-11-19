@@ -3215,6 +3215,8 @@
 						"scripts/lib/template/hooks-path.ts",
 						"scripts/set-hooks-path.ts",
 						"scripts/lib/template/git-hooks-scope.ts",
+						"scripts/smokestack/hooks/leak-guard-setup.sh",
+						"scripts/smokestack/run-bash.ts",
 						"scripts/test-worktree-hooks-path.ts",
 						"package.json"
 					]

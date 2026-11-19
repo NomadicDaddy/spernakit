@@ -13,8 +13,11 @@
  *     from: true in the worktree, false in the main checkout.
  *  3. With the extension off, `prepare` writes the shared value as before (`--local`), and never
  *     turns the extension on.
- * The fixture copies only the template's own files: `prepare` must not depend on Smokestack's
- * delivered hooks-scope.ts, which a derived app can receive after the template upgrade.
+ * `prepare` runs end to end, the delivered Smokestack guard setup included, since it reads and
+ * writes `core.hooksPath` too. It runs this checkout's delivery (0.10.12 or later); an older
+ * delivery's setup writes the shared value, which is why the 3.50.4 upgrade note asks for 0.10.12
+ * before upgrading in a worktree. Smokestack's lib/shared-core is not copied, so `prepare` is also
+ * shown not to depend on its hooks-scope.ts.
  */
 import {
 	chmodSync,
@@ -32,6 +35,12 @@ import { dirname, join, resolve } from 'node:path';
 import { hasSmokestackHooksPath } from './lib/template/hooks-path.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
+const PREPARE_FILES = [
+	'scripts/set-hooks-path.ts',
+	'scripts/lib/template/git-hooks-scope.ts',
+	'scripts/smokestack/run-bash.ts',
+	'scripts/smokestack/hooks/leak-guard-setup.sh',
+];
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
@@ -78,8 +87,9 @@ function guardRuns(cwd: string): string {
 
 /**
  * Give a checkout what this template's `prepare` runs: the real `prepare` script from this
- * checkout's package.json, the real hooks-path setter and its scope module, and a stub for the
- * Smokestack guard setup, which writes a patterns file outside the repository and has its own tests.
+ * checkout's package.json, the real hooks-path setter and its scope module, and the delivered
+ * run-bash.ts and leak-guard-setup.sh. runPrepare points the setup at a patterns file that already
+ * exists, so it only does its hooks-path step.
  */
 function stagePrepare(dir: string): void {
 	const pkg = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
@@ -89,18 +99,17 @@ function stagePrepare(dir: string): void {
 		join(dir, 'package.json'),
 		JSON.stringify({ scripts: { prepare: pkg.scripts.prepare } }),
 	);
-	for (const file of ['scripts/set-hooks-path.ts', 'scripts/lib/template/git-hooks-scope.ts']) {
+	for (const file of PREPARE_FILES) {
 		mkdirSync(dirname(join(dir, file)), { recursive: true });
 		copyFileSync(join(repoRoot, file), join(dir, file));
 	}
-	mkdirSync(join(dir, 'scripts', 'smokestack'), { recursive: true });
-	writeFileSync(join(dir, 'scripts', 'smokestack', 'run-bash.ts'), 'process.exit(0);\n');
 }
 
 /** Run the checkout's `prepare` exactly as an install does. */
 function runPrepare(cwd: string): void {
 	const result = Bun.spawnSync(['bun', 'run', 'prepare'], {
 		cwd,
+		env: { ...process.env, LEAK_GUARD_PATTERNS: join(dirname(cwd), 'patterns') },
 		stderr: 'pipe',
 		stdout: 'pipe',
 	});
@@ -188,6 +197,7 @@ function sharedScope(root: string): void {
 }
 
 const root = mkdtempSync(join(tmpdir(), 'spernakit-worktree-hooks-'));
+writeFileSync(join(root, 'patterns'), '# fixture: present, so the guard setup writes none\n');
 try {
 	worktreeScoped(root);
 	sharedScope(root);
