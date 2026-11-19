@@ -3186,13 +3186,7 @@
 			},
 			{
 				"cache": {
-					"inputs": [
-						"backend/src/**/*.ts",
-						"scripts/init.ts",
-						"scripts/lib/domain-route-fixture.ts",
-						"scripts/test-domain-route-aggregator.ts",
-						"package.json"
-					]
+					"uncacheable": "initializes from the complete live template tree and typechecks it"
 				},
 				"description": "An app initialized from HEAD ships routes/domain.ts mounted once by create-api-app.ts with no route override, and with the documented app aggregator added, ReturnType<typeof createApiApp> keeps the template's and the app's routes fully typed",
 				"name": "test:domain-route-aggregator",
