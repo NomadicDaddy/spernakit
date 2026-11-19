@@ -101,6 +101,18 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'scripts/test-auth-rate-limit-state.ts',
 		],
 	},
+	// Sends real logins and refreshes through the limiter against a migrated temp database, so its
+	// world is the migrations, the backend sources, the fixture that boots the API, and the gate.
+	'test:auth-session-rate-limit': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/auth-ordering-fixture.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-auth-session-rate-limit.ts',
+		],
+	},
 	// Runs in-process against a temp SQLite file (like `test:retention-zero`), so its world is the
 	// backend source plus the migrations it applies; a change anywhere in backend/src re-runs it.
 	'test:impersonation-audit': {

@@ -1242,6 +1242,30 @@
 					],
 					"inputs": [
 						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/auth-ordering-fixture.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-auth-session-rate-limit.ts"
+					]
+				},
+				"description": "Refresh and logout have their own rate-limit bucket, keyed by the verified refresh-token user or else the IP, so a burst of failed logins from one address cannot answer that address's sessions 429 on refresh",
+				"name": "test:auth-session-rate-limit",
+				"run": ["bun", "run", "test:auth-session-rate-limit"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
 						"backend/src/create-api-app.ts",
 						"backend/src/db/seed/**",
 						"backend/src/guards/**",

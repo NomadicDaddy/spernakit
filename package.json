@@ -177,6 +177,7 @@
 		"test:audit-plugin-lifecycle": "bun scripts/test-audit-plugin-lifecycle.ts",
 		"test:auth-before-validation": "bun scripts/test-auth-before-validation.ts",
 		"test:auth-rate-limit-state": "bun scripts/test-auth-rate-limit-state.ts",
+		"test:auth-session-rate-limit": "bun scripts/test-auth-session-rate-limit.ts",
 		"test:auth-reset-api": "bun scripts/test-auth-reset-api.ts",
 		"test:auth-reset-ui-dev": "bun scripts/test-auth-reset-ui.ts --mode dev",
 		"test:auth-reset-ui-preview": "bun scripts/test-auth-reset-ui.ts --mode preview",

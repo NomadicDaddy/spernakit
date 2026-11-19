@@ -369,6 +369,10 @@
 					"description": "Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule"
 				},
 				{
+					"command": "bun run test:auth-session-rate-limit",
+					"description": "Refresh and logout have their own rate-limit bucket, keyed by the verified refresh-token user or else the IP, so a burst of failed logins from one address cannot answer that address's sessions 429 on refresh"
+				},
+				{
 					"command": "bun run test:public-route-surface",
 					"description": "Every route the application registers refuses an anonymous caller unless it is listed as public with a reason, and the list carries no entry that is stale or already guarded"
 				},

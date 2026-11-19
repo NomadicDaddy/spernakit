@@ -6,7 +6,14 @@ import { useAuthStore } from '@/stores/authStore';
 import { getCommonHeaders, getCsrfHeader } from './requestHelpers';
 import { DEFAULT_API_TIMEOUT_MS, fetchWithRetry, withTimeout } from './retryHandler';
 
-let refreshPromise: null | Promise<boolean> = null;
+/**
+ * How a refresh ended. Only `rejected` (the server refused the refresh token, 401 or 403) means
+ * the session is over. `transient` (429, a 5xx, a network failure) says nothing about the session,
+ * so it must not sign the user out: a rate limit or a restart would otherwise do exactly that.
+ */
+type RefreshOutcome = 'ok' | 'rejected' | 'transient';
+
+let refreshPromise: null | Promise<RefreshOutcome> = null;
 let isLoggingOut = false;
 
 /** Reset the logging-out guard. Call when the user explicitly logs in. */
@@ -18,19 +25,25 @@ function resetLoggingOutGuard(): void {
 const REFRESH_LOCK_NAME = 'auth-refresh';
 
 /** Ask the server to rotate the token pair. */
-async function attemptRefresh(): Promise<boolean> {
-	const res = await fetch('/api/v1/auth/refresh', {
-		credentials: 'include',
-		headers: { ...getCommonHeaders(), ...getCsrfHeader() },
-		method: 'POST',
-	});
-	if (!res.ok) return false;
+async function attemptRefresh(): Promise<RefreshOutcome> {
+	let res: Response;
+	try {
+		res = await fetch('/api/v1/auth/refresh', {
+			credentials: 'include',
+			headers: { ...getCommonHeaders(), ...getCsrfHeader() },
+			method: 'POST',
+		});
+	} catch {
+		return 'transient';
+	}
+	if (res.status === 401 || res.status === 403) return 'rejected';
+	if (!res.ok) return 'transient';
 
 	const csrfToken = res.headers.get('X-CSRF-Token');
 	if (csrfToken) {
 		useAuthStore.getState().setCsrfToken(csrfToken);
 	}
-	return true;
+	return 'ok';
 }
 
 /**
@@ -43,14 +56,14 @@ async function attemptRefresh(): Promise<boolean> {
  * API. Without it, for any reason, the refresh runs unguarded, and two tabs refreshing at once can
  * end the sign-in.
  */
-function refreshAcrossTabs(): Promise<boolean> {
+function refreshAcrossTabs(): Promise<RefreshOutcome> {
 	const locks = (navigator as Partial<Navigator>).locks;
 	if (!locks) return attemptRefresh();
 	return locks.request(REFRESH_LOCK_NAME, attemptRefresh);
 }
 
 /** Deduplicate concurrent refresh calls so only one in-flight request exists per tab. */
-function deduplicateRefresh(): Promise<boolean> {
+function deduplicateRefresh(): Promise<RefreshOutcome> {
 	if (!refreshPromise) {
 		refreshPromise = refreshAcrossTabs().finally(() => {
 			refreshPromise = null;
@@ -141,10 +154,11 @@ async function fetchWithRefresh(
 	if (res.status !== 401) return res;
 	if (url.includes('/api/v1/auth/refresh') || url.includes('/api/v1/auth/login')) return res;
 
-	const refreshed = await deduplicateRefresh();
-	if (refreshed) return retryWithFreshToken(url, options);
-
-	handleSessionExpired();
+	const outcome = await deduplicateRefresh();
+	if (outcome === 'ok') return retryWithFreshToken(url, options);
+	// A transient failure leaves the session alone: answer the original 401 and let the next
+	// request try again.
+	if (outcome === 'rejected') handleSessionExpired();
 	return res;
 }
 

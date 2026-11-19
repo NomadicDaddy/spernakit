@@ -7,6 +7,16 @@ const AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS = 10;
 /** Account-level auth rate limit window in milliseconds (15 minutes) */
 const AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 
+/**
+ * Maximum session requests (refresh, logout) per signed-in user per window, or per IP when the
+ * request carries no valid refresh token. Kept apart from the login bucket so failed logins from
+ * one address cannot sign that address's existing sessions out.
+ */
+const AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS = 60;
+
+/** Session request rate limit window in milliseconds (15 minutes) */
+const AUTH_SESSION_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
+
 /** Maximum registration attempts per window per IP */
 const REGISTRATION_RATE_LIMIT_MAX_REQUESTS = 5;
 
@@ -46,6 +56,8 @@ const EMAIL_CHANGE_CONFIRM_IP_WINDOW_MS = 15 * 60 * 1000;
 export {
 	AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
 	AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS,
+	AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS,
+	AUTH_SESSION_RATE_LIMIT_WINDOW_MS,
 	EMAIL_CHANGE_CONFIRM_IP_MAX_REQUESTS,
 	EMAIL_CHANGE_CONFIRM_IP_WINDOW_MS,
 	OAUTH_CALLBACK_IP_MAX_REQUESTS,

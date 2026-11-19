@@ -5,12 +5,15 @@ import { HTTP_STATUS } from '../../constants/httpStatus.ts';
 import {
 	AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
 	AUTH_ACCOUNT_RATE_LIMIT_WINDOW_MS,
+	AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS,
+	AUTH_SESSION_RATE_LIMIT_WINDOW_MS,
 } from '../../constants/rateLimit.ts';
 import { getAuthSettings, isAuthRateLimitInEffect } from '../../services/authService.ts';
 import { type RateLimitCheckResult } from '../../services/rateLimitService.ts';
 import { getClientIp } from '../../utils/clientIp.ts';
 import { RATE_ERROR_CODES, rateLimitError } from '../../utils/errorResponse.ts';
 import { PreValidationRejection } from '../../utils/preValidationRejection.ts';
+import { parseCookies, verifyRefreshToken } from '../authTokens.ts';
 import { checkLimit, type RateLimitBackend } from './helpers.ts';
 import { createRateLimitStore } from './store.ts';
 
@@ -21,6 +24,53 @@ const AUTH_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 /** Auth login paths that include an account identifier in the request body. */
 const AUTH_ACCOUNT_PATHS = new Set(['/api/v1/auth/forgot-password', '/api/v1/auth/login']);
+
+/**
+ * Paths that keep an existing sign-in going rather than create one. They have a bucket of their
+ * own: sharing the per-IP login bucket let a burst of failed logins from one address answer every
+ * session behind that address 429 on refresh, which the browser treats as a signed-out session.
+ */
+const AUTH_SESSION_PATHS = new Set(['/api/v1/auth/logout', '/api/v1/auth/refresh']);
+
+interface AuthBucket {
+	key: string;
+	max: number;
+	windowMs: number;
+}
+
+/**
+ * The bucket an auth request counts against. A session request is keyed by the user its refresh
+ * cookie belongs to, but only once that token verifies, so nobody can spend another user's budget
+ * by naming them; without a valid token it falls back to a per-IP session bucket. Every other
+ * auth request counts against the per-IP login bucket the SYSOP settings size.
+ *
+ * @param request - The incoming request
+ * @param pathname - Its URL path
+ * @param settings - The current auth rate-limit settings
+ * @returns The bucket key and its limit
+ */
+function bucketFor(
+	request: Request,
+	pathname: string,
+	settings: ReturnType<typeof getAuthSettings>,
+): AuthBucket {
+	const ip = getClientIp(request);
+	if (!AUTH_SESSION_PATHS.has(pathname)) {
+		return {
+			key: `auth:${ip}`,
+			max: settings.authRateLimitMaxRequests,
+			windowMs: settings.authRateLimitWindowMinutes * 60 * 1000,
+		};
+	}
+	const cookie = request.headers.get('cookie');
+	const token = cookie ? parseCookies(cookie)[getConfig().security.refreshCookieName] : undefined;
+	const payload = token ? verifyRefreshToken(token) : null;
+	return {
+		key: payload ? `auth:session:user:${String(payload.id)}` : `auth:session:ip:${ip}`,
+		max: AUTH_SESSION_RATE_LIMIT_MAX_REQUESTS,
+		windowMs: AUTH_SESSION_RATE_LIMIT_WINDOW_MS,
+	};
+}
 
 /**
  * Check account-level rate limit for login/password-reset to prevent distributed brute-force.
@@ -108,28 +158,16 @@ const authRateLimitPlugin = new Elysia({ name: 'auth-rate-limit' }).onTransform(
 
 		authStore.startCleanup();
 
-		const ip = getClientIp(request);
 		const backend = config.rateLimit.backend as RateLimitBackend;
-		const authMaxRequests = authSettings.authRateLimitMaxRequests;
-		const authWindowMs = authSettings.authRateLimitWindowMinutes * 60 * 1000;
-
-		// IP-based rate limit
-		const ipResult = checkLimit(
-			backend,
-			authStore,
-			`auth:${ip}`,
-			authMaxRequests,
-			authWindowMs,
-		);
+		const limit = bucketFor(request, url.pathname, authSettings);
+		const ipResult = checkLimit(backend, authStore, limit.key, limit.max, limit.windowMs);
 
 		if (ipResult.limited) {
 			throw rejectAsLimited(ipResult.retryAfter);
 		}
 
-		set.headers['X-RateLimit-Limit'] = String(authMaxRequests);
-		set.headers['X-RateLimit-Remaining'] = String(
-			Math.max(0, authMaxRequests - ipResult.count),
-		);
+		set.headers['X-RateLimit-Limit'] = String(limit.max);
+		set.headers['X-RateLimit-Remaining'] = String(Math.max(0, limit.max - ipResult.count));
 		set.headers['X-RateLimit-Reset'] = String(Math.ceil(ipResult.resetAt.getTime() / 1000));
 
 		// Account-level rate limit for login/password-reset

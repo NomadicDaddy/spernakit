@@ -73,21 +73,21 @@ Chosen alternative: **Selective exemption by coverage status**
 
 ### Exempt from global limiter
 
-| Path prefix                  | Method | Why exempt                                                                                                                         | Dedicated protection                                                                       |
-| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `/api/v1/auth/me`            | GET    | Polled on every SPA navigation; rate-limiting causes false session-expiry redirects                                                | Safe method (GET) - `authRateLimitPlugin` skips safe methods; account-bound via JWT cookie |
-| `/api/v1/auth/login`         | POST   | Lockout here blocks recovery from any other rate-limit exhaustion                                                                  | `authRateLimitPlugin`: 10 req/15min per IP + 10 attempts/15min per account                 |
-| `/api/v1/auth/refresh`       | POST   | Lockout here forces re-login, compounding the problem                                                                              | `authRateLimitPlugin`: 10 req/15min per IP                                                 |
-| `/api/v1/health`             | any    | Infrastructure endpoint (load balancers, uptime monitors)                                                                          | Trivial compute, no auth state                                                             |
-| `/api/v1/docs`               | any    | OpenAPI docs UI served to authenticated developers                                                                                 | Trivial compute                                                                            |
-| `/api/v1/dashboards/shared/` | GET    | Unauthenticated; shared dashboard 429 triggers TanStack Query retries that cascade and exhaust the global budget for all endpoints | Dedicated per-route limiter: 30 req/60s per IP (`templates-import.ts`)                     |
+| Path prefix                  | Method | Why exempt                                                                                                                         | Dedicated protection                                                                                                              |
+| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `/api/v1/auth/me`            | GET    | Polled on every SPA navigation; rate-limiting causes false session-expiry redirects                                                | Safe method (GET) - `authRateLimitPlugin` skips safe methods; account-bound via JWT cookie                                        |
+| `/api/v1/auth/login`         | POST   | Lockout here blocks recovery from any other rate-limit exhaustion                                                                  | `authRateLimitPlugin`: 10 req/15min per IP + 10 attempts/15min per account                                                        |
+| `/api/v1/auth/refresh`       | POST   | Lockout here forces re-login, compounding the problem                                                                              | `authRateLimitPlugin` session bucket: 60 req/15min per verified refresh-token user, or per IP without one; never the login bucket |
+| `/api/v1/health`             | any    | Infrastructure endpoint (load balancers, uptime monitors)                                                                          | Trivial compute, no auth state                                                                                                    |
+| `/api/v1/docs`               | any    | OpenAPI docs UI served to authenticated developers                                                                                 | Trivial compute                                                                                                                   |
+| `/api/v1/dashboards/shared/` | GET    | Unauthenticated; shared dashboard 429 triggers TanStack Query retries that cascade and exhaust the global budget for all endpoints | Dedicated per-route limiter: 30 req/60s per IP (`templates-import.ts`)                                                            |
 
 ### NOT exempt - count against global limiter
 
 | Path prefix                     | Why not exempt                                                                                                                 |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | `/api/v1/auth/register`         | Credential creation; global limiter is part of defense in depth. Also covered by `REGISTRATION_RATE_LIMIT` (5 req/hour per IP) |
-| `/api/v1/auth/logout`           | Low frequency; no lockout-recovery concern                                                                                     |
+| `/api/v1/auth/logout`           | Low frequency; no lockout-recovery concern. In `authRateLimitPlugin` it shares refresh's session bucket, not the login bucket  |
 | `/api/v1/auth/password-reset/*` | Covered by `PASSWORD_RESET_*` limits; still benefits from global cap                                                           |
 | `/api/v1/auth/verify-email`     | One-shot token redemption, low frequency                                                                                       |
 | `/api/v1/auth/oauth/*`          | Covered by `OAUTH_CALLBACK` limits; still benefits from global cap                                                             |
