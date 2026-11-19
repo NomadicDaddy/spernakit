@@ -11,6 +11,10 @@
  * file arrives by Smokestack's own delivery, which a derived app can take after a template
  * upgrade. If `prepare` imported it, an app between the two would get a `prepare` that fails
  * silently and sets no hooks. So the template keeps this small copy of its own.
+ *
+ * This is an approved compatibility bridge (Phillip, Yes #59446 on #59432). Retire it in the first
+ * template release after every derived app carries Smokestack 0.10.12: import hooks-scope.ts from
+ * scripts/smokestack/lib/shared-core in set-hooks-path.ts and hooks-path.ts, and delete this file.
  */
 
 function gitConfig(root: string, args: string[]): string {

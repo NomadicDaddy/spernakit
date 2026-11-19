@@ -35,6 +35,9 @@ this release.
   upgrade worktree runs the app's own copy. The 0.9.x setup reads and writes the shared value, which
   can move the main checkout off its hooks again. Take the Smokestack delivery on main, then create
   the upgrade worktree. An app below 0.10.12 can still upgrade in its main checkout.
+- `scripts/lib/template/git-hooks-scope.ts` is a temporary copy of Smokestack's hooks-scope rules,
+  approved so apps still on Smokestack 0.9.x keep working hooks. It is removed in the first
+  template release after every derived app carries Smokestack 0.10.12.
 
 ## [3.50.3] - 2026-11-19
 
