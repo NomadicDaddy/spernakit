@@ -8,6 +8,8 @@ ps_modules/
 
 # aidd / agent-generated artifacts
 /.aidd/
+# Repo records kept out of git (R7), often only in the canonical checkout
+/.records/
 .claude/
 .windsurf/
 AGENTS.md

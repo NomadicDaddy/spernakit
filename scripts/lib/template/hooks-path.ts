@@ -1,16 +1,19 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { effectiveHooksPath } from '../../smokestack/lib/shared-core/hooks-scope.ts';
+
 const HOOKS = ['pre-commit', 'pre-push'] as const;
 const HOOKS_DIR = 'scripts/smokestack/hooks';
 
-/** Whether Git points at delivered, executable Smokestack hooks. */
+/**
+ * Whether Git points this checkout at delivered, executable Smokestack hooks. The hooks path is
+ * read the way git dispatches it: a linked worktree's own value under `extensions.worktreeConfig`
+ * first, then the shared one, so an upgrade worktree and its main checkout are each judged by the
+ * hooks they actually run.
+ */
 export function hasSmokestackHooksPath(repoRoot: string): boolean {
-	const result = Bun.spawnSync(
-		['git', '-C', repoRoot, 'config', '--local', '--get', 'core.hooksPath'],
-		{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
-	);
-	if (result.exitCode !== 0 || result.stdout.toString().trim() !== HOOKS_DIR) return false;
+	if (effectiveHooksPath(repoRoot) !== HOOKS_DIR) return false;
 
 	const paths = HOOKS.map((hook) => `${HOOKS_DIR}/${hook}`);
 	const indexed = Bun.spawnSync(['git', '-C', repoRoot, 'ls-files', '--stage', '--', ...paths], {

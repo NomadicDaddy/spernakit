@@ -190,6 +190,8 @@ and `bun run template:sync-plan -- --app ../<app>` generates a read-only review 
 version must be v3.29.0 or later. Apps without that baseline must be initialized from the current
 template instead of using the sync workflow.
 
+**Upgrading in a worktree**: a linked worktree shares the main checkout's git config, so an install there used to point the main checkout's `core.hooksPath` at hooks only the worktree's tree had, leaving main's commits unguarded until the merge. Turn on per-worktree config once per repository before creating the upgrade worktree: `git config extensions.worktreeConfig true`. Git asks that `core.bare` and `core.worktree` move to `config.worktree` at the same time, if the repository sets them. With it on, `prepare` (`scripts/set-hooks-path.ts`) writes `core.hooksPath` to the worktree's own config, so each checkout keeps running its own guards. Without it, `prepare` writes the shared value as before. Nothing turns the extension on automatically.
+
 **Steps** (for each derived app):
 
 1. `bun run template:sync-plan -- --app ../{app} --from {source} --to {target}` - generate `upgrade-review/{app}/` review artifacts

@@ -3211,6 +3211,20 @@
 			},
 			{
 				"cache": {
+					"inputs": [
+						"scripts/lib/template/hooks-path.ts",
+						"scripts/set-hooks-path.ts",
+						"scripts/smokestack/lib/shared-core/hooks-scope.ts",
+						"scripts/test-worktree-hooks-path.ts",
+						"package.json"
+					]
+				},
+				"description": "Installing in an upgrade worktree with extensions.worktreeConfig on writes that worktree's own core.hooksPath, so the main checkout keeps running its own guards, and the template's hooks-path reader judges each checkout by the hooks git dispatches",
+				"name": "test:worktree-hooks-path",
+				"run": ["bun", "run", "test:worktree-hooks-path"]
+			},
+			{
+				"cache": {
 					"uncacheable": "initializes from the complete live template tree and typechecks it"
 				},
 				"description": "An app initialized from HEAD ships routes/domain.ts mounted once by create-api-app.ts with no route override, and with the documented app aggregator added, ReturnType<typeof createApiApp> keeps the template's and the app's routes fully typed",

@@ -75,6 +75,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	'test:seed-rerun-honesty',
 	// Seeds a throwaway database and deletes real workspaces; about a second, so it always runs.
 	'test:workspace-deleted-hook',
+	// Builds a throwaway repository and worktree and runs git hooks in both; a second or two, so it
+	// always runs.
+	'test:worktree-hooks-path',
 ]);
 
 export const STEP_DEPENDENCIES: Record<string, StepDependencies> = {
