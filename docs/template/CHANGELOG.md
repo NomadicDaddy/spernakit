@@ -3,6 +3,36 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.50.3] - 2026-11-19
+
+### Changed
+
+- `/auth/refresh` and `/auth/logout` have rate-limit buckets of their own, 60 requests per 15
+  minutes per sign-in, instead of sharing the per-IP login bucket. A sign-in is identified by its
+  verified refresh cookie for refresh and its access cookie for logout. Without a valid token,
+  each route falls back to a per-IP bucket of its own. The limiter also matches paths with a
+  trailing slash the way the router does. ADR-009 describes the buckets.
+- The browser now signs a user out only when the server rejects the refresh (401 or 403). A
+  429, a 5xx or a network failure on refresh leaves the session alone.
+- The container entrypoint no longer copies the database on every start. `db:migrate` already
+  takes a consistent `VACUUM INTO` backup exactly when migrations are pending, and it now keeps
+  the newest five timestamped pre-migration backups and deletes the rest. That includes the
+  per-start copies older images left. Retention is best-effort and never stops a migration.
+
+### Fixed
+
+- Confirming an email change now ends every refresh session and clears the CSRF token, so
+  other signed-in browsers are signed out, as the confirm page says. Before, they refreshed
+  straight back in. The user's cached profile shows the new address at once.
+- A burst of failed logins from one address, or several people behind one NAT, no longer
+  answers that address's existing sessions 429 on refresh and signs them out.
+
+### Upgrade notes
+
+- Existing `data/` directories may hold many `<db>.pre-migrate.<timestamp>.bak` copies from
+  the old entrypoint. The next `db:migrate` run with a pending migration keeps the newest five of
+  them and deletes the rest; delete them by hand sooner if disk is short.
+
 ## [3.50.2] - 2026-11-19
 
 ### Changed
