@@ -15,6 +15,7 @@
  * This is an approved compatibility bridge (Phillip, Yes #59446 on #59432). Retire it in the first
  * template release after every derived app carries Smokestack 0.10.12: import hooks-scope.ts from
  * scripts/smokestack/lib/shared-core in set-hooks-path.ts and hooks-path.ts, and delete this file.
+ * Tracked as `.aidd/features/retire-template-git-hooks-scope-bridge`.
  */
 
 function gitConfig(root: string, args: string[]): string {
