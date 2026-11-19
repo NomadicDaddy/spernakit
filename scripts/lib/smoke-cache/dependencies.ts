@@ -54,8 +54,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	'test:alert-cooldown',
 	// Runs the real deployer into temp roots without Docker; under a second, so it always runs.
 	'test:deploy-local-prod-config',
-	// Its compile-time half lives in typecheck; the run itself reads one file and mounts twelve
-	// fixture routes, so it always runs.
+	// It initializes an app from the live HEAD tree and typechecks it with the documented route
+	// extension applied, so every template file is an input, as for test:init-exclusions. About
+	// ten seconds, so it always runs.
 	'test:domain-route-aggregator',
 	'test:fleet-manifest',
 	// It imports the release-notes and sync-plan tools whole and reads the release workflow, so its

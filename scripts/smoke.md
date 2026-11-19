@@ -374,7 +374,7 @@ Steps (in order):
 108. `bun run test:workspace-deleted-hook`
      - Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged.
 109. `bun run test:domain-route-aggregator`
-     - create-api-app.ts mounts every route group through the one typed aggregator in routes/domain.ts, and an application aggregator nested in it keeps its routes' inferred types.
+     - An app initialized from HEAD ships routes/domain.ts mounted once by create-api-app.ts with no route override, and with the documented app aggregator added, ReturnType<typeof createApiApp> keeps the template's and the app's routes fully typed.
 110. `bun run test:migration-runner-safety`
      - The CLI and startup migration runners refuse unknown journal hashes and orphaned files, check foreign keys before COMMIT, record content hashes, and refuse startup when a failed migration cannot be restored.
 111. `bun run test:deploy-local-prod-config`
