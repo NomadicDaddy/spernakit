@@ -11,6 +11,7 @@ import { endAllRefreshSessions } from '../../utils/auth/refreshSessions.ts';
 import { revokeAllUserTokens } from '../../utils/auth/tokenBlacklist.ts';
 import { isRawUniqueViolation } from '../../utils/errorResponse.ts';
 import { logAuth } from '../../utils/logger.ts';
+import { invalidateUserProfileCache } from '../user/userCrudHelpers.ts';
 import { verifyPassword } from './authCore.ts';
 
 function generateSecurityToken(expiryMs: number): {
@@ -200,6 +201,8 @@ function confirmEmailChange(token: string): ConfirmEmailChangeResult {
 		DEFAULT_REFRESH_TTL_MS,
 	);
 	revokeAllUserTokens(record.userId, new Date(Date.now() + refreshTtlMs));
+	// The profile cache would otherwise serve the old address and verification for its TTL.
+	invalidateUserProfileCache(record.userId);
 
 	logAuth('info', 'Email change confirmed', { userId: record.userId });
 	return { success: true, userId: record.userId };

@@ -37,6 +37,7 @@ import {
 	requestEmailChange,
 } from '../backend/src/services/auth/authEmailChange.ts';
 import { tokenCleanupTask } from '../backend/src/services/scheduler/cleanupAuth.ts';
+import { getUserById } from '../backend/src/services/userService.ts';
 import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
@@ -237,10 +238,17 @@ async function run(): Promise<void> {
 		'email-new@example.com',
 	);
 	assert(requested.success, 'the email change request must succeed');
+	const emailUserId = ACCOUNTS.indexOf('email') + 1;
+	// Cache the profile first, so a confirm that leaves the cache alone would show the old address.
+	assert(getUserById(emailUserId)?.email === 'email@example.com', 'the old email starts cached');
 	if (requested.success) {
 		const confirmed = confirmEmailChange(requested.token);
 		assert(confirmed.success, 'the email change must confirm');
 	}
+	assert(
+		getUserById(emailUserId)?.email === 'email-new@example.com',
+		`the new email must show at once, got ${String(getUserById(emailUserId)?.email)}`,
+	);
 	assert((await refresh(home)).status === 401, 'an email change must end the first sign-in');
 	assert((await refresh(office)).status === 401, 'an email change must end the second sign-in');
 
