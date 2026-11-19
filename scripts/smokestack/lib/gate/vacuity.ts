@@ -1,8 +1,8 @@
 /**
  * GC5's decidable half: does a gate that passed say how many items it examined?
  *
- * Rule 5 of `docs/reference/gate-conventions.md` has two halves, and only one of them is a property
- * of the source text.
+ * Rule 5 of `gate-conventions.md` (docs/reference/ in smokestack, scripts/smokestack/docs/ where
+ * delivered) has two halves, and only one of them is a property of the source text.
  *
  * "A gate that examined zero items fails" describes a code path. Whether a given run reached zero
  * is not answerable from the text, so that half stays a review item, which is what the conventions

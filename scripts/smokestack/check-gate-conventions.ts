@@ -2,14 +2,14 @@
 /**
  * check-gate-conventions.ts
  *
- * The meta-gate. Statically enforces the decidable rules of `docs/reference/gate-conventions.md`
- * across every TypeScript file a gate task runs, so that the conventions are a contract rather
- * than a document nobody reads. A gate task is one named `check*`, or one the allowlist's `gates`
- * map declares with a reason -- see `lib/gate/discover.ts` for why the naming convention alone was
- * not the population.
+ * The meta-gate. Statically enforces the decidable rules of gate-conventions.md (in docs/reference/
+ * in smokestack, and in scripts/smokestack/docs/ where it is delivered) across every TypeScript
+ * file a gate task runs, so that the conventions are a contract rather than a document nobody
+ * reads. A gate task is one named `check*`, or one the allowlist's `gates` map declares with a
+ * reason -- see `lib/gate/discover.ts` for why the naming convention alone was not the population.
  *
  * Enforces: ASSERT-050 (spernakit) / QUAL-006 (aidd) -- every gate follows the conventions in
- * docs/reference/gate-conventions.md.
+ * gate-conventions.md (docs/reference/ in smokestack, scripts/smokestack/docs/ where delivered).
  *
  * Rule 7 (waiver forms) has no static form, and rule 5 (anti-vacuity) has one for half of itself:
  * whether a success line states a count is decidable, whether a run legitimately reached zero items
@@ -150,6 +150,21 @@ function repositoryRoot(dir: string): string {
 	return dirname(at);
 }
 
+/**
+ * Where the repository at `root` holds the gate-conventions document, for the failure message to
+ * name: beside the gates where smokestack delivers them, under docs/reference in smokestack itself.
+ * A path that is not there would send a reader nowhere (Roger, reviewing a consumer), so when
+ * neither is present the wording names both.
+ */
+export function conventionsDocument(root: string): string {
+	for (const path of [
+		'scripts/smokestack/docs/gate-conventions.md',
+		'docs/reference/gate-conventions.md',
+	])
+		if (existsSync(join(root, path))) return path;
+	return 'gate-conventions.md (scripts/smokestack/docs/ where delivered, docs/reference/ in smokestack)';
+}
+
 export async function runGateConventions(options: GateConventionsOptions = {}): Promise<number> {
 	const root = resolve(options.root ?? repositoryRoot(import.meta.dir));
 	let report: GateConventionsReport;
@@ -182,7 +197,7 @@ export async function runGateConventions(options: GateConventionsOptions = {}): 
 	if (report.findings.length > 0) {
 		console.error('[FAIL] Gate convention violations:');
 		for (const item of [...report.findings].sort(order)) console.error(describe(item));
-		console.error('\nSee docs/reference/gate-conventions.md for what each rule requires.');
+		console.error(`\nSee ${conventionsDocument(root)} for what each rule requires.`);
 		console.log(
 			`[FAIL] check:gate-conventions -- ${report.findings.length} violation(s) across ${report.examined} gates.`,
 		);

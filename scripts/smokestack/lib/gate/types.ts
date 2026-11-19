@@ -1,8 +1,8 @@
 /**
  * Shared types for the gate-conventions meta-gate.
  *
- * The rule numbers here are the rule numbers in `docs/reference/gate-conventions.md`, which is the
- * document this code enforces. Seven of the eight rules are statically decidable, and rule 5 only
+ * The rule numbers here are the rule numbers in `gate-conventions.md` (docs/reference/ in
+ * smokestack, scripts/smokestack/docs/ where delivered), which is the document this code enforces. Seven of the eight rules are statically decidable, and rule 5 only
  * in half: its count half is a property of the success line's text, while its zero-items half is a
  * property of a code path and stays a review item, alongside rule 7's waiver forms.
  *

@@ -20,8 +20,9 @@
  * now lives in `frontend/src/api/*.ts`, the mutation in `frontend/src/hooks/*.ts`, and only the
  * dispatch remains in the component. The patterns matched **zero lines in spernakit's own
  * frontend** while eight real destructive dispatches sat in it, and the gate reported `[OK]` on
- * every run. Rule 5 of `docs/reference/gate-conventions.md` exists for exactly that: a gate that
- * found nothing looks the same as a gate that looked at nothing, which is why the pass line below
+ * every run. Rule 5 of `gate-conventions.md` (docs/reference/ in smokestack, scripts/smokestack/docs/
+ * where delivered) exists for exactly that: a gate that found nothing looks the same as a gate
+ * that looked at nothing, which is why the pass line below
  * carries the count and why zero sites in a frontend that has mutations is a failure.
  *
  * Usage:

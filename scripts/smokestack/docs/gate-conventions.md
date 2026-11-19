@@ -153,7 +153,7 @@ Every gate names the rule it enforces, in a header line:
 ```ts
 /**
  * Enforces: ASSERT-050 (spernakit) / QUAL-006 (aidd) -- every gate follows the conventions in
- * docs/reference/gate-conventions.md.
+ * gate-conventions.md (docs/reference/ in smokestack, scripts/smokestack/docs/ where delivered).
  */
 ```
 
@@ -375,6 +375,12 @@ smokestack's own fast subset follows this. Beside the statics it runs every `che
 takes about a second, plus `test:gate-conventions` (about 1 s) and `test:shared-core` (about 16 s).
 It leaves three steps to `smoke:qc`: the full `test` suite (minutes), `check:leak-guard` (about
 38 s) and `check:shared-core` (about 27 s, which reads every consumer repository).
+
+A full-gate step that takes minutes or most of the machine, such as a whole test suite or a build,
+should be marked `"heavy": true` in `smokestack.json`. The runner then holds it until no other
+gate on the machine is running a heavy step (see the smokestack README, "Heavy steps wait for each
+other"). That is a backstop for runner steps only. It does not replace the team's heavy-work slot rule,
+which also covers installs, builds and VM runs that never pass through a runner.
 
 ## Adding a new gate
 

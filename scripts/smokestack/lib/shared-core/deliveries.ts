@@ -29,8 +29,14 @@ import { existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { platform } from 'node:process';
 
+import {
+	asTarget,
+	isRecord,
+	type PendingRecord,
+	readPendingMap,
+	writtenPending,
+} from './delivery-shape.ts';
 import { type HookClaim, isClaim, type Lock } from './lock.ts';
-import { withRecordLock } from './record-lock.ts';
 import { configRoot } from './roots.ts';
 
 export const DELIVERIES_FILE = 'deliveries.json';
@@ -76,42 +82,21 @@ export function rootKey(fleetRoot: string): string {
 	return platform === 'win32' ? real.toLowerCase() : real;
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
+/**
+ * The whole record: every confirmed section by root key, and the deliveries into linked worktrees
+ * not yet confirmed in their canonical checkout (`pending`, pending.ts). Both are checked in full
+ * on every read (delivery-shape.ts), and this module carries `pending` through every write, so
+ * both always change in one write.
+ */
+export interface RecordParts {
+	pending: PendingRecord | undefined;
+	roots: Record<string, Deliveries>;
 }
 
-function asTarget(raw: unknown, where: string): DeliveredTarget {
-	const fail = (message: string): never => {
-		throw new Error(`${where} ${message}`);
-	};
-	if (!isRecord(raw)) return fail('must be an object.');
-	const { commit, groups, version } = raw;
-	if (typeof commit !== 'string' || !/^[0-9a-f]{40}$/u.test(commit)) {
-		return fail('commit must be 40 hex characters.');
-	}
-	if (typeof version !== 'string' || !/^\d+\.\d+\.\d+$/u.test(version)) {
-		return fail('version must be three numbers, as in 1.2.3.');
-	}
-	if (!isRecord(groups)) return fail('groups must be an object.');
-	const read: DeliveredTarget['groups'] = {};
-	for (const [name, group] of Object.entries(groups)) {
-		if (!isRecord(group)) return fail(`group '${name}' must be an object.`);
-		const { claim, paths } = group;
-		if (!Array.isArray(paths) || paths.some((path) => typeof path !== 'string')) {
-			return fail(`group '${name}' paths must be a list of paths.`);
-		}
-		if (claim !== undefined && claim !== 'foreign-hook' && claim !== 'local-chain') {
-			return fail(`group '${name}' claim is not one a write records.`);
-		}
-		read[name] = { paths: paths as string[], ...(claim === undefined ? {} : { claim }) };
-	}
-	return { commit, groups: read, version };
-}
-
-/** Every section in the owner's record, by root key. Empty when the file is not there. */
-function readAll(ownerRoot: string): Record<string, Deliveries> {
+/** The owner's whole record. Empty when the file is not there. */
+export function readRecordParts(ownerRoot: string): RecordParts {
 	const path = join(configRoot(ownerRoot), DELIVERIES_FILE);
-	if (!existsSync(path)) return {};
+	if (!existsSync(path)) return { pending: undefined, roots: {} };
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(readFileSync(path, 'utf8'));
@@ -119,8 +104,15 @@ function readAll(ownerRoot: string): Record<string, Deliveries> {
 		const reason = err instanceof Error ? err.message : String(err);
 		throw new Error(`${path}: is not JSON (${reason}).`, { cause: err });
 	}
-	if (!isRecord(parsed) || !isRecord(parsed['roots']) || Object.keys(parsed).length !== 1) {
-		throw new Error(`${path}: expected an object holding only "roots".`);
+	const keys = isRecord(parsed) ? Object.keys(parsed) : [];
+	const pending = isRecord(parsed) ? parsed['pending'] : undefined;
+	if (
+		!isRecord(parsed) ||
+		!isRecord(parsed['roots']) ||
+		keys.some((key) => key !== 'roots' && key !== 'pending') ||
+		(pending !== undefined && !isRecord(pending))
+	) {
+		throw new Error(`${path}: expected an object holding "roots" and optionally "pending".`);
 	}
 	const all: Record<string, Deliveries> = {};
 	for (const [root, section] of Object.entries(parsed['roots'])) {
@@ -131,7 +123,10 @@ function readAll(ownerRoot: string): Record<string, Deliveries> {
 		}
 		all[root] = read;
 	}
-	return all;
+	return {
+		pending: pending === undefined ? undefined : readPendingMap(pending, path),
+		roots: all,
+	};
 }
 
 /**
@@ -139,7 +134,7 @@ function readAll(ownerRoot: string): Record<string, Deliveries> {
  * cannot vouch for: a record that cannot be read is not an empty one.
  */
 export function readDeliveries(ownerRoot: string, fleetRoot: string): Deliveries | null {
-	return readAll(ownerRoot)[rootKey(fleetRoot)] ?? null;
+	return readRecordParts(ownerRoot).roots[rootKey(fleetRoot)] ?? null;
 }
 
 function sorted<T>(
@@ -152,17 +147,12 @@ function sorted<T>(
 }
 
 /**
- * Writes one fleet root's section and leaves every other root's as it was. Objects with sorted
- * keys, tabs, one trailing newline, so the same state is the same bytes. Returns whether the file
- * changed: a write that confirms what is already recorded touches nothing.
+ * Writes the whole record, both maps, in one write. Objects with sorted keys, tabs, one trailing
+ * newline, so the same state is the same bytes. Returns whether the file changed: a write that
+ * confirms what is already recorded touches nothing.
  */
-export function writeDeliveries(
-	ownerRoot: string,
-	fleetRoot: string,
-	section: Deliveries,
-): boolean {
-	const all = { ...readAll(ownerRoot), [rootKey(fleetRoot)]: section };
-	const roots = sorted(all, (deliveries) =>
+export function writeRecordParts(ownerRoot: string, parts: RecordParts): boolean {
+	const roots = sorted(parts.roots, (deliveries) =>
 		sorted(deliveries, (target) => ({
 			commit: target.commit,
 			groups: sorted(target.groups, (group) => ({
@@ -173,7 +163,9 @@ export function writeDeliveries(
 		})),
 	);
 	const path = join(configRoot(ownerRoot), DELIVERIES_FILE);
-	const content = `${JSON.stringify({ roots }, null, '\t')}\n`;
+	const written = writtenPending(parts.pending ?? {});
+	const pending = Object.keys(written).length === 0 ? {} : { pending: written };
+	const content = `${JSON.stringify({ ...pending, roots }, null, '\t')}\n`;
 	if (existsSync(path) && readFileSync(path, 'utf8') === content) return false;
 	writeFileSync(path, content);
 	return true;
@@ -201,50 +193,68 @@ export function deliveredBy(lock: Lock): DeliveredTarget | null {
 }
 
 /**
- * Brings the record into line with the locks a write settled, and with no others: a lock withheld
+ * What the record would hold for each target a write settled, and for no others: a lock withheld
  * keeps the entry of its last good delivery, and a target outside an --only narrowing is not
- * touched. Returns whether the file changed.
+ * touched. The write does not put these in the confirmed record. Its target has not decided yet
+ * whether it keeps them, so each becomes a pending delivery that the reconcile confirms only once
+ * the target has committed it (worktree-record.ts settleRun; shared-core-record-follows-a-
+ * restored-delivery).
  *
- * Only the groups the run delivered and compared are recorded from it. A group the run was
- * narrowed away from keeps the entry the record already has: copying it out of the target's lock
- * would write the target's own word into the owner's memory, which is how a hand-made claim was
- * once recorded by a write narrowed to some other group. Where such a kept entry belongs to another
- * version than this delivery, nothing is recorded for that target at all, since one entry cannot
- * name two versions; the unnarrowed write records it.
+ * Only the groups the run delivered and compared are taken from it. A group the run was narrowed
+ * away from keeps the entry the record already has: copying it out of the target's lock would
+ * write the target's own word into the owner's memory, which is how a hand-made claim was once
+ * recorded by a write narrowed to some other group. Where such a kept entry belongs to another
+ * version than this delivery, nothing is returned for that target at all, since one entry cannot
+ * name two versions; the unnarrowed write settles it.
+ *
+ * Read from the record as it stands now rather than as it stood when the write began, so an adopt
+ * or forget run meanwhile is not undone; the caller holds the record lock. `deliveries` is the
+ * write's starting snapshot: a repository, or a group of one, that it held and the record no
+ * longer does was forgotten while the write ran, and the forget stands (Roger #39011).
  */
-export function recordSettled(
+export function settledEntries(
 	ownerRoot: string,
 	fleetRoot: string,
 	deliveries: Deliveries,
 	settled: Map<string, Lock>,
-): boolean {
-	if (settled.size === 0) return false;
-	// Under the record lock, and merged into the record as it stands now rather than as it stood
-	// when the write began, so an adopt or forget run meanwhile is not undone. `deliveries` is the
-	// write's starting snapshot: a repository, or a group of one, that it held and the record no
-	// longer does was forgotten while the write ran, and the forget stands (Roger #39011).
-	return withRecordLock(ownerRoot, () => {
-		const section = { ...(readDeliveries(ownerRoot, fleetRoot) ?? deliveries) };
-		for (const [directory, lock] of settled) {
-			const delivered = deliveredBy(lock);
-			if (delivered === null) continue;
-			const started = deliveries[directory];
-			const before = section[directory];
-			if (started !== undefined && before === undefined) continue;
-			const forgotten = Object.keys(started?.groups ?? {}).filter(
-				(name) => before?.groups[name] === undefined,
-			);
-			const groups = Object.fromEntries(
-				Object.entries(delivered.groups).filter(([name]) => !forgotten.includes(name)),
-			);
-			if (Object.keys(groups).length === 0) continue;
-			const entry: DeliveredTarget = { ...delivered, groups };
-			const kept = Object.keys(before?.groups ?? {}).some((name) => !(name in entry.groups));
-			if (kept && (before?.version !== entry.version || before.commit !== entry.commit)) {
-				continue;
-			}
-			section[directory] = { ...entry, groups: { ...before?.groups, ...entry.groups } };
+): Map<string, DeliveredTarget> {
+	const entries = new Map<string, DeliveredTarget>();
+	const section = readDeliveries(ownerRoot, fleetRoot) ?? deliveries;
+	for (const [directory, lock] of settled) {
+		const delivered = deliveredBy(lock);
+		if (delivered === null) continue;
+		const started = deliveries[directory];
+		const before = section[directory];
+		if (started !== undefined && before === undefined) continue;
+		const forgotten = Object.keys(started?.groups ?? {}).filter(
+			(name) => before?.groups[name] === undefined,
+		);
+		const groups = Object.fromEntries(
+			Object.entries(delivered.groups).filter(([name]) => !forgotten.includes(name)),
+		);
+		if (Object.keys(groups).length === 0) continue;
+		const entry: DeliveredTarget = { ...delivered, groups };
+		const kept = Object.keys(before?.groups ?? {}).some((name) => !(name in entry.groups));
+		if (kept && (before?.version !== entry.version || before.commit !== entry.commit)) {
+			continue;
 		}
-		return writeDeliveries(ownerRoot, fleetRoot, section);
+		entries.set(directory, { ...entry, groups: { ...before?.groups, ...entry.groups } });
+	}
+	return entries;
+}
+
+/** Whether two entries record the same delivery, compared as the record writes them. */
+export function sameDelivery(a: DeliveredTarget | undefined, b: DeliveredTarget): boolean {
+	return a !== undefined && entryText(a) === entryText(b);
+}
+
+function entryText(entry: DeliveredTarget): string {
+	return JSON.stringify({
+		commit: entry.commit,
+		groups: sorted(entry.groups, (group) => ({
+			...(group.claim === undefined ? {} : { claim: group.claim }),
+			paths: [...group.paths].sort(),
+		})),
+		version: entry.version,
 	});
 }

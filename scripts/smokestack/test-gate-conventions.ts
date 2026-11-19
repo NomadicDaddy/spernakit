@@ -117,6 +117,26 @@ try {
 		`Findings belong on stderr and the summary on stdout:\n${result.output}`,
 	);
 
+	// --- The failure names the conventions document where this repository holds it: beside the
+	// delivered gates, or under docs/reference in smokestack, or both places when it has neither.
+	assert(
+		result.output.includes('See gate-conventions.md (scripts/smokestack/docs/'),
+		result.output,
+	);
+	for (const doc of [
+		'scripts/smokestack/docs/gate-conventions.md',
+		'docs/reference/gate-conventions.md',
+	]) {
+		write(doc, '# Gate conventions\n');
+		result = runCheck();
+		assert(
+			result.exitCode === 1 &&
+				result.output.includes(`See ${doc} for what each rule requires.`),
+			`The failure must name ${doc}, which exists here:\n${result.output}`,
+		);
+		rmSync(join(fixtureRoot, doc));
+	}
+
 	// --- The --json envelope carries the four keys rule 8 fixes. ------------------------------
 	const envelope = JSON.parse(runCheck('--json').stdout) as Record<string, unknown>;
 	assert(

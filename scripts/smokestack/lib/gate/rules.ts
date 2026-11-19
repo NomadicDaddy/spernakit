@@ -1,5 +1,6 @@
 /**
- * The statically decidable rules of `docs/reference/gate-conventions.md`.
+ * The statically decidable rules of `gate-conventions.md` (docs/reference/ in smokestack,
+ * scripts/smokestack/docs/ where delivered).
  *
  * Each function takes one gate and returns its findings. They are pure over `Gate`, with the single
  * exception of GC6, which is handed the assertion IDs its caller already read, so that every rule

@@ -2,8 +2,8 @@
  * The in-source waiver form for `check-destructive-confirmation`, and the two ways a marker stops
  * being one.
  *
- * `docs/reference/gate-conventions.md` sanctions exactly two waiver forms, and this gate uses the
- * first: a comment on or above the offending line, naming the rule and carrying a reason. That is
+ * `gate-conventions.md` (docs/reference/ in smokestack, scripts/smokestack/docs/ where delivered)
+ * sanctions exactly two waiver forms, and this gate uses the first: a comment on or above the offending line, naming the rule and carrying a reason. That is
  * the right form here for the same reason it was right for `check-docs` — the exception belongs to
  * one call site, and the person who needs to know about it is the next person to read that line.
  *

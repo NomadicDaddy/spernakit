@@ -1,8 +1,8 @@
 /**
  * The in-source waiver form for `check-docs`, and the two ways a marker stops being one.
  *
- * `docs/reference/gate-conventions.md` sanctions exactly two waiver forms, and this gate uses the
- * first: a comment on or above the offending line, naming the rule and carrying a reason. That is
+ * `gate-conventions.md` (docs/reference/ in smokestack, scripts/smokestack/docs/ where delivered)
+ * sanctions exactly two waiver forms, and this gate uses the first: a comment on or above the offending line, naming the rule and carrying a reason. That is
  * the right form here because the exception belongs to one line and the reader of that line is
  * the person who needs to know about it. The current uses cover application routes in the
  * panel's Markdown content: those links are valid at runtime but intentionally have no matching
