@@ -21,7 +21,8 @@ this release.
 
 - Deleting a user who owns an active workspace answers 409 `RESOURCE_PROTECTED` telling the
   admin to delete those workspaces first, instead of a 500. Bulk delete now refuses such a user
-  the same way, item by item, where before it deleted them and left the workspace ownerless.
+  too, where before it deleted them and left the workspace ownerless. The request still answers
+  200, and that user's item fails with the same reason while the others go ahead.
 - Bulk delete and bulk role change now evict the user cache. Before, a deleted or re-roled user
   kept reading as before for up to five minutes, including their old role on permission checks.
 
