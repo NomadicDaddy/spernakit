@@ -29,8 +29,9 @@ interface WorkspaceDeletedContext {
 /**
  * Must finish synchronously: the transaction cannot wait for a promise, and its tx is closed as
  * soon as the handlers return. Deferred work that reaches it afterwards throws a
- * WorkspaceDeletedHandlerError naming the handler, which nothing catches, so the backend's fatal
- * handlers end the process. Never defer work from a handler.
+ * WorkspaceDeletedHandlerError naming the handler. Left uncaught, that error reaches the backend's
+ * fatal handlers, which end the process; a returned promise's later rejection is swallowed, since
+ * the promise itself is already refused. Never defer work from a handler.
  */
 type WorkspaceDeletedHandler = (context: WorkspaceDeletedContext) => void;
 
