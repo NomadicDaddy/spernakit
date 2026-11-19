@@ -3,6 +3,31 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.50.4] - 2026-11-19
+
+### Changed
+
+- Carries Smokestack 0.10.12 in place of 0.9.0. Hook readers and writers honour a worktree-scoped
+  `core.hooksPath` under `extensions.worktreeConfig`, a dry run names every blocker in one pass,
+  worktree deliveries are recorded against the canonical checkout, and the leak guard now catches
+  added lines starting with `++` and a key body whose last line has no final newline, and runs
+  faster on each commit.
+
+### Fixed
+
+- Installing in an upgrade worktree no longer points the main checkout's hooks at a folder only
+  the worktree has. With `extensions.worktreeConfig` on, `prepare` (now `scripts/set-hooks-path.ts`)
+  writes `core.hooksPath` to the worktree's own config, so each checkout keeps running its own
+  guards. With it off, `prepare` writes the shared value as before. The template's hooks-path check
+  reads the value git actually uses for that checkout.
+- `format:check` no longer reads `.records/`, which is kept out of git and often exists only in
+  the canonical checkout.
+
+### Upgrade notes
+
+- Before creating an upgrade worktree, turn on per-worktree config once per repository with
+  `git config extensions.worktreeConfig true`. DEVELOPMENT.md (Template Upgrade) has the details.
+
 ## [3.50.3] - 2026-11-19
 
 ### Changed
