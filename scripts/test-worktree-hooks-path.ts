@@ -47,7 +47,11 @@ function assert(condition: boolean, message: string): void {
 }
 
 function git(cwd: string, ...args: string[]): string {
-	const result = Bun.spawnSync(['git', '-C', cwd, ...args], { stderr: 'pipe', stdout: 'pipe' });
+	const result = Bun.spawnSync(['git', '-C', cwd, ...args], {
+		stderr: 'pipe',
+		stdout: 'pipe',
+		windowsHide: true,
+	});
 	if (result.exitCode !== 0)
 		throw new Error(`git ${args.join(' ')}: ${result.stderr.toString()}`);
 	return result.stdout.toString().trim();
@@ -56,6 +60,7 @@ function git(cwd: string, ...args: string[]): string {
 function config(cwd: string, scope: '--local' | '--worktree', key: string): string {
 	const result = Bun.spawnSync(['git', '-C', cwd, 'config', scope, '--get', key], {
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	return result.stdout.toString().trim();
 }
@@ -79,6 +84,7 @@ function guardRuns(cwd: string): string {
 	Bun.spawnSync(['git', '-C', cwd, 'hook', 'run', 'pre-commit'], {
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	return existsSync(join(cwd, 'ran.txt'))
 		? readFileSync(join(cwd, 'ran.txt'), 'utf8').trim()
@@ -107,11 +113,15 @@ function stagePrepare(dir: string): void {
 
 /** Run the checkout's `prepare` exactly as an install does. */
 function runPrepare(cwd: string): void {
+	const patterns = join(dirname(cwd), 'patterns');
 	const result = Bun.spawnSync(['bun', 'run', 'prepare'], {
 		cwd,
-		env: { ...process.env, LEAK_GUARD_PATTERNS: join(dirname(cwd), 'patterns') },
+		// prepare runs as an install runs it, with the whole environment bun, git and bash need;
+		// only the patterns path is pinned to the fixture.
+		env: { ...process.env, LEAK_GUARD_PATTERNS: patterns }, // allow-env-spread-policy
 		stderr: 'pipe',
 		stdout: 'pipe',
+		windowsHide: true,
 	});
 	assert(result.exitCode === 0, `prepare failed in ${cwd}: ${result.stderr.toString()}`);
 }
