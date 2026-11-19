@@ -3,6 +3,34 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.50.2] - 2026-11-19
+
+### Changed
+
+- Every route group now reaches the API through one typed aggregator,
+  `backend/src/routes/domain.ts`, which `create-api-app.ts` mounts with a single `.use()`. An
+  application keeps its own groups in an aggregator of its own and mounts it with one more `.use()`
+  at the end of the `domainRoutes` chain. It no longer edits `create-api-app.ts`, and needs no
+  `AnyElysia`, type cast or `.templateoverrides` entry to stay under TypeScript's
+  instantiation-depth limit. `domain.ts` is classified as infrastructure, so the added line shows
+  in drift as a warning. DEVELOPMENT.md, CUSTOMIZATION.md and ADMIN_DB.md show the pattern.
+- The users screen shows the server's own reason when a delete is refused because something
+  depends on the item, instead of a generic "protected" message.
+
+### Fixed
+
+- Deleting a user who owns an active workspace answers 409 `RESOURCE_PROTECTED` telling the
+  admin to delete those workspaces first, instead of a 500. Bulk delete now refuses such a user
+  the same way, item by item, where before it deleted them and left the workspace ownerless.
+- Bulk delete and bulk role change now evict the user cache. Before, a deleted or re-roled user
+  kept reading as before for up to five minutes, including their old role on permission checks.
+
+### Upgrade notes
+
+- Move any route groups your app added to `create-api-app.ts` into an aggregator file of your
+  own, such as `backend/src/routes/app.ts`, and mount it at the end of the chain in
+  `backend/src/routes/domain.ts`.
+
 ## [3.50.1] - 2026-11-19
 
 ### Added
