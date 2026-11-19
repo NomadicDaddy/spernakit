@@ -5,6 +5,9 @@
  * wrapped the same way, so a statement built during the call and run later is refused, not just a
  * later call on the transaction itself. After the scope closes, the connection is back in
  * autocommit, and a deferred write would land outside the transaction it was meant for.
+ *
+ * It guards against accidental deferral, not deliberate escape: code set on reaching the real
+ * session (through property descriptors or prototypes, which are not trapped) still can.
  */
 
 interface TransactionScope<T extends object> {

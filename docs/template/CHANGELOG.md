@@ -12,8 +12,10 @@ this release.
   registered handler runs inside the delete's transaction, after the soft delete and in
   registration order. A handler that throws or returns a promise rolls the delete back with a
   `WorkspaceDeletedHandlerError` naming it. The transaction handed to handlers, and every
-  statement built from it, closes when they return, so deferred work cannot write outside it.
-  DEVELOPMENT.md describes the contract.
+  statement built from it, closes when they return. Deferred work that reaches it afterwards
+  throws instead of writing outside the transaction, and since nothing catches that error, the
+  backend's fatal handlers end the process. So a handler must never defer work. DEVELOPMENT.md
+  describes the contract.
 
 ### Changed
 
