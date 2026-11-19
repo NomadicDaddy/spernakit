@@ -3,6 +3,49 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.50.1] - 2026-11-19
+
+### Added
+
+- `onWorkspaceDeleted(name, handler)`, exported from `services/workspaceService.ts`, lets an
+  application clean up its own per-workspace data without editing `workspaceCrud.ts`. Every
+  registered handler runs inside the delete's transaction, after the soft delete and in
+  registration order. A handler that throws or returns a promise rolls the delete back with a
+  `WorkspaceDeletedHandlerError` naming it. The transaction handed to handlers is revoked when
+  they return, so deferred work cannot write outside it. DEVELOPMENT.md describes the contract.
+
+### Changed
+
+- Both migration runners, `db:migrate` and the one that runs at startup, now give the same
+  guarantees. Each refuses a `.sql` file that the journal does not list, refuses an applied row
+  that matches no journal entry, warns when an applied migration's file has changed since it ran,
+  and runs `integrity_check` and `foreign_key_check` before committing. The CLI records a content
+  hash for each migration, in a new nullable column it adds to its own tracking table. The CLI's
+  pre-validation no longer hides a failed foreign-key check. At startup, a failed integrity check
+  now always refuses to start: after restoring the pre-migration backup, when the restore fails,
+  and when there is no backup.
+- The health-alert warning cooldown is measured from the last alert of the same check that a
+  channel actually delivered, recorded in a new `notified_at` column, rather than from the newest
+  alert row. A `cooldownMinutes` above 15 now works as configured. A check that escalates from
+  degraded to unhealthy records and sends its critical alert at once. CONFIGURATION.md describes
+  the timing.
+
+### Fixed
+
+- Creating or renaming a user, or changing an email address, to a value a soft-deleted account
+  still holds now answers 409 instead of 500. So does a confirmed email change that loses a race,
+  and the change link is consumed. The availability checks no longer skip soft-deleted rows,
+  because the unique indexes do not.
+- An API key name only has to be unique among the user's active keys, so a revoked key's name can
+  be reused, and a concurrent duplicate answers 409 instead of 500.
+
+### Upgrade notes
+
+- Two migrations apply automatically: the API-key name index becomes partial (active keys only),
+  and `health_check_alerts` gains a nullable `notified_at`.
+- An app that kept its own workspace cleanup in an edited `workspaceCrud.ts` should move it into
+  an `onWorkspaceDeleted` handler registered at the top level of a module the server imports once.
+
 ## [3.49.1] - 2026-11-17
 
 ### Fixed
