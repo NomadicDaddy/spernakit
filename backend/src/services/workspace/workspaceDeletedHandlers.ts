@@ -14,13 +14,20 @@ type DbTransaction = Parameters<Parameters<ReturnType<typeof getDb>['transaction
 interface WorkspaceDeletedContext {
 	/** The user performing the delete. */
 	deletedBy: number;
-	/** The delete's transaction; write through it so the cleanup commits or rolls back with it. */
+	/**
+	 * The delete's transaction; write through it so the cleanup commits or rolls back with it.
+	 * It is revoked when the handlers return, so using it afterwards throws.
+	 */
 	tx: DbTransaction;
 	/** The workspace being deleted. */
 	workspaceId: number;
 }
 
-/** Must finish synchronously: the transaction cannot wait for a promise. */
+/**
+ * Must finish synchronously: the transaction cannot wait for a promise, and its tx is revoked as
+ * soon as the handlers return. Build and run each statement inside the call; a statement built
+ * here and run later would bypass the revocation.
+ */
 type WorkspaceDeletedHandler = (context: WorkspaceDeletedContext) => void;
 
 class WorkspaceDeletedHandlerError extends Error {
@@ -59,21 +66,29 @@ function onWorkspaceDeleted(name: string, handler: WorkspaceDeletedHandler): voi
  * @param context - The workspace, the deleting user and the delete's transaction
  */
 function runWorkspaceDeletedHandlers(context: WorkspaceDeletedContext): void {
-	for (const [name, handler] of handlers) {
-		let result: unknown;
-		try {
-			result = handler(context);
-		} catch (err) {
-			throw new WorkspaceDeletedHandlerError(name, err);
+	// Handlers get a revocable view of the transaction. Once they have all returned, any later use
+	// of it throws, so work a handler deferred (an await, a timer) cannot write after the commit or
+	// rollback, where the connection is back in autocommit.
+	const { proxy: tx, revoke } = Proxy.revocable(context.tx, {});
+	try {
+		for (const [name, handler] of handlers) {
+			let result: unknown;
+			try {
+				result = handler({ ...context, tx });
+			} catch (err) {
+				throw new WorkspaceDeletedHandlerError(name, err);
+			}
+			if (result instanceof Promise) {
+				// The work it started is outside the transaction; refuse rather than half-clean.
+				result.catch(() => undefined);
+				throw new WorkspaceDeletedHandlerError(
+					name,
+					new Error('handlers must be synchronous; it returned a promise'),
+				);
+			}
 		}
-		if (result instanceof Promise) {
-			// The work it started is outside the transaction; refuse rather than half-clean.
-			result.catch(() => undefined);
-			throw new WorkspaceDeletedHandlerError(
-				name,
-				new Error('handlers must be synchronous; it returned a promise'),
-			);
-		}
+	} finally {
+		revoke();
 	}
 }
 

@@ -12,6 +12,8 @@
  *  4. A handler that returns a promise is refused the same way, since its work would escape the
  *     transaction.
  *  5. Registering a second handler under a taken name throws.
+ *  6. Work a handler defers (an await, a timer) finds the transaction revoked and writes nothing,
+ *     whether the delete rolled back or committed.
  */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -43,6 +45,9 @@ function assert(condition: boolean, message: string): void {
 const calls: { deletedBy: number; name: string; sawDeleted: boolean; workspaceId: number }[] = [];
 const failFor = new Set<number>();
 const asyncFor = new Set<number>();
+const timerFor = new Set<number>();
+/** What a handler's deferred write did: 'wrote', 'revoked', or any other error. */
+const lateWrites = new Map<number, string>();
 
 function isDeleted(id: number): boolean | undefined {
 	return getDb()
@@ -76,9 +81,34 @@ function registerHandlers(): void {
 		calls.push({ deletedBy, name: 'second', sawDeleted: true, workspaceId });
 		if (failFor.has(workspaceId)) throw new Error('fixture failure');
 	});
-	onWorkspaceDeleted('third', ({ workspaceId }) => {
-		if (asyncFor.has(workspaceId)) return Promise.resolve() as unknown as void;
+	onWorkspaceDeleted('third', ({ tx, workspaceId }) => {
+		const lateWrite = (): void => {
+			try {
+				tx.insert(settings)
+					.values({ key: `late.${String(workspaceId)}`, value: 'late' })
+					.run();
+				lateWrites.set(workspaceId, 'wrote');
+			} catch (err) {
+				lateWrites.set(workspaceId, err instanceof TypeError ? 'revoked' : String(err));
+			}
+		};
+		if (asyncFor.has(workspaceId)) {
+			const deferred = async (): Promise<void> => {
+				await Bun.sleep(20);
+				lateWrite();
+			};
+			return deferred() as unknown as void;
+		}
+		if (timerFor.has(workspaceId)) setTimeout(lateWrite, 20);
 	});
+}
+
+function lateKey(id: number): boolean {
+	return getDb()
+		.select()
+		.from(settings)
+		.all()
+		.some((s) => s.key === `late.${String(id)}`);
 }
 
 function refusal(id: number, deletedBy: number): undefined | WorkspaceDeletedHandlerError {
@@ -91,12 +121,13 @@ function refusal(id: number, deletedBy: number): undefined | WorkspaceDeletedHan
 	return undefined;
 }
 
-function run(ownerId: number): void {
+async function run(ownerId: number): Promise<void> {
 	const make = (slug: string): number => create({ name: slug, ownerId, slug }).id;
 	const plain = make('plain');
 	const ordered = make('ordered');
 	const failing = make('failing');
 	const promised = make('promised');
+	const timed = make('timed');
 
 	// 1. No handlers registered yet.
 	assert(softDelete(plain, ownerId), '1: a workspace should delete with no handlers registered');
@@ -138,6 +169,22 @@ function run(ownerId: number): void {
 	);
 	assert(isDeleted(promised) === false, '4: the workspace should stay active');
 
+	// 6. Deferred work cannot write through tx once the handlers have returned: not after the
+	// refused promise's rollback, and not from a timer after a delete that committed.
+	timerFor.add(timed);
+	assert(softDelete(timed, ownerId), '6: a handler that only schedules work should delete');
+	await Bun.sleep(100);
+	assert(
+		lateWrites.get(promised) === 'revoked',
+		`6: the refused handler's awaited write should hit a revoked tx, got ${lateWrites.get(promised)}`,
+	);
+	assert(!lateKey(promised), '6: the awaited write should not land after the rollback');
+	assert(
+		lateWrites.get(timed) === 'revoked',
+		`6: the timer's write should hit a revoked tx, got ${lateWrites.get(timed)}`,
+	);
+	assert(!lateKey(timed), '6: the timer write should not land after the commit');
+
 	// 5. Duplicate names.
 	let duplicate = false;
 	try {
@@ -161,7 +208,7 @@ try {
 		.all()
 		.find((u) => u.role === 'ADMIN');
 	if (!owner) throw new Error('the seed produced no ADMIN account');
-	run(owner.id);
+	await run(owner.id);
 } finally {
 	await closeDatabase();
 	// Statements cached on the closed handle keep the file open on Windows until collected.
