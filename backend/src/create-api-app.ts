@@ -15,21 +15,7 @@ import { authRateLimitPlugin, rateLimitPlugin } from './plugins/rateLimit/index.
 import { requestIdPlugin } from './plugins/requestId.ts';
 import { securityHeadersPlugin } from './plugins/securityHeaders.ts';
 import { workspacePlugin } from './plugins/workspace.ts';
-import { auditRoutes } from './routes/audit.ts';
-import { authRoutes } from './routes/auth/index.ts';
-import { bugsRoutes } from './routes/bugs.ts';
-import { businessMetricsRoutes } from './routes/business-metrics.ts';
-import { dashboardRoutes } from './routes/dashboards/index.ts';
-import { databaseAdminRoutes } from './routes/database-admin/index.ts';
-import { fileRoutes } from './routes/files/index.ts';
-import { healthRoutes } from './routes/health/index.ts';
-import { notificationRoutes } from './routes/notifications/index.ts';
-import { onboardingRoutes } from './routes/onboarding.ts';
-import { settingsRoutes } from './routes/settings/index.ts';
-import { systemRoutes } from './routes/system/index.ts';
-import { taskRoutes } from './routes/tasks.ts';
-import { usersRoutes } from './routes/users/index.ts';
-import { workspaceRoutes } from './routes/workspaces/index.ts';
+import { domainRoutes } from './routes/domain.ts';
 // Imported directly (not via the healthService facade) so the readiness probe
 // can share the READINESS_CACHE_TTL_MS constant with the checks implementation.
 import { READINESS_CACHE_TTL_MS, runAllChecks } from './services/health/healthChecks.ts';
@@ -44,24 +30,6 @@ import {
 } from './utils/errorResponse.ts';
 import { logger } from './utils/logger.ts';
 import { describeValidationError } from './utils/validationErrorMessage.ts';
-
-/** Bundles all route plugins into a single Elysia instance. */
-const routePlugins = new Elysia({ name: 'routes' })
-	.use(auditRoutes)
-	.use(authRoutes)
-	.use(bugsRoutes)
-	.use(businessMetricsRoutes)
-	.use(databaseAdminRoutes)
-	.use(dashboardRoutes)
-	.use(fileRoutes)
-	.use(healthRoutes)
-	.use(notificationRoutes)
-	.use(onboardingRoutes)
-	.use(settingsRoutes)
-	.use(systemRoutes)
-	.use(taskRoutes)
-	.use(usersRoutes)
-	.use(workspaceRoutes);
 
 interface CreateApiAppOptions {
 	/**
@@ -238,7 +206,7 @@ function createApiApp(options?: CreateApiAppOptions) {
 				},
 			},
 		)
-		.use(routePlugins);
+		.use(domainRoutes);
 }
 
 export { createApiApp };

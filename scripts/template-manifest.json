@@ -42,6 +42,7 @@
 		"backend/src/db/seed/index.ts",
 		"backend/src/db/seed.ts",
 		"backend/src/routes/auth/index.ts",
+		"backend/src/routes/domain.ts",
 		"backend/src/routes/notifications/index.ts",
 		"backend/src/routes/settings/app-features.ts",
 		"backend/src/routes/settings/index.ts",

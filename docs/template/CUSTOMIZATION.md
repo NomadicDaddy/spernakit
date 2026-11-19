@@ -352,14 +352,20 @@ export { productRoutes };
 ```
 
 ```typescript
-// backend/src/create-api-app.ts - Register routes via routePlugins array
-import { productRoutes } from './routes/products.ts';
+// backend/src/routes/app.ts - your application's own route groups, in one typed aggregator
+import { Elysia } from 'elysia';
 
-// Add to the routePlugins array in create-api-app.ts:
-const routePlugins = [
-	// ... existing route plugins
-	productRoutes,
-];
+import { productRoutes } from './products.ts';
+
+const appRoutes = new Elysia({ name: 'app-routes' }).use(productRoutes);
+
+export { appRoutes };
+
+// backend/src/routes/domain.ts - mount it with one more .use() at the end of the chain.
+// create-api-app.ts mounts domainRoutes and needs no change. See DEVELOPMENT.md.
+const domainRoutes = new Elysia({ name: 'routes' })
+	// ... the template's route groups
+	.use(appRoutes);
 ```
 
 ---

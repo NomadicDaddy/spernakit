@@ -587,22 +587,34 @@ export { productRoutes };
 
 3. **Register Routes** (App Integration)
 
-```typescript
-// backend/src/create-api-app.ts - add to the routePlugins chain
-import { productRoutes } from './routes/products.ts';
+Every route group reaches the API through one typed aggregator, `backend/src/routes/domain.ts`, which `create-api-app.ts` mounts with a single `.use()`. Don't add groups to `create-api-app.ts`. Put your application's groups in an aggregator of your own, built the same way, and mount it with one more `.use()` at the end of the `domainRoutes` chain:
 
-const routePlugins = new Elysia({ name: 'routes' })
-	// ... existing routes
-	.use(productRoutes);
+```typescript
+// backend/src/routes/app.ts - your application's own route groups
+import { Elysia } from 'elysia';
+
+import { orderRoutes } from './orders.ts';
+import { productRoutes } from './products.ts';
+
+const appRoutes = new Elysia({ name: 'app-routes' }).use(orderRoutes).use(productRoutes);
+
+export { appRoutes };
+
+// backend/src/routes/domain.ts - one more line at the end of the chain
+const domainRoutes = new Elysia({ name: 'routes' })
+	// ... the template's route groups
+	.use(appRoutes);
 
 // Routes are mounted under /api/v1 prefix via createApiApp()
 ```
+
+Never widen an aggregator's type (`AnyElysia`, `Elysia<any, ...>` or a cast). Its type is inferred, so every route stays in `ReturnType<typeof createApiApp>`, which the typed gate scripts use. Keeping your groups in their own aggregator keeps each chain short, so the composed type stays inside TypeScript's instantiation-depth limit (TS2589) as the app grows. `domain.ts` is classified as infrastructure, so drift reports your added line as a warning, and no `.templateoverrides` entry is needed.
 
 4. **Verify Integration** (End-to-End Reachability)
 
 Confirm the new endpoint is reachable from a user-facing path:
 
-- [ ] Route is registered in `create-api-app.ts` (Step 3 above)
+- [ ] Route group is mounted through `routes/domain.ts` (Step 3 above)
 - [ ] Frontend API module in `frontend/src/api/` calls the endpoint
 - [ ] A page or component consumes the API module and is routed in `routes.tsx`
 - [ ] Navigation link exists for the feature (sidebar, menu, or in-page link)

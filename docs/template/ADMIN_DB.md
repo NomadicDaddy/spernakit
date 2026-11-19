@@ -27,7 +27,7 @@
 
 - **Route file:** `backend/src/routes/database-admin.ts`
 - **Route prefix:** `/database-admin`
-- **Registration:** Import `databaseAdminRoutes` in `backend/src/create-api-app.ts`, add `.use(databaseAdminRoutes)` to `routePlugins`
+- **Registration:** Import `databaseAdminRoutes` in `backend/src/routes/domain.ts` and add `.use(databaseAdminRoutes)` to the `domainRoutes` chain, which `create-api-app.ts` mounts
 
 | Method | Path                                     | Guard                       | Description                                        |
 | ------ | ---------------------------------------- | --------------------------- | -------------------------------------------------- |
@@ -108,7 +108,7 @@
 
 | Target File                                      | Change                                                                                           |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `backend/src/create-api-app.ts`                  | Import + `.use(databaseAdminRoutes)` in `routePlugins`                                           |
+| `backend/src/routes/domain.ts`                   | Import + `.use(databaseAdminRoutes)` in the `domainRoutes` chain                                 |
 | `frontend/src/pages/settings/SettingsLayout.tsx` | Add `{ label: 'Database', to: '/settings/database' }` to tabs                                    |
 | `frontend/src/routes.tsx`                        | Lazy import `DatabaseTab`, add route under `/settings` children                                  |
 | `frontend/src/api/types.ts`                      | Add `TableMetadata`, `ColumnInfo`, `ForeignKeyInfo`, `IndexInfo`, `SafeModeState`, `QueryResult` |

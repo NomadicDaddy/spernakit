@@ -200,6 +200,7 @@
 		"test:destructive-evidence": "bun scripts/test-destructive-evidence.ts",
 		"test:dialog-focus-return": "bun scripts/test-dialog-focus-return.ts",
 		"test:dialog-form-survival": "bun scripts/test-dialog-form-survival.ts",
+		"test:domain-route-aggregator": "bun scripts/test-domain-route-aggregator.ts",
 		"test:error-log-wiring": "bun scripts/test-error-log-wiring.ts",
 		"test:feature-integration": "bun scripts/test-feature-integration.ts",
 		"test:field-encryption-rotation": "bun scripts/test-field-encryption-rotation.ts",

@@ -3159,6 +3159,19 @@
 				"description": "Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged",
 				"name": "test:workspace-deleted-hook",
 				"run": ["bun", "run", "test:workspace-deleted-hook"]
+			},
+			{
+				"cache": {
+					"inputs": [
+						"backend/src/**/*.ts",
+						"scripts/lib/domain-route-fixture.ts",
+						"scripts/test-domain-route-aggregator.ts",
+						"package.json"
+					]
+				},
+				"description": "create-api-app.ts mounts every route group through the one typed aggregator in routes/domain.ts, and an application aggregator nested in it keeps its routes' inferred types",
+				"name": "test:domain-route-aggregator",
+				"run": ["bun", "run", "test:domain-route-aggregator"]
 			}
 		]
 	},
