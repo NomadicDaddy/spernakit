@@ -15,9 +15,10 @@ this release.
 - The browser now signs a user out only when the server rejects the refresh (401 or 403). A
   429, a 5xx or a network failure on refresh leaves the session alone.
 - The container entrypoint no longer copies the database on every start. `db:migrate` already
-  takes a consistent `VACUUM INTO` backup exactly when migrations are pending, and it now keeps
-  the newest five timestamped pre-migration backups and deletes the rest. That includes the
-  per-start copies older images left. Retention is best-effort and never stops a migration.
+  takes a consistent `VACUUM INTO` backup exactly when migrations are pending. It now keeps
+  that backup plus the four newest older timestamped backups, of either naming, and deletes the
+  rest, including the per-start copies older images left. Only regular files count, and
+  retention is best-effort: it never stops a migration.
 
 ### Fixed
 
@@ -30,8 +31,9 @@ this release.
 ### Upgrade notes
 
 - Existing `data/` directories may hold many `<db>.pre-migrate.<timestamp>.bak` copies from
-  the old entrypoint. The next `db:migrate` run with a pending migration keeps the newest five of
-  them and deletes the rest; delete them by hand sooner if disk is short.
+  the old entrypoint. The next `db:migrate` run with a pending migration keeps its own new backup
+  and the four newest older ones across both namings, and deletes the rest. Delete them by hand
+  sooner if disk is short.
 
 ## [3.50.2] - 2026-11-19
 

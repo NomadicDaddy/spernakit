@@ -85,7 +85,8 @@ chmod 400 "$CONFIG_FILE" 2>/dev/null || true
 
 # Run database migrations (with retry for transient failures). db:migrate takes its own
 # consistent VACUUM INTO backup before it applies anything, only when migrations are pending, and
-# keeps the newest five; the entrypoint no longer copies the database on every start.
+# keeps that backup plus the four newest older ones; the entrypoint no longer copies the database
+# on every start.
 MAX_RETRIES=3
 RETRY=0
 until cd /app && bun run db:migrate; do
