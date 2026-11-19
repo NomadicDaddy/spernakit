@@ -130,7 +130,22 @@ function typecheckExtended(target: string, domainSource: string): void {
 		extends: './tsconfig.json',
 	};
 	writeFileSync(join(target, 'backend/tsconfig.probe.json'), JSON.stringify(probeConfig));
-	const tsc = Bun.spawnSync(['bunx', 'tsc', '--noEmit', '-p', 'tsconfig.probe.json'], {
+	// The probe app has no node_modules, so bunx would fall back to whatever tsc is on PATH. Run
+	// this checkout's pinned compiler by path instead, and confirm it is the pinned version.
+	const tscBin = join(repoRoot, 'node_modules/typescript/bin/tsc');
+	const pinned = (
+		JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as {
+			devDependencies?: Record<string, string>;
+		}
+	).devDependencies?.typescript;
+	const version = Bun.spawnSync(['bun', tscBin, '--version'], { stdout: 'pipe' })
+		.stdout.toString()
+		.trim();
+	assert(
+		pinned !== undefined && version === `Version ${pinned}`,
+		`2: the probe must typecheck with the pinned TypeScript ${pinned}, got "${version}"`,
+	);
+	const tsc = Bun.spawnSync(['bun', tscBin, '--noEmit', '-p', 'tsconfig.probe.json'], {
 		cwd: join(target, 'backend'),
 		stderr: 'pipe',
 		stdout: 'pipe',
