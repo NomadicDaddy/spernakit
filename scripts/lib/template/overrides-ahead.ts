@@ -25,9 +25,19 @@ export type AheadExpiry = { hash: string; kind: 'blob' } | { kind: 'version'; ve
 /** One parsed AHEAD entry, kept beside the action maps by loadTemplateOverrides. */
 export interface AheadEntry {
 	action: 'KEEP' | 'SKIP';
+	/** The normalised app path, as in the action maps. */
+	appPath: string;
 	expiry: AheadExpiry;
 	/** The 1-based `.templateoverrides` line, so a failure points at what to edit. */
 	line: number;
+}
+
+/**
+ * The `ahead` map's key. KEEP and SKIP on one path are separate entries in the action maps, so each
+ * keeps its own expiry, and a later line for the same action and path replaces only its own.
+ */
+export function aheadKey(action: 'KEEP' | 'SKIP', appPath: string): string {
+	return `${action} ${appPath}`;
 }
 
 const MARKER = /^AHEAD\b/u;
@@ -77,7 +87,8 @@ export interface ExpiryInput {
  */
 export function expiredAheadEntries(input: ExpiryInput): string[] {
 	const expired: string[] = [];
-	for (const [appPath, entry] of input.ahead) {
+	for (const entry of input.ahead.values()) {
+		const { appPath } = entry;
 		const where = `${entry.action} ${appPath} (.templateoverrides line ${String(entry.line)})`;
 		if (entry.expiry.kind === 'version') {
 			if (compareVersions(input.targetVersion, entry.expiry.version) >= 0) {

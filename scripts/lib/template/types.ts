@@ -20,8 +20,8 @@ export type TemplateOverrideAction = 'DELETED' | 'KEEP' | 'SKIP';
 
 export interface TemplateOverrides {
 	/**
-	 * SKIP and KEEP entries whose reason carries an AHEAD expiry (overrides-ahead.ts), by app path.
-	 * Absent on overrides built in memory; loadTemplateOverrides always sets it.
+	 * SKIP and KEEP entries whose reason carries an AHEAD expiry (overrides-ahead.ts), keyed by
+	 * aheadKey(action, path). Absent on overrides built in memory; loadTemplateOverrides sets it.
 	 */
 	ahead?: Map<string, AheadEntry>;
 	deleted: Map<string, string>;

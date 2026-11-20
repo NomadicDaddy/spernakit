@@ -6,7 +6,7 @@ import path from 'node:path';
 
 import type { FileResult, TemplateOverrideAction, TemplateOverrides } from './types.ts';
 
-import { parseAheadMarker } from './overrides-ahead.ts';
+import { aheadKey, parseAheadMarker } from './overrides-ahead.ts';
 
 const VALID_OVERRIDE_ACTIONS = new Set<TemplateOverrideAction>(['DELETED', 'KEEP', 'SKIP']);
 
@@ -91,13 +91,17 @@ export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
 					: overrides.skip;
 		target.set(normalisedPath, reason);
 		if (action === 'DELETED') continue;
+		// A later line for the same action and path replaces the earlier reason above, so it also
+		// replaces that line's expiry: a plain or malformed replacement leaves none behind.
+		const key = aheadKey(action, normalisedPath);
+		overrides.ahead?.delete(key);
 		const expiry = parseAheadMarker(reason);
 		if (expiry === 'malformed') {
 			console.log(
 				`   Warning: .templateoverrides line ${i + 1} says AHEAD but names no expiry ("AHEAD until <X.Y.Z>" or "AHEAD until blob <hash>"): "${line}"`,
 			);
 		} else if (expiry !== null) {
-			overrides.ahead?.set(normalisedPath, { action, expiry, line: i + 1 });
+			overrides.ahead?.set(key, { action, appPath: normalisedPath, expiry, line: i + 1 });
 		}
 	}
 

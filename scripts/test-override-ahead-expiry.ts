@@ -120,6 +120,40 @@ try {
 		`An entry without a marker gets no AHEAD output:\n${plain.output}`,
 	);
 
+	// ===== 6. A later line for the same action and path replaces the expiry with its reason. =====
+	for (const replacement of ['kept in sync by hand', 'AHEAD, not kept: hand-synced']) {
+		fixture.writeOverrides([
+			`KEEP  ${AGREED}  # AHEAD until 9.1.0: taken early`,
+			`KEEP  ${AGREED}  # ${replacement}`,
+		]);
+		const replaced = fixture.run(['--target-version', '9.1.0']);
+		assert(
+			replaced.exitCode === 0 && !replaced.output.includes('Expired AHEAD'),
+			`A replacement "${replacement}" must leave no stale expiry behind:\n${replaced.output}`,
+		);
+	}
+
+	// ===== 7. KEEP and SKIP on one path keep separate expiries, in either order. =====
+	for (const lines of [
+		[`SKIP  ${AGREED}  # AHEAD until 9.1.0: a`, `KEEP  ${AGREED}  # AHEAD until 9.2.0: b`],
+		[`KEEP  ${AGREED}  # AHEAD until 9.2.0: b`, `SKIP  ${AGREED}  # AHEAD until 9.1.0: a`],
+	]) {
+		fixture.writeOverrides(lines);
+		const both = fixture.run(['--target-version', '9.1.0']);
+		const skipLine = lines.findIndex((text) => text.startsWith('SKIP')) + 1;
+		assert(
+			both.exitCode === 1 &&
+				both.output.includes(
+					`SKIP ${AGREED} (.templateoverrides line ${String(skipLine)})`,
+				),
+			`The expired SKIP must fail with its own line, whatever the KEEP says:\n${both.output}`,
+		);
+		assert(
+			!both.output.includes(`KEEP ${AGREED} (`),
+			`The unexpired KEEP on the same path must not be reported:\n${both.output}`,
+		);
+	}
+
 	console.log(`[OK] AHEAD override expiry test passed (${String(checks)} checks).`);
 } catch (err) {
 	console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
