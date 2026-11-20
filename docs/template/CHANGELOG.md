@@ -3,6 +3,21 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.1] - 2026-11-20
+
+### Changed
+
+- `check:gates-wired` now counts a test as wired when a QC step in the repository's own
+  `scripts/smokestack/smokestack.json` runs it with `bun run <name>`. An application can add its
+  own test steps there and they count, without overriding a template file. A step whose `onlyIn`
+  names another repository is skipped in this one, so it doesn't count, and neither does a
+  fast-only step. Steps and excuses in `scripts/smoke.json` still count as before.
+
+### Upgrade notes
+
+- An application that keeps a `scripts/smoke.json` override only to register its own test steps
+  can move those steps into `scripts/smokestack/smokestack.json` instead.
+
 ## [3.50.4] - 2026-11-19
 
 ### Changed
