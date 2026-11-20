@@ -32,26 +32,37 @@ function fixture(scripts: string[], commands: string[], excusedTests?: Excuse[])
 }
 
 interface PlanStep {
+	name: string;
 	onlyIn?: string;
 	run: string[];
 }
 
-/** A repository whose gate plan is scripts/smokestack/smokestack.json, with no smoke.json. */
-function planFixture(scripts: string[], qc: PlanStep[], fast: PlanStep[] = []): string {
+/**
+ * A repository whose gate plan is scripts/smokestack/smokestack.json, with no smoke.json. Each plan
+ * has the shape the runner accepts: a version, a cache block on every step, a real `lint` step, and
+ * a fast list of qc step names whose one substitute, when given, runs `fastRun` in lint's place.
+ */
+function planFixture(scripts: string[], qc: PlanStep[], fastRun?: string[]): string {
 	fixtures += 1;
 	const root = join(fixtureParent, `case-${String(fixtures)}`);
 	mkdirSync(join(root, 'scripts', 'smokestack'), { recursive: true });
-	const scriptMap = Object.fromEntries(scripts.map((name) => [name, `bun scripts/${name}.ts`]));
+	const names = ['lint', ...scripts];
+	const scriptMap = Object.fromEntries(names.map((name) => [name, `bun scripts/${name}.ts`]));
 	writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'app', scripts: scriptMap }));
-	const steps = (list: PlanStep[]) =>
-		list.map((step) => ({ description: step.run.join(' '), name: step.run[2], ...step }));
-	const plan = { fast: { steps: steps(fast) }, qc: { steps: steps(qc) }, version: 1 };
+	const steps = [own(['bun', 'run', 'lint']), ...qc].map((step) => ({
+		cache: { uncacheable: 'fixture' },
+		description: step.run.join(' '),
+		...step,
+	}));
+	const replace = fastRun ? { replace: { lint: { name: 'lint:substitute', run: fastRun } } } : {};
+	const plan = { fast: { steps: ['lint'], ...replace }, qc: { steps }, version: 1 };
 	writeFileSync(join(root, 'scripts', 'smokestack', 'smokestack.json'), JSON.stringify(plan));
 	return root;
 }
 
 function own(run: string[], onlyIn?: string): PlanStep {
-	return onlyIn === undefined ? { run } : { onlyIn, run };
+	const name = run[2] ?? 'file-step';
+	return onlyIn === undefined ? { name, run } : { name, onlyIn, run };
 }
 
 function findings(root: string): string {
@@ -142,9 +153,9 @@ try {
 		'a step limited to another repository is skipped here, so it wires nothing',
 	);
 	assert.match(
-		findings(planFixture(['test:app'], [], [own(['bun', 'run', 'test:app'])])),
+		findings(planFixture(['test:app'], [], ['bun', 'run', 'test:app'])),
 		/test:app is run by no step/,
-		'a fast-only step is not the full gate',
+		'a fast substitute is not the full gate, so it wires nothing',
 	);
 	assert.match(
 		findings(
