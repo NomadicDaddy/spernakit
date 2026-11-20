@@ -3,6 +3,26 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.2] - 2026-11-20
+
+### Added
+
+- A `.templateoverrides` SKIP or KEEP entry kept only until the template catches up can now say
+  when that is. Its reason starts with `AHEAD until <version>` or `AHEAD until blob <hash>`.
+  `check:override-deltas` then fails, naming the entry, file and line, once the upgrade target
+  reaches that version or ships that exact file, so the entry can't outlive its reason. It checks
+  the version you're upgrading to, not the one the app is on.
+
+### Changed
+
+- An override reason that starts with `AHEAD` but names no expiry now prints a warning with its
+  line number. It still works as an ordinary override.
+
+### Upgrade notes
+
+- Rewrite free-text `AHEAD` reasons as `AHEAD until <version>` (or `AHEAD until blob <hash>`)
+  to stop the warning and have the upgrade check enforce them.
+
 ## [3.51.1] - 2026-11-20
 
 ### Changed
