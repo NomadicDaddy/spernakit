@@ -3,6 +3,8 @@
  * and upgrade scripts.
  */
 
+import type { AheadEntry } from './overrides-ahead.ts';
+
 // ===== TYPES =====
 
 export interface ClassificationOverrides {
@@ -17,6 +19,11 @@ export type DriftCategory = 'branded' | 'infrastructure' | 'pure' | 'security-in
 export type TemplateOverrideAction = 'DELETED' | 'KEEP' | 'SKIP';
 
 export interface TemplateOverrides {
+	/**
+	 * SKIP and KEEP entries whose reason carries an AHEAD expiry (overrides-ahead.ts), by app path.
+	 * Absent on overrides built in memory; loadTemplateOverrides always sets it.
+	 */
+	ahead?: Map<string, AheadEntry>;
 	deleted: Map<string, string>;
 	keep: Map<string, string>;
 	skip: Map<string, string>;

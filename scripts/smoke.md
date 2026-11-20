@@ -419,27 +419,29 @@ Steps (in order):
      - Upgrade audit reports app-authored lines the template copy deleted.
 131. `bun run test:override-deltas`
      - Override report names the template content each .templateoverrides entry withholds.
-132. `bun run test:smoke-steps`
+132. `bun run test:override-ahead-expiry`
+     - An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob.
+133. `bun run test:smoke-steps`
      - Smoke step comparison names a template step a derived app's runbook lost.
-133. `bun run test:reset-packages`
+134. `bun run test:reset-packages`
      - Package reset preserves dependencies when the frozen-install preflight fails.
-134. `bun run test:clear-logs`
+135. `bun run test:clear-logs`
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-135. `bun run test:scaffolded-hooks`
+136. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-136. `bun run test:gate-scripts`
+137. `bun run test:gate-scripts`
      - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
-137. `bun run test:template-drift`
+138. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-138. `bun run format:check`
+139. `bun run format:check`
      - Format check.
-139. `bun run test:aidd-format`
+140. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-140. `bun run check:aidd-format`
+141. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-141. `bun run check-deps`
+142. `bun run check-deps`
      - Check dependency versions.
-142. `bun run check:dead-code`
+143. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

@@ -2830,6 +2830,28 @@
 						".claude/**"
 					],
 					"inputs": [
+						"scripts/check-override-deltas.ts",
+						"scripts/lib/template/*.ts",
+						"scripts/test-override-ahead-expiry.ts"
+					]
+				},
+				"description": "An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob",
+				"name": "test:override-ahead-expiry",
+				"run": ["bun", "run", "test:override-ahead-expiry"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"scripts/check-smoke-steps.ts",
 						"scripts/lib/smoke-steps/*.ts",
 						"scripts/lib/template/repo.ts",

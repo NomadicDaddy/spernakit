@@ -6,6 +6,8 @@ import path from 'node:path';
 
 import type { FileResult, TemplateOverrideAction, TemplateOverrides } from './types.ts';
 
+import { parseAheadMarker } from './overrides-ahead.ts';
+
 const VALID_OVERRIDE_ACTIONS = new Set<TemplateOverrideAction>(['DELETED', 'KEEP', 'SKIP']);
 
 /**
@@ -24,10 +26,16 @@ const VALID_OVERRIDE_ACTIONS = new Set<TemplateOverrideAction>(['DELETED', 'KEEP
  *                  'suppressed'. One path is only ever in one of those two states, so a single
  *                  DELETED line is never ambiguous.
  *
+ * A SKIP or KEEP reason may start with an AHEAD expiry, `AHEAD until <X.Y.Z>` or
+ * `AHEAD until blob <hash>`, for an entry that only waits for the template to catch up. It is parsed
+ * into `ahead`, and check:override-deltas fails once the upgrade target reaches it. The format is
+ * documented in overrides-ahead.ts. An AHEAD reason with no parseable expiry is warned about by line.
+ *
  * Returns empty maps if the file is absent, blank, or unparseable.
  */
 export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
 	const overrides: TemplateOverrides = {
+		ahead: new Map(),
 		deleted: new Map(),
 		keep: new Map(),
 		skip: new Map(),
@@ -82,6 +90,15 @@ export function loadTemplateOverrides(repoRoot: string): TemplateOverrides {
 					? overrides.keep
 					: overrides.skip;
 		target.set(normalisedPath, reason);
+		if (action === 'DELETED') continue;
+		const expiry = parseAheadMarker(reason);
+		if (expiry === 'malformed') {
+			console.log(
+				`   Warning: .templateoverrides line ${i + 1} says AHEAD but names no expiry ("AHEAD until <X.Y.Z>" or "AHEAD until blob <hash>"): "${line}"`,
+			);
+		} else if (expiry !== null) {
+			overrides.ahead?.set(normalisedPath, { action, expiry, line: i + 1 });
+		}
 	}
 
 	return overrides;

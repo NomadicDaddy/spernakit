@@ -115,6 +115,20 @@ export function getTemplateFileAtVersion(
 	return result.stdout.toString();
 }
 
+/** The git blob id of `filePath` in the template at `v<version>`, or null when it has none. */
+export function getTemplateBlobAtVersion(
+	spernakitPath: string,
+	version: string,
+	filePath: string,
+): null | string {
+	const result = Bun.spawnSync(
+		['git', '-C', spernakitPath, 'rev-parse', '--verify', '--quiet', `v${version}:${filePath}`],
+		{ stderr: 'pipe', stdout: 'pipe', windowsHide: true },
+	);
+	if (result.exitCode !== 0) return null;
+	return result.stdout.toString().trim();
+}
+
 export function readLocalFile(repoRoot: string, filePath: string): null | string {
 	const fullPath = path.join(repoRoot, filePath);
 	try {

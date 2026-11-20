@@ -128,6 +128,15 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-lost-lines.ts',
 		],
 	},
+	// Drives the real override CLI against the same two-tag fixture, so the drift library is an input.
+	'test:override-ahead-expiry': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/check-override-deltas.ts',
+			'scripts/lib/template/*.ts',
+			'scripts/test-override-ahead-expiry.ts',
+		],
+	},
 	'test:override-deltas': {
 		// The test drives the real CLI against a two-tag git fixture, so the whole drift library is an
 		// input: overrides.ts parses the entries, classify.ts decides branding and security relevance,

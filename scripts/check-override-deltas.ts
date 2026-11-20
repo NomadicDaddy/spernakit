@@ -20,6 +20,11 @@
  * Run it against the version you are upgrading TO, before the copy pass, so each entry can be
  * re-merged or deliberately kept while there is still a decision to make.
  *
+ * An entry whose reason starts with an AHEAD expiry (`AHEAD until <X.Y.Z>` or `AHEAD until blob
+ * <hash>`, see lib/template/overrides-ahead.ts) only waits for the template to catch up. When the
+ * target version reaches that version, or the target's blob for the path is that hash, the check
+ * fails naming the entry, whatever --fail-on-delta says: the entry has outlived its reason.
+ *
  * Usage:
  *   bun run check:override-deltas -- --target-version 3.31.2
  *   bun run check:override-deltas -- --target-version 3.31.2 --fail-on-delta
@@ -29,11 +34,17 @@ import path from 'node:path';
 import { exit } from 'node:process';
 import { parseArgs } from 'node:util';
 
-import { loadAppBrandingValues, loadClassificationOverrides } from './lib/template/classify.ts';
+import {
+	loadAppBrandingValues,
+	loadClassificationOverrides,
+	toTemplatePath,
+} from './lib/template/classify.ts';
 import { computeOverrideDeltas } from './lib/template/override-deltas.ts';
 import { printOverrideDeltas } from './lib/template/override-report.ts';
+import { expiredAheadEntries } from './lib/template/overrides-ahead.ts';
 import { loadTemplateOverrides } from './lib/template/overrides.ts';
 import {
+	getTemplateBlobAtVersion,
 	getTemplateFileAtVersion,
 	gitTagExists,
 	isSpernakitItself,
@@ -118,15 +129,27 @@ function report(options: OverrideDeltaOptions): number {
 	console.log(`   Template: ${spernakitPath}`);
 	console.log('');
 
+	const overrides = loadTemplateOverrides(repoRoot);
 	const entries = computeOverrideDeltas({
 		appBranding: loadAppBrandingValues(repoRoot),
 		classification: classification.overrides,
-		overrides: loadTemplateOverrides(repoRoot),
+		overrides,
 		readApp: (appPath) => readLocalFile(repoRoot, appPath),
 		readTemplate: (tPath) => getTemplateFileAtVersion(spernakitPath, targetVersion, tPath),
 	});
 
 	const counts = printOverrideDeltas(entries, targetVersion);
+
+	// An AHEAD entry only waits for the template to catch up. Once the selected target has, the
+	// entry hides nothing it was meant to, and keeping it would hide what the target ships there.
+	const expired = expiredAheadEntries({
+		ahead: overrides.ahead ?? new Map(),
+		blobAt: (tPath) => getTemplateBlobAtVersion(spernakitPath, targetVersion, tPath),
+		targetVersion,
+		toTemplatePath,
+	});
+	for (const message of expired) console.log(`[FAIL] Expired AHEAD override: ${message}`);
+	if (expired.length > 0) return 1;
 
 	// An unresolved entry always fails: the report could not substantiate it either way. A withheld
 	// delta is a review item, so it is advisory until a caller (the dance, a release gate) asks for

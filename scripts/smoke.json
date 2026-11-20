@@ -676,6 +676,10 @@
 					"description": "Override report names the template content each .templateoverrides entry withholds"
 				},
 				{
+					"command": "bun run test:override-ahead-expiry",
+					"description": "An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob"
+				},
+				{
 					"command": "bun run test:smoke-steps",
 					"description": "Smoke step comparison names a template step a derived app's runbook lost"
 				},
