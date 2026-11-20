@@ -111,7 +111,11 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'test:gates-wired': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['scripts/check-gates-wired.ts', 'scripts/test-gates-wired.ts'],
+		globs: [
+			'scripts/check-gates-wired.ts',
+			'scripts/smokestack/lib/smokestack/config.ts',
+			'scripts/test-gates-wired.ts',
+		],
 	},
 	'test:lost-lines': {
 		// The test drives the real CLI against a purpose-built template/app pair of git repos, so the

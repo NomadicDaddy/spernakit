@@ -2129,7 +2129,13 @@
 						".aidd/**",
 						".claude/**"
 					],
-					"inputs": ["package.json", "scripts/check-gates-wired.ts", "scripts/smoke.json"]
+					"inputs": [
+						"package.json",
+						"scripts/check-gates-wired.ts",
+						"scripts/smoke.json",
+						"scripts/smokestack/lib/smokestack/config.ts",
+						"scripts/smokestack/smokestack.json"
+					]
 				},
 				"description": "Every test:* script is run by a smoke step, or excused by name with a reason",
 				"name": "check:gates-wired",
@@ -2147,7 +2153,11 @@
 						".aidd/**",
 						".claude/**"
 					],
-					"inputs": ["scripts/check-gates-wired.ts", "scripts/test-gates-wired.ts"]
+					"inputs": [
+						"scripts/check-gates-wired.ts",
+						"scripts/smokestack/lib/smokestack/config.ts",
+						"scripts/test-gates-wired.ts"
+					]
 				},
 				"description": "The wired-gates check fails on an unwired script, a prefix of a wired name, and a reasonless or stale excuse",
 				"name": "test:gates-wired",

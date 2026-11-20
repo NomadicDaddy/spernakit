@@ -31,6 +31,29 @@ function fixture(scripts: string[], commands: string[], excusedTests?: Excuse[])
 	return root;
 }
 
+interface PlanStep {
+	onlyIn?: string;
+	run: string[];
+}
+
+/** A repository whose gate plan is scripts/smokestack/smokestack.json, with no smoke.json. */
+function planFixture(scripts: string[], qc: PlanStep[], fast: PlanStep[] = []): string {
+	fixtures += 1;
+	const root = join(fixtureParent, `case-${String(fixtures)}`);
+	mkdirSync(join(root, 'scripts', 'smokestack'), { recursive: true });
+	const scriptMap = Object.fromEntries(scripts.map((name) => [name, `bun scripts/${name}.ts`]));
+	writeFileSync(join(root, 'package.json'), JSON.stringify({ name: 'app', scripts: scriptMap }));
+	const steps = (list: PlanStep[]) =>
+		list.map((step) => ({ description: step.run.join(' '), name: step.run[2], ...step }));
+	const plan = { fast: { steps: steps(fast) }, qc: { steps: steps(qc) }, version: 1 };
+	writeFileSync(join(root, 'scripts', 'smokestack', 'smokestack.json'), JSON.stringify(plan));
+	return root;
+}
+
+function own(run: string[], onlyIn?: string): PlanStep {
+	return onlyIn === undefined ? { run } : { onlyIn, run };
+}
+
 function findings(root: string): string {
 	return runGatesWiredCheck(root).findings.join('\n');
 }
@@ -99,6 +122,44 @@ try {
 		),
 		/test:a is excused but a smoke step runs it/,
 		'an excuse for a wired script fails',
+	);
+
+	// App-owned steps: the repository's own Smokestack plan wires what its full gate runs.
+	assert.equal(
+		runGatesWiredCheck(planFixture(['test:app'], [own(['bun', 'run', 'test:app'])])).code,
+		0,
+		'a qc step in scripts/smokestack/smokestack.json wires its script, with no smoke.json',
+	);
+	assert.equal(
+		runGatesWiredCheck(planFixture(['test:app'], [own(['bun', 'run', 'test:app'], 'app')]))
+			.code,
+		0,
+		'a step limited to this repository runs here, so it wires',
+	);
+	assert.match(
+		findings(planFixture(['test:app'], [own(['bun', 'run', 'test:app'], 'spernakit')])),
+		/test:app is run by no step/,
+		'a step limited to another repository is skipped here, so it wires nothing',
+	);
+	assert.match(
+		findings(planFixture(['test:app'], [], [own(['bun', 'run', 'test:app'])])),
+		/test:app is run by no step/,
+		'a fast-only step is not the full gate',
+	);
+	assert.match(
+		findings(
+			planFixture(
+				['test:server', 'test:server-services'],
+				[own(['bun', 'run', 'test:server-services'])],
+			),
+		),
+		/test:server is run by no step/,
+		'a prefix of a plan-wired name is not wired',
+	);
+	assert.match(
+		findings(planFixture(['test:app'], [own(['bun', 'scripts/test-app.ts'])])),
+		/test:app is run by no step/,
+		'running the file is not running the script',
 	);
 
 	console.log('[OK] check:gates-wired regression test passed.');

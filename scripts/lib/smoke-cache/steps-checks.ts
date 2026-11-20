@@ -159,7 +159,13 @@ export const CHECK_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'check:gates-wired': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['package.json', 'scripts/check-gates-wired.ts', 'scripts/smoke.json'],
+		globs: [
+			'package.json',
+			'scripts/check-gates-wired.ts',
+			'scripts/smoke.json',
+			'scripts/smokestack/lib/smokestack/config.ts',
+			'scripts/smokestack/smokestack.json',
+		],
 	},
 	'check:git-window-hide': {
 		excludes: COMMON_EXCLUDES,

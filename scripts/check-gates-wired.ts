@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Require every `test:*` script in `package.json` to be run by a step in `scripts/smoke.json`.
+ * Require every `test:*` script in `package.json` to be run by a QC step in
+ * `scripts/smokestack/smokestack.json` or by a step in `scripts/smoke.json`.
  *
  * Enforces: no regression test exists as a package script that nothing runs. No assertion ID; this
  * is a wiring invariant rather than a catalog rule.
@@ -23,12 +24,21 @@
  *   not wire `test:server`.
  *
  * A script also counts as run when a wired script's command chains its whole command with `&&`.
+ *
+ * `scripts/smokestack/smokestack.json` is the repository's own gate plan: the delivery lock leaves
+ * it to each repository, so an application adds its own QC steps there without overriding any
+ * delivered file. Its `qc.steps` are what a full gate runs, so a step whose `run` is `bun run <name>`
+ * wires that script. A step whose `onlyIn` names another repository is skipped here, so it wires
+ * nothing; that decision is the runner's own `skipReason`. Steps in `scripts/smoke.json` still
+ * count, and its `excusedTests` stays the one place to excuse a script.
  */
 
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { cwd, exit } from 'node:process';
 import { parseArgs } from 'node:util';
+
+import { skipReason } from './smokestack/lib/smokestack/config.ts';
 
 export interface GatesWiredResult {
 	code: number;
@@ -68,12 +78,34 @@ function wiredScripts(smoke: Record<string, unknown>): Set<string> {
 	return wired;
 }
 
+/** Every script a full-gate step in the repository's own Smokestack plan runs here. */
+function smokestackWired(root: string, packageName: null | string): Set<string> {
+	const wired = new Set<string>();
+	const path = join(root, 'scripts', 'smokestack', 'smokestack.json');
+	if (!existsSync(path)) return wired;
+	const qc = readObject(path).qc;
+	const steps = isRecord(qc) && Array.isArray(qc.steps) ? qc.steps : [];
+	for (const step of steps) {
+		if (!isRecord(step) || typeof step.name !== 'string' || !Array.isArray(step.run)) continue;
+		const run = step.run.filter((part): part is string => typeof part === 'string');
+		const onlyIn = typeof step.onlyIn === 'string' ? step.onlyIn : null;
+		const shape = { cache: null, description: '', heavy: false, name: step.name, onlyIn, run };
+		if (skipReason(shape, packageName) !== null) continue;
+		if (run[0] === 'bun' && run[1] === 'run' && run[2] !== undefined) wired.add(run[2]);
+	}
+	return wired;
+}
+
 export function runGatesWiredCheck(root: string): GatesWiredResult {
-	const scripts = readObject(join(root, 'package.json')).scripts;
+	const manifest = readObject(join(root, 'package.json'));
+	const scripts = manifest.scripts;
 	const commands = isRecord(scripts) ? scripts : {};
 	const gates = Object.keys(commands).filter((name) => name.startsWith('test:'));
-	const smoke = readObject(join(root, 'scripts', 'smoke.json'));
+	const smokePath = join(root, 'scripts', 'smoke.json');
+	const smoke = existsSync(smokePath) ? readObject(smokePath) : {};
+	const packageName = typeof manifest.name === 'string' ? manifest.name : null;
 	const wired = wiredScripts(smoke);
+	for (const name of smokestackWired(root, packageName)) wired.add(name);
 	// A wired script that chains another script's whole command runs that script too:
 	// `test:template-drift` is `<drift test> && <deletions test>`, so `test:template-deletions` runs.
 	const chained = new Set<string>();
@@ -118,7 +150,7 @@ export function runGatesWiredCheck(root: string): GatesWiredResult {
 	for (const gate of gates) {
 		if (wired.has(gate) || excused.has(gate)) continue;
 		findings.push(
-			`${gate} is run by no step in scripts/smoke.json. Add a step, or excuse it there under excusedTests with a reason.`,
+			`${gate} is run by no step in scripts/smokestack/smokestack.json (qc) or scripts/smoke.json. Add a step, or excuse it in scripts/smoke.json under excusedTests with a reason.`,
 		);
 	}
 	return { code: findings.length === 0 ? 0 : 1, examined: gates.length, findings };
