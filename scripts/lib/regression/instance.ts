@@ -157,6 +157,14 @@ const FETCH_DEADLINE_MS = 2_000;
 /** How long a killed child may take to exit before the run gives up on it. */
 const KILL_DEADLINE_MS = 5_000;
 
+/** Every backend child this process has started and not yet seen exit. */
+const liveBackends = new Set<Bun.Subprocess>();
+
+/** Kill every live backend child at once; for an interrupted run, which cannot wait on them. */
+export function killLiveBackends(): void {
+	for (const child of liveBackends) child.kill('SIGKILL');
+}
+
 /** Wait for `child` to exit within `ms`; true when it did. */
 async function exitedWithin(child: Bun.Subprocess, ms: number): Promise<boolean> {
 	return Promise.race([child.exited.then(() => true), Bun.sleep(ms).then(() => false)]);
@@ -235,6 +243,8 @@ export async function startBackend(
 			stdout: Bun.file(logPath),
 			windowsHide: true,
 		});
+		liveBackends.add(child);
+		void child.exited.then(() => liveBackends.delete(child));
 		if (await ready(child, readyFile, port)) {
 			return { origin: `http://127.0.0.1:${String(port)}`, port, process: child };
 		}

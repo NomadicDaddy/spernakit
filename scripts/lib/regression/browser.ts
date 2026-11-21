@@ -57,18 +57,42 @@ export async function managedExecutable(): Promise<string> {
 	return puppeteer.executablePath();
 }
 
-/** Launch the managed browser headless and check it is the pinned revision. */
+const CLOSE_DEADLINE_MS = 10_000;
+
+/**
+ * Close a browser within a deadline. A close that does not settle in time kills the browser
+ * process and fails, so no caller waits on it forever.
+ */
+export async function closeBounded(browser: Browser): Promise<void> {
+	const closed = await Promise.race([
+		browser.close().then(() => true),
+		Bun.sleep(CLOSE_DEADLINE_MS).then(() => false),
+	]);
+	if (closed) return;
+	browser.process()?.kill('SIGKILL');
+	throw new Error(`the browser did not close within ${String(CLOSE_DEADLINE_MS)} ms; killed it.`);
+}
+
+/**
+ * Launch the managed browser headless and check it is the pinned revision. Until it returns the
+ * browser, this owns it: any failure after the launch closes it before the error propagates.
+ */
 export async function launchManaged(): Promise<Browser> {
 	const executablePath = await managedExecutable();
 	const browser = await puppeteer.launch({ args: LAUNCH_ARGS, executablePath, headless: true });
-	const version = await browser.version();
-	if (!version.endsWith(`/${pinnedChromeRevision()}`)) {
-		await browser.close();
-		throw new Error(
-			`the launched browser is ${version}, but puppeteer pins ${pinnedChromeRevision()}.`,
-		);
+	try {
+		const version = await browser.version();
+		if (!version.endsWith(`/${pinnedChromeRevision()}`)) {
+			throw new Error(
+				`the launched browser is ${version}, but puppeteer pins ${pinnedChromeRevision()}.`,
+			);
+		}
+		return browser;
+	} catch (err) {
+		// The launch error is the one to report; a failed close here must not replace it.
+		await closeBounded(browser).catch(() => undefined);
+		throw err;
 	}
-	return browser;
 }
 
 function puppeteerVersion(): string {
@@ -91,7 +115,7 @@ export async function currentFingerprint(): Promise<Fingerprint> {
 			puppeteer: puppeteerVersion(),
 		};
 	} finally {
-		await browser.close();
+		await closeBounded(browser);
 	}
 }
 

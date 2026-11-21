@@ -171,9 +171,11 @@ The full `smoke:qc` runs it after the build:
 2. `test:regression-suite` seeds a database once, then gives every case its own copy and its own
    backend under `data/regression-suite/<run>/`, with generated config and keys, on loopback. A
    small proxy serves `frontend/dist` and forwards `/api`. Nothing reads the repository's `config/`
-   or `.env`, and the run directory is removed afterwards. A failing case names its step, the
-   expectation and the page it was on, and fails the gate. The step is cached on the tracked tree,
-   the build and the fingerprint, so an unchanged tree replays its pass.
+   or `.env`. A failing case names its step, the expectation and the page it was on, and fails the
+   gate. A passing run removes its run directory. A failing one keeps it, with each backend's log
+   and any login-error screenshot, and prints its path; a later run clears it once it is an hour
+   old. The step is cached on the tracked tree, the build and the fingerprint, so an unchanged tree
+   replays its pass.
 
 To run it by hand, build first, then:
 

@@ -14,13 +14,14 @@ import type { TestCase } from './suite.ts';
 import { getSeedCredential } from '../../../backend/src/utils/auth/passwordGenerator.ts';
 import { TestResults } from '../../crawltest-results.ts';
 import { type CrawlSession, loginSession } from '../../crawltest-session.ts';
-import { launchManaged } from './browser.ts';
+import { closeBounded, launchManaged } from './browser.ts';
 import { startFrontendProxy } from './frontend-proxy.ts';
 import {
 	type Backend,
 	copySnapshot,
 	createRun,
 	freezeSnapshot,
+	killLiveBackends,
 	removeAbandonedRuns,
 	removeRun,
 	type Run,
@@ -44,14 +45,16 @@ function signInAs(role: string): { email: string; password: string } {
 }
 
 /**
- * Close the case's browser and stop its backend. Each release runs whatever the other does, and
- * the first failure is thrown once both have been tried.
+ * Close the case's browser and stop its backend. Both start at once and each is bounded, so
+ * neither can hold the other up, and the first failure is thrown once both have settled.
  */
 async function release(browser: Browser | null, backend: Backend | null): Promise<void> {
-	const failures: unknown[] = [];
-	if (browser !== null) await browser.close().catch((err: unknown) => failures.push(err));
-	if (backend !== null) await stopBackend(backend).catch((err: unknown) => failures.push(err));
-	if (failures.length > 0) throw failures[0];
+	const outcomes = await Promise.allSettled([
+		browser === null ? Promise.resolve() : closeBounded(browser),
+		backend === null ? Promise.resolve() : stopBackend(backend),
+	]);
+	const failed = outcomes.find((outcome) => outcome.status === 'rejected');
+	if (failed !== undefined) throw failed.reason;
 }
 
 async function runCase(
@@ -137,6 +140,14 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 		console.log(`   Left in place (not provably abandoned): ${kept.join(', ')}`);
 	const run = createRun();
 	let frontend: null | ReturnType<typeof startFrontendProxy> = null;
+	// An interrupted gate must not orphan backends; puppeteer already closes Chrome on these.
+	const interrupted = (): void => {
+		killLiveBackends();
+		process.exit(130);
+	};
+	process.once('SIGINT', interrupted);
+	process.once('SIGTERM', interrupted);
+	let keepEvidence = true;
 	try {
 		frontend = startFrontendProxy();
 		const seed = await startBackend(run, frontend.origin, 'seed.db');
@@ -152,9 +163,18 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 			);
 			results.push(result);
 		}
+		keepEvidence = results.some((result) => result.error !== undefined);
 		return results;
 	} finally {
+		process.off('SIGINT', interrupted);
+		process.off('SIGTERM', interrupted);
 		frontend?.stop();
-		removeRun(run);
+		if (keepEvidence) {
+			// Its logs and login-error screenshots explain the failure. It is gitignored, and a
+			// later run removes it once it is an hour old and this process is gone.
+			console.log(`   Evidence kept in ${run.dir}`);
+		} else {
+			removeRun(run);
+		}
 	}
 }
