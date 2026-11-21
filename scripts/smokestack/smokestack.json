@@ -2558,6 +2558,33 @@
 			},
 			{
 				"cache": {
+					"uncacheable": "records the managed browser's runtime, which no file in the tree names; it is test:regression-suite's cache input, so it must describe this machine every gate"
+				},
+				"description": "Record the browser, Bun and puppeteer the regression suite runs on",
+				"name": "regression:fingerprint",
+				"run": ["bun", "run", "regression:fingerprint"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": ["frontend/dist/**", ".regression/fingerprint.json"],
+					"inventory": "git"
+				},
+				"description": "The application's never-break flows in tests/regression-suite.md pass end to end in a browser",
+				"heavy": true,
+				"name": "test:regression-suite",
+				"run": ["bun", "run", "test:regression-suite"]
+			},
+			{
+				"cache": {
 					"excludes": [
 						"**/node_modules/**",
 						".git/**",
@@ -2852,8 +2879,6 @@
 						".claude/**"
 					],
 					"inputs": [
-						".gitignore",
-						"scaffolding/.gitignore",
 						"scripts/lib/regression/suite.ts",
 						"scripts/test-regression-suite-parser.ts"
 					]

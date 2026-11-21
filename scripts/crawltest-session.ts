@@ -129,12 +129,18 @@ export async function screenshotPreLoginPages(
 // Login
 // ---------------------------------------------------------------------------
 
+/**
+ * Sign in through the login form and wait for the dashboard. On failure a screenshot goes to
+ * `errorScreenshot`; crawltest keeps its old `scripts/login-error.png`, and the regression suite
+ * passes a path inside its own run directory so a run never writes into the repository.
+ */
 export async function loginSession(
 	session: CrawlSession,
 	results: TestResults,
 	opts: CrawlerOpts,
 	email: string,
 	password: string,
+	errorScreenshot: `${string}.png` = 'scripts/login-error.png',
 ): Promise<void> {
 	if (!session.page) throw new Error('Browser not initialized');
 
@@ -174,8 +180,8 @@ export async function loginSession(
 		if (session.page) {
 			console.log(`   Current URL: ${session.page.url()}`);
 			try {
-				await session.page.screenshot({ path: 'scripts/login-error.png' });
-				console.log('   Screenshot saved to scripts/login-error.png');
+				await session.page.screenshot({ path: errorScreenshot });
+				console.log(`   Screenshot saved to ${errorScreenshot}`);
 			} catch {
 				// Ignore screenshot errors
 			}

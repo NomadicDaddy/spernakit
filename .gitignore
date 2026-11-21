@@ -8,9 +8,7 @@ ps_modules/
 
 # aidd / agent-generated artifacts
 .agents/
-# Everything aidd keeps stays local except the checked-in regression suite (regression-suite-gate).
-/.aidd/*
-!/.aidd/regression-suite.md
+/.aidd/
 .claude/
 .codex/
 .windsurf/
@@ -20,6 +18,10 @@ opencode.json
 
 # aidd-adjacent run/test outputs
 *.pre-crawl-bak
+# The regression suite's recorded browser runtime (scripts/regression-fingerprint.ts).
+/.regression/
+# Its isolated runs: per-case databases, generated config and keys (scripts/lib/regression/instance.ts).
+/data/regression-suite/
 *.tsbuildinfo
 artifacts/
 crawltest.json

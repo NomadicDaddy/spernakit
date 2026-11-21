@@ -1,5 +1,5 @@
 /**
- * The parser for `.aidd/regression-suite.md`, the checked-in never-break suite.
+ * The parser for `tests/regression-suite.md`, the checked-in never-break suite.
  *
  * The file is ordinary Markdown so people can read it. Each case is a `## TC-NNN: title` heading
  * followed by exactly one fenced block whose info string is `tc`. The block is JSON, and it is the

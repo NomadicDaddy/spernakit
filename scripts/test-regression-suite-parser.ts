@@ -1,18 +1,13 @@
 #!/usr/bin/env bun
 /**
- * Regression test for the `.aidd/regression-suite.md` parser.
+ * Regression test for the `tests/regression-suite.md` parser.
  *
  * The suite is the one gate an application writes for itself, so the parser is what keeps it from
  * being quietly weakened: a commented-out case, a case that can never fail, a gap left by a deleted
  * case, or a selector that breaks the moment the page is restyled. Each refusal below is one of
  * those, and the last cases check that a sound suite parses into exactly the steps it says.
- *
- * It also checks the ignore rules: the suite is the one file under `.aidd/` git tracks, here and in
- * the scaffold every new application starts from, while the rest of `.aidd/` stays local.
  */
 import { strict as assert } from 'node:assert';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 
 import { parseSuite, SuiteError, withRunId } from './lib/regression/suite.ts';
 
@@ -154,36 +149,5 @@ refuses(
 	/exactly one action key/,
 	'two actions in one step',
 );
-
-// ===== Ignore rules: the suite is tracked, the rest of .aidd stays local. =====
-const root = join(import.meta.dir, '..');
-function ignored(path: string): boolean {
-	const result = Bun.spawnSync(['git', '-C', root, 'check-ignore', '-q', '--no-index', path], {
-		stderr: 'pipe',
-		stdout: 'pipe',
-		windowsHide: true,
-	});
-	if (result.exitCode > 1)
-		throw new Error(`git check-ignore failed: ${result.stderr.toString()}`);
-	return result.exitCode === 0;
-}
-const trees = existsSync(join(root, 'scaffolding', '.gitignore')) ? ['', 'scaffolding/'] : [''];
-for (const tree of trees) {
-	assert.equal(
-		ignored(`${tree}.aidd/regression-suite.md`),
-		false,
-		`${tree}.aidd/regression-suite.md is trackable`,
-	);
-	assert.equal(
-		ignored(`${tree}.aidd/roadmap.json`),
-		true,
-		`${tree}.aidd/roadmap.json stays ignored`,
-	);
-	assert.equal(
-		ignored(`${tree}.aidd/features/some-record/feature.json`),
-		true,
-		`${tree}.aidd/features/ stays ignored`,
-	);
-}
 
 console.log('[OK] regression suite parser test passed.');

@@ -49,6 +49,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	// Its inputs are the sibling spernakit checkout's `.aidd/`, not this tree — the same reason
 	// `check:drift` cannot be cached. A local hash would report "unchanged" across a template bump.
 	'check:template-features',
+	// It records the managed browser's runtime, which no file in the tree names, and it is the
+	// regression suite's own cache input, so it must describe this machine every run.
+	'regression:fingerprint',
 	'test:aidd-format',
 	// Seeds a throwaway database and runs the real alert path; a second or two, so it always runs.
 	'test:alert-cooldown',
@@ -69,6 +72,10 @@ export const UNCACHEABLE_STEPS = new Set([
 	'test:lucide-names',
 	// Temp-root SQLite fixtures for both migration runners; under a second, so it always runs.
 	'test:migration-runner-safety',
+	// It drives the built app end to end, so its inputs are every tracked file plus the build output
+	// and the browser fingerprint. Only smokestack's git inventory can key that honestly; a glob list
+	// here would replay a pass after a change it does not name.
+	'test:regression-suite',
 	// Small seed-security fixtures always run; the rerun test also starts a disposable process.
 	'test:seed-announcement',
 	'test:seed-credentials-never-logged',

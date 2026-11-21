@@ -397,53 +397,57 @@ Steps (in order):
      - Build.
 120. `bun run verify-minification`
      - Verify bundle minification and total size budget.
-121. `bun run check:critical-path`
+121. `bun run regression:fingerprint`
+     - Record the browser, Bun and puppeteer the regression suite runs on.
+122. `bun run test:regression-suite`
+     - The application's never-break flows in tests/regression-suite.md pass end to end in a browser.
+123. `bun run check:critical-path`
      - Verify critical-path size, React runtime placement, and no preload waterfall.
-122. `bun run check:api-types`
+124. `bun run check:api-types`
      - API type contract validation.
-123. `bun run check:feature-integration`
+125. `bun run check:feature-integration`
      - Feature integration check.
-124. `bun run test:feature-integration`
+126. `bun run test:feature-integration`
      - Feature integration rejects unmounted flat route modules.
-125. `bun run check:schema-parity`
+127. `bun run check:schema-parity`
      - SQLite/PG schema parity check.
-126. `bun run test:backup-compression`
+128. `bun run test:backup-compression`
      - Backup decompression guard rejects high-ratio archives and cleans up.
-127. `bun run test:bundle-budget`
+129. `bun run test:bundle-budget`
      - Bundle budget stays app-owned and is only enforced with matching provenance.
-128. `bun run test:crawl-credentials`
+130. `bun run test:crawl-credentials`
      - Crawl login resolves from the seed account and never from a tracked config file.
-129. `bun run test:critical-path-budget`
+131. `bun run test:critical-path-budget`
      - Critical-path budget stays app-owned and regenerates both recorded limits.
-130. `bun run test:lost-lines`
+132. `bun run test:lost-lines`
      - Upgrade audit reports app-authored lines the template copy deleted.
-131. `bun run test:override-deltas`
+133. `bun run test:override-deltas`
      - Override report names the template content each .templateoverrides entry withholds.
-132. `bun run test:override-ahead-expiry`
+134. `bun run test:override-ahead-expiry`
      - An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob.
-133. `bun run test:regression-suite-parser`
+135. `bun run test:regression-suite-parser`
      - The regression-suite parser refuses commented-out, unfailable, gapped, off-origin and CSS-selector cases.
-134. `bun run test:smoke-steps`
+136. `bun run test:smoke-steps`
      - Smoke step comparison names a template step a derived app's runbook lost.
-135. `bun run test:reset-packages`
+137. `bun run test:reset-packages`
      - Package reset preserves dependencies when the frozen-install preflight fails.
-136. `bun run test:clear-logs`
+138. `bun run test:clear-logs`
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-137. `bun run test:scaffolded-hooks`
+139. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-138. `bun run test:gate-scripts`
+140. `bun run test:gate-scripts`
      - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
-139. `bun run test:template-drift`
+141. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-140. `bun run format:check`
+142. `bun run format:check`
      - Format check.
-141. `bun run test:aidd-format`
+143. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-142. `bun run check:aidd-format`
+144. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-143. `bun run check-deps`
+145. `bun run check-deps`
      - Check dependency versions.
-144. `bun run check:dead-code`
+146. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

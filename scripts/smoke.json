@@ -631,6 +631,14 @@
 					"description": "Verify bundle minification and total size budget"
 				},
 				{
+					"command": "bun run regression:fingerprint",
+					"description": "Record the browser, Bun and puppeteer the regression suite runs on"
+				},
+				{
+					"command": "bun run test:regression-suite",
+					"description": "The application's never-break flows in tests/regression-suite.md pass end to end in a browser"
+				},
+				{
 					"command": "bun run check:critical-path",
 					"description": "Verify critical-path size, React runtime placement, and no preload waterfall"
 				},

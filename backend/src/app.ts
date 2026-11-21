@@ -55,9 +55,11 @@ process.on('beforeExit', (code) => {
 
 let app!: { server: { stop: () => Promise<void> | void } | null };
 
-async function createApp(): Promise<{ server: { stop: () => Promise<void> | void } | null }> {
+async function createApp(
+	configDirOverride?: string,
+): Promise<{ server: { stop: () => Promise<void> | void } | null }> {
 	// Initialize config
-	const config = initializeConfig();
+	const config = initializeConfig(configDirOverride);
 	configureLogger(config);
 	validateWsMaxPayload();
 
@@ -191,13 +193,23 @@ async function createApp(): Promise<{ server: { stop: () => Promise<void> | void
 	return elysiaApp;
 }
 
-try {
-	app = await createApp();
-} catch (err) {
-	// Use console.error as fallback — logger may not be initialized yet
-	console.error('Startup failed:', err instanceof Error ? err.message : err);
-	process.exit(1);
+/**
+ * Start the backend. Every launcher (dev, start, supervisord) runs this file directly, so it calls
+ * this with no argument and behaves exactly as before. `configDirOverride` is for throwaway
+ * instances only, such as the regression suite's isolated backend, and has the meaning
+ * initializeConfig gives it: read config and secrets from that directory, never config/.
+ */
+export async function startBackend(configDirOverride?: string): Promise<void> {
+	try {
+		app = await createApp(configDirOverride);
+	} catch (err) {
+		// Use console.error as fallback — logger may not be initialized yet
+		console.error('Startup failed:', err instanceof Error ? err.message : err);
+		process.exit(1);
+	}
 }
+
+if (import.meta.main) await startBackend();
 
 // Graceful shutdown: stop server, close connections, clean up resources
 const SHUTDOWN_TIMEOUT_MS = 15_000;
