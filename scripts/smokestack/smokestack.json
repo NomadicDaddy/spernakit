@@ -2526,7 +2526,7 @@
 						"frontend/package.json",
 						"shared/package.json"
 					],
-					"outputs": ["frontend/dist"]
+					"outputs": ["frontend/dist/index.html"]
 				},
 				"description": "Build",
 				"name": "build",
