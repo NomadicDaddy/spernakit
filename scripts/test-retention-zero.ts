@@ -11,14 +11,11 @@
  *  2. with the windows restored to 30 days the same tasks purge the same rows — so the zero branch
  *     is a real short-circuit, not a task that never deletes anything.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
 import { notifications } from '../backend/src/db/schema/notifications.ts';
 import { systemMetrics } from '../backend/src/db/schema/systemMetrics.ts';
@@ -28,6 +25,7 @@ import {
 	auditLogCleanupTask,
 	systemMetricsCleanupTask,
 } from '../backend/src/services/scheduler/cleanupData.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SEED_ROWS = 3;
@@ -91,10 +89,7 @@ function setWindows(days: number): void {
 
 async function run(): Promise<void> {
 	initializeConfig();
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-retention-zero-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-retention-zero-');
 	seed();
 
 	// --- Phase 1: window 0 keeps every row (web vitals excepted, by design) ---
@@ -139,12 +134,7 @@ async function run(): Promise<void> {
 	assert(rowCount(notifications) === 0, 'notifications rows purged with a positive window');
 	assert(metricCount('system') === 0, 'system metric rows purged with a positive window');
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log('[OK] retention-zero: 0 keeps rows forever; positive windows still purge');

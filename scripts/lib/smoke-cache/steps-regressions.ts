@@ -167,7 +167,12 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	// Same in-process temp-DB shape as `test:impersonation-audit` above.
 	'test:retention-zero': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-retention-zero.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/temp-db-app.ts',
+			'scripts/test-retention-zero.ts',
+		],
 	},
 	// Walks the bundler's import graph from app.ts, so its world is all backend source, the
 	// lockfile that resolves the packages it reaches, and the spec extractor it reads.
