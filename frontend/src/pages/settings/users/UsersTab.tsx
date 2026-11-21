@@ -78,6 +78,9 @@ function UsersTab() {
 
 	function handleBulkDelete() {
 		const ids = selectedRows.map((u) => u.id);
+		// destructive-confirmation-allow: confirmed by BulkDeleteDialog, whose onConfirm is this
+		// handler (UsersTabDialogs.tsx, BulkDialogs). The dialog moved to that file below the line
+		// cap, and this gate's handler-to-dialog hop only searches one file.
 		bulkDeleteMutation.mutate(ids, {
 			onSuccess: () => {
 				clearSelection();
