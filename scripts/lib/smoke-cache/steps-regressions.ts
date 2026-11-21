@@ -74,6 +74,7 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/plugins/**',
 			'backend/src/routes/dashboards/**',
 			'backend/src/services/dashboard/**',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-dashboard-share-revoke.ts',
 		],

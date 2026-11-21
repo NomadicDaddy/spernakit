@@ -21,21 +21,19 @@
  *     was not true is that the token stopped existing, which is what an owner is told happened.
  *  7. Revoking is recorded by the audit plugin, like the other dashboard mutations.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
 import { dashboardConfigs } from '../backend/src/db/schema/dashboards.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { workspaceMembers, workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -87,10 +85,7 @@ async function run(): Promise<void> {
 	const cookieName = config.security.authCookieName;
 	const origin = config.server.frontendUrl;
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-share-revoke-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-share-revoke-');
 	const db = getDb();
 	db.insert(users)
 		.values([
@@ -271,12 +266,7 @@ async function run(): Promise<void> {
 		'the second admin can still share the dashboard they do own',
 	);
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log(
