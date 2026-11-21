@@ -57,6 +57,7 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'backend/src/services/authService.ts',
 			'backend/src/utils/fieldSelection.ts',
 			'scripts/lib/audit-filter-seed.ts',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-audit-outcome-filter.ts',
 		],

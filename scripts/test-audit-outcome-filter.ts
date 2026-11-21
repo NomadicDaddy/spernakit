@@ -1,19 +1,17 @@
 #!/usr/bin/env bun
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { auditLogs } from '../backend/src/db/schema/auditLogs.ts';
 import { workspaces } from '../backend/src/db/schema/workspaces.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { sysopId, sysopSeed } from './lib/audit-filter-seed.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -247,10 +245,7 @@ async function run(): Promise<void> {
 	// plugin would drop every row and each assertion below would fail for the wrong reason.
 	config.audit.ipWhitelist = [];
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-audit-outcome-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-audit-outcome-');
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
 
 	const app = createApiApp();
@@ -261,12 +256,7 @@ async function run(): Promise<void> {
 	await rejectsUnknownOutcome(app);
 	await workspaceAndDateRegressions(app);
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log(
