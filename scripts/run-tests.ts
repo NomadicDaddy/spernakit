@@ -140,7 +140,16 @@ export async function runSelected(
 	steps: Step[],
 	options: { config: Config; signal: AbortSignal },
 ): Promise<number> {
-	const stand = standing(root, 'qc');
+	let stand: ReturnType<typeof standing>;
+	try {
+		stand = standing(root, 'qc');
+	} catch (err) {
+		const reason = err instanceof Error ? err.message : String(err);
+		console.error(
+			`[FAIL] bun run test cannot check this repository against its lock: ${reason}`,
+		);
+		return EXIT_CANNOT_START;
+	}
 	if (stand.state === 'refused') {
 		console.error(`[FAIL] bun run test will not start: ${stand.reason}.`);
 		return EXIT_CANNOT_START;

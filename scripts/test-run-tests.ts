@@ -101,8 +101,11 @@ function resultCases(): void {
 
 /** The CLI refuses git's hook variables before it reads, checks or starts anything. */
 function hookEnvCase(): void {
+	// The gate mark stays set, so a broken hook guard meets the gate-mark refusal instead of starting
+	// a real run; only the hook refusal's message names GIT_INDEX_FILE.
 	const given = withoutNames(process.env, [GATE_MARK], process.platform === 'win32');
-	const env = { ...given, GIT_INDEX_FILE: join(tmpdir(), 'run-tests-no-such-index') };
+	const index = join(tmpdir(), 'run-tests-no-such-index');
+	const env = { ...given, [GATE_MARK]: '1', GIT_INDEX_FILE: index };
 	const ran = Bun.spawnSync(['bun', join(root, 'scripts', 'run-tests.ts')], {
 		cwd: root,
 		env,
