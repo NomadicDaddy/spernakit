@@ -3,6 +3,17 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.8] - 2026-11-21
+
+### Added
+
+- `bun run test` runs every `test:` step of the full gate once, in order, on the current tree,
+  and replays nothing from the step cache. It also runs only the setup those tests need (the
+  frontend build and browser fingerprint the regression suite uses), goes on past a failure,
+  and names every test that failed or did not run. It is the full test run for a merge that
+  doesn't touch the gate pipeline. Its list is the gate's own, so new test steps, a derived
+  app's included, join it automatically.
+
 ## [3.51.7] - 2026-11-21
 
 ### Fixed
