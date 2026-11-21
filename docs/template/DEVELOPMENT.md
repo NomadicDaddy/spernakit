@@ -291,9 +291,16 @@ During the 2026-07-27 dance a `SKIP docker/nginx.conf` taken for one CSP token -
 
 Two other sections matter as much as the deltas. **WITHHOLDING NOTHING** names every entry whose withheld delta is empty: those overrides are obsolete and can be deleted. **UNRESOLVED** names entries that could not be compared at all, because the app or the target no longer has the path; those exit non-zero regardless of flags, since an entry the report cannot substantiate is not a clean entry.
 
-**Exit codes**: advisory by default - withheld deltas are review items, not failures, because an override may be withholding exactly what its reason says it should. `--fail-on-delta` makes any withheld delta blocking, for a release gate that wants every entry re-merged or re-justified first. Unresolved entries always fail.
+**AHEAD expiry**: an entry taken only because the app is ahead of the template - it carries a change the template has not shipped yet - should say when it stops being needed. Start its reason with one of two markers:
 
-**Self-test**: `bun run test:override-deltas` drives the shipped CLI against a two-tag template repository paired with an app frozen by its own overrides (`scripts/lib/template/override-deltas-fixture.ts`), reconstructing the nginx case beside a branded file, a scaffold-mapped file, an obsolete entry and a stale one, with a re-merged copy as the negative control.
+- `AHEAD until <X.Y.Z>`, for example `KEEP .githooks/pre-commit # AHEAD until 3.52.0: fleet hook sync`. It expires when the target version reaches or passes that version.
+- `AHEAD until blob <hash>`, for example `SKIP scripts/check.ts # AHEAD until blob 2ebe968b72: waiting for this copy`. The hash is a git blob id, 7 to 40 hex characters, compared as a prefix. It expires when the target's blob for the entry's template path (scaffold-mapped where that applies) matches.
+
+The comparison is always against `--target-version`, never the app's recorded `spernakit_version`, so an app on an old pin that upgrades straight to an expired target is caught before the copy. A `KEEP` and a `SKIP` on one path keep separate expiries, and a later line for the same action and path replaces the earlier one's. A reason that starts with `AHEAD` but names no parseable expiry prints a warning with its line number and otherwise acts as an ordinary override, so rewrite free-text `AHEAD` reasons into one of the two forms.
+
+**Exit codes**: advisory by default - withheld deltas are review items, not failures, because an override may be withholding exactly what its reason says it should. `--fail-on-delta` makes any withheld delta blocking, for a release gate that wants every entry re-merged or re-justified first. Unresolved entries always fail. An expired AHEAD entry also always fails, with or without `--fail-on-delta`, naming its action, path and `.templateoverrides` line: it has outlived its reason, and keeping it would hide what the target ships there.
+
+**Self-tests**: `bun run test:override-deltas` drives the shipped CLI against a two-tag template repository paired with an app frozen by its own overrides (`scripts/lib/template/override-deltas-fixture.ts`), reconstructing the nginx case beside a branded file, a scaffold-mapped file, an obsolete entry and a stale one, with a re-merged copy as the negative control. `bun run test:override-ahead-expiry` drives the same CLI and fixture through the AHEAD cases: unexpired, an old pin with an expired target, a blob match, a malformed marker, an unmarked entry, a plain or malformed replacement of a marked line, and a `KEEP` and `SKIP` on one path in either order.
 
 ### Smoke Step Comparison
 
