@@ -11,6 +11,12 @@ this release.
   to `main`. Before, a passing CI run from a pull request also counted, so a tag on a commit that
   never reached `main` could publish. Such a tag now waits for a run that never comes and fails.
 
+### Changed
+
+- `smoke:qc:fast` now also runs the gate-conventions and destructive-confirmation checks. Both
+  take a few seconds and catch code moves that break whole-tree rules, which used to surface only
+  in the full gate.
+
 ## [3.51.6] - 2026-11-21
 
 ### Fixed
