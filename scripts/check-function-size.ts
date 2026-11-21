@@ -172,11 +172,20 @@ function printWorst(label: string, offenders: Offender[]): void {
  * The gate. Fails when either count rose above the baseline; passes otherwise, noting when a
  * count fell so the baseline can be lowered.
  *
+ * The path and the measurement are parameters for the same reason as recordBaseline's: the
+ * self-test drives every outcome against a throwaway baseline with a stand-in measurement.
+ *
  * @param updateBaseline - Whether to write lower counts back to the baseline file.
+ * @param baselinePath - Where the baseline lives; the repository's own by default.
+ * @param measureWith - How the counts are taken; a real ESLint run by default.
  * @returns The exit code.
  */
-export async function runCheckFunctionSize(updateBaseline: boolean): Promise<number> {
-	if (!existsSync(BASELINE_PATH)) {
+export async function runCheckFunctionSize(
+	updateBaseline: boolean,
+	baselinePath: string = BASELINE_PATH,
+	measureWith: (baseline: Baseline) => Measured = measure,
+): Promise<number> {
+	if (!existsSync(baselinePath)) {
 		console.error(
 			'[FAIL] function-size has no baseline: scripts/function-size-baseline.json is missing.',
 		);
@@ -185,8 +194,8 @@ export async function runCheckFunctionSize(updateBaseline: boolean): Promise<num
 		);
 		return 1;
 	}
-	const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) as Baseline;
-	const measured = measure(baseline);
+	const baseline = JSON.parse(readFileSync(baselinePath, 'utf8')) as Baseline;
+	const measured = measureWith(baseline);
 	if (measured.files === 0) {
 		console.error(`[FAIL] function-size scanned no files under ${SCANNED.join(', ')}.`);
 		return 1;
@@ -220,9 +229,9 @@ export async function runCheckFunctionSize(updateBaseline: boolean): Promise<num
 			complexity: { ...baseline.complexity, over: counts.complexity },
 			lines: { ...baseline.lines, over: counts.lines },
 		};
-		writeFileSync(BASELINE_PATH, `${JSON.stringify(next, null, '\t')}\n`);
+		writeFileSync(baselinePath, `${JSON.stringify(next, null, '\t')}\n`);
 		console.log(
-			`[OK] function-size baseline lowered: ${fell.join('; ')}. Commit ${BASELINE_PATH}.`,
+			`[OK] function-size baseline lowered: ${fell.join('; ')}. Commit ${baselinePath}.`,
 		);
 		return 0;
 	}

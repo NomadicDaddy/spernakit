@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-import { parseReport, recordBaseline } from './check-function-size.ts';
+import { parseReport, recordBaseline, runCheckFunctionSize } from './check-function-size.ts';
 import { STEP_DEPENDENCIES } from './lib/smoke-cache/dependencies.ts';
 
 /**
@@ -152,4 +153,115 @@ function run(): void {
 	);
 }
 
+type Measured = ReturnType<typeof parseReport>;
+type Gate = { code: number; file: null | string; said: string };
+
+/** A stand-in measurement with the given numbers of offenders, recording the thresholds it got. */
+function counted(complexity: number, lines: number, seen: number[][] = []) {
+	const offenders = (n: number, base: number): Measured['lines'] =>
+		Array.from({ length: n }, (_, i) => ({
+			file: 'backend/src/x.ts',
+			line: base + i,
+			measure: 50 + i,
+			name: `f${String(base + i)}`,
+		}));
+	return (baseline: { complexity: { threshold: number }; lines: { threshold: number } }) => {
+		seen.push([baseline.complexity.threshold, baseline.lines.threshold]);
+		return { complexity: offenders(complexity, 1), files: 3, lines: offenders(lines, 100) };
+	};
+}
+
+/**
+ * Drives the real ratchet, runCheckFunctionSize, through every outcome against a throwaway
+ * baseline: a rise fails and names the worst offenders, an unchanged count passes, a fall passes
+ * and only --update-baseline writes it down, an update never raises a count, and the thresholds
+ * are carried into the measurement untouched.
+ */
+async function ratchetOutcomes(): Promise<void> {
+	const scratch = mkdtempSync(join(tmpdir(), 'function-size-ratchet-'));
+	const path = join(scratch, 'function-size-baseline.json');
+	const start = { complexity: { over: 5, threshold: 7 }, lines: { over: 4, threshold: 40 } };
+	const reset = (): void => writeFileSync(path, `${JSON.stringify(start, null, '\t')}\n`);
+	const gate = async (
+		update: boolean,
+		measureWith: ReturnType<typeof counted>,
+	): Promise<Gate> => {
+		const said: string[] = [];
+		const [realError, realLog] = [console.error, console.log];
+		console.error = (message: string) => said.push(message);
+		console.log = (message: string) => said.push(message);
+		try {
+			const code = await runCheckFunctionSize(update, path, measureWith);
+			const file = existsSync(path) ? readFileSync(path, 'utf8') : null;
+			return { code, file, said: said.join('\n') };
+		} finally {
+			[console.error, console.log] = [realError, realLog];
+		}
+	};
+	try {
+		reset();
+		const recorded = readFileSync(path, 'utf8');
+		const seen: number[][] = [];
+		const same = await gate(false, counted(5, 4, seen));
+		assert.equal(same.code, 0);
+		assert.match(same.said, /ratchet holds: 5 functions over complexity 7 and 4 over 40 lines/);
+		assert.deepEqual(seen, [[7, 40]], 'the measurement runs at the baseline thresholds');
+
+		const rose = await gate(false, counted(6, 4));
+		assert.equal(rose.code, 1, 'one more function over complexity fails');
+		assert.match(rose.said, /complexity: 6 functions over 7, baseline 5/);
+		assert.match(rose.said, /worst complexity:\n {2}- backend\/src\/x\.ts:\d+ f\d+ \(55\)/);
+		assert.equal(rose.file, recorded);
+		const roseUpdating = await gate(true, counted(5, 5));
+		assert.equal(roseUpdating.code, 1, '--update-baseline does not let a count rise');
+		assert.equal(roseUpdating.file, recorded);
+		const mixed = await gate(true, counted(3, 5));
+		assert.equal(mixed.code, 1, 'a fall in one count does not pay for a rise in the other');
+		assert.equal(mixed.file, recorded);
+
+		const fell = await gate(false, counted(4, 4));
+		assert.equal(fell.code, 0);
+		assert.match(fell.said, /a count fell .*run with --update-baseline/);
+		assert.equal(fell.file, recorded, 'a fall is not written down without --update-baseline');
+		const lowered = await gate(true, counted(4, 3));
+		assert.equal(lowered.code, 0);
+		assert.deepEqual(JSON.parse(lowered.file ?? 'null'), {
+			complexity: { over: 4, threshold: 7 },
+			lines: { over: 3, threshold: 40 },
+		});
+		const tightened = await gate(false, counted(5, 4));
+		assert.equal(tightened.code, 1, 'once lowered, the old counts no longer pass');
+
+		rmSync(path);
+		const missing = await gate(false, counted(0, 0));
+		assert.equal(missing.code, 1);
+		assert.match(missing.said, /has no baseline/);
+		assert.equal(missing.file, null, 'a missing baseline is refused, not recorded');
+		reset();
+		const none = await gate(false, (b) => ({ ...counted(0, 0)(b), files: 0 }));
+		assert.equal(none.code, 1, 'a measurement that scanned no files is refused');
+	} finally {
+		rmSync(scratch, { force: true, recursive: true });
+	}
+
+	// The CLI parses strictly and has no way to skip the ratchet: an unknown flag is refused before
+	// anything is measured or written.
+	const ownBaseline = resolve(import.meta.dir, 'function-size-baseline.json');
+	const before = readFileSync(ownBaseline, 'utf8');
+	const skip = spawnSync('bun', [resolve(import.meta.dir, 'check-function-size.ts'), '--skip'], {
+		encoding: 'utf8',
+	});
+	assert.notEqual(skip.status, 0, 'an unknown flag such as --skip is refused');
+	assert.match(
+		`${skip.stderr}${skip.stdout}`,
+		/Unknown option '--skip'|ERR_PARSE_ARGS_UNKNOWN_OPTION/,
+	);
+	assert.equal(readFileSync(ownBaseline, 'utf8'), before);
+
+	console.log(
+		'[OK] function-size ratchet fails a rise and names the worst offenders, passes an unchanged or lower count, writes a lower count only with --update-baseline and never a higher one, refuses a missing baseline or empty scan, measures at the baseline thresholds, and offers no skip flag.',
+	);
+}
+
 run();
+await ratchetOutcomes();
