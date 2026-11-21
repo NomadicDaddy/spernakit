@@ -160,6 +160,7 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/routes/**',
 			'backend/src/swaggerDocs.ts',
 			'scripts/lib/public-routes.ts',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/test-public-route-surface.ts',
 		],
 	},

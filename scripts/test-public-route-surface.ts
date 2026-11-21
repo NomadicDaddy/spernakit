@@ -23,19 +23,17 @@
  * Runs in process against a throwaway temp-file SQLite database. The probe sends real requests, so
  * a route that is open and destructive acts on that database and nothing else.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { PUBLIC_ROUTES, publicRouteIndex, routeKey } from './lib/public-routes.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
@@ -204,10 +202,7 @@ async function run(): Promise<void> {
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-route-surface-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-route-surface-');
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
 	// The seed may require a password change on first login, which its guard enforces from
 	// beforeHandle: left set, an authenticated probe would be refused for an unrelated reason.
@@ -231,12 +226,7 @@ async function run(): Promise<void> {
 	theListHasNoUnusedEntries(probes);
 	everyEntryGivesAReason();
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log(
