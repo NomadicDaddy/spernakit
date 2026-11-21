@@ -3,6 +3,19 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.4] - 2026-11-21
+
+### Changed
+
+- Template drift checks and upgrades now leave `tests/regression-suite.md` alone once an app has
+  it. A new app still starts from the template's five cases, but after that they are the app's own
+  flows, so adapting them no longer shows up as drift, and an upgrade never overwrites them.
+
+### Upgrade notes
+
+- An app that carried a `.templateoverrides` KEEP for `tests/regression-suite.md` to protect its
+  own cases can drop it.
+
 ## [3.51.3] - 2026-11-20
 
 ### Added
