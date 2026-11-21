@@ -3,6 +3,17 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.9] - 2026-11-21
+
+### Changed
+
+- Carries Smokestack 1.0.4 in place of 0.10.12. A gate step keyed on a script that starts with a
+  shebang is now keyed on what that script imports, so a change to one of its helpers reruns the
+  step instead of replaying an old pass. A script Bun can run but cannot scan for imports runs
+  every time and says why. `scripts/smokestack/smokestack.json` accepts `omits` to explain a gate
+  the app leaves out, and opt-in groups reach exactly the repositories whose committed lock
+  declares them. The first full gate after upgrading reruns every step whose key gains files.
+
 ## [3.51.8] - 2026-11-21
 
 ### Added
