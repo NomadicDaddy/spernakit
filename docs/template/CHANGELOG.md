@@ -3,6 +3,15 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.6] - 2026-11-21
+
+### Fixed
+
+- The regression suite's isolated app now keeps its live connection. Its proxy didn't pass the
+  browser's sign-in cookie and origin on to the backend's WebSocket, so the backend turned every
+  connection away and the page reconnected about once a second. No case used live updates, so the
+  suite still passed. Cases that depend on live updates now behave as they do in production.
+
 ## [3.51.5] - 2026-11-21
 
 ### Fixed
