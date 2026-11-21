@@ -85,6 +85,16 @@ gate pipeline itself. The QC pipeline runs these steps automatically:
 During implementation, `bun run smoke:qc:fast` checks template smoke-step parity, then runs the
 cached max-lines, typecheck, format, and lint subset. The full gate remains required before release.
 
+`smoke:qc:fast` runs no tests, so a merge that does not touch the gate pipeline takes one full test
+run on the exact merge tree (team rule R22), and `bun run test` is that run. It runs every `test:`
+step in the full gate's `qc.steps`, once each and in order, plus only the setup those tests need
+(the frontend build and browser fingerprint the regression suite uses). It replays nothing from the
+step cache, runs to the end, and names every test that failed or did not run. Its list is
+`qc.steps` itself, so a new test step joins it with no second list to update, and a derived app's
+own test steps run too; derived apps receive the script through their next template upgrade. The
+dev and preview auth-reset tests run only in their own smoke modes and are outside it. A merge
+that changes the gate pipeline still takes one full `bun run smoke:qc`.
+
 1. `bun run check:drift` - Template drift check
 2. `bun run check:config` - Config invariants check
 3. `bun run check:schema-drift` - Config schema artifact drift check
@@ -1211,6 +1221,9 @@ bun run smoke:preview
 
 # Run quality control tests
 bun run smoke:qc
+
+# Run every test step of the full gate once, uncached (the R22 merge run)
+bun run test
 
 # Run authentication reset API tests
 bun run test:auth-reset-api

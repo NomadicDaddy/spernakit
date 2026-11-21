@@ -977,6 +977,30 @@
 						".claude/**"
 					],
 					"inputs": [
+						"package.json",
+						"scripts/run-tests.ts",
+						"scripts/smokestack/lib/**/*.ts",
+						"scripts/smokestack/smokestack.json",
+						"scripts/test-run-tests.ts"
+					]
+				},
+				"description": "bun run test selects every qc test step and only the setup they name, refuses setup it cannot meet, replays nothing, runs to the end and names each step that failed or did not run",
+				"name": "test:run-tests",
+				"run": ["bun", "run", "test:run-tests"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**",
 						"scripts/lib/test-auth-keys.ts",
