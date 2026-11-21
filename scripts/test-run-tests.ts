@@ -15,6 +15,8 @@ import { reportTestRun, runSelected, selectTestRun, TEST_SETUP } from './run-tes
 import { readScripts } from './smokestack/lib/shared-core/targets.ts';
 import { parseStepCache } from './smokestack/lib/smokestack/cache-config.ts';
 import { readConfig, type Step } from './smokestack/lib/smokestack/config.ts';
+import { withoutNames } from './smokestack/lib/smokestack/env.ts';
+import { GATE_MARK } from './smokestack/lib/smokestack/gate.ts';
 
 const root = resolve(import.meta.dir, '..');
 const failures: string[] = [];
@@ -53,8 +55,11 @@ function selectionCases(): void {
 	const elsewhere = [step('build', { onlyIn: 'other' }), step('test:needs')];
 	const skippedSetup = selectTestRun(elsewhere, 'app', setup);
 	check(reasons(skippedSetup).includes('does not run here'), 'refuses setup skipped here');
-	const skippedTest = selectTestRun([step('test:needs', { onlyIn: 'other' })], 'app', setup);
-	check(names(skippedTest) === 'test:needs', 'a test skipped here demands no setup');
+	const skippedTest = selectTestRun([step('test:x', { onlyIn: 'other' })], 'app', setup);
+	const refused = reasons(skippedTest);
+	check(refused.includes('test:x does not run here'), 'refuses a test skipped here, naming it');
+	const ownTest = selectTestRun([step('test:x', { onlyIn: 'app' })], 'app', setup);
+	check(names(ownTest) === 'test:x', 'selects a test whose onlyIn names this repository');
 }
 
 function realConfigCase(): void {
@@ -84,11 +89,36 @@ function resultCases(): void {
 		selected: 3,
 		skipped: 0,
 	};
-	check(reportTestRun(steps, base) === 0, 'a clean run exits 0');
+	check(reportTestRun(steps, base, 'app') === 0, 'a clean run exits 0');
 	const failed = { ...base, failures: [{ detail: 'exit 1', name: 'test:b' }], passed: 2 };
-	check(reportTestRun(steps, failed) === 1, 'a failed test exits 1');
+	check(reportTestRun(steps, failed, 'app') === 1, 'a failed test exits 1');
 	const stopped = { ...base, interrupted: true, notRun: 2, passed: 1 };
-	check(reportTestRun(steps, stopped) === 130, 'an interrupted run exits 130');
+	check(reportTestRun(steps, stopped, 'app') === 130, 'an interrupted run exits 130');
+	const withSkip = [...steps, step('test:d', { onlyIn: 'other' })];
+	const skipped = { ...base, selected: 4, skipped: 1 };
+	check(reportTestRun(withSkip, skipped, 'app') === 1, 'a skipped step fails the run');
+}
+
+/** The CLI refuses git's hook variables before it reads, checks or starts anything. */
+function hookEnvCase(): void {
+	const given = withoutNames(process.env, [GATE_MARK], process.platform === 'win32');
+	const env = { ...given, GIT_INDEX_FILE: join(tmpdir(), 'run-tests-no-such-index') };
+	const ran = Bun.spawnSync(['bun', join(root, 'scripts', 'run-tests.ts')], {
+		cwd: root,
+		env,
+		stderr: 'pipe',
+		stdout: 'pipe',
+		// A refusal takes a second or two; should the guard ever break, the whole run is cut short.
+		timeout: 60_000,
+		windowsHide: true,
+	});
+	const said = `${ran.stdout.toString()}${ran.stderr.toString()}`;
+	check(ran.exitCode === 2, `the CLI exits 2 under a hook's GIT_INDEX_FILE (${ran.exitCode})`);
+	check(said.includes('GIT_INDEX_FILE'), 'the refusal names the variable');
+	check(
+		!said.includes('==>') && !said.includes('shared files'),
+		'nothing runs, not even preflight',
+	);
 }
 
 async function runCase(): Promise<void> {
@@ -116,6 +146,7 @@ async function runCase(): Promise<void> {
 selectionCases();
 realConfigCase();
 resultCases();
+hookEnvCase();
 await runCase();
 if (failures.length > 0) {
 	console.error(`[FAIL] test:run-tests -- ${failures.length} check(s) failed.`);
