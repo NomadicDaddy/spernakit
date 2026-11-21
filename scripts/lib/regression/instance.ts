@@ -63,17 +63,18 @@ export function removeAbandonedRuns(): string[] {
 	if (!existsSync(RUNS_DIR)) return kept;
 	for (const name of readdirSync(RUNS_DIR)) {
 		const dir = join(RUNS_DIR, name);
-		let owner: { pid?: number } = {};
-		try {
-			owner = JSON.parse(readFileSync(join(dir, 'owner.json'), 'utf8')) as { pid?: number };
-		} catch {
-			// No readable owner: treat it as not ours to judge.
-		}
 		// Aged by owner.json, written once at createRun and removed last: a partial removal bumps
-		// the directory's own mtime, which would restart the hour every time it is retried.
-		const ownerFile = join(dir, 'owner.json');
-		const old =
-			existsSync(ownerFile) && Date.now() - statSync(ownerFile).mtimeMs > ABANDONED_AFTER_MS;
+		// the directory's own mtime, which would restart the hour every time it is retried. Read and
+		// stat in one guard: a concurrent cleanup may remove the marker at any moment.
+		let owner: { pid?: number } = {};
+		let old = false;
+		try {
+			const ownerFile = join(dir, 'owner.json');
+			owner = JSON.parse(readFileSync(ownerFile, 'utf8')) as { pid?: number };
+			old = Date.now() - statSync(ownerFile).mtimeMs > ABANDONED_AFTER_MS;
+		} catch {
+			// No readable owner, or it vanished: not ours to judge, so the directory is skipped.
+		}
 		if (typeof owner.pid === 'number' && !isAlive(owner.pid) && old) {
 			const failed = removeRunDir(dir);
 			if (failed.length > 0) kept.push(`${name} (could not remove: ${failed.join('; ')})`);
