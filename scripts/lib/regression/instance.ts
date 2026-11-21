@@ -55,8 +55,8 @@ function isAlive(pid: number): boolean {
 }
 
 /**
- * Remove run directories a crashed run left behind, and only those: the owner process is gone and
- * the directory is over an hour old. Anything else may be a concurrent run, so it is reported.
+ * Remove run directories a crashed run left behind, and only those: the owner is gone and the run
+ * is over an hour old by owner.json. Anything else may be a concurrent run, so it is reported.
  */
 export function removeAbandonedRuns(): string[] {
 	const kept: string[] = [];
@@ -69,7 +69,11 @@ export function removeAbandonedRuns(): string[] {
 		} catch {
 			// No readable owner: treat it as not ours to judge.
 		}
-		const old = Date.now() - statSync(dir).mtimeMs > ABANDONED_AFTER_MS;
+		// Aged by owner.json, written once at createRun and removed last: a partial removal bumps
+		// the directory's own mtime, which would restart the hour every time it is retried.
+		const ownerFile = join(dir, 'owner.json');
+		const old =
+			existsSync(ownerFile) && Date.now() - statSync(ownerFile).mtimeMs > ABANDONED_AFTER_MS;
 		if (typeof owner.pid === 'number' && !isAlive(owner.pid) && old) {
 			const failed = removeRunDir(dir);
 			if (failed.length > 0) kept.push(`${name} (could not remove: ${failed.join('; ')})`);
