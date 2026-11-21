@@ -21,6 +21,7 @@ import {
 import { join, resolve } from 'node:path';
 
 import { generateKeys } from '../setup/keys.ts';
+import { removeRunDir } from './cleanup.ts';
 
 export const REPO_ROOT = resolve(import.meta.dir, '..', '..', '..');
 export const RUNS_DIR = join(REPO_ROOT, 'data', 'regression-suite');
@@ -70,7 +71,8 @@ export function removeAbandonedRuns(): string[] {
 		}
 		const old = Date.now() - statSync(dir).mtimeMs > ABANDONED_AFTER_MS;
 		if (typeof owner.pid === 'number' && !isAlive(owner.pid) && old) {
-			rmSync(dir, { force: true, recursive: true });
+			const failed = removeRunDir(dir);
+			if (failed.length > 0) kept.push(`${name} (could not remove: ${failed.join('; ')})`);
 		} else {
 			kept.push(name);
 		}
@@ -286,6 +288,7 @@ export function copySnapshot(run: Run, from: string, to: string): void {
 	copyFileSync(join(run.dir, from), join(run.dir, to));
 }
 
-export function removeRun(run: Run): void {
-	rmSync(run.dir, { force: true, recursive: true });
+/** Remove a run's directory config-first (cleanup.ts); returns each path that could not go. */
+export function removeRun(run: Run): string[] {
+	return removeRunDir(run.dir);
 }

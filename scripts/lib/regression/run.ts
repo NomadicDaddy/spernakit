@@ -9,15 +9,13 @@
  */
 import type { Browser, Page } from 'puppeteer';
 
-import { readdirSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
-
 import type { TestCase } from './suite.ts';
 
 import { getSeedCredential } from '../../../backend/src/utils/auth/passwordGenerator.ts';
 import { TestResults } from '../../crawltest-results.ts';
 import { type CrawlSession, loginSession } from '../../crawltest-session.ts';
 import { closeBounded, launchManaged } from './browser.ts';
+import { keepOnlyEvidence } from './cleanup.ts';
 import { startFrontendProxy } from './frontend-proxy.ts';
 import {
 	type Backend,
@@ -41,27 +39,11 @@ export interface CaseResult {
 
 type SeedRole = Parameters<typeof getSeedCredential>[0];
 
-/**
- * Strip a failed run down to its diagnostics: delete everything but logs, screenshots and
- * owner.json (which removeAbandonedRuns needs to clear the directory later). config/, which holds
- * the private keys, goes first, and every other entry is still tried when one cannot be removed,
- * so a locked database never shields the rest. Returns each path that could not be removed.
- */
-function keepOnlyEvidence(run: Run): string[] {
-	const entries = readdirSync(run.dir, { withFileTypes: true })
-		.filter((entry) => !(entry.isFile() && /\.(?:log|png)$|^owner\.json$/u.test(entry.name)))
-		.map((entry) => entry.name)
-		.sort((a, b) => Number(b === 'config') - Number(a === 'config'));
-	const failed: string[] = [];
-	for (const name of entries) {
-		const path = join(run.dir, name);
-		try {
-			rmSync(path, { force: true, recursive: true });
-		} catch (err) {
-			failed.push(`${path} (${err instanceof Error ? err.message : String(err)})`);
-		}
+/** Print each path a cleanup could not remove; reported, never thrown over the run's result. */
+function warnUnremoved(failed: string[]): void {
+	for (const path of failed) {
+		console.error(`[WARN] could not remove generated config or data: ${path}`);
 	}
-	return failed;
 }
 
 function signInAs(role: string): { email: string; password: string } {
@@ -201,22 +183,16 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 			// mirrored whatever .gitignore says, so those go either way. A later run removes the
 			// rest once it is an hour old and this process is gone.
 			// Reported, not thrown: the case failure that brought us here is the error to show.
-			let failed: string[];
-			try {
-				failed = keepOnlyEvidence(run);
-			} catch (err) {
-				failed = [`${run.dir} (${err instanceof Error ? err.message : String(err)})`];
-			}
-			for (const path of failed) {
-				console.error(`[WARN] could not remove generated config or data: ${path}`);
-			}
+			const failed = keepOnlyEvidence(run.dir);
+			warnUnremoved(failed);
 			console.log(
 				failed.length === 0
 					? `   Evidence (logs and screenshots only) kept in ${run.dir}`
 					: `   Evidence kept in ${run.dir}, with the ${String(failed.length)} item(s) above still in it`,
 			);
 		} else {
-			removeRun(run);
+			// The same config-first removal: a locked file must not leave the keys behind on a pass.
+			warnUnremoved(removeRun(run));
 		}
 	}
 }
