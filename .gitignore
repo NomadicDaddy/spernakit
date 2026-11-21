@@ -8,7 +8,9 @@ ps_modules/
 
 # aidd / agent-generated artifacts
 .agents/
-/.aidd/
+# Everything aidd keeps stays local except the checked-in regression suite (regression-suite-gate).
+/.aidd/*
+!/.aidd/regression-suite.md
 .claude/
 .codex/
 .windsurf/

@@ -2852,6 +2852,29 @@
 						".claude/**"
 					],
 					"inputs": [
+						".gitignore",
+						"scaffolding/.gitignore",
+						"scripts/lib/regression/suite.ts",
+						"scripts/test-regression-suite-parser.ts"
+					]
+				},
+				"description": "The regression-suite parser refuses commented-out, unfailable, gapped, off-origin and CSS-selector cases",
+				"name": "test:regression-suite-parser",
+				"run": ["bun", "run", "test:regression-suite-parser"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"scripts/check-smoke-steps.ts",
 						"scripts/lib/smoke-steps/*.ts",
 						"scripts/lib/template/repo.ts",

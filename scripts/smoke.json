@@ -680,6 +680,10 @@
 					"description": "An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob"
 				},
 				{
+					"command": "bun run test:regression-suite-parser",
+					"description": "The regression-suite parser refuses commented-out, unfailable, gapped, off-origin and CSS-selector cases"
+				},
+				{
 					"command": "bun run test:smoke-steps",
 					"description": "Smoke step comparison names a template step a derived app's runbook lost"
 				},
