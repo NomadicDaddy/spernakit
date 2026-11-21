@@ -31,7 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { getConfig } from '../backend/src/config/configLoader.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { AUTH_ERROR_CODES } from '../shared/src/errorCodes.ts';
-import { type App, post, put, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { type App, post, put, startFixture } from './lib/auth-ordering-fixture.ts';
 import { generateEcKeyPair } from './lib/crypto-keys.ts';
 import {
 	findSignInCodeInStepUp,
@@ -40,6 +40,7 @@ import {
 	STEP_UP_ROUTES,
 	type StepUpRoute,
 } from './lib/step-up-password.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

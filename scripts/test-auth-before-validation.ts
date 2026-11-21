@@ -27,12 +27,13 @@ import { getConfig } from '../backend/src/config/configLoader.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { createWorkspaceDocs } from '../backend/src/routes/workspaces/crud.docs.ts';
-import { post, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { post, startFixture } from './lib/auth-ordering-fixture.ts';
 import {
 	declaredStatuses,
 	findBeforeHandleGuards,
 	findInHandlerGuards,
 } from './lib/auth-ordering.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 /** The representative protected route: ADMIN or higher, with a body schema to be skipped. */

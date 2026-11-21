@@ -23,15 +23,8 @@ import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { generateApiKey, revokeApiKey } from '../backend/src/services/apiKeyService.ts';
 import { requestEmailChange } from '../backend/src/services/authService.ts';
 import { createUser, softDeleteUser } from '../backend/src/services/userService.ts';
-import {
-	type App,
-	type Claim,
-	get,
-	post,
-	put,
-	seedUserId,
-	startFixture,
-} from './lib/auth-ordering-fixture.ts';
+import { type App, type Claim, get, post, put, startFixture } from './lib/auth-ordering-fixture.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 const PASSWORD = 'Unique-Probe-1!';

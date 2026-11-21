@@ -30,7 +30,8 @@ import { fileURLToPath } from 'node:url';
 
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { validateUsername } from '../shared/src/usernamePolicy.ts';
-import { type App, post, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { type App, post, startFixture } from './lib/auth-ordering-fixture.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 import { CANDIDATES, findRivalRules } from './lib/username-parity.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');

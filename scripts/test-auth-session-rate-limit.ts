@@ -30,7 +30,8 @@ import {
 	newRefreshFamilyId,
 	storeRefreshSession,
 } from '../backend/src/utils/auth/refreshSessions.ts';
-import { type App, post, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { type App, post, startFixture } from './lib/auth-ordering-fixture.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 /** More failed logins than the default allowance of ten. */

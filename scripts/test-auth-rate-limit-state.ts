@@ -26,7 +26,8 @@ import { fileURLToPath } from 'node:url';
 import type { App, Claim } from './lib/auth-ordering-fixture.ts';
 
 import { getConfig } from '../backend/src/config/configLoader.ts';
-import { get, post, seedUserId, startFixture } from './lib/auth-ordering-fixture.ts';
+import { get, post, startFixture } from './lib/auth-ordering-fixture.ts';
+import { seedUserId } from './lib/temp-db-app.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const SETTINGS = '/api/v1/settings/auth-security';

@@ -7,20 +7,16 @@
  * the sequence of assertions it is. Two gates use this now, the ordering one it was written for
  * and the auth rate limit state one, and both want the same three things from it.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-
 import type { UserRole } from '../../backend/src/types/roles.ts';
 
 import { getConfig, initializeConfig } from '../../backend/src/config/configLoader.ts';
 import { createApiApp } from '../../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../../backend/src/db/index.ts';
+import { getDb } from '../../backend/src/db/index.ts';
 import { users } from '../../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../../backend/src/plugins/auth.ts';
 import { getSeedUsersWithPasswords } from '../../backend/src/utils/auth/passwordGenerator.ts';
+import { startTempDatabase } from './temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './test-auth-keys.ts';
 
 /** Low bcrypt cost: this gate hashes a handful of passwords and is not measuring the hash. */
@@ -28,19 +24,6 @@ const SEED_ROUNDS = 4;
 
 type App = ReturnType<typeof createApiApp>;
 type Claim = { id: number; role: UserRole };
-
-/** The id of a seeded account, looked up by the role the seed gave it. */
-function seedUserId(role: UserRole): number {
-	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === role);
-	if (!seed) throw new Error(`SEED_USERS carries no ${role} account`);
-	const row = getDb()
-		.select()
-		.from(users)
-		.all()
-		.find((user) => user.username === seed.username);
-	if (!row) throw new Error(`the seed produced no ${seed.username} account`);
-	return row.id;
-}
 
 /**
  * One request to the representative route.
@@ -164,24 +147,12 @@ async function startFixture(repoRoot: string): Promise<{ app: App; dispose: () =
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-auth-ordering-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-auth-ordering-');
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
 	getDb().update(users).set({ requiresPasswordChange: false }).run();
-
-	const dispose = async (): Promise<void> => {
-		await closeDatabase();
-		try {
-			rmSync(tmpDir, { force: true, recursive: true });
-		} catch {
-			// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-		}
-	};
 
 	return { app: createApiApp(), dispose };
 }
 
-export { del, get, post, put, seedUserId, startFixture };
+export { del, get, post, put, startFixture };
 export type { App, Claim };
