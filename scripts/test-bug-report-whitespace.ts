@@ -15,23 +15,20 @@
  *
  * Runs in process against a throwaway temp-file SQLite database.
  */
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { UserRole } from '../backend/src/types/roles.ts';
-
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { bugReports } from '../backend/src/db/schema/bugReports.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
 import { generateAndStoreCsrfToken } from '../backend/src/plugins/csrf.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import { seedUserId, startTempDatabase } from './lib/temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -45,19 +42,6 @@ function assert(condition: boolean, message: string): void {
 }
 
 type App = ReturnType<typeof createApiApp>;
-
-/** The id of a seeded account, looked up by the role the seed gave it. */
-function seedUserId(role: UserRole): number {
-	const seed = getSeedUsersWithPasswords(false).find((user) => user.role === role);
-	if (!seed) throw new Error(`SEED_USERS carries no ${role} account`);
-	const row = getDb()
-		.select()
-		.from(users)
-		.all()
-		.find((user) => user.username === seed.username);
-	if (!row) throw new Error(`the seed produced no ${seed.username} account`);
-	return row.id;
-}
 
 /** What one submitting session carries: the account it acts as and that account’s CSRF token. */
 interface Session {
@@ -215,10 +199,7 @@ async function run(): Promise<void> {
 	config.rateLimit.enabled = false;
 	config.rateLimit.authEnabled = false;
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-bug-whitespace-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-bug-whitespace-');
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), SEED_ROUNDS);
 	// The seed may require a password change on first login, and its guard refuses every other route
 	// while that flag is set, which would answer each submission 403 for an unrelated reason.
@@ -234,12 +215,7 @@ async function run(): Promise<void> {
 	await paddedEmailIsTrimmedFirst(app, session);
 	placeholderIsExplained();
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log('[OK] bug-report-whitespace: an empty description is refused, not stored');

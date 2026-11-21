@@ -51,6 +51,7 @@ export const REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'backend/src/routes/bugs.helpers.ts',
 			'backend/src/routes/bugs.ts',
 			'backend/src/services/bugReportService.ts',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-bug-report-whitespace.ts',
 		],
