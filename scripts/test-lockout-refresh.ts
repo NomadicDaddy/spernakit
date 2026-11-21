@@ -16,16 +16,13 @@
  * app.handle(). It needs no live server and is unaffected by the committed dev DB's
  * migration-journal boot guard (a fresh DB has no journal drift).
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS } from '../backend/src/constants/rateLimit.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { handleRotationCollision } from '../backend/src/routes/auth/refresh.ts';
 import { startSignIn } from '../backend/src/routes/auth/session-helpers.ts';
@@ -33,6 +30,7 @@ import { hashPassword } from '../backend/src/services/auth/authCore.ts';
 import { login } from '../backend/src/services/auth/authLogin.ts';
 import { getAuthSettings } from '../backend/src/services/auth/authSecurityService.ts';
 import { findRefreshSession } from '../backend/src/utils/auth/refreshSessions.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 function setCookieValue(response: Response, name: string): null | string {
@@ -59,13 +57,8 @@ async function run(): Promise<void> {
 	applyEphemeralAuthKeys(getConfig().security);
 	getConfig().rateLimit.enabled = false;
 
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-lockout-test-'));
-	const dbPath = join(tmpDir, 'test.db');
-	const migrationsDir = join(repoRoot, 'backend', 'drizzle');
-
 	// Apply migrations to a fresh file (its own connection), then open it for the app.
-	runAutoMigrations(dbPath, migrationsDir);
-	initializeDatabase(dbPath);
+	const { dispose } = startTempDatabase(repoRoot, 'spernakit-lockout-test-');
 
 	const db = getDb();
 
@@ -209,12 +202,7 @@ async function run(): Promise<void> {
 		'Lockout threshold must be strictly above the per-account rate limit',
 	);
 
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL/backup file handle; temp cleanup is best-effort.
-	}
+	await dispose();
 
 	if (failures.length === 0) {
 		console.log('✅ lockout/refresh decoupling regression checks passed');

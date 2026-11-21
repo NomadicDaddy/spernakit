@@ -54,6 +54,7 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 		globs: [
 			'backend/drizzle/**',
 			'backend/src/**',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-lockout-refresh.ts',
 		],
