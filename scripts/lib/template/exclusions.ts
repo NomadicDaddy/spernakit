@@ -97,6 +97,11 @@ const DRIFT_EXCLUDED_PATTERNS = [
 	/^scripts\/bundle-budget\.json$/,
 	/^scripts\/critical-path-budget\.json$/,
 	/^scripts\/function-size-baseline\.json$/,
+	// The never-break suite: a new app starts from the template's five cases, and from then on
+	// they are the app's own flows, like its fixtures. Comparing them would report every adapted
+	// case as drift, and an upgrade must never overwrite them; the upgrade only copies the file in
+	// when an app has none (presence.ts fails the gate from 3.51.3 without one).
+	/^tests\/regression-suite\.md$/,
 	/\.lock$/,
 ];
 

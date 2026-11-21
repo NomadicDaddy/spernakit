@@ -161,7 +161,11 @@ export const SELF_TEST_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 	},
 	'test:regression-suite-parser': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['scripts/lib/regression/suite.ts', 'scripts/test-regression-suite-parser.ts'],
+		globs: [
+			'scripts/lib/regression/suite.ts',
+			'scripts/lib/template/exclusions.ts',
+			'scripts/test-regression-suite-parser.ts',
+		],
 	},
 	'test:security-fixes': {
 		// The v2 signing scheme and the reset consumption race (v3.47.6): every module the

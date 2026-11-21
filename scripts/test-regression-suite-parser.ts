@@ -6,10 +6,14 @@
  * being quietly weakened: a commented-out case, a case that can never fail, a gap left by a deleted
  * case, or a selector that breaks the moment the page is restyled. Each refusal below is one of
  * those, and the last cases check that a sound suite parses into exactly the steps it says.
+ *
+ * It also pins how the template hands the suite over: init copies it into a new app, and drift and
+ * upgrades leave it alone from then on, because the cases are the app's own.
  */
 import { strict as assert } from 'node:assert';
 
 import { parseSuite, SuiteError, withRunId } from './lib/regression/suite.ts';
+import { isFileExcluded, isInitExcluded } from './lib/template/exclusions.ts';
 
 const SIGN_IN =
 	'{ "role": "SYSOP", "steps": [{ "goto": "/login" }, { "signIn": true }, { "expectUrl": "/dashboard" }] }';
@@ -149,5 +153,11 @@ refuses(
 	/exactly one action key/,
 	'two actions in one step',
 );
+
+// ===== Hand-over: copied at init, then the app's own. =====
+assert.equal(isInitExcluded('tests/regression-suite.md'), false, 'init copies the suite');
+assert.equal(isFileExcluded('tests/regression-suite.md'), true, 'drift ignores the suite');
+// Control: the exclusion names that one file, not tests/ as a whole.
+assert.equal(isFileExcluded('tests/other.md'), false, 'other files under tests/ stay compared');
 
 console.log('[OK] regression suite parser test passed.');
