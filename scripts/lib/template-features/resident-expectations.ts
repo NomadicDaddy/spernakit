@@ -7,7 +7,8 @@
  * again, which is most of the file.
  */
 import { assert } from './assert.ts';
-import { readJson, removePath, runSync, TEMPLATE_VERSION, writeJson } from './fixture.ts';
+import { TEMPLATE_VERSION } from './fixture-corpus.ts';
+import { readJson, removePath, runSync, writeJson } from './fixture.ts';
 
 const PROBE = 'remediation-20991231-probe';
 const GAMMA = '.aidd/features/gamma-feature/feature.json';

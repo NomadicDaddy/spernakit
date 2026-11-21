@@ -14,20 +14,17 @@ import type { TestCase } from './suite.ts';
 import { getSeedCredential } from '../../../backend/src/utils/auth/passwordGenerator.ts';
 import { TestResults } from '../../crawltest-results.ts';
 import { type CrawlSession, loginSession } from '../../crawltest-session.ts';
+import { type Backend, killLiveBackends, startBackend, stopBackend } from './backend.ts';
 import { closeBounded, launchManaged } from './browser.ts';
 import { keepOnlyEvidence } from './cleanup.ts';
 import { startFrontendProxy } from './frontend-proxy.ts';
 import {
-	type Backend,
 	copySnapshot,
 	createRun,
 	freezeSnapshot,
-	killLiveBackends,
 	removeAbandonedRuns,
 	removeRun,
 	type Run,
-	startBackend,
-	stopBackend,
 } from './instance.ts';
 import { guardOrigin, runStep } from './steps.ts';
 

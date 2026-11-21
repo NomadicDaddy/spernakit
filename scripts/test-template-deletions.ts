@@ -21,10 +21,7 @@ import {
 	REMOVED_FILE,
 	REMOVED_SCAFFOLD,
 } from './lib/template/deletions-fixture.ts';
-import { detectRetainedDeletions, findRemovedPaths } from './lib/template/deletions.ts';
-import { type RetainedDeletion } from './lib/template/deletions.ts';
-import { printRetainedDeletions } from './lib/template/report.ts';
-import { type TemplateOverrides } from './lib/template/types.ts';
+import { checkDeletionDetectorUnits } from './lib/template/deletions-unit-checks.ts';
 
 let checks = 0;
 
@@ -32,12 +29,6 @@ function assert(condition: boolean, message: string): void {
 	if (!condition) throw new Error(message);
 	checks++;
 }
-
-const noOverrides = (): TemplateOverrides => ({
-	deleted: new Map(),
-	keep: new Map(),
-	skip: new Map(),
-});
 
 const fixture = createDeletionFixture(join(import.meta.dir, '..'));
 
@@ -227,68 +218,8 @@ try {
 		`--target-version without a value must be rejected, not silently ignored:\n${noValue.output}`,
 	);
 
-	// ===== 10. Detector unit behavior the CLI fixture cannot isolate. =====
-	// findRemovedPaths is the set the drift report is filtered by, so it must include a removed path
-	// the app has ALREADY dropped — otherwise deleting the file would resurrect it as a missing-file
-	// failure, which is exactly the contradiction assertion 7 guards end-to-end.
-	const removedRegardless = findRemovedPaths({
-		recordedPaths: ['gone.ts', 'kept.ts'],
-		targetPaths: ['kept.ts'],
-	});
-	assert(
-		removedRegardless.has('gone.ts') && !removedRegardless.has('kept.ts'),
-		'findRemovedPaths must classify by the two template versions alone, not by app contents',
-	);
-	assert(
-		detectRetainedDeletions({
-			existsInApp: () => false,
-			overrides: noOverrides(),
-			recordedPaths: ['gone.ts'],
-			targetPaths: [],
-		}).length === 0,
-		'A removed path the app no longer carries must not be reported',
-	);
-	// Duplicate candidates collapse, and output is deterministically ordered.
-	const ordered = detectRetainedDeletions({
-		existsInApp: () => true,
-		overrides: noOverrides(),
-		recordedPaths: ['b.ts', 'a.ts', 'b.ts'],
-		targetPaths: [],
-	});
-	assert(
-		ordered.length === 2 && ordered[0]?.filePath === 'a.ts',
-		'Deletions must be de-duplicated and sorted for a stable report',
-	);
-	// An empty DELETED reason is still a suppression — the operator acknowledged the path.
-	const emptyReason = detectRetainedDeletions({
-		existsInApp: () => true,
-		overrides: { ...noOverrides(), deleted: new Map([['a.ts', '']]) },
-		recordedPaths: ['a.ts'],
-		targetPaths: [],
-	});
-	assert(
-		emptyReason[0]?.status === 'suppressed',
-		'A DELETED line with no reason must still suppress the retention',
-	);
-
-	const captureReport = (deletions: RetainedDeletion[]): string => {
-		const lines: string[] = [];
-		const originalLog = console.log;
-		console.log = (...args: unknown[]) => {
-			lines.push(args.map(String).join(' '));
-		};
-		try {
-			printRetainedDeletions(deletions, '3.47.6', '3.48.0', true);
-		} finally {
-			console.log = originalLog;
-		}
-		return lines.join('\n');
-	};
-	const plainReport = captureReport([{ filePath: 'site/og.png', status: 'retained' }]);
-	assert(
-		plainReport.includes('Delete these files') && plainReport.includes('site/og.png'),
-		'Retained template deletions must name the file and the operator remedy',
-	);
+	// ===== 10. Detector unit behavior the CLI fixture cannot isolate (deletions-unit-checks.ts). =====
+	checkDeletionDetectorUnits(assert);
 
 	console.log(`Template deletion detection test passed (${checks} assertions).`);
 } catch (err) {

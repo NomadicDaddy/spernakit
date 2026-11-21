@@ -26,14 +26,13 @@ import {
 	expectInitialPlan,
 	parsePlan,
 } from './lib/template-features/expectations.ts';
+import { DURABLE_DIRS, TEMPLATE_VERSION } from './lib/template-features/fixture-corpus.ts';
 import {
 	createFeatureFixture,
-	DURABLE_DIRS,
 	readJson,
 	readText,
 	removePath,
 	runSync,
-	TEMPLATE_VERSION,
 	writeJson,
 } from './lib/template-features/fixture.ts';
 import { expectResidentTier } from './lib/template-features/resident-expectations.ts';

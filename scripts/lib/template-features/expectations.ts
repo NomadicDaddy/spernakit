@@ -7,7 +7,8 @@
  * here; the assertion counter lives here too so the driver can report one total.
  */
 import { assert, assertionCount } from './assert.ts';
-import { DURABLE_DIRS, readJson, runSync, type SyncRun } from './fixture.ts';
+import { DURABLE_DIRS } from './fixture-corpus.ts';
+import { readJson, runSync, type SyncRun } from './fixture.ts';
 
 export interface PlanEntry {
 	action: string;
