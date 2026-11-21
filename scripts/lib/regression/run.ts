@@ -41,13 +41,27 @@ export interface CaseResult {
 
 type SeedRole = Parameters<typeof getSeedCredential>[0];
 
-/** Strip a failed run down to its diagnostics: delete every file but logs and screenshots. */
-function keepOnlyEvidence(run: Run): void {
-	for (const entry of readdirSync(run.dir, { withFileTypes: true })) {
-		// owner.json stays: removeAbandonedRuns needs it to clear this directory later.
-		const keep = entry.isFile() && /\.(?:log|png)$|^owner\.json$/u.test(entry.name);
-		if (!keep) rmSync(join(run.dir, entry.name), { force: true, recursive: true });
+/**
+ * Strip a failed run down to its diagnostics: delete everything but logs, screenshots and
+ * owner.json (which removeAbandonedRuns needs to clear the directory later). config/, which holds
+ * the private keys, goes first, and every other entry is still tried when one cannot be removed,
+ * so a locked database never shields the rest. Returns each path that could not be removed.
+ */
+function keepOnlyEvidence(run: Run): string[] {
+	const entries = readdirSync(run.dir, { withFileTypes: true })
+		.filter((entry) => !(entry.isFile() && /\.(?:log|png)$|^owner\.json$/u.test(entry.name)))
+		.map((entry) => entry.name)
+		.sort((a, b) => Number(b === 'config') - Number(a === 'config'));
+	const failed: string[] = [];
+	for (const name of entries) {
+		const path = join(run.dir, name);
+		try {
+			rmSync(path, { force: true, recursive: true });
+		} catch (err) {
+			failed.push(`${path} (${err instanceof Error ? err.message : String(err)})`);
+		}
 	}
+	return failed;
 }
 
 function signInAs(role: string): { email: string; password: string } {
@@ -186,16 +200,17 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 			// holds private keys and the databases hold seeded accounts, and this tree can be
 			// mirrored whatever .gitignore says, so those go either way. A later run removes the
 			// rest once it is an hour old and this process is gone.
+			// Reported, not thrown: the case failure that brought us here is the error to show.
+			let failed: string[];
 			try {
-				keepOnlyEvidence(run);
-				console.log(`   Evidence (logs and screenshots only) kept in ${run.dir}`);
+				failed = keepOnlyEvidence(run);
 			} catch (err) {
-				// Reported, not thrown: the case failure that brought us here is the error to show.
-				const why = err instanceof Error ? err.message : String(err);
-				console.error(
-					`[WARN] could not strip generated config and databases from ${run.dir}: ${why}`,
-				);
+				failed = [`${run.dir} (${err instanceof Error ? err.message : String(err)})`];
 			}
+			for (const path of failed) {
+				console.error(`[WARN] could not remove generated config or data: ${path}`);
+			}
+			console.log(`   Evidence (logs and screenshots only) kept in ${run.dir}`);
 		} else {
 			removeRun(run);
 		}
