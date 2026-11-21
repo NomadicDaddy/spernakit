@@ -163,6 +163,9 @@ const workflow = readFileSync(resolve(root, '.github/workflows/release.yml'), 'u
 assert.match(workflow, /tags: \['v\*\.\*\.\*']/);
 assert.match(workflow, /bun-version-file: package\.json/);
 assert.match(workflow, /Require a green CI run for this commit/);
+// Only a push-event CI run on main satisfies the gate, never a pull_request run on a branch commit.
+assert.ok(workflow.includes('.event == "push"'), 'the CI gate must require a push-event run');
+assert.ok(workflow.includes('.head_branch == "main"'), 'the CI gate must require a run on main');
 assert.match(workflow, /bun scripts\/release-notes\.ts "\$\{TAG_NAME\}"/);
 assert.match(workflow, /gh release create .*--verify-tag/);
 

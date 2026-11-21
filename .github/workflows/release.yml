@@ -34,10 +34,8 @@ jobs:
               with:
                   bun-version-file: package.json
 
-            # The tag is usually pushed alongside the commit it points at, so CI may still be
-            # running. Wait for it rather than assuming, and refuse to publish if it is not green.
-            # A tag on a commit that never reached main has no CI run at all and times out here,
-            # which is the intended outcome: no release without a passing build.
+            # Only a push-event CI run on `main` for this SHA satisfies the gate; a tag on a commit
+            # that never reached main times out here.
             - name: Require a green CI run for this commit
               env:
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +44,7 @@ jobs:
                   for attempt in $(seq 1 20); do
                       read -r status conclusion <<<"$(gh api \
                           "repos/${GITHUB_REPOSITORY}/actions/runs?head_sha=${SHA}&per_page=50" \
-                          --jq '[.workflow_runs[] | select(.name == "CI")][0] | "\(.status // "absent") \(.conclusion // "none")"')"
+                          --jq '[.workflow_runs[] | select(.name == "CI" and .event == "push" and .head_branch == "main")][0] | "\(.status // "absent") \(.conclusion // "none")"')"
                       case "${status}:${conclusion}" in
                           completed:success)
                               echo "CI passed for ${SHA}."
