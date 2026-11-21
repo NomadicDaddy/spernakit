@@ -1,15 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { BellOff, CheckCheck, Trash2 } from 'lucide-react';
+import { BellOff, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import type { DataResponse, Notification, NotificationStatistics } from '@/api/types';
 
 import { trackEvent } from '@/api/businessMetrics';
 import { getNotificationStatistics, notificationKeys } from '@/api/notifications';
-import { ConfirmAlertDialog } from '@/components/shared/ConfirmAlertDialog';
 import { BulkActionBar } from '@/components/shared/data-table/BulkActionBar';
 import { DataTable } from '@/components/shared/data-table/DataTable';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { TableSkeleton } from '@/components/shared/skeletons/TableSkeleton';
 import { Button } from '@/components/ui/button';
 import { useNotificationColumns } from '@/hooks/notifications/useNotificationColumns';
@@ -19,118 +17,12 @@ import { useUrlSorting } from '@/hooks/useUrlSorting';
 import { STALE_TIME_SHORT } from '@/lib/queryConfig';
 import { useWorkspaceStore } from '@/stores/workspaceStore';
 
+import { NotificationDeleteDialogs } from './NotificationDeleteDialogs';
 import { NotificationFilters } from './NotificationFilters';
+import { NotificationPageHeader } from './NotificationPageHeader';
 import { NotificationStatsGrid } from './NotificationStatsGrid';
 
 const VALID_READ_FILTERS = new Set<string>(['all', 'read', 'unread']);
-
-function NotificationPageHeader({
-	markAllReadIsPending,
-	onMarkAllRead,
-	statsLoading,
-	unreadCount,
-}: {
-	markAllReadIsPending: boolean;
-	onMarkAllRead: () => void;
-	statsLoading: boolean;
-	unreadCount: number;
-}) {
-	return (
-		/*
-		 * The description no longer prints a count. It said "N total notifications" directly above a
-		 * Total tile saying the same thing, and the table's own pagination summary states the
-		 * filtered count — three renderings of one number down the same column.
-		 */
-		<PageHeader description="Alerts and messages for your workspace" title="Notifications">
-			{/*
-			 * Hidden rather than permanently disabled. With nothing unread this rendered as a greyed
-			 * control in the page's most prominent action slot, and the only explanation — "There
-			 * are no unread notifications." — lived in an sr-only span. A `title` would not have
-			 * fixed that: the Button sets `disabled:pointer-events-none`, so a native tooltip never
-			 * fires on it. An action that cannot apply is better absent than dead, and the Unread
-			 * tile beside it already says why.
-			 */}
-			{(statsLoading || unreadCount > 0) && (
-				<Button
-					disabled={statsLoading || markAllReadIsPending}
-					onClick={onMarkAllRead}
-					size="sm"
-					variant="outline">
-					<CheckCheck aria-hidden="true" className="size-4" />
-					Mark all read
-				</Button>
-			)}
-			{/*
-			 * Delete no longer lives here. In the header it sat two sections above the checkboxes it
-			 * acted on — off screen once the stats grid and the toolbar were between them — and it
-			 * reported a bare count, so a filter that hid every selected row left "Delete (1)" in the
-			 * page's most prominent action slot pointing at nothing visible. It is now in the shared
-			 * BulkActionBar under the table, beside its selection and beside the count of what the
-			 * filter is hiding, the same as /settings/users.
-			 */}
-		</PageHeader>
-	);
-}
-
-function NotificationDeleteDialogs({
-	bulkDeleteMutation,
-	deleteMutation,
-	deleteTarget,
-	onClearDeleteTarget,
-	onClearSelectedRows,
-	onShowBulkDeleteChange,
-	selectedRows,
-	showBulkDelete,
-}: {
-	bulkDeleteMutation: ReturnType<typeof useNotifications>['bulkDeleteMutation'];
-	deleteMutation: ReturnType<typeof useNotifications>['deleteMutation'];
-	deleteTarget: Notification | null;
-	onClearDeleteTarget: () => void;
-	onClearSelectedRows: () => void;
-	onShowBulkDeleteChange: (open: boolean) => void;
-	selectedRows: Notification[];
-	showBulkDelete: boolean;
-}) {
-	return (
-		<>
-			<ConfirmAlertDialog
-				confirmText="Delete"
-				description={`Are you sure you want to delete “${deleteTarget?.title}”? This action cannot be undone.`}
-				isOpen={!!deleteTarget}
-				isPending={deleteMutation.isPending}
-				onConfirm={() => {
-					if (deleteTarget) deleteMutation.mutate(deleteTarget.id);
-				}}
-				onOpenChange={(open) => {
-					if (!open) onClearDeleteTarget();
-				}}
-				title="Delete notification"
-				variant="destructive"
-			/>
-
-			<ConfirmAlertDialog
-				confirmText="Delete all"
-				description={`Are you sure you want to delete ${selectedRows.length} selected notifications? This action cannot be undone.`}
-				isOpen={showBulkDelete}
-				isPending={bulkDeleteMutation.isPending}
-				onConfirm={() => {
-					bulkDeleteMutation.mutate(
-						selectedRows.map((n) => n.id),
-						{
-							onSuccess: () => {
-								onClearSelectedRows();
-								onShowBulkDeleteChange(false);
-							},
-						},
-					);
-				}}
-				onOpenChange={onShowBulkDeleteChange}
-				title={`Delete ${selectedRows.length} notifications`}
-				variant="destructive"
-			/>
-		</>
-	);
-}
 
 function NotificationsPage() {
 	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();

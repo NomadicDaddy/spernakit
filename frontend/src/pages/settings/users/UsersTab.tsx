@@ -2,7 +2,6 @@ import { Plus, Shield, Trash2, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import type { User } from '@/api/types';
-import type { CreateUserInput } from '@/api/users';
 
 import { BulkActionBar } from '@/components/shared/data-table/BulkActionBar';
 import { DataTable } from '@/components/shared/data-table/DataTable';
@@ -12,27 +11,9 @@ import { useUsers } from '@/hooks/settings/useUsers';
 import { useAuthorization } from '@/hooks/useAuthorization';
 import { useUrlFilters } from '@/hooks/useUrlFilters';
 
-import {
-	BulkDeleteDialog,
-	BulkRoleDialog,
-	CreateUserDialog,
-	DeleteUserDialog,
-	EditUserDialog,
-	ImpersonateDialog,
-	ResetPasswordDialog,
-	UserTableFilters,
-} from './index';
+import { UserTableFilters } from './index';
+import { type DialogState, UsersTabDialogs } from './UsersTabDialogs';
 import { useUserColumns } from './useUserColumns';
-
-type DialogState =
-	| { newRole: string; type: 'bulkRole' }
-	| { type: 'bulkDelete' }
-	| { type: 'create' }
-	| { type: 'delete'; user: User }
-	| { type: 'edit'; user: User }
-	| { type: 'impersonate'; user: User }
-	| { type: 'resetPassword'; user: User }
-	| null;
 
 function UsersTab() {
 	const { getFilter, limit, page, setFilter, setFilters, setLimit, setPage } = useUrlFilters();
@@ -216,80 +197,17 @@ function UsersTab() {
 				</BulkActionBar>
 			)}
 
-			<CreateUserDialog
-				isOpen={dialog?.type === 'create'}
-				isPending={createMutation.isPending}
-				onCreate={(form: CreateUserInput) =>
-					createMutation.mutate(form, {
-						onSuccess: () => setDialog(null),
-					})
-				}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-			/>
-
-			<EditUserDialog
-				isOpen={dialog?.type === 'edit'}
-				isPending={updateMutation.isPending}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				onUpdate={(id, input) =>
-					updateMutation.mutate(
-						{ id, input: input },
-						{ onSuccess: () => setDialog(null) },
-					)
-				}
-				user={dialog?.type === 'edit' ? dialog.user : null}
-			/>
-
-			<DeleteUserDialog
-				isOpen={dialog?.type === 'delete'}
-				isPending={deleteMutation.isPending}
-				onConfirm={(id) => deleteMutation.mutate(id)}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				user={dialog?.type === 'delete' ? dialog.user : null}
-			/>
-
-			<BulkDeleteDialog
-				isPending={bulkDeleteMutation.isPending}
-				onConfirm={handleBulkDelete}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				open={dialog?.type === 'bulkDelete'}
+			<UsersTabDialogs
+				bulkDeleteMutation={bulkDeleteMutation}
+				bulkRoleMutation={bulkRoleMutation}
+				createMutation={createMutation}
+				deleteMutation={deleteMutation}
+				dialog={dialog}
+				handleBulkDelete={handleBulkDelete}
+				handleBulkRoleUpdate={handleBulkRoleUpdate}
 				selectedRows={selectedRows}
-			/>
-
-			<BulkRoleDialog
-				isPending={bulkRoleMutation.isPending}
-				newRole={dialog?.type === 'bulkRole' ? dialog.newRole : 'OPERATOR'}
-				onConfirm={handleBulkRoleUpdate}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				onRoleChange={(role) => setDialog({ newRole: role, type: 'bulkRole' })}
-				open={dialog?.type === 'bulkRole'}
-				selectedRows={selectedRows}
-			/>
-
-			<ResetPasswordDialog
-				isOpen={dialog?.type === 'resetPassword'}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				user={dialog?.type === 'resetPassword' ? dialog.user : null}
-			/>
-
-			<ImpersonateDialog
-				isOpen={dialog?.type === 'impersonate'}
-				onOpenChange={(open) => {
-					if (!open) setDialog(null);
-				}}
-				user={dialog?.type === 'impersonate' ? dialog.user : null}
+				setDialog={setDialog}
+				updateMutation={updateMutation}
 			/>
 		</div>
 	);
