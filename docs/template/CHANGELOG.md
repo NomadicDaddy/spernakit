@@ -3,6 +3,14 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.7] - 2026-11-21
+
+### Fixed
+
+- The release workflow now publishes a tag only when its commit has a passing CI run from a push
+  to `main`. Before, a passing CI run from a pull request also counted, so a tag on a commit that
+  never reached `main` could publish. Such a tag now waits for a run that never comes and fails.
+
 ## [3.51.6] - 2026-11-21
 
 ### Fixed
