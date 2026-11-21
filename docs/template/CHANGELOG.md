@@ -3,6 +3,32 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.3] - 2026-11-20
+
+### Added
+
+- `tests/regression-suite.md` holds the flows the app must never break, as five to ten numbered
+  cases, and the full `smoke:qc` runs them in a browser (`test:regression-suite`). The template
+  ships five: signing in, the dashboard, creating a workspace, finding it again after a backend
+  restart, and sending signed-out visitors to sign in. Each case runs against its own throwaway
+  backend and database, so the gate never touches your config, `.env` or data. A failing case
+  names the step and page and fails the gate. The parser refuses a commented-out case, a gap in
+  the numbering, a case with nothing to check and CSS selectors.
+- `regression:fingerprint` records the browser, Bun and puppeteer the suite runs on, so a cached
+  pass replays only on the same runtime.
+
+### Fixed
+
+- The full gate's `build` step can now replay from the cache. It declared its output as a
+  directory, which the cache never matched, so it rebuilt on every run.
+
+### Upgrade notes
+
+- From 3.51.3, an app on this template version or later fails the gate without a
+  `tests/regression-suite.md`. Copy the template's file, then adapt its cases to your app's own
+  core flows. Build before running the suite by hand.
+- Add `/.regression/` and `/data/regression-suite/` to `.gitignore`, as the scaffold now does.
+
 ## [3.51.2] - 2026-11-20
 
 ### Added

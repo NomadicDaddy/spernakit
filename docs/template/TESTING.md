@@ -21,6 +21,7 @@ Spernakit uses smoke tests, crawl tests, and integration scripts to check applic
 | `bun run supertest`                  | Full validation chain across all environments                                     |
 | `bun run crawltest`                  | Crawl test in dev mode                                                            |
 | `bun run crawltest:preview`          | Crawl test in preview mode                                                        |
+| `bun run test:regression-suite`      | The app's never-break flows (`tests/regression-suite.md`) in a browser            |
 | `bun run test:auth-reset-api`        | Password reset API endpoint verification                                          |
 | `bun run test:auth-reset-ui-dev`     | Password reset UI E2E in dev mode                                                 |
 | `bun run test:auth-reset-ui-preview` | Password reset UI E2E in preview mode                                             |
@@ -154,6 +155,37 @@ app that removed one of those pages fails its own release crawl until that entry
 routes the app does not serve, add the ones it added, and record the file in `.templateoverrides` as
 a `KEEP` that names which routes differ and why. Leave `schema` and `viewport` alone; the guard
 checks both against fixed values, and a capture taken at another size does not verify.
+
+## Regression Suite
+
+`tests/regression-suite.md` lists the five to ten flows the app must never break, such as signing
+in, creating its core record and finding it again after a restart. Each case is a `## TC-NNN:`
+heading with one fenced `tc` block of JSON steps; the file's own header and
+`scripts/lib/regression/suite.ts` describe the step vocabulary. The template ships its own baseline
+cases, and each derived app keeps and extends its copy.
+
+The full `smoke:qc` runs it after the build:
+
+1. `regression:fingerprint` records the managed Chrome, Bun and puppeteer in
+   `.regression/fingerprint.json`. It always runs.
+2. `test:regression-suite` seeds a database once, then gives every case its own copy and its own
+   backend under `data/regression-suite/<run>/`, with generated config and keys, on loopback. A
+   small proxy serves `frontend/dist` and forwards `/api`. Nothing reads the repository's `config/`
+   or `.env`, and the run directory is removed afterwards. A failing case names its step, the
+   expectation and the page it was on, and fails the gate. The step is cached on the tracked tree,
+   the build and the fingerprint, so an unchanged tree replays its pass.
+
+To run it by hand, build first, then:
+
+```bash
+bun run regression:fingerprint
+bun run test:regression-suite
+bun scripts/test-regression-suite.ts --suite path/to/other.md   # run a different suite file
+```
+
+To retire a flow, delete its case and renumber, so the change shows in review. The parser refuses
+a commented-out case, a gap in the numbering, a case with no expectation and CSS selectors. From
+3.51.3, an app on that template version or later fails the gate if it has no suite.
 
 ## Authentication Reset Testing
 
