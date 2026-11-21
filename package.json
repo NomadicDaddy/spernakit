@@ -243,6 +243,7 @@
 		"test:render-phase-sync": "bun scripts/test-render-phase-sync.ts",
 		"test:reset-packages": "bun scripts/test-reset-packages.ts",
 		"test:retention-zero": "bun scripts/test-retention-zero.ts",
+		"test:runtime-cache-inputs": "bun scripts/test-runtime-cache-inputs.ts",
 		"test:scaffolded-hooks": "bun scripts/test-scaffolded-hooks.ts",
 		"test:secret-permissions": "bun scripts/test-secret-permissions.ts",
 		"test:secrets-file": "bun scripts/test-secrets-file.ts",

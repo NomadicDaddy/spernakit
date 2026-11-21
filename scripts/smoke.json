@@ -321,6 +321,10 @@
 					"description": "The function-size ratchet reads rule offenders with their measures, refuses fatal, rule-less, empty and non-JSON ESLint reports, refuses to re-record a baseline, and its cache entry covers everything it measures"
 				},
 				{
+					"command": "bun run test:runtime-cache-inputs",
+					"description": "Each cached step keys the files it reads at run time (copied assets, documents, licence material, migrations), checked through the runner's own input collector"
+				},
+				{
 					"command": "bun run test:refresh-sessions",
 					"description": "One user signed in on several browsers keeps each sign-in: refresh, replay, logout and password change end only the sign-ins they mean"
 				},

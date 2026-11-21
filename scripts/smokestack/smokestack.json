@@ -625,7 +625,8 @@
 						"frontend/src/routes/routeGroups.tsx",
 						"scripts/lib/password-form-route.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-onboarding-password-step.ts"
+						"scripts/test-onboarding-password-step.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "The onboarding checklist reports the sysop password change from the database rather than affirming it, with the first-login toggle off and on",
@@ -677,7 +678,8 @@
 						"backend/src/utils/fieldSelection.ts",
 						"scripts/lib/audit-filter-seed.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-audit-outcome-filter.ts"
+						"scripts/test-audit-outcome-filter.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "A failed sign-in is filterable by outcome, carries its status on the row, and names the account it tried to use",
@@ -943,6 +945,34 @@
 						"logs/**",
 						"backups/**",
 						"artifacts/**",
+						".claude/**"
+					],
+					"inputs": [
+						".aidd/assertions.md",
+						".prettierrc",
+						"Dockerfile",
+						"backend/drizzle/**",
+						"docs/template/STACK.md",
+						"frontend/public/**",
+						"licenses/**",
+						"scripts/smokestack/lib/smokestack/*.ts",
+						"scripts/smokestack/smokestack.json",
+						"scripts/test-runtime-cache-inputs.ts"
+					]
+				},
+				"description": "Each cached step keys the files it reads at run time (copied assets, documents, licence material, migrations), checked through the runner's own input collector",
+				"name": "test:runtime-cache-inputs",
+				"run": ["bun", "run", "test:runtime-cache-inputs"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
 						".aidd/**",
 						".claude/**"
 					],
@@ -1159,7 +1189,8 @@
 						"backend/src/utils/preValidationRejection.ts",
 						"scripts/lib/auth-ordering.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-auth-before-validation.ts"
+						"scripts/test-auth-before-validation.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "A caller the route would reject is answered 401 or 403 before the body is validated, the rejection says nothing about the schema, public routes still return 400, and no route guards from beforeHandle",
@@ -1196,7 +1227,8 @@
 						"patches/elysia@1.4.32.patch",
 						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-api-key-request-signing.ts",
-						"scripts/test-elysia-native-params.ts"
+						"scripts/test-elysia-native-params.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "Native ESM/CJS numeric-parameter validation and encoded paths pass; mandatory API-key signing refuses missing or malformed headers and replayed nonces while correctly signed requests authenticate",
@@ -1229,7 +1261,8 @@
 						"frontend/src/pages/settings/auth/AuthenticationTab.tsx",
 						"scripts/lib/auth-ordering-fixture.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-auth-rate-limit-state.ts"
+						"scripts/test-auth-rate-limit-state.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "Settings reports the pre-boot rateLimit.authEnabled kill-switch alongside the editable auth rate limit switch, so the page cannot say requests are throttled while they go through, and the plugin and the settings API decide that from one shared rule",
@@ -1362,7 +1395,8 @@
 						"backend/src/routes/bugs.ts",
 						"backend/src/services/bugReportService.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-bug-report-whitespace.ts"
+						"scripts/test-bug-report-whitespace.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "A bug report whose description is empty once trimmed is refused rather than stored, every field the service trims is trimmed before the schema sees it, and a description opening with a blank line still gets a title",
@@ -1411,7 +1445,8 @@
 						"backend/src/routes/dashboards/**",
 						"backend/src/services/dashboard/**",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-dashboard-share-revoke.ts"
+						"scripts/test-dashboard-share-revoke.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "A dashboard share link can be revoked, answers like an unknown token afterwards, rotates on the next share, and is cleared when the dashboard is deleted",
@@ -1511,7 +1546,8 @@
 						"scripts/lib/step-up-password.ts",
 						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-step-up-password-message.ts",
-						"shared/src/errorCodes.ts"
+						"shared/src/errorCodes.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "A form that asks an already signed-in user for their current password says that the current password is wrong when it is, from every surface that asks for one, and answers with a status that does not send the client off to refresh the session or sign the user out",
@@ -1585,7 +1621,8 @@
 						"scripts/lib/username-parity.ts",
 						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-username-parity.ts",
-						"shared/src/usernamePolicy.ts"
+						"shared/src/usernamePolicy.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "The browser refuses exactly the usernames the API refuses, because the rule lives once in the shared policy and nothing under frontend or backend keeps its own copy of the allowed characters or builds its own verdict out of the shared bounds",
@@ -1882,7 +1919,10 @@
 						"scripts/generate-third-party-licenses.ts",
 						"scripts/smokestack/lib/license-core/**/*.ts",
 						"scripts/lib/third-party-licenses/**/*.ts",
-						"shared/package.json"
+						"shared/package.json",
+						".prettierrc",
+						"Dockerfile",
+						"licenses/**"
 					]
 				},
 				"description": "Third-party license inventory matches the installed graph",
@@ -2203,7 +2243,6 @@
 						"logs/**",
 						"backups/**",
 						"artifacts/**",
-						".aidd/**",
 						".claude/**"
 					],
 					"inputs": [
@@ -2211,7 +2250,8 @@
 						"scripts/*.ts",
 						"scripts/gate-conventions-allowlist.json",
 						"scripts/smokestack/*.ts",
-						"scripts/smokestack/lib/gate/**/*.ts"
+						"scripts/smokestack/lib/gate/**/*.ts",
+						".aidd/assertions.md"
 					]
 				},
 				"description": "Every gate follows docs/reference/gate-conventions.md",
@@ -2358,7 +2398,8 @@
 						"docs/template/CHANGELOG.md",
 						"docs/template/README.md",
 						"package.json",
-						"scripts/check-version-refs.ts"
+						"scripts/check-version-refs.ts",
+						"docs/template/STACK.md"
 					]
 				},
 				"description": "Current-state version claims in docs match package.json",
@@ -2532,7 +2573,8 @@
 						"bun.lock",
 						"backend/package.json",
 						"frontend/package.json",
-						"shared/package.json"
+						"shared/package.json",
+						"frontend/public/**"
 					],
 					"outputs": ["frontend/dist/index.html"]
 				},
@@ -3034,7 +3076,8 @@
 						"backend/src/utils/errorResponse.ts",
 						"backend/src/utils/logger.ts",
 						"scripts/lib/test-auth-keys.ts",
-						"scripts/test-security-fixes.ts"
+						"scripts/test-security-fixes.ts",
+						"backend/drizzle/**"
 					]
 				},
 				"description": "v2 signed-nonce API-key scheme and reset consumption race regressions",

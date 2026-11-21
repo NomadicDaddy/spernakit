@@ -76,6 +76,9 @@ export const UNCACHEABLE_STEPS = new Set([
 	// and the browser fingerprint. Only smokestack's git inventory can key that honestly; a glob list
 	// here would replay a pass after a change it does not name.
 	'test:regression-suite',
+	// Asks the active runner's collector about fourteen steps' keys; about four seconds, so it always
+	// runs here. The active runner keys it from its smokestack.json cache block.
+	'test:runtime-cache-inputs',
 	// Small seed-security fixtures always run; the rerun test also starts a disposable process.
 	'test:seed-announcement',
 	'test:seed-credentials-never-logged',
