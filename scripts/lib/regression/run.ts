@@ -210,7 +210,11 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 			for (const path of failed) {
 				console.error(`[WARN] could not remove generated config or data: ${path}`);
 			}
-			console.log(`   Evidence (logs and screenshots only) kept in ${run.dir}`);
+			console.log(
+				failed.length === 0
+					? `   Evidence (logs and screenshots only) kept in ${run.dir}`
+					: `   Evidence kept in ${run.dir}, with the ${String(failed.length)} item(s) above still in it`,
+			);
 		} else {
 			removeRun(run);
 		}
