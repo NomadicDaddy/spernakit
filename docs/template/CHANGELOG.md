@@ -3,6 +3,16 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.5] - 2026-11-21
+
+### Fixed
+
+- A regression-suite run that passes now removes its throwaway run directory the same careful way
+  a failed one strips it: the generated config with its keys goes first, every other file is still
+  tried if one is locked, and anything that couldn't be removed is printed as a warning instead of
+  stopping the cleanup. Before, a database still held open could stop the removal part-way and
+  leave the keys behind. The hourly clean-up of abandoned run directories works the same way.
+
 ## [3.51.4] - 2026-11-21
 
 ### Changed
