@@ -23,11 +23,11 @@ import {
 import { handleAdminResetPassword, handleUnlockUser } from './handlers-admin.ts';
 import {
 	handleCreateUser,
-	handleDeleteUser,
 	handleGetUserById,
 	handleListUsers,
 	handleUpdateUser,
 } from './handlers-crud.ts';
+import { handleDeleteUser } from './handlers-delete.ts';
 
 /* ------------------------------------------------------------------ */
 /*  Routes                                                             */
