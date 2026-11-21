@@ -7,7 +7,7 @@
  * browser, and runs its steps. Every case starts from the same seeded state, so no case can change
  * another's baseline, and `restartBackend` restarts only that case's backend on its own file.
  */
-import type { Page } from 'puppeteer';
+import type { Browser, Page } from 'puppeteer';
 
 import type { TestCase } from './suite.ts';
 
@@ -43,6 +43,17 @@ function signInAs(role: string): { email: string; password: string } {
 	return credential;
 }
 
+/**
+ * Close the case's browser and stop its backend. Each release runs whatever the other does, and
+ * the first failure is thrown once both have been tried.
+ */
+async function release(browser: Browser | null, backend: Backend | null): Promise<void> {
+	const failures: unknown[] = [];
+	if (browser !== null) await browser.close().catch((err: unknown) => failures.push(err));
+	if (backend !== null) await stopBackend(backend).catch((err: unknown) => failures.push(err));
+	if (failures.length > 0) throw failures[0];
+}
+
 async function runCase(
 	run: Run,
 	testCase: TestCase,
@@ -51,10 +62,12 @@ async function runCase(
 ): Promise<CaseResult> {
 	const dbFile = `tc-${String(index + 1).padStart(3, '0')}.db`;
 	copySnapshot(run, 'seed.db', dbFile);
-	let backend: Backend | null = await startBackend(run, frontend.origin, dbFile);
-	frontend.setBackend(backend.origin);
-	const browser = await launchManaged();
+	let backend: Backend | null = null;
+	let browser: Browser | null = null;
 	try {
+		backend = await startBackend(run, frontend.origin, dbFile);
+		frontend.setBackend(backend.origin);
+		browser = await launchManaged();
 		const page: Page = await browser.newPage();
 		await page.setViewport({ height: 900, width: 1440 });
 		const leftOrigin = guardOrigin(page, frontend.origin);
@@ -113,8 +126,7 @@ async function runCase(
 		}
 		return { id: testCase.id, title: testCase.title };
 	} finally {
-		await browser.close();
-		if (backend !== null) await stopBackend(backend);
+		await release(browser, backend);
 	}
 }
 
@@ -124,8 +136,9 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 	if (kept.length > 0)
 		console.log(`   Left in place (not provably abandoned): ${kept.join(', ')}`);
 	const run = createRun();
-	const frontend = startFrontendProxy();
+	let frontend: null | ReturnType<typeof startFrontendProxy> = null;
 	try {
+		frontend = startFrontendProxy();
 		const seed = await startBackend(run, frontend.origin, 'seed.db');
 		await stopBackend(seed);
 		freezeSnapshot(run, 'seed.db');
@@ -141,7 +154,7 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 		}
 		return results;
 	} finally {
-		frontend.stop();
+		frontend?.stop();
 		removeRun(run);
 	}
 }

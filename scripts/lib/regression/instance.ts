@@ -152,20 +152,59 @@ function scrubbedEnv(): Record<string, string> {
 	return env;
 }
 
-async function healthy(origin: string, deadline: number): Promise<boolean> {
-	while (Date.now() < deadline) {
+/** How long one health request may take before the attempt counts it as unanswered. */
+const FETCH_DEADLINE_MS = 2_000;
+/** How long a killed child may take to exit before the run gives up on it. */
+const KILL_DEADLINE_MS = 5_000;
+
+/** Wait for `child` to exit within `ms`; true when it did. */
+async function exitedWithin(child: Bun.Subprocess, ms: number): Promise<boolean> {
+	return Promise.race([child.exited.then(() => true), Bun.sleep(ms).then(() => false)]);
+}
+
+/** Stop `child`: SIGTERM, then SIGKILL, each waited on under its own deadline. */
+async function settle(child: Bun.Subprocess, graceMs: number): Promise<void> {
+	child.kill('SIGTERM');
+	if (await exitedWithin(child, graceMs)) return;
+	child.kill('SIGKILL');
+	if (await exitedWithin(child, KILL_DEADLINE_MS)) return;
+	throw new Error(`backend process ${String(child.pid)} did not exit after SIGKILL.`);
+}
+
+/**
+ * Whether the child we started is serving: it wrote its ready file naming its own pid and the
+ * port it bound, it is still running, and /api/v1/health answers 200 there. Another listener on
+ * the port cannot pass, because only our child writes that file, and only after its own bind.
+ */
+async function ready(child: Bun.Subprocess, readyFile: string, port: number): Promise<boolean> {
+	const deadline = Date.now() + HEALTH_DEADLINE_MS;
+	while (Date.now() < deadline && child.exitCode === null) {
+		let owned = false;
 		try {
-			const res = await fetch(`${origin}/api/v1/health`);
-			if (res.ok) return true;
+			const claim = JSON.parse(readFileSync(readyFile, 'utf8')) as {
+				pid?: number;
+				port?: number;
+			};
+			owned = claim.pid === child.pid && claim.port === port;
 		} catch {
-			// Not listening yet.
+			// Not written yet.
+		}
+		if (owned) {
+			try {
+				const res = await fetch(`http://127.0.0.1:${String(port)}/api/v1/health`, {
+					signal: AbortSignal.timeout(FETCH_DEADLINE_MS),
+				});
+				if (res.ok && child.exitCode === null) return true;
+			} catch {
+				// Not answering yet, or the request ran past its deadline.
+			}
 		}
 		await Bun.sleep(250);
 	}
 	return false;
 }
 
-/** A port nothing is listening on right now. The caller retries if the backend loses the race. */
+/** A port nothing is listening on right now. A lost bind exits the child, and the caller retries. */
 function candidatePort(): number {
 	const probe = Bun.listen({ hostname: '127.0.0.1', port: 0, socket: { data() {} } });
 	const port = probe.port;
@@ -174,8 +213,9 @@ function candidatePort(): number {
 }
 
 /**
- * Start a backend on `dbFile` and wait for /api/v1/health under a deadline. A bind race or a slow
- * start retries on a fresh port, up to three times; then the case fails with the log's tail.
+ * Start a backend on `dbFile` and wait until the child itself reports it is listening and answers
+ * health, under a deadline. A lost bind or a slow start stops that child and retries on a fresh
+ * port, up to three times; then the case fails with the log's tail.
  */
 export async function startBackend(
 	run: Run,
@@ -187,34 +227,26 @@ export async function startBackend(
 		const port = candidatePort();
 		writeConfig(run, port, frontendOrigin, dbFile);
 		const logPath = join(run.dir, `backend-${dbFile}-${String(attempt)}.log`);
-		const child = Bun.spawn(['bun', ENTRY, run.configDir], {
+		const readyFile = join(run.dir, `backend-${dbFile}-${String(attempt)}.ready.json`);
+		const child = Bun.spawn(['bun', ENTRY, run.configDir, readyFile], {
 			cwd: run.dir,
 			env: scrubbedEnv(),
 			stderr: Bun.file(logPath),
 			stdout: Bun.file(logPath),
 			windowsHide: true,
 		});
-		const origin = `http://127.0.0.1:${String(port)}`;
-		if (await healthy(origin, Date.now() + HEALTH_DEADLINE_MS))
-			return { origin, port, process: child };
-		child.kill();
-		await child.exited;
+		if (await ready(child, readyFile, port)) {
+			return { origin: `http://127.0.0.1:${String(port)}`, port, process: child };
+		}
+		await settle(child, KILL_DEADLINE_MS);
 		lastLog = existsSync(logPath) ? readFileSync(logPath, 'utf8').slice(-2000) : '';
 	}
-	throw new Error(`the isolated backend never answered /api/v1/health:\n${lastLog}`);
+	throw new Error(`the isolated backend never became ready:\n${lastLog}`);
 }
 
-/** Stop a backend and wait for it to exit, so its database file is closed. */
+/** Stop a backend and wait, under deadlines, for it to exit, so its database file is closed. */
 export async function stopBackend(backend: Backend): Promise<void> {
-	backend.process.kill('SIGTERM');
-	const exited = await Promise.race([
-		backend.process.exited.then(() => true),
-		Bun.sleep(STOP_DEADLINE_MS).then(() => false),
-	]);
-	if (!exited) {
-		backend.process.kill('SIGKILL');
-		await backend.process.exited;
-	}
+	await settle(backend.process, STOP_DEADLINE_MS);
 }
 
 /** Checkpoint the seeded snapshot's WAL and refuse to copy while one remains. */

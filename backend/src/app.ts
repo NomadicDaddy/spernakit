@@ -53,11 +53,13 @@ process.on('beforeExit', (code) => {
 	logger.flush?.();
 });
 
-let app!: { server: { stop: () => Promise<void> | void } | null };
+let app!: {
+	server: { port: number | undefined; stop: () => Promise<void> | void } | null;
+};
 
 async function createApp(
 	configDirOverride?: string,
-): Promise<{ server: { stop: () => Promise<void> | void } | null }> {
+): Promise<{ server: { port: number | undefined; stop: () => Promise<void> | void } | null }> {
 	// Initialize config
 	const config = initializeConfig(configDirOverride);
 	configureLogger(config);
@@ -198,8 +200,10 @@ async function createApp(
  * this with no argument and behaves exactly as before. `configDirOverride` is for throwaway
  * instances only, such as the regression suite's isolated backend, and has the meaning
  * initializeConfig gives it: read config and secrets from that directory, never config/.
+ *
+ * Resolves with the port the server actually bound, once it is listening; a failed bind exits.
  */
-export async function startBackend(configDirOverride?: string): Promise<void> {
+export async function startBackend(configDirOverride?: string): Promise<number | undefined> {
 	try {
 		app = await createApp(configDirOverride);
 	} catch (err) {
@@ -207,6 +211,7 @@ export async function startBackend(configDirOverride?: string): Promise<void> {
 		console.error('Startup failed:', err instanceof Error ? err.message : err);
 		process.exit(1);
 	}
+	return app.server?.port;
 }
 
 if (import.meta.main) await startBackend();
