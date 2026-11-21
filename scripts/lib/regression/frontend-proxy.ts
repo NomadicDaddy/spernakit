@@ -21,12 +21,27 @@ export interface FrontendProxy {
 }
 
 interface Relay {
+	/**
+	 * The browser's cookie and origin headers. The backend authenticates a WebSocket upgrade from
+	 * its auth cookie and checks its origin, so the relayed upgrade must carry both, as nginx's does.
+	 */
+	headers: Record<string, string>;
 	/** What the browser sent before the backend socket opened, sent in order once it does. */
 	pending: (ArrayBuffer | string)[];
 	/** The browser's path and query, so the backend sees the same socket URL. */
 	target: string;
 	upstream: null | WebSocket;
 }
+
+/**
+ * The runtime WebSocket is Bun's, which takes `{ headers }`. With the DOM lib loaded, bun-types
+ * defers the global's type to DOM's constructor, whose second argument is only protocols, so
+ * this names Bun's own declared signature for the one place that needs headers.
+ */
+const BunWebSocket = WebSocket as unknown as new (
+	url: string,
+	options?: Bun.WebSocketOptions,
+) => WebSocket;
 
 function distFile(pathname: string): null | string {
 	const relative = normalize(decodeURIComponent(pathname)).replace(/^[\\/]+/u, '');
@@ -47,7 +62,13 @@ export function startFrontendProxy(): FrontendProxy {
 		async fetch(request, srv) {
 			const url = new URL(request.url);
 			if (url.pathname === '/ws' || url.pathname.startsWith('/ws/')) {
+				const headers: Record<string, string> = {};
+				for (const name of ['cookie', 'origin']) {
+					const value = request.headers.get(name);
+					if (value !== null) headers[name] = value;
+				}
 				const data: Relay = {
+					headers,
 					pending: [],
 					target: `${url.pathname}${url.search}`,
 					upstream: null,
@@ -94,8 +115,9 @@ export function startFrontendProxy(): FrontendProxy {
 				else ws.data.pending.push(frame);
 			},
 			open(ws) {
-				const upstream = new WebSocket(
+				const upstream = new BunWebSocket(
 					`${backend.replace(/^http/u, 'ws')}${ws.data.target}`,
+					{ headers: ws.data.headers },
 				);
 				upstream.binaryType = 'arraybuffer';
 				ws.data.upstream = upstream;
