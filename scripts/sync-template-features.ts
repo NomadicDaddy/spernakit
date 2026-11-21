@@ -235,7 +235,7 @@ if (import.meta.main) {
 	// to the default pull and report the app clean. Bad arguments exit 2, drift exits 1.
 	let options: CliOptions;
 	try {
-		options = parseTemplateFeatureArgs(Bun.argv.slice(2));
+		options = parseTemplateFeatureArgs();
 	} catch (err) {
 		console.error(`[FAIL] sync-template-features: ${(err as Error).message}`);
 		console.error(

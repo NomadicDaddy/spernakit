@@ -15,7 +15,8 @@ export interface CliOptions {
 	template: string | undefined;
 }
 
-export function parseTemplateFeatureArgs(args: string[]): CliOptions {
+/** Parse the command line; defaults to this process's own arguments, read here beside parseArgs. */
+export function parseTemplateFeatureArgs(args: string[] = Bun.argv.slice(2)): CliOptions {
 	const { values } = parseArgs({
 		args,
 		options: {
