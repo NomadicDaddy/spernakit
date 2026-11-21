@@ -62,15 +62,20 @@ export function startFrontendProxy(): FrontendProxy {
 				// fetch decompresses what it receives, so a forwarded content-encoding header would
 				// describe bytes that are no longer compressed. Ask the backend for a plain body.
 				headers.delete('accept-encoding');
-				return fetch(`${backend}${url.pathname}${url.search}`, {
-					body:
-						request.method === 'GET' || request.method === 'HEAD'
-							? null
-							: await request.arrayBuffer(),
-					headers,
-					method: request.method,
-					redirect: 'manual',
-				});
+				try {
+					return await fetch(`${backend}${url.pathname}${url.search}`, {
+						body:
+							request.method === 'GET' || request.method === 'HEAD'
+								? null
+								: await request.arrayBuffer(),
+						headers,
+						method: request.method,
+						redirect: 'manual',
+					});
+				} catch {
+					// The backend is down, as during a restartBackend step: answer as nginx would.
+					return new Response('backend unavailable', { status: 502 });
+				}
 			}
 			const file = distFile(url.pathname) ?? join(DIST_DIR, 'index.html');
 			return new Response(Bun.file(file));

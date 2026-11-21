@@ -128,7 +128,10 @@ export function writeConfig(run: Run, port: number, frontendOrigin: string, dbFi
 		server: {
 			...defaults.server,
 			backendPort: port,
-			backendUrl: `http://127.0.0.1:${String(port)}`,
+			// The public URL, which is the token issuer. In production nginx serves both on one
+			// origin that outlives a restart; here the frontend proxy plays that part. A restarted
+			// backend gets a fresh port, so naming its own port would reject every session it issued.
+			backendUrl: frontendOrigin,
 			frontendUrl: frontendOrigin,
 			host: '127.0.0.1',
 			nodeEnv: 'development',

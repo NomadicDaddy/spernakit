@@ -5,6 +5,13 @@
  * never CSS, and each must match exactly one element, so a step can't silently act on the wrong
  * one. A wait that runs out fails the step with what was expected. `signIn` and `restartBackend`
  * need the runner's session and instance, so it supplies them as callbacks.
+ *
+ * `click` and `fill` act inside the page rather than through CDP input. Real CDP input stops
+ * reaching the page shortly after an authenticated Spernakit route mounts (seen on two Chrome
+ * builds and two puppeteer versions; the suite's first run hit it on /workspaces, where the
+ * Create Workspace click opened nothing). So a click is the pointer sequence a user's press makes
+ * and then the element's click, and a fill writes the value through the native setter and fires
+ * `input`, the way crawltest does, so React sees the change.
  */
 import type { ElementHandle, Page } from 'puppeteer';
 
@@ -37,7 +44,7 @@ async function only(page: Page, selector: Selector): Promise<ElementHandle> {
 	try {
 		await page.waitForSelector(css, { timeout: WAIT_MS, visible: true });
 	} catch {
-		throw new Error(`${describe(selector)} never appeared.`);
+		throw new Error(`${describe(selector)} never appeared on ${new URL(page.url()).pathname}.`);
 	}
 	const matches = await page.$$(css);
 	if (matches.length !== 1) {
@@ -72,8 +79,52 @@ async function waitForText(page: Page, text: string): Promise<void> {
 			text,
 		);
 	} catch {
-		throw new Error(`the text "${text}" never appeared.`);
+		throw new Error(`the text "${text}" never appeared on ${new URL(page.url()).pathname}.`);
 	}
+}
+
+/** A user's press: pointer and mouse down and up, then click, all dispatched in the page. */
+async function press(element: ElementHandle): Promise<void> {
+	await element.evaluate((el) => {
+		if (!(el instanceof HTMLElement)) throw new Error('the target is not an HTML element.');
+		el.scrollIntoView({ block: 'center' });
+		const pointer = {
+			bubbles: true,
+			button: 0,
+			cancelable: true,
+			isPrimary: true,
+			pointerId: 1,
+		};
+		el.dispatchEvent(new PointerEvent('pointerdown', pointer));
+		el.dispatchEvent(new MouseEvent('mousedown', pointer));
+		el.focus();
+		el.dispatchEvent(new PointerEvent('pointerup', pointer));
+		el.dispatchEvent(new MouseEvent('mouseup', pointer));
+		el.click();
+	});
+}
+
+/** Replace a text field's value the way React notices: the native setter, then `input`. */
+async function fill(element: ElementHandle, value: string): Promise<void> {
+	const filled = await element.evaluate((el, text) => {
+		const proto =
+			el instanceof HTMLTextAreaElement
+				? HTMLTextAreaElement.prototype
+				: el instanceof HTMLInputElement
+					? HTMLInputElement.prototype
+					: null;
+		if (proto === null || !(el instanceof HTMLElement)) return false;
+		el.focus();
+		// React installs its own value setter on the element, so write past it to the prototype's.
+		// eslint-disable-next-line @typescript-eslint/unbound-method
+		const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+		if (setter === undefined) return false;
+		setter.call(el, text);
+		el.dispatchEvent(new Event('input', { bubbles: true }));
+		el.dispatchEvent(new Event('change', { bubbles: true }));
+		return true;
+	}, value);
+	if (!filled) throw new Error('the fill target is not a text input or textarea.');
 }
 
 export async function runStep(step: Step, ctx: StepContext): Promise<void> {
@@ -85,11 +136,9 @@ export async function runStep(step: Step, ctx: StepContext): Promise<void> {
 	} else if ('signIn' in step) {
 		await ctx.signIn();
 	} else if ('click' in step) {
-		await (await only(ctx.page, step.click)).click();
+		await press(await only(ctx.page, step.click));
 	} else if ('fill' in step) {
-		const element = await only(ctx.page, step.fill);
-		await element.click({ count: 3 });
-		await element.type(withRunId(step.value, ctx.runId), { delay: 5 });
+		await fill(await only(ctx.page, step.fill), withRunId(step.value, ctx.runId));
 	} else if ('expectUrl' in step) {
 		await waitForPath(ctx.page, step.expectUrl);
 	} else if ('expectText' in step) {
