@@ -24,17 +24,14 @@
  *     the holder a password they did not choose. The step reopens on `requiresPasswordChange`,
  *     which is the half of the predicate a timestamp check on its own cannot cover.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { OnboardingStep } from '../backend/src/services/onboardingService.ts';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { getDb } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
 import { signAccessToken } from '../backend/src/plugins/auth.ts';
@@ -47,10 +44,12 @@ import {
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { firstRoutePath, passwordStepLinkFailures } from './lib/password-form-route.ts';
+import { startTempDatabase } from './lib/temp-db-app.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STEP_ID = 'change-sysop-password';
+const TEMP_PREFIX = 'spernakit-onboarding-password-';
 /** Low bcrypt cost: this gate hashes a dozen passwords and is not measuring the hash. */
 const SEED_ROUNDS = 4;
 const NEW_PASSWORD = 'Chosen-By-The-Owner-9!';
@@ -85,23 +84,6 @@ function requireSysop(): SeededUser {
 		.find((user) => user.username === username);
 	if (!row) throw new Error(`the seed produced no ${username} account`);
 	return row;
-}
-
-function openDatabase(): string {
-	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-onboarding-password-'));
-	const dbPath = join(tmpDir, 'test.db');
-	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
-	initializeDatabase(dbPath);
-	return tmpDir;
-}
-
-async function teardown(tmpDir: string): Promise<void> {
-	await closeDatabase();
-	try {
-		rmSync(tmpDir, { force: true, recursive: true });
-	} catch {
-		// Windows may briefly hold the WAL file handle; temp cleanup is best-effort.
-	}
 }
 
 /** Run the real seed, which is what reads the password-change toggle. */
@@ -141,7 +123,7 @@ function stepOf(steps: OnboardingStep[], id: string): OnboardingStep | undefined
 
 /** Scenario 1: the default install, with the password-change toggle off. */
 async function defaultInstall(): Promise<void> {
-	const tmpDir = openDatabase();
+	const { dispose } = startTempDatabase(repoRoot, TEMP_PREFIX);
 	await seedAccounts();
 	const sysop = requireSysop();
 	assert(
@@ -191,12 +173,12 @@ async function defaultInstall(): Promise<void> {
 		stepOf(after, STEP_ID)?.completed === true,
 		'once the password has actually been changed the step must report complete',
 	);
-	await teardown(tmpDir);
+	await dispose();
 }
 
 /** Scenario 2: "Require Password Change on First Login" turned on, then the database re-seeded. */
 async function toggleOn(): Promise<void> {
-	const tmpDir = openDatabase();
+	const { dispose } = startTempDatabase(repoRoot, TEMP_PREFIX);
 	await seedAccounts();
 	updateAuthSettings({ requirePasswordChange: true }, requireSysop().id);
 	/*
@@ -267,7 +249,7 @@ async function toggleOn(): Promise<void> {
 		stepOf(getOnboardingStatus().steps, STEP_ID)?.completed === false,
 		'after an administrator reset the sysop is on a password it did not choose, so the step must open again',
 	);
-	await teardown(tmpDir);
+	await dispose();
 }
 
 async function run(): Promise<void> {

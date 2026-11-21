@@ -147,6 +147,7 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'frontend/src/routes/lazyPages.ts',
 			'frontend/src/routes/routeGroups.tsx',
 			'scripts/lib/password-form-route.ts',
+			'scripts/lib/temp-db-app.ts',
 			'scripts/lib/test-auth-keys.ts',
 			'scripts/test-onboarding-password-step.ts',
 		],
