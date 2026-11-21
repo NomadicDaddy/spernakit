@@ -159,6 +159,8 @@ const KILL_DEADLINE_MS = 5_000;
 
 /** Every backend child this process has started and not yet seen exit. */
 const liveBackends = new Set<Bun.Subprocess>();
+/** How many backends this process has started, which numbers their logs. */
+let backendStarts = 0;
 
 /** Kill every live backend child at once; for an interrupted run, which cannot wait on them. */
 export function killLiveBackends(): void {
@@ -231,11 +233,14 @@ export async function startBackend(
 	dbFile: string,
 ): Promise<Backend> {
 	let lastLog = '';
+	// Numbered per start, so a restarted backend never writes over the log from before the restart.
+	const start = ++backendStarts;
 	for (let attempt = 1; attempt <= 3; attempt++) {
 		const port = candidatePort();
 		writeConfig(run, port, frontendOrigin, dbFile);
-		const logPath = join(run.dir, `backend-${dbFile}-${String(attempt)}.log`);
-		const readyFile = join(run.dir, `backend-${dbFile}-${String(attempt)}.ready.json`);
+		const name = `backend-${dbFile}-start${String(start)}-attempt${String(attempt)}`;
+		const logPath = join(run.dir, `${name}.log`);
+		const readyFile = join(run.dir, `${name}.ready.json`);
 		const child = Bun.spawn(['bun', ENTRY, run.configDir, readyFile], {
 			cwd: run.dir,
 			env: scrubbedEnv(),

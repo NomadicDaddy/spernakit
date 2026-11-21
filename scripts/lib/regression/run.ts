@@ -9,6 +9,9 @@
  */
 import type { Browser, Page } from 'puppeteer';
 
+import { readdirSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+
 import type { TestCase } from './suite.ts';
 
 import { getSeedCredential } from '../../../backend/src/utils/auth/passwordGenerator.ts';
@@ -37,6 +40,15 @@ export interface CaseResult {
 }
 
 type SeedRole = Parameters<typeof getSeedCredential>[0];
+
+/** Strip a failed run down to its diagnostics: delete every file but logs and screenshots. */
+function keepOnlyEvidence(run: Run): void {
+	for (const entry of readdirSync(run.dir, { withFileTypes: true })) {
+		// owner.json stays: removeAbandonedRuns needs it to clear this directory later.
+		const keep = entry.isFile() && /\.(?:log|png)$|^owner\.json$/u.test(entry.name);
+		if (!keep) rmSync(join(run.dir, entry.name), { force: true, recursive: true });
+	}
+}
 
 function signInAs(role: string): { email: string; password: string } {
 	const credential = getSeedCredential(role as SeedRole);
@@ -170,9 +182,20 @@ export async function runSuite(cases: TestCase[]): Promise<CaseResult[]> {
 		process.off('SIGTERM', interrupted);
 		frontend?.stop();
 		if (keepEvidence) {
-			// Its logs and login-error screenshots explain the failure. It is gitignored, and a
-			// later run removes it once it is an hour old and this process is gone.
-			console.log(`   Evidence kept in ${run.dir}`);
+			// Only the logs and login-error screenshots explain a failure. The generated config
+			// holds private keys and the databases hold seeded accounts, and this tree can be
+			// mirrored whatever .gitignore says, so those go either way. A later run removes the
+			// rest once it is an hour old and this process is gone.
+			try {
+				keepOnlyEvidence(run);
+				console.log(`   Evidence (logs and screenshots only) kept in ${run.dir}`);
+			} catch (err) {
+				// Reported, not thrown: the case failure that brought us here is the error to show.
+				const why = err instanceof Error ? err.message : String(err);
+				console.error(
+					`[WARN] could not strip generated config and databases from ${run.dir}: ${why}`,
+				);
+			}
 		} else {
 			removeRun(run);
 		}

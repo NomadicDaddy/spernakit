@@ -59,18 +59,38 @@ export async function managedExecutable(): Promise<string> {
 
 const CLOSE_DEADLINE_MS = 10_000;
 
+const KILL_DEADLINE_MS = 5_000;
+
 /**
- * Close a browser within a deadline. A close that does not settle in time kills the browser
- * process and fails, so no caller waits on it forever.
+ * Close a browser within a deadline. A close that rejects or does not settle in time kills the
+ * browser process, waits (bounded) until it has exited, and then fails, so no caller waits forever
+ * and no Chrome outlives a failed close.
  */
 export async function closeBounded(browser: Browser): Promise<void> {
+	const chrome = browser.process();
 	const closed = await Promise.race([
-		browser.close().then(() => true),
+		browser.close().then(
+			() => true,
+			() => false,
+		),
 		Bun.sleep(CLOSE_DEADLINE_MS).then(() => false),
 	]);
 	if (closed) return;
-	browser.process()?.kill('SIGKILL');
-	throw new Error(`the browser did not close within ${String(CLOSE_DEADLINE_MS)} ms; killed it.`);
+	if (chrome === null)
+		throw new Error('the browser did not close, and it has no process to kill.');
+	const gone = (): boolean => chrome.exitCode !== null || chrome.signalCode !== null;
+	const exited = new Promise<boolean>((resolve) => {
+		chrome.once('exit', () => resolve(true));
+	});
+	if (!gone()) chrome.kill('SIGKILL');
+	const confirmed =
+		gone() || (await Promise.race([exited, Bun.sleep(KILL_DEADLINE_MS).then(() => false)]));
+	if (!confirmed) {
+		throw new Error(`browser process ${String(chrome.pid)} did not exit after SIGKILL.`);
+	}
+	throw new Error(
+		`the browser did not close within ${String(CLOSE_DEADLINE_MS)} ms or its close failed; killed it.`,
+	);
 }
 
 /**
