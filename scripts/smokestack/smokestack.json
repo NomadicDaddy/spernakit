@@ -1,6 +1,14 @@
 {
 	"fast": {
-		"steps": ["check:smoke-steps", "check:max-lines", "typecheck", "format:check", "lint"]
+		"steps": [
+			"check:smoke-steps",
+			"check:max-lines",
+			"check:gate-conventions",
+			"check:destructive-confirmation",
+			"typecheck",
+			"format:check",
+			"lint"
+		]
 	},
 	"qc": {
 		"steps": [
