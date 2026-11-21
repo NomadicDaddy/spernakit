@@ -66,8 +66,9 @@ function checkEveryEntryPointConfiguresTheLogger(): void {
 			.filter((line) => !/^\s*(?:\/\/|\*|\/\*)/.test(line))
 			.join('\n');
 		// As a statement or the right-hand side of an assignment, so a message that names the
-		// function is not counted.
-		if (!/(?:=|^)\s*initializeConfig\(\)/m.test(code)) continue;
+		// function is not counted. An argument is allowed: app.ts passes its optional config
+		// directory override through.
+		if (!/(?:=|^)\s*initializeConfig\([^)]*\)/m.test(code)) continue;
 		entryPoints += 1;
 		if (!/\bconfigureLogger\(/.test(code)) offenders.push(relative(repoRoot, file));
 	}
