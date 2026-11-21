@@ -1,8 +1,14 @@
 import type { WsMessage } from './types';
 
-import { PING_INTERVAL, PONG_TIMEOUT } from './constants';
 import { dispatchToHandlers } from './dispatcher';
+import { Heartbeat } from './heartbeat';
 import { checkBackendReachable, ReconnectScheduler } from './reconnect';
+import {
+	addRetrySignalListeners,
+	isRetrySignal,
+	removeRetrySignalListeners,
+	type RetrySignalHandler,
+} from './retrySignals';
 import { getWsUrl } from './utils';
 
 type ConnectionState = 'connected' | 'connecting' | 'disconnected';
@@ -13,8 +19,7 @@ class WebSocketManager {
 	private static instance: null | WebSocketManager = null;
 	private ws: null | WebSocket = null;
 	private disconnectTimeout: null | ReturnType<typeof setTimeout> = null;
-	private pingInterval: null | ReturnType<typeof setInterval> = null;
-	private pongTimeout: null | ReturnType<typeof setTimeout> = null;
+	private heartbeat = new Heartbeat(() => this.ws);
 	private reconnectScheduler = new ReconnectScheduler(
 		() => {
 			void this.doConnect();
@@ -27,7 +32,7 @@ class WebSocketManager {
 	private setConnectionState: ((state: ConnectionState) => void) | null = null;
 	private subscribers = 0;
 
-	private retrySignalHandler: (() => void) | null = null;
+	private retrySignalHandler: null | RetrySignalHandler = null;
 
 	private constructor() {}
 
@@ -113,7 +118,9 @@ class WebSocketManager {
 	private handleOpen(): void {
 		this.reconnectScheduler.resetAttempts();
 		this.setConnectionState?.('connected');
-		this.startHeartbeat();
+		// Clear every timer, the reconnect scheduler's included, before the heartbeat starts.
+		this.clearTimers();
+		this.heartbeat.start();
 	}
 
 	private hasActiveSocket(): boolean {
@@ -132,10 +139,7 @@ class WebSocketManager {
 		}
 
 		if (msg.type === 'pong') {
-			if (this.pongTimeout) {
-				clearTimeout(this.pongTimeout);
-				this.pongTimeout = null;
-			}
+			this.heartbeat.pongReceived();
 			return;
 		}
 
@@ -210,29 +214,6 @@ class WebSocketManager {
 		}, STRICT_MODE_DISCONNECT_DELAY_MS);
 	}
 
-	private startHeartbeat(): void {
-		this.clearTimers();
-
-		this.pingInterval = setInterval(() => {
-			this.sendHeartbeatPing();
-		}, PING_INTERVAL);
-	}
-
-	private sendHeartbeatPing(): void {
-		const socket = this.ws;
-		if (socket === null || socket.readyState !== socket.OPEN) return;
-		if (this.pongTimeout) return;
-
-		try {
-			socket.send(JSON.stringify({ type: 'ping' }));
-		} catch {
-			socket.close();
-			return;
-		}
-
-		this.pongTimeout = setTimeout(() => this.ws?.close(), PONG_TIMEOUT);
-	}
-
 	private sendChannelCommand(type: 'subscribe' | 'unsubscribe', channel: string): void {
 		const socket = this.ws;
 		if (socket === null || socket.readyState !== socket.OPEN) return;
@@ -248,15 +229,11 @@ class WebSocketManager {
 		if (this.retrySignalHandler) return;
 
 		this.retrySignalHandler = (event?: Event) => {
-			const isVisibleSignal =
-				event?.type === 'visibilitychange' && document.visibilityState === 'visible';
-			const isOnlineSignal = event?.type === 'online';
-
-			if (!isVisibleSignal && !isOnlineSignal) return;
+			if (!isRetrySignal(event)) return;
 			if (this.intentionalClose) return;
 			const socket = this.ws;
 			if (socket && socket.readyState === socket.OPEN) {
-				this.sendHeartbeatPing();
+				this.heartbeat.sendPing();
 				return;
 			}
 			if (socket && socket.readyState === socket.CONNECTING) return;
@@ -264,27 +241,18 @@ class WebSocketManager {
 			void this.probeBackendAndReconnect();
 		};
 
-		document.addEventListener('visibilitychange', this.retrySignalHandler);
-		window.addEventListener('online', this.retrySignalHandler);
+		addRetrySignalListeners(this.retrySignalHandler);
 	}
 
 	private stopRetrySignalListeners(): void {
 		if (this.retrySignalHandler) {
-			document.removeEventListener('visibilitychange', this.retrySignalHandler);
-			window.removeEventListener('online', this.retrySignalHandler);
+			removeRetrySignalListeners(this.retrySignalHandler);
 			this.retrySignalHandler = null;
 		}
 	}
 
 	private clearTimers(): void {
-		if (this.pingInterval) {
-			clearInterval(this.pingInterval);
-			this.pingInterval = null;
-		}
-		if (this.pongTimeout) {
-			clearTimeout(this.pongTimeout);
-			this.pongTimeout = null;
-		}
+		this.heartbeat.clear();
 		this.reconnectScheduler.clearTimers();
 	}
 
