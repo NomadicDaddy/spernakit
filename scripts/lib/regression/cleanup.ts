@@ -43,10 +43,17 @@ export function removeEntries(dir: string, keep: (entry: Dirent) => boolean): st
 	return failed;
 }
 
-/** Remove a whole run directory: its entries config-first, then the directory once it is empty. */
+/**
+ * Remove a whole run directory: its entries config-first, then owner.json, then the directory.
+ * owner.json goes last on purpose: while anything else remains, it is what lets a later run's
+ * abandoned-run cleanup (removeAbandonedRuns) recognise the directory and try again, so a lock
+ * that clears later never strands the directory.
+ */
 export function removeRunDir(dir: string): string[] {
-	const failed = removeEntries(dir, () => false);
+	const failed = removeEntries(dir, (entry) => entry.name === 'owner.json');
 	if (failed.length > 0 || !existsSync(dir)) return failed;
+	const last = removeEntries(dir, () => false);
+	if (last.length > 0) return last;
 	try {
 		rmdirSync(dir);
 	} catch (err) {
