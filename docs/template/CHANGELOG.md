@@ -3,6 +3,17 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.0] - 2026-11-22
+
+### Security
+
+- An open WebSocket's scheduled re-check of its token and account now always runs, so the gap
+  between checks stays within the configured two-minute interval (a busy event loop can still run
+  one late). It used to share a throttle with the checks on incoming messages, so a message just
+  before a scheduled check could skip it and leave up to about two and a half minutes between
+  checks. Only the checks on incoming messages are throttled now, and a connection that was never
+  checked is checked on its first message.
+
 ## [3.51.12] - 2026-11-22
 
 ### Fixed
