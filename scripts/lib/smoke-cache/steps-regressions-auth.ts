@@ -217,4 +217,14 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'shared/src/usernamePolicy.ts',
 		],
 	},
+	// Drives the real WebSocket revalidation with a fake clock and reads the handlers' timer call,
+	// so its world is the backend sources, their config defaults and the gate itself.
+	'test:ws-revalidation-ceiling': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/src/**',
+			'backend/src/config/defaults.json',
+			'scripts/test-ws-revalidation-ceiling.ts',
+		],
+	},
 };
