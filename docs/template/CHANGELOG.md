@@ -3,6 +3,18 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.2] - 2026-11-22
+
+### Changed
+
+- Dependencies are updated to this week's fleet versions: @tanstack/react-query 5.108.2,
+  @tanstack/react-virtual 3.14.28, lucide-react 1.77.0, react-router 8.5.2, recharts 3.11.0,
+  tailwind-merge 3.7.1, @zxcvbn-ts/core 4.3.0 and language-common 4.2.0, and nodemailer 10.6.1.
+  The build and lint tooling moves too: @rolldown/plugin-babel 0.3.1 (the React Compiler's
+  Babel step), puppeteer 25.18.1, typescript-eslint 8.73.0, eslint-plugin-jsdoc 65.5.2,
+  eslint-plugin-perfectionist 5.14.0, eslint-plugin-react-refresh 0.5.8 and knip 6.48.0.
+  TypeScript stays at 6.0.3.
+
 ## [3.52.1] - 2026-11-22
 
 ### Changed
