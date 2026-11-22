@@ -22,6 +22,8 @@ copyright line to reproduce. Their terms are the standard text of the declared l
 reproduced in the summary document; the copyright holder is the package author.
 
 - `@scalar/openapi-types@0.2.0` (MIT)
+- `@zxcvbn-ts/core@4.3.0` (MIT)
+- `@zxcvbn-ts/language-common@4.2.0` (MIT)
 - `drizzle-orm@0.45.4` (Apache-2.0)
 - `emoji-regex@8.0.0` (MIT)
 - `pg-types@2.2.0` (MIT)
@@ -1818,7 +1820,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/query-core@5.107.1
+### @tanstack/query-core@5.108.2
 
 License: MIT
 
@@ -1846,7 +1848,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-query@5.107.1
+### @tanstack/react-query@5.108.2
 
 License: MIT
 
@@ -1930,7 +1932,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/react-virtual@3.14.26
+### @tanstack/react-virtual@3.14.28
 
 License: MIT
 
@@ -2014,7 +2016,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @tanstack/virtual-core@3.19.11
+### @tanstack/virtual-core@3.19.13
 
 License: MIT
 
@@ -2406,33 +2408,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @zxcvbn-ts/core@4.2.0
+### @zxcvbn-ts/core@4.3.0
 
 License: MIT
-
-```text
-Copyright (c) 2012-2016 Dan Wheeler and Dropbox, Inc.
-Copyright (c) 2021 @zxcvbn-ts
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```
 
 ### @zxcvbn-ts/dictionary-compression@3.0.1
 
@@ -2462,32 +2440,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### @zxcvbn-ts/language-common@4.1.3
+### @zxcvbn-ts/language-common@4.2.0
 
 License: MIT
 
+NOTICE:
+
 ```text
-Copyright (c) 2012-2016 Dan Wheeler and Dropbox, Inc.
-Copyright (c) 2021 @zxcvbn-ts
+This package includes data derived from third-party sources in passwords.json and diceware.json.
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+passwords.json
+Source: Mark Burnett's ten million passwords release
+(https://medium.com/xato-security/today-i-am-releasing-ten-million-passwords-b6278bbe7495)
+As in the original zxcvbn (https://github.com/dropbox/zxcvbn#acknowledgments):
+Mark Burnett for releasing his 10M password corpus and for his 2005 book, Perfect Passwords: Selection, Protection, Authentication.
+License: the source author states that he is releasing the data set to the public domain
+(see the source article above). No position is taken here on the legal effect of that
+dedication in every jurisdiction.
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+diceware.json
+Source: Electronic Frontier Foundation, "New Wordlists for Random Passphrases" (2016)
+(https://www.eff.org/deeplinks/2016/07/new-wordlists-random-passphrases)
+Obtained via https://github.com/dmuth/diceware/blob/main/assets/wordlist/wordlist-5-dice-eff.js
+(Apache-2.0 repository; the wordlist there is credited to the EFF page above).
+License: no licence is stated for the wordlist itself. The EFF website states that its original
+material is licensed under Creative Commons Attribution 4.0 International (CC BY 4.0)
+(https://www.eff.org/copyright).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Any redistribution of this package must retain this notice.
 ```
 
 ### ansi-regex@5.0.1
@@ -4403,7 +4383,7 @@ will be liable to anyone for any damages related to this
 software or this license, under any kind of legal claim.***
 ```
 
-### lucide-react@1.73.0
+### lucide-react@1.77.0
 
 License: ISC
 
@@ -4523,7 +4503,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### nodemailer@10.5.0
+### nodemailer@10.6.1
 
 License: MIT-0
 
@@ -5535,7 +5515,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### react-router@8.5.1
+### react-router@8.5.2
 
 License: MIT
 
@@ -5621,7 +5601,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-### recharts@3.10.1
+### recharts@3.11.0
 
 License: MIT
 
@@ -6046,7 +6026,7 @@ The above copyright notice and this permission notice shall be included in all c
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
-### tailwind-merge@3.7.0
+### tailwind-merge@3.7.1
 
 License: MIT
 
