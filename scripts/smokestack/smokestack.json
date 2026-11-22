@@ -3354,6 +3354,19 @@
 			{
 				"cache": {
 					"inputs": [
+						"backend/src/**/*.ts",
+						"backend/src/config/defaults.json",
+						"scripts/test-ws-revalidation-ceiling.ts",
+						"package.json"
+					]
+				},
+				"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the two-minute ceiling",
+				"name": "test:ws-revalidation-ceiling",
+				"run": ["bun", "run", "test:ws-revalidation-ceiling"]
+			},
+			{
+				"cache": {
+					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**/*.ts",
 						"backend/src/config/defaults.json",

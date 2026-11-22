@@ -109,13 +109,16 @@ function handleOpen(ws: {
 	// Arm periodic revalidation so idle connections still re-verify JWT/user state on the
 	// framework cadence. Jitter spreads timer fires across connections to avoid a thundering
 	// herd (all connections would otherwise align on the 2-minute grid when started at boot).
-	// Jitter is SUBTRACTED from the base interval so the effective ceiling between revalidations
-	// never exceeds WS_REVALIDATION_INTERVAL_MS (2 minutes) — see ASSERT-042.
+	// Jitter is SUBTRACTED from the base interval, and the timer always runs the full check
+	// (force), so a recent message-driven check can't throttle a tick and the gap between full
+	// checks never exceeds WS_REVALIDATION_INTERVAL_MS (2 minutes). Only checks on incoming
+	// messages are throttled. See ASSERT-042.
 	const revalTimer = setInterval(
 		() => {
 			const stillValid = revalidateConnection(
 				{ close: (code, reason) => rawWs.close(code, reason) },
 				wsContext,
+				true,
 			);
 			if (!stillValid) {
 				clearInterval(revalTimer);

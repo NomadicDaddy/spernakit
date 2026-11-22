@@ -29,10 +29,31 @@ function extractTokenTimestamps(cookieHeader: null | string): {
 	return { tokenExpiresAt, tokenIssuedAt };
 }
 
-/** Revalidate JWT expiry, account status, and blanket token revocation. */
+/**
+ * Whether a message-driven check can skip the account lookups because the last full check is
+ * recent. The periodic timer never asks: it passes `force`, so a message shortly before a tick
+ * can't push the next full check a whole period later (ASSERT-042).
+ */
+function recentlyValidated(ctx: WsContext, now: number): boolean {
+	return (
+		!ctx.lastValidatedAt ||
+		now - ctx.lastValidatedAt <= WS_REVALIDATION_INTERVAL_MS - WS_REVALIDATION_JITTER_MS
+	);
+}
+
+/**
+ * Revalidate JWT expiry, account status, and blanket token revocation.
+ *
+ * @param ws - The socket to close when the connection is no longer valid
+ * @param ctx - The connection's context
+ * @param force - True from the periodic timer, which always runs the full check; message-driven
+ *   checks leave it false and are throttled to once per interval minus jitter
+ * @returns False when the socket was closed
+ */
 function revalidateConnection(
 	ws: { close: (code?: number, reason?: string) => void },
 	ctx: WsContext,
+	force = false,
 ): boolean {
 	const now = Date.now();
 
@@ -42,13 +63,7 @@ function revalidateConnection(
 		return false;
 	}
 
-	// The timer fires no later than interval - jitter, preserving the two-minute ceiling.
-	if (
-		!ctx.lastValidatedAt ||
-		now - ctx.lastValidatedAt <= WS_REVALIDATION_INTERVAL_MS - WS_REVALIDATION_JITTER_MS
-	) {
-		return true;
-	}
+	if (!force && recentlyValidated(ctx, now)) return true;
 
 	ctx.lastValidatedAt = now;
 

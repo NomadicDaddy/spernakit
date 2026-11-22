@@ -12,8 +12,9 @@ const WS_REVALIDATION_INTERVAL_MS = 120_000;
 
 /**
  * Thundering-herd jitter applied to the revalidation timer. Subtracted from the base interval
- * (never added) so the effective ceiling between revalidations stays at or below
- * WS_REVALIDATION_INTERVAL_MS (2 minutes) — see ASSERT-042.
+ * (never added), and the timer always runs the full check, so the effective ceiling between
+ * revalidations stays at or below WS_REVALIDATION_INTERVAL_MS (2 minutes) — see ASSERT-042.
+ * Message-driven checks are throttled to once per interval minus this jitter.
  */
 const WS_REVALIDATION_JITTER_MS = 30_000;
 
