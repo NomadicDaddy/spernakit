@@ -86,18 +86,16 @@ export function updatePackageJsonFiles(s: SetupSettings): void {
 		applySpernakitVersionOrdering(pkg, s.appSlug, spernakitVersion);
 		Object.assign(pkg, githubMeta);
 
-		// A derived project MAY publish its image - that is its owner's call, and removing the
-		// capability would just push them into hand-rolling a push. What the template removes is
-		// its OWN publish path (it distributes nothing, so it triggers no GPL/LGPL obligation).
-		// The derived app gets a publish path that names no registry by default, plus the
-		// compliance materials it must complete first: check:image-publication enforces that a
-		// project which CAN publish has a finished source offer. Publishing stays possible;
-		// publishing blind does not.
+		// Setup gives a derived app no image publish path. Its images serve the owner's own
+		// deployments and are never given to anyone, so there is no distribution and no GPL/LGPL
+		// source obligation to meet. Setup used to add
+		// docker:image:push and release:publish here, which undid the owner's removal of them on
+		// every re-run (Phillip #61862; Roger #61876). Publishing would be the owner's new
+		// decision: add a push script by hand, and check:image-publication then requires a
+		// completed licenses/SOURCE-OFFER.md before that path can pass.
 		const scripts = pkg['scripts'] as Record<string, string> | undefined;
 		if (scripts) {
 			rewriteGateScriptsThenPrune(scripts, (file) => existsSync(file.replace(/^\.\//, '')));
-			scripts['docker:image:push'] = 'bun scripts/docker-image.ts push';
-			scripts['release:publish'] = 'bun run docker:image:push';
 		}
 	});
 

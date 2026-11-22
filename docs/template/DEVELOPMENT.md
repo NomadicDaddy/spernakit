@@ -142,18 +142,20 @@ image. A project that hands an image to someone else becomes the distributor of 
 it. A template that distributes nothing triggers nothing, which is why it ships
 `licenses/CONTAINER-DISTRIBUTION.md` (guidance) rather than a corresponding-source offer.
 
-**A derived application may publish its image** - that is its owner's decision, and `bun run setup`
-gives it the publish path. What it may not do is publish blind:
+**A derived application does not publish its image either.** Its images serve the owner's own
+deployments and are never pushed to a public registry or given to anyone. So `bun run setup`
+gives a derived app no publish path: no `docker:image:push` and no `release:publish`.
 
 - `setup` installs `licenses/SOURCE-OFFER.md` from the template, with `<LEGAL ENTITY>` and
-  `<CONTACT ADDRESS>` left as placeholders for the owner to fill in.
+  `<CONTACT ADDRESS>` left as placeholders. Nothing is distributed, so no offer is made, and the
+  placeholders stay.
 - In a derived app, `check:image-publication` inverts: a project that **can** publish must have a
-  **completed** offer. Placeholders fail the gate, because an offer a recipient cannot act on is
-  not an offer.
-- `docker:image:push` requires `IMAGE_REGISTRY` (the template names no registry for you) and
-  refuses to push while the offer is missing or unfilled.
-- If you never publish, delete `licenses/SOURCE-OFFER.md` and the publication scripts. Nothing
-  obliges an offer for software you do not distribute, and the guard then has nothing to check.
+  **completed** offer. With no publish path it has nothing to check and passes. Placeholders fail
+  the gate the moment a publish path appears, because an offer a recipient cannot act on is not
+  an offer.
+- Publishing would be the owner's new decision. It starts with completing the offer, then adding
+  a push script by hand. `bun scripts/docker-image.ts push` requires `IMAGE_REGISTRY` (the
+  template names no registry for you) and refuses to push while the offer is missing or unfilled.
 
 ### Template Drift Detection
 

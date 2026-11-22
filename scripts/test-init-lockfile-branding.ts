@@ -29,6 +29,7 @@ try {
 	writePackage(fixture, {
 		name: 'spernakit',
 		private: true,
+		scripts: { 'app-task': 'echo kept' },
 		version: '3.48.1',
 		workspaces: ['backend', 'frontend', 'shared'],
 	});
@@ -55,6 +56,18 @@ try {
 		frontendPort: '49780',
 	});
 	assert.equal(readFileSync(join(fixture, 'bun.lock'), 'utf8'), originalLock);
+	// Setup gives a derived app no image publish path (setup-adds-no-image-publish-path).
+	const branded = JSON.parse(readFileSync(join(fixture, 'package.json'), 'utf8')) as {
+		scripts?: Record<string, string>;
+	};
+	assert.equal(
+		branded.scripts?.['docker:image:push'],
+		undefined,
+		'setup added docker:image:push',
+	);
+	assert.equal(branded.scripts?.['release:publish'], undefined, 'setup added release:publish');
+	assert.equal(branded.scripts?.['app-task'], 'echo kept', "setup changed the app's own script");
+	console.log('[OK] Setup adds no image publish script and keeps the app-owned one');
 	const stale = install(true);
 	assert.notEqual(stale.code, 0, 'branding without lock refresh must fail frozen install');
 	assert.match(stale.output, /lockfile had changes/);

@@ -118,20 +118,21 @@ function claimAppLicense(s: SetupSettings): void {
 }
 
 /**
- * License materials a derived project needs before it can publish an image.
+ * License materials for a derived project's container images.
  *
- * The template ships guidance and no offer, because it distributes nothing. A derived project
- * that publishes DOES distribute, so it needs its own offer — and shipping the template's
- * guidance verbatim would be worse than shipping nothing: it names Spernakit and NomadicDaddy,
- * and an owner could reasonably read it as covering them. So setup rewrites the guidance for
- * this project and drops in the offer template, with placeholders that the publication guard and
- * `docker:image:push` both refuse to ship.
+ * The template ships guidance and no offer, because it distributes nothing, and a derived app
+ * distributes nothing either: setup gives it no publish path, and its images serve the owner's
+ * own deployments. Shipping the template's guidance verbatim would
+ * still be wrong: it names Spernakit and NomadicDaddy, and an owner could reasonably read it as
+ * covering them. So setup rewrites the guidance for this project and drops in the offer
+ * template, with placeholders that check:image-publication refuses if a publish path is ever
+ * added.
  */
 export function updateLicenseFiles(s: SetupSettings): void {
 	claimAppLicense(s);
 	updateFile('licenses/CONTAINER-DISTRIBUTION.md', {
-		"Derived-project owners should obtain legal advice for their own distribution model. Spernakit's\nlocal build and image checks prove buildability and inventory coverage; they do not grant a\nderived project permission to publish an image or fulfill that project's source obligations.": `If you publish an image, complete \`licenses/SOURCE-OFFER.md\` first: \`check:image-publication\`\nand \`docker:image:push\` both refuse to ship an image while it is missing or still contains\nplaceholders. If you never publish, delete that file and the publication scripts instead —\nnothing obliges you to make an offer for software you do not distribute. Obtain legal advice for\nyour own distribution model; the build and image checks prove buildability and inventory\ncoverage, not compliance.`,
-		'Spernakit builds container images only as local verification artifacts. The template project\ndoes not publish, supply, or offer those images to downstream users. This document is guidance,\nnot a corresponding-source offer by NomadicDaddy.': `${s.appName} builds container images with \`bun run docker:image:build\`. Whether it publishes\nthem is this project's decision. This document is guidance, not a corresponding-source offer by\nthe Spernakit template or its author.`,
+		"Derived-project owners should obtain legal advice for their own distribution model. Spernakit's\nlocal build and image checks prove buildability and inventory coverage; they do not grant a\nderived project permission to publish an image or fulfill that project's source obligations.": `Publishing an image would be a new decision for the owner. It would mean adding a push script\nand first completing \`licenses/SOURCE-OFFER.md\`, which keeps its \`<LEGAL ENTITY>\` and\n\`<CONTACT ADDRESS>\` placeholders because no offer is made for software that is not distributed.\n\`check:image-publication\` refuses a publication path while those placeholders remain. Obtain\nlegal advice for any distribution model; the build and image checks prove buildability and\ninventory coverage, not compliance.`,
+		'Spernakit builds container images only as local verification artifacts. The template project\ndoes not publish, supply, or offer those images to downstream users. This document is guidance,\nnot a corresponding-source offer by NomadicDaddy.': `${s.appName} builds container images with \`bun run docker:image:build\`, for the owner's own\ndeployments only. It does not publish them: setup gives the project no image push or\npublication script, so \`check:image-publication\` finds no publication path. This document is\nguidance, not a corresponding-source offer by the Spernakit template or its author.`,
 	});
 
 	// Consuming the template is a one-way step, so this pass has to survive being re-run. `reset`
