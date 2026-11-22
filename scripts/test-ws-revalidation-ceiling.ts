@@ -16,6 +16,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import { initializeConfig } from '../backend/src/config/configLoader.ts';
+import { getAppSlug, loadDefaults } from '../backend/src/config/configUtils.ts';
 import { WS_REVALIDATION_INTERVAL_MS, type WsContext } from '../backend/src/routes/ws/wsAuth.ts';
 import { revalidateConnection } from '../backend/src/routes/ws/wsRevalidation.ts';
 
@@ -46,7 +47,13 @@ function ranFullCheck(ctx: WsContext, force: boolean): boolean {
 }
 
 // A throwaway config directory, created from defaults, so neither the checkout's own config nor its
-// split secrets can change the result behind the step's cache key (Roger 5Q-1, 27cf159).
+// split secrets can change the result behind the step's cache key (Roger 5Q-1, 27cf159). The
+// app's slug-prefixed environment overrides are dropped for the same reason (Roger 5Q-1, 3be4f05):
+// the cache keys no environment value but PATH, and a short override fails schema validation.
+const envPrefix = `${getAppSlug(loadDefaults()).toUpperCase().replace(/-/g, '_')}_`;
+for (const name of Object.keys(process.env)) {
+	if (name.startsWith(envPrefix)) delete process.env[name];
+}
 const configDir = mkdtempSync(join(tmpdir(), 'spernakit-ws-ceiling-'));
 try {
 	initializeConfig(configDir);
