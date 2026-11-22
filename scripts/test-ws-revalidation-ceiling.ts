@@ -59,6 +59,14 @@ assert(
 	ranFullCheck(contextValidatedAgo(91), false),
 	'a message 91 s after the last check runs the full check',
 );
+const neverValidated: WsContext = {
+	tokenExpiresAt: Date.now() + WS_REVALIDATION_INTERVAL_MS * 10,
+	wsUser: null,
+};
+assert(
+	ranFullCheck(neverValidated, false),
+	'a message on a connection never validated runs the full check (Morticia L-1)',
+);
 assert(
 	ranFullCheck(contextValidatedAgo(1), true),
 	'the timer runs the full check however recent the last one was',

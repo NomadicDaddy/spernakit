@@ -378,7 +378,7 @@ Steps (in order):
 110. `bun run test:alert-cooldown`
      - A check that stays degraded or unhealthy keeps one open alert and reminds from it once per cooldown, escalation sends a critical at once, and a healthy check resolves its alert.
 111. `bun run test:ws-revalidation-ceiling`
-     - The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the two-minute ceiling.
+     - The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the configured two-minute interval.
 112. `bun run test:workspace-deleted-hook`
      - Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged.
 113. `bun run test:worktree-hooks-path`

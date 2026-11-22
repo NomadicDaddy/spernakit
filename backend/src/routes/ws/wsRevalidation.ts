@@ -32,11 +32,12 @@ function extractTokenTimestamps(cookieHeader: null | string): {
 /**
  * Whether a message-driven check can skip the account lookups because the last full check is
  * recent. The periodic timer never asks: it passes `force`, so a message shortly before a tick
- * can't push the next full check a whole period later (ASSERT-042).
+ * can't push the next full check a whole period later (ASSERT-042). A connection never validated
+ * is not recent, so its first message-driven check runs in full.
  */
 function recentlyValidated(ctx: WsContext, now: number): boolean {
 	return (
-		!ctx.lastValidatedAt ||
+		ctx.lastValidatedAt !== undefined &&
 		now - ctx.lastValidatedAt <= WS_REVALIDATION_INTERVAL_MS - WS_REVALIDATION_JITTER_MS
 	);
 }

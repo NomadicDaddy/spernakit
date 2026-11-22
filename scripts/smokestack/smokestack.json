@@ -3360,7 +3360,7 @@
 						"package.json"
 					]
 				},
-				"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the two-minute ceiling",
+				"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the configured two-minute interval",
 				"name": "test:ws-revalidation-ceiling",
 				"run": ["bun", "run", "test:ws-revalidation-ceiling"]
 			},

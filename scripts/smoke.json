@@ -590,7 +590,7 @@
 				},
 				{
 					"command": "bun run test:ws-revalidation-ceiling",
-					"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the two-minute ceiling"
+					"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the configured two-minute interval"
 				},
 				{
 					"command": "bun run test:workspace-deleted-hook",

@@ -110,9 +110,10 @@ function handleOpen(ws: {
 	// framework cadence. Jitter spreads timer fires across connections to avoid a thundering
 	// herd (all connections would otherwise align on the 2-minute grid when started at boot).
 	// Jitter is SUBTRACTED from the base interval, and the timer always runs the full check
-	// (force), so a recent message-driven check can't throttle a tick and the gap between full
-	// checks never exceeds WS_REVALIDATION_INTERVAL_MS (2 minutes). Only checks on incoming
-	// messages are throttled. See ASSERT-042.
+	// (force), so a recent message-driven check can't throttle a tick. The scheduled gap between
+	// full checks is then at most WS_REVALIDATION_INTERVAL_MS (2 minutes), the configured ceiling;
+	// a delayed event loop can still run a tick late. Only checks on incoming messages are
+	// throttled. See ASSERT-042.
 	const revalTimer = setInterval(
 		() => {
 			const stillValid = revalidateConnection(
