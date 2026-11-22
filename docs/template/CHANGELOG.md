@@ -3,6 +3,26 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.1] - 2026-11-22
+
+### Changed
+
+- Spernakit now requires Bun 1.4.5 (packageManager `bun@1.4.5`, engines `>=1.4.5`), and the
+  container image builds on `oven/bun:1.4.5-alpine`. CI and the release workflow take the Bun
+  version from package.json, so they move with it.
+
+### Fixed
+
+- A fresh install under Bun 1.4.5 no longer splits Elysia into several copies and fails
+  typecheck. Elysia's optional peers (`openapi-types`, `@sinclair/typebox`) are now declared
+  alongside it, so the backend, the root and the Swagger plugin share one copy.
+
+### Upgrade notes
+
+- Derived apps take Bun 1.4.5 and the two declared packages together at their next template
+  upgrade. Until then, a fresh `bun install` under 1.4.5 in an app still on 3.52.0 or earlier
+  fails typecheck.
+
 ## [3.52.0] - 2026-11-22
 
 ### Security
