@@ -50,9 +50,10 @@ function ranFullCheck(ctx: WsContext, force: boolean): boolean {
 // split secrets can change the result behind the step's cache key (Roger 5Q-1, 27cf159). The
 // app's slug-prefixed environment overrides are dropped for the same reason (Roger 5Q-1, 3be4f05):
 // the cache keys no environment value but PATH, and a short override fails schema validation.
+// Windows looks names up case-insensitively, so the comparison is too (Roger, f7078eb).
 const envPrefix = `${getAppSlug(loadDefaults()).toUpperCase().replace(/-/g, '_')}_`;
 for (const name of Object.keys(process.env)) {
-	if (name.startsWith(envPrefix)) delete process.env[name];
+	if (name.toUpperCase().startsWith(envPrefix)) delete process.env[name];
 }
 const configDir = mkdtempSync(join(tmpdir(), 'spernakit-ws-ceiling-'));
 try {
