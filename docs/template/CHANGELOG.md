@@ -3,6 +3,23 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.12] - 2026-11-22
+
+### Fixed
+
+- A health check that stays degraded or unhealthy now keeps one open alert for as long as the
+  condition lasts, instead of adding a new one every 20 minutes. Reminders are sent from that alert
+  once per `alerting.cooldownMinutes`, at either severity, and a send no channel delivered is
+  retried at the next check. Going from degraded to unhealthy closes the warning and sends a
+  critical alert at once; falling back keeps the critical alert without an extra notice.
+- A check that reports healthy again now resolves its open alert, so a later recurrence is
+  recorded and sent at once rather than waiting out the cooldown.
+
+### Upgrade notes
+
+- Open alerts left over from the old behaviour collapse to the newest one for each check the next
+  time that check fails, and all of them resolve the next time it passes. No migration is needed.
+
 ## [3.51.11] - 2026-11-22
 
 ### Changed
