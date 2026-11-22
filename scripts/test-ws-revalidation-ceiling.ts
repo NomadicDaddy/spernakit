@@ -11,8 +11,9 @@
  * The context carries no user, so the checks below exercise the throttle and the expiry check
  * without a database: a full check is visible as lastValidatedAt moving to now.
  */
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 
 import { initializeConfig } from '../backend/src/config/configLoader.ts';
 import { WS_REVALIDATION_INTERVAL_MS, type WsContext } from '../backend/src/routes/ws/wsAuth.ts';
@@ -44,7 +45,14 @@ function ranFullCheck(ctx: WsContext, force: boolean): boolean {
 	);
 }
 
-initializeConfig();
+// A throwaway config directory, created from defaults, so neither the checkout's own config nor its
+// split secrets can change the result behind the step's cache key (Roger 5Q-1, 27cf159).
+const configDir = mkdtempSync(join(tmpdir(), 'spernakit-ws-ceiling-'));
+try {
+	initializeConfig(configDir);
+} finally {
+	rmSync(configDir, { force: true, recursive: true });
+}
 
 // The defect's trace: a message-driven check 28 s ago, then the timer tick.
 assert(
