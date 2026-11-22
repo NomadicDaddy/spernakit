@@ -3341,6 +3341,7 @@
 						"backend/drizzle/**",
 						"backend/src/**/*.ts",
 						"backend/src/config/defaults.json",
+						"scripts/lib/alert-test-disk.ts",
 						"scripts/lib/test-auth-keys.ts",
 						"scripts/test-alert-cooldown.ts",
 						"package.json"

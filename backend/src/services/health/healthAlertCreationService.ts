@@ -79,7 +79,15 @@ function meetsAlertThreshold(check: HealthCheckInput): boolean {
 	return checkSeverity >= thresholdSeverity;
 }
 
+/**
+ * Alerts whose send is still running. notifiedAt is written only once a send completes, so without
+ * this a check run during the first send (an on-demand check, or a slow channel's retries reaching
+ * the next scheduled run) would find the row never notified and send it again.
+ */
+const sendsInFlight = new Set<number>();
+
 async function dispatchAlertNotifications(alert: AlertRow): Promise<void> {
+	sendsInFlight.add(alert.id);
 	try {
 		const results = await sendAlertWithRetry({
 			checkType: alert.checkType,
@@ -115,6 +123,20 @@ async function dispatchAlertNotifications(alert: AlertRow): Promise<void> {
 			},
 			'Alert notification failed',
 		);
+	} finally {
+		sendsInFlight.delete(alert.id);
+	}
+}
+
+/**
+ * Send a reminder from the open row when one is due and none is already being sent.
+ *
+ * @param current - The check type's one open alert
+ */
+function remindIfDue(current: AlertRow): void {
+	if (sendsInFlight.has(current.id)) return;
+	if (isReminderDue(current.notifiedAt, getConfig().alerting.cooldownMinutes)) {
+		void dispatchAlertNotifications(current);
 	}
 }
 
@@ -165,8 +187,11 @@ function syncFailingCheck(check: HealthCheckInput): void {
 	const severity = alertSeverityFor(check.status);
 	const current = openAlertFor(check.checkType);
 
+	// A result below alertThreshold neither opens an alert nor reminds; an open row stays until
+	// the check recovers.
+	if (!meetsAlertThreshold(check)) return;
 	if (!current) {
-		if (meetsAlertThreshold(check)) openAlert(check, severity);
+		openAlert(check, severity);
 		return;
 	}
 	if (current.severity === 'warn' && severity === 'critical') {
@@ -174,9 +199,7 @@ function syncFailingCheck(check: HealthCheckInput): void {
 		openAlert(check, severity);
 		return;
 	}
-	if (isReminderDue(current.notifiedAt, getConfig().alerting.cooldownMinutes)) {
-		void dispatchAlertNotifications(current);
-	}
+	remindIfDue(current);
 }
 
 export { syncCheckAlert };

@@ -8,10 +8,8 @@
  * never resolved its alerts.
  *
  * Every case drives the real consumer, runAndStoreSingleCheck('disk'), against a throwaway
- * migrated SQLite database with real seeded admins (the in-app channel's recipients). The disk
- * thresholds are set through updateHealthConfig so the real check reads healthy, degraded or
- * unhealthy. Time passing is simulated by moving an open row's notifiedAt back, never by setting
- * resolvedAt. Cooldown is 60 minutes.
+ * migrated SQLite database with real seeded admins (the in-app channel's recipients), through the
+ * helpers in lib/alert-test-disk.ts. Cooldown is 60 minutes.
  */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -29,81 +27,32 @@ import {
 	getActiveAlerts,
 	resolveAlert,
 } from '../backend/src/services/health/healthAlertService.ts';
-import { runAndStoreSingleCheck } from '../backend/src/services/health/healthChecks.ts';
-import { updateHealthConfig } from '../backend/src/services/health/healthConfigService.ts';
 import { cleanupStaleAlerts } from '../backend/src/services/health/healthHistoryService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
+import {
+	ageOpenRow,
+	deliveredAfter,
+	diskAlerts,
+	MINUTE,
+	notificationCount,
+	onlyOpenIs,
+	openDisk,
+	openStamp,
+	resetDisk,
+	runDisk,
+	secondStart,
+	setAlertThreshold,
+	setConfigAdmin,
+	setDisk,
+} from './lib/alert-test-disk.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 const COOLDOWN = 60;
-const MINUTE = 60_000;
-type Alert = typeof healthCheckAlerts.$inferSelect;
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
-}
-
-let adminId = 0;
-/** Make the real disk check read the given status on this machine. */
-function setDisk(status: 'degraded' | 'healthy' | 'unhealthy'): void {
-	const thresholds = {
-		degraded: { diskSpaceDegradedThreshold: 0.9999, diskSpaceUnhealthyThreshold: 0.00001 },
-		healthy: { diskSpaceDegradedThreshold: 0.00002, diskSpaceUnhealthyThreshold: 0.00001 },
-		unhealthy: { diskSpaceDegradedThreshold: 0.9999, diskSpaceUnhealthyThreshold: 0.9998 },
-	}[status];
-	updateHealthConfig(thresholds, adminId);
-}
-
-function runDisk(expected: string): void {
-	const result = runAndStoreSingleCheck('disk');
-	if (result?.status !== expected)
-		throw new Error(`disk check read ${result?.status}, not ${expected}`);
-}
-
-function diskAlerts(): Alert[] {
-	return getDb()
-		.select()
-		.from(healthCheckAlerts)
-		.all()
-		.filter((alert) => alert.checkType === 'disk');
-}
-const openDisk = (): Alert[] => diskAlerts().filter((alert) => alert.resolvedAt === null);
-
-/** Dispatch is fire-and-forget; wait for the open row's notifiedAt to move past `after`. */
-async function deliveredAfter(after: number): Promise<boolean> {
-	for (let attempt = 0; attempt < 40; attempt++) {
-		const stamp = openDisk()[0]?.notifiedAt?.getTime();
-		if (stamp !== undefined && stamp > after) return true;
-		await new Promise((settled) => setTimeout(settled, 50));
-	}
-	return false;
-}
-
-/** notifiedAt is stored in whole seconds, so compare a fresh send against the second it began. */
-function secondStart(): number {
-	return Math.floor(Date.now() / 1000) * 1000 - 1;
-}
-
-/** Move the open row's notifiedAt or createdAt back by `minutes`, to stand in for time passing. */
-function ageOpenRow(minutes: number, field: 'createdAt' | 'notifiedAt' = 'notifiedAt'): void {
-	const [open] = openDisk();
-	if (!open) throw new Error('no open disk alert to age');
-	getDb()
-		.update(healthCheckAlerts)
-		.set({ [field]: new Date(Date.now() - minutes * MINUTE) })
-		.where(eq(healthCheckAlerts.id, open.id))
-		.run();
-}
-
-const openStamp = (): number => openDisk()[0]?.notifiedAt?.getTime() ?? 0;
-const onlyOpenIs = (severity: 'critical' | 'warn'): boolean =>
-	openDisk().length === 1 && openDisk()[0]?.severity === severity;
-
-function resetDisk(): void {
-	setDisk('healthy');
-	runDisk('healthy');
 }
 
 async function longDegraded(): Promise<void> {
@@ -248,6 +197,41 @@ async function undeliveredRetries(): Promise<void> {
 	assert(openDisk().length === 1, 'G: the retry uses the same row');
 }
 
+/** Notifications from one degraded run, optionally with a second run while its send is pending. */
+async function sendsFromOpening(secondRunWhilePending: boolean): Promise<number> {
+	resetDisk();
+	const before = notificationCount();
+	setDisk('degraded');
+	runDisk('degraded');
+	if (secondRunWhilePending) runDisk('degraded');
+	await deliveredAfter(0);
+	await Bun.sleep(300);
+	return notificationCount() - before;
+}
+
+async function pendingSendAndThreshold(): Promise<void> {
+	const single = await sendsFromOpening(false);
+	const withSecond = await sendsFromOpening(true);
+	assert(single > 0, 'H: an opening sends notifications');
+	assert(withSecond === single, 'H: a run while the first send is pending does not send again');
+
+	resetDisk();
+	setAlertThreshold('unhealthy');
+	setDisk('degraded');
+	runDisk('degraded');
+	assert(openDisk().length === 0, 'I: a result below alertThreshold opens nothing');
+	setAlertThreshold('degraded');
+	runDisk('degraded');
+	await deliveredAfter(0);
+	setAlertThreshold('unhealthy');
+	ageOpenRow(COOLDOWN + 1);
+	const aged = openStamp();
+	runDisk('degraded');
+	await Bun.sleep(300);
+	assert(openStamp() === aged, 'I: a result below alertThreshold sends no reminder');
+	setAlertThreshold('degraded');
+}
+
 initializeConfig();
 const config = getConfig();
 applyEphemeralAuthKeys(config.security);
@@ -264,12 +248,13 @@ try {
 	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
 	initializeDatabase(dbPath);
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), 4);
-	adminId = getDb().select({ id: users.id }).from(users).limit(1).get()?.id ?? 0;
+	setConfigAdmin(getDb().select({ id: users.id }).from(users).limit(1).get()?.id ?? 0);
 	await longDegraded();
 	await recoverAndRecur();
 	await escalateAndFallBack();
 	await overridesAndDuplicates();
 	await undeliveredRetries();
+	await pendingSendAndThreshold();
 } finally {
 	await closeDatabase();
 	// Statements cached on the closed handle keep the file open on Windows until collected.
