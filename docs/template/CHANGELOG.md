@@ -3,6 +3,23 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.11] - 2026-11-22
+
+### Changed
+
+- Carries Smokestack 1.0.5 in place of 1.0.4. A delivered gate marked fast must now run in every
+  fast gate: when a project's full gate runs `check:gate-conventions` or
+  `check:destructive-confirmation`, its fast gate has to run the same command, exactly as written,
+  or the runner refuses to start. This template already lists both in
+  `fast.steps`. Three delivered files that sat at the 300-line limit are split, with behaviour
+  unchanged.
+
+### Upgrade notes
+
+- A derived app whose `scripts/smokestack/smokestack.json` runs either gate in `qc.steps` but not in
+  `fast.steps` must add it to `fast.steps` before taking this version, or `smoke:qc` and
+  `smoke:qc:fast` will refuse to start.
+
 ## [3.51.10] - 2026-11-21
 
 ### Changed
