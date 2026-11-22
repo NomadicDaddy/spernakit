@@ -23,6 +23,10 @@ this release.
   once per `alerting.cooldownMinutes`, at either severity, and a send no channel delivered is
   retried at the next check. Going from degraded to unhealthy closes the warning and sends a
   critical alert at once; falling back keeps the critical alert without an extra notice.
+- A result below the health alert threshold (System Health's alert setting) now neither opens an
+  alert nor sends a reminder, so raising the threshold quiets an open warning until the check
+  recovers, which resolves it. A check that runs while an alert's first notice is still being sent
+  no longer sends it a second time.
 - A check that reports healthy again now resolves its open alert, so a later recurrence is
   recorded and sent at once rather than waiting out the cooldown.
 
