@@ -3,6 +3,22 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.51.10] - 2026-11-21
+
+### Changed
+
+- `bun run setup` no longer gives a derived app a container-image publish path: it adds neither
+  `docker:image:push` nor `release:publish`. A derived app's images serve its owner's own
+  deployments and are not given to anyone, and re-running setup used to put back publish scripts
+  an owner had removed. The guidance setup writes into `licenses/CONTAINER-DISTRIBUTION.md` and
+  `DEVELOPMENT.md` now says images are not published and that publishing would be a new decision
+  that starts with completing `licenses/SOURCE-OFFER.md`. `check:image-publication` is unchanged.
+
+### Upgrade notes
+
+- A derived app that still has `docker:image:push` or `release:publish` keeps them until its
+  owner removes them; setup no longer adds them, and it doesn't delete an app's own scripts.
+
 ## [3.51.9] - 2026-11-21
 
 ### Changed
