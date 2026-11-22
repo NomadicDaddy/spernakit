@@ -14,14 +14,14 @@ this release.
 ### Fixed
 
 - A fresh install under Bun 1.4.5 no longer splits Elysia into several copies and fails
-  typecheck. Elysia's optional peers (`openapi-types`, `@sinclair/typebox`) are now declared
-  alongside it, so the backend, the root and the Swagger plugin share one copy.
+  typecheck. Elysia's TypeBox and OpenAPI Types peers (`@sinclair/typebox`, `openapi-types`)
+  are now declared alongside it, so the backend, the root and the Swagger plugin share one copy.
 
 ### Upgrade notes
 
 - Derived apps take Bun 1.4.5 and the two declared packages together at their next template
-  upgrade. Until then, a fresh `bun install` under 1.4.5 in an app still on 3.52.0 or earlier
-  fails typecheck.
+  upgrade. Until then, an app on 3.52.0 or earlier that carries Elysia with `@elysiajs/swagger`
+  fails typecheck after a fresh `bun install` under 1.4.5.
 
 ## [3.52.0] - 2026-11-22
 
