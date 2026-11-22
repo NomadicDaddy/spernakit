@@ -26,6 +26,7 @@ by license family, and it does not inventory the Alpine base system.
 | [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)                             | 9.0.3   | MIT           |
 | [lru-cache](https://www.npmjs.com/package/lru-cache)                                   | 11.5.3  | BlueOak-1.0.0 |
 | [nodemailer](https://www.npmjs.com/package/nodemailer)                                 | 10.5.0  | MIT-0         |
+| [openapi-types](https://www.npmjs.com/package/openapi-types)                           | 12.1.3  | MIT           |
 | [otpauth](https://www.npmjs.com/package/otpauth)                                       | 9.6.0   | MIT           |
 | [pg](https://www.npmjs.com/package/pg)                                                 | 8.23.1  | MIT           |
 | [pino](https://www.npmjs.com/package/pino)                                             | 10.4.0  | MIT           |
@@ -121,7 +122,7 @@ Applies to: lucide-react.
 
 ### MIT License
 
-Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, @zxcvbn-ts/core, @zxcvbn-ts/language-common, clsx, cmdk, elysia, jsonwebtoken, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
+Applies to: @elysiajs/swagger, @radix-ui/react-alert-dialog, @radix-ui/react-avatar, @radix-ui/react-checkbox, @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-label, @radix-ui/react-popover, @radix-ui/react-progress, @radix-ui/react-select, @radix-ui/react-separator, @radix-ui/react-slot, @radix-ui/react-switch, @radix-ui/react-tabs, @radix-ui/react-tooltip, @sinclair/typebox, @tanstack/react-query, @tanstack/react-table, @tanstack/react-virtual, @types/pg, @zxcvbn-ts/core, @zxcvbn-ts/language-common, clsx, cmdk, elysia, jsonwebtoken, openapi-types, otpauth, pg, pino, pino-roll, qrcode, react, react-dom, react-grid-layout, react-router, recharts, sonner, tailwind-merge, zustand.
 
 Each MIT-licensed dependency is provided under the standard MIT License, with
 copyright held by the respective package authors as stated in that package.
@@ -194,7 +195,7 @@ it is not distributed, so it is not inventoried here.
 
 ## Bundled runtime: Bun and its LGPL components
 
-The local verification image is built on `oven/bun:1.4.3-alpine`, so it contains the Bun
+The local verification image is built on `oven/bun:1.4.5-alpine`, so it contains the Bun
 runtime, and Bun statically links libraries under the LGPL. This section records what a derived
 project must consider before distributing that image. Bun's own license text is reproduced in
 [`licenses/BUN-LICENSE.md`](./licenses/BUN-LICENSE.md); that file, this file, and the root
@@ -220,7 +221,7 @@ licenses in `licenses/BUN-LICENSE.md`.
 
 - The patched WebKit/JavaScriptCore that Bun links is published at
   <https://github.com/oven-sh/webkit>.
-- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.3`.
+- Bun itself (MIT) is at <https://github.com/oven-sh/bun>, tagged `bun-v1.4.5`.
 - TinyCC is at <https://github.com/tinycc/tinycc>.
 
 **How to modify the LGPL library and relink**

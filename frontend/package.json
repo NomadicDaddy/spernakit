@@ -56,9 +56,9 @@
 		"vite-plugin-compression2": "2.5.4"
 	},
 	"engines": {
-		"bun": ">=1.4.3"
+		"bun": ">=1.4.5"
 	},
-	"packageManager": "bun@1.4.3",
+	"packageManager": "bun@1.4.5",
 	"scripts": {
 		"build": "bunx tsc -p tsconfig.build.json && bunx vite build",
 		"dev": "bunx vite --host",

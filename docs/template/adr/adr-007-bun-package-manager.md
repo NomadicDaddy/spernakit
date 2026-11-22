@@ -197,7 +197,7 @@ Root `package.json`:
 		"bun": ">=1.4.3"
 	},
 	"name": "spernakit",
-	"packageManager": "bun@1.4.3",
+	"packageManager": "bun@1.4.5",
 	"scripts": {
 		"build": "bun run build",
 		"dev": "bun run dev",
@@ -262,7 +262,7 @@ pnpm-lock.yaml
 ````markdown
 ## Prerequisites
 
-- **Bun 1.4.3+** (Required package manager and runtime)
+- **Bun 1.4.5+** (Required package manager and runtime)
 
 [Install Bun](https://bun.sh)
 

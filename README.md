@@ -112,7 +112,7 @@ authoritative and update this README.
 
 ## Prerequisites
 
-- [Bun 1.4.3+](https://bun.sh) as the required package manager and runtime
+- [Bun 1.4.5+](https://bun.sh) as the required package manager and runtime
 - Node.js 24.x as optional compatibility tooling
 - SQLite by default, with PostgreSQL support through `config.database.dialect`
 
@@ -157,7 +157,7 @@ spernakit/
 
 | Layer                       | Technology                                      |
 | --------------------------- | ----------------------------------------------- |
-| Runtime and package manager | Bun 1.4.3+                                      |
+| Runtime and package manager | Bun 1.4.5+                                      |
 | Backend                     | Elysia + Drizzle ORM                            |
 | Database                    | SQLite by default, PostgreSQL supported         |
 | Frontend                    | React 19 + Vite 8                               |
