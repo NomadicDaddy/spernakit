@@ -3,7 +3,6 @@ import type { AlertData, AlertNotificationResult } from './alertWebhook.ts';
 import { getConfig } from '../../config/configLoader.ts';
 import { sleep } from '../../utils/async.ts';
 import { logger } from '../../utils/logger.ts';
-import { hasRecentAlert } from './alertCooldown.ts';
 import { sendEmailAlert } from './alertEmailNotification.ts';
 import { sendInAppAlert } from './alertInAppNotification.ts';
 import {
@@ -26,23 +25,9 @@ async function sendAlertNotifications(
 	alert: AlertData,
 	skipChannels?: Set<AlertChannel>,
 ): Promise<AlertNotificationResult[]> {
-	const config = getConfig();
-	const { alerting } = config;
-
-	// Check cooldown - for warnings only (critical alerts bypass cooldown)
-	if (alert.severity !== 'critical') {
-		if (hasRecentAlert(alert.checkType, alerting.cooldownMinutes, alert.id)) {
-			logger.info(
-				{
-					alertId: alert.id,
-					checkType: alert.checkType,
-					cooldownMinutes: alerting.cooldownMinutes,
-				},
-				'Alert notification skipped due to cooldown',
-			);
-			return [];
-		}
-	}
+	// The caller decides when an alert is due (healthAlertCreationService: a new or escalated row
+	// at once, a reminder once per cooldown from the open row), so every call here sends.
+	const { alerting } = getConfig();
 
 	// Dispatch enabled channels in parallel — failures in one channel don't affect others
 	const channelPromises: Promise<AlertNotificationResult>[] = [];

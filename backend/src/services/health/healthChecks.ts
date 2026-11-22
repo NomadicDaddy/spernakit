@@ -6,7 +6,7 @@ import { getConfig } from '../../config/configLoader.ts';
 import { getDb } from '../../db/index.ts';
 import { healthCheckLogs } from '../../db/schema/healthChecks.ts';
 import { logger } from '../../utils/logger.ts';
-import { createAlertAndNotify } from './healthAlertCreationService.ts';
+import { syncCheckAlert } from './healthAlertCreationService.ts';
 import {
 	checkDatabase,
 	checkDiskSpace,
@@ -136,15 +136,12 @@ export function runAndStoreChecks(): HealthCheckResult {
 		db.insert(healthCheckLogs).values(logsToInsert).run();
 	}
 
+	// Every result, healthy included: a healthy one resolves its check's open alert.
 	for (const check of result.checks) {
-		if (check.status === 'healthy') {
-			continue;
-		}
-
 		try {
-			createAlertAndNotify(check);
+			syncCheckAlert(check);
 		} catch (err) {
-			logger.error({ err }, 'Failed to create health alert');
+			logger.error({ err }, 'Failed to update health alert');
 		}
 	}
 
@@ -203,12 +200,10 @@ export function runAndStoreSingleCheck(checkType: string): CheckResult | null {
 
 	storeCheckResult(result);
 
-	if (result.status !== 'healthy') {
-		try {
-			createAlertAndNotify(result);
-		} catch (err) {
-			logger.error({ err }, 'Failed to create health alert');
-		}
+	try {
+		syncCheckAlert(result);
+	} catch (err) {
+		logger.error({ err }, 'Failed to update health alert');
 	}
 
 	return result;

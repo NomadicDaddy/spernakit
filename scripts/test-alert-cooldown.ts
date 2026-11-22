@@ -1,26 +1,17 @@
 #!/usr/bin/env bun
 /**
- * Gate: the warning cooldown is measured from the last successful notification, not from the
- * newest alert row (`.aidd/features/audit-logic-1790885878-alert-cooldown-is-measured-from-the-
- * newest-alert-row-so-any-cooldown-above-15-mi`).
+ * Gate: a health check keeps one open alert per condition, reminds from it once per cooldown, and
+ * resolves it when the check recovers (`.aidd/features/health-alert-resolve-on-recovery`).
  *
- * The defect: a new alert row is created every 15 minutes while a check stays degraded, and the
- * cooldown asked whether any unresolved alert of that type was created within cooldownMinutes.
- * Each suppressed row was itself recent, so with a cooldown above 15 minutes the first warning
- * was the only one ever sent.
+ * The defects: a check that stayed degraded added a new unresolved row every 20 minutes (the
+ * creation dedup looked back only 15 minutes, and checks run every 5), and a check that recovered
+ * never resolved its alerts.
  *
- * Against a throwaway migrated SQLite database with real seeded admins (the in-app channel's
- * recipients), cooldown 60 minutes:
- *  1. The defect: a warning delivered 70 minutes ago plus a newer, never-delivered row created
- *     10 minutes ago does not suppress the next warning.
- *  2. Same-or-lower within the window: a warning delivered 10 minutes ago suppresses the next.
- *  3. Independent checks: a delivery for one check type does not suppress another.
- *  4. Resolved then recurring: a resolved alert's delivery does not suppress a new one.
- *  5. Escalation, through the real creation path: a same-severity repeat inside 15 minutes adds no
- *     row, escalating to unhealthy records a critical alert that is sent inside the warning
- *     window, and falling back to degraded adds nothing.
- *  6. A real createAlertAndNotify run stamps notifiedAt once a channel delivers, and leaves it
- *     null when every channel is off, so an undelivered row never starts a window.
+ * Every case drives the real consumer, runAndStoreSingleCheck('disk'), against a throwaway
+ * migrated SQLite database with real seeded admins (the in-app channel's recipients). The disk
+ * thresholds are set through updateHealthConfig so the real check reads healthy, degraded or
+ * unhealthy. Time passing is simulated by moving an open row's notifiedAt back, never by setting
+ * resolvedAt. Cooldown is 60 minutes.
  */
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -28,150 +19,233 @@ import { join, resolve } from 'node:path';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+// eq comes through the DB surface module: this script resolves dependencies from the root
+// manifest, which does not carry drizzle-orm.
+import { closeDatabase, eq, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { healthCheckAlerts } from '../backend/src/db/schema/healthChecks.ts';
+import { users } from '../backend/src/db/schema/users.ts';
 import { seedUsersIfEmpty } from '../backend/src/db/seed/users.ts';
-import { createAlertAndNotify } from '../backend/src/services/health/healthAlertCreationService.ts';
-import { hasRecentAlert } from '../backend/src/services/notification/alertCooldown.ts';
+import {
+	getActiveAlerts,
+	resolveAlert,
+} from '../backend/src/services/health/healthAlertService.ts';
+import { runAndStoreSingleCheck } from '../backend/src/services/health/healthChecks.ts';
+import { updateHealthConfig } from '../backend/src/services/health/healthConfigService.ts';
+import { cleanupStaleAlerts } from '../backend/src/services/health/healthHistoryService.ts';
 import { getSeedUsersWithPasswords } from '../backend/src/utils/auth/passwordGenerator.ts';
 import { applyEphemeralAuthKeys } from './lib/test-auth-keys.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 const COOLDOWN = 60;
 const MINUTE = 60_000;
+type Alert = typeof healthCheckAlerts.$inferSelect;
 
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
 }
 
-function minutesAgo(minutes: number): Date {
-	return new Date(Date.now() - minutes * MINUTE);
+let adminId = 0;
+/** Make the real disk check read the given status on this machine. */
+function setDisk(status: 'degraded' | 'healthy' | 'unhealthy'): void {
+	const thresholds = {
+		degraded: { diskSpaceDegradedThreshold: 0.9999, diskSpaceUnhealthyThreshold: 0.00001 },
+		healthy: { diskSpaceDegradedThreshold: 0.00002, diskSpaceUnhealthyThreshold: 0.00001 },
+		unhealthy: { diskSpaceDegradedThreshold: 0.9999, diskSpaceUnhealthyThreshold: 0.9998 },
+	}[status];
+	updateHealthConfig(thresholds, adminId);
 }
 
-/** Insert an alert row as the health checks would have, with chosen timestamps. */
-function insertAlert(input: {
-	checkType: string;
-	createdAt: Date;
-	notifiedAt?: Date;
-	resolvedAt?: Date;
-	severity?: 'critical' | 'warn';
-}): number {
-	const row = getDb()
-		.insert(healthCheckAlerts)
-		.values({
-			checkType: input.checkType,
-			createdAt: input.createdAt,
-			message: `${input.checkType} fixture`,
-			notifiedAt: input.notifiedAt ?? null,
-			resolvedAt: input.resolvedAt ?? null,
-			severity: input.severity ?? 'warn',
-		})
-		.returning({ id: healthCheckAlerts.id })
-		.get();
-	if (!row) throw new Error('alert insert returned no row');
-	return row.id;
+function runDisk(expected: string): void {
+	const result = runAndStoreSingleCheck('disk');
+	if (result?.status !== expected)
+		throw new Error(`disk check read ${result?.status}, not ${expected}`);
 }
 
-function cooldownCases(): void {
-	// 1. The defect scenario.
-	insertAlert({ checkType: 'disk', createdAt: minutesAgo(70), notifiedAt: minutesAgo(70) });
-	insertAlert({ checkType: 'disk', createdAt: minutesAgo(10) });
-	const candidate = insertAlert({ checkType: 'disk', createdAt: new Date() });
-	assert(
-		!hasRecentAlert('disk', COOLDOWN, candidate),
-		'1: a delivery 70 minutes ago must not suppress a warning when the cooldown is 60',
-	);
-
-	// 2. Same or lower inside the window.
-	insertAlert({ checkType: 'memory', createdAt: minutesAgo(10), notifiedAt: minutesAgo(10) });
-	const inside = insertAlert({ checkType: 'memory', createdAt: new Date() });
-	assert(
-		hasRecentAlert('memory', COOLDOWN, inside),
-		'2: a delivery 10 minutes ago must suppress the next warning',
-	);
-
-	// 3. Independent check types.
-	const other = insertAlert({ checkType: 'database', createdAt: new Date() });
-	assert(
-		!hasRecentAlert('database', COOLDOWN, other),
-		'3: a memory delivery must not suppress a database warning',
-	);
-
-	// 4. Resolved, then recurring.
-	insertAlert({
-		checkType: 'filesystem',
-		createdAt: minutesAgo(5),
-		notifiedAt: minutesAgo(5),
-		resolvedAt: minutesAgo(2),
-	});
-	const recur = insertAlert({ checkType: 'filesystem', createdAt: new Date() });
-	assert(
-		!hasRecentAlert('filesystem', COOLDOWN, recur),
-		'4: a resolved alert must not suppress the recurrence',
-	);
-}
-
-function rowsFor(checkType: string): (typeof healthCheckAlerts.$inferSelect)[] {
+function diskAlerts(): Alert[] {
 	return getDb()
 		.select()
 		.from(healthCheckAlerts)
 		.all()
-		.filter((alert) => alert.checkType === checkType);
+		.filter((alert) => alert.checkType === 'disk');
 }
+const openDisk = (): Alert[] => diskAlerts().filter((alert) => alert.resolvedAt === null);
 
-async function notifiedAtFor(
-	checkType: string,
-	severity: 'critical' | 'warn' = 'warn',
-): Promise<Date | null | undefined> {
-	// createAlertAndNotify dispatches fire-and-forget; give the in-app write time to land.
+/** Dispatch is fire-and-forget; wait for the open row's notifiedAt to move past `after`. */
+async function deliveredAfter(after: number): Promise<boolean> {
 	for (let attempt = 0; attempt < 40; attempt++) {
-		const row = rowsFor(checkType).find((alert) => alert.severity === severity);
-		if (row?.notifiedAt) return row.notifiedAt;
+		const stamp = openDisk()[0]?.notifiedAt?.getTime();
+		if (stamp !== undefined && stamp > after) return true;
 		await new Promise((settled) => setTimeout(settled, 50));
 	}
-	return null;
+	return false;
 }
 
-/** Through the real creation path: degraded, a repeat, unhealthy, then degraded again. */
-async function escalationCase(): Promise<void> {
-	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
-	assert(
-		(await notifiedAtFor('escalating')) instanceof Date,
-		'5: the first warning must be sent',
-	);
-	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
-	assert(
-		rowsFor('escalating').length === 1,
-		'5: a same-severity repeat inside 15 minutes adds no row',
-	);
-	createAlertAndNotify({ checkType: 'escalating', status: 'unhealthy' });
-	assert(
-		rowsFor('escalating').filter((a) => a.severity === 'critical').length === 1,
-		'5: escalating to unhealthy inside 15 minutes must record a critical alert',
-	);
-	assert(
-		(await notifiedAtFor('escalating', 'critical')) instanceof Date,
-		'5: the critical alert must be sent inside the warning window',
-	);
-	createAlertAndNotify({ checkType: 'escalating', status: 'degraded' });
-	assert(rowsFor('escalating').length === 2, '5: falling back to degraded adds no row');
+/** notifiedAt is stored in whole seconds, so compare a fresh send against the second it began. */
+function secondStart(): number {
+	return Math.floor(Date.now() / 1000) * 1000 - 1;
 }
 
-async function dispatchCases(): Promise<void> {
-	createAlertAndNotify({ checkType: 'delivered-check', status: 'degraded' });
+/** Move the open row's notifiedAt or createdAt back by `minutes`, to stand in for time passing. */
+function ageOpenRow(minutes: number, field: 'createdAt' | 'notifiedAt' = 'notifiedAt'): void {
+	const [open] = openDisk();
+	if (!open) throw new Error('no open disk alert to age');
+	getDb()
+		.update(healthCheckAlerts)
+		.set({ [field]: new Date(Date.now() - minutes * MINUTE) })
+		.where(eq(healthCheckAlerts.id, open.id))
+		.run();
+}
+
+const openStamp = (): number => openDisk()[0]?.notifiedAt?.getTime() ?? 0;
+const onlyOpenIs = (severity: 'critical' | 'warn'): boolean =>
+	openDisk().length === 1 && openDisk()[0]?.severity === severity;
+
+function resetDisk(): void {
+	setDisk('healthy');
+	runDisk('healthy');
+}
+
+async function longDegraded(): Promise<void> {
+	setDisk('degraded');
+	runDisk('degraded');
+	assert(await deliveredAfter(0), 'A: the first warning is sent at once');
+	const first = openStamp();
+	// Each run is a check 20 minutes after the open row was created, past the old 15-minute dedup.
+	for (let run = 0; run < 6; run++) {
+		ageOpenRow(20, 'createdAt');
+		runDisk('degraded');
+	}
+	await Bun.sleep(300);
+	assert(openDisk().length === 1, 'A: a long degraded spell keeps exactly one open alert');
+	assert(openStamp() === first, 'A: no reminder inside the cooldown');
+	ageOpenRow(COOLDOWN + 1);
+	const aged = Date.now() - (COOLDOWN + 1) * MINUTE;
+	runDisk('degraded');
+	assert(await deliveredAfter(aged + MINUTE), 'A: a reminder goes out once the cooldown passes');
+	assert(openDisk().length === 1, 'A: the reminder comes from the same row');
+}
+
+async function recoverAndRecur(): Promise<void> {
+	resetDisk();
+	assert(openDisk().length === 0, 'B: a healthy check resolves its open alert');
 	assert(
-		(await notifiedAtFor('delivered-check')) instanceof Date,
-		'6: a delivered alert must record notifiedAt',
+		!getActiveAlerts().some((alert) => alert.checkType === 'disk'),
+		'B: the resolved alert is gone from Active Alerts',
+	);
+	assert(
+		diskAlerts().every((alert) => alert.resolvedAt instanceof Date),
+		'B: resolvedAt is stored',
+	);
+	const before = secondStart();
+	setDisk('degraded');
+	runDisk('degraded');
+	assert(await deliveredAfter(before), 'B: a recurrence opens and sends a new alert at once');
+}
+
+async function escalate(): Promise<number> {
+	resetDisk();
+	setDisk('degraded');
+	runDisk('degraded');
+	await deliveredAfter(0);
+	setDisk('unhealthy');
+	runDisk('unhealthy');
+	assert(await deliveredAfter(0), 'C: escalation sends a critical at once');
+	assert(onlyOpenIs('critical'), 'C: one open critical row');
+	const critical = openStamp();
+	for (let run = 0; run < 4; run++) runDisk('unhealthy');
+	await Bun.sleep(300);
+	assert(openStamp() === critical, 'D: a lasting critical is not re-sent each run');
+	return critical;
+}
+
+async function escalateAndFallBack(): Promise<void> {
+	const critical = await escalate();
+	setDisk('degraded');
+	runDisk('degraded');
+	await Bun.sleep(300);
+	assert(onlyOpenIs('critical'), 'C: falling back keeps the critical row');
+	assert(openStamp() === critical, 'C: falling back sends no immediate notice');
+	ageOpenRow(COOLDOWN + 1);
+	const aged = Date.now() - (COOLDOWN + 1) * MINUTE;
+	runDisk('degraded');
+	assert(
+		await deliveredAfter(aged + MINUTE),
+		'C: the fallen-back row reminds once the cooldown passes',
+	);
+	assert(openDisk()[0]?.severity === 'critical', 'C: that reminder is at critical');
+}
+
+async function overridesAndDuplicates(): Promise<void> {
+	resetDisk();
+	setDisk('degraded');
+	runDisk('degraded');
+	await deliveredAfter(0);
+	const [open] = openDisk();
+	if (open) resolveAlert(open.id);
+	const afterResolve = secondStart();
+	runDisk('degraded');
+	assert(
+		await deliveredAfter(afterResolve),
+		'E: after a manual resolve the next run opens and sends',
 	);
 
+	const [current] = openDisk();
+	if (current) {
+		getDb()
+			.update(healthCheckAlerts)
+			.set({ createdAt: new Date(Date.now() - 400 * 24 * 60 * MINUTE) })
+			.where(eq(healthCheckAlerts.id, current.id))
+			.run();
+	}
+	cleanupStaleAlerts();
+	assert(openDisk().length === 0, 'E: the admin bulk cleanup resolves the open row by age');
+	const afterCleanup = secondStart();
+	runDisk('degraded');
+	assert(
+		await deliveredAfter(afterCleanup),
+		'E: after the bulk cleanup the next run opens and sends',
+	);
+
+	for (let copy = 0; copy < 3; copy++) {
+		getDb()
+			.insert(healthCheckAlerts)
+			.values({
+				checkType: 'disk',
+				message: 'disk duplicate from before the fix',
+				severity: 'warn',
+			})
+			.run();
+	}
+	getDb()
+		.insert(healthCheckAlerts)
+		.values({ checkType: 'memory', message: 'memory', severity: 'warn' })
+		.run();
+	runDisk('degraded');
+	assert(openDisk().length === 1, 'F: existing duplicates collapse to one open row');
+	resetDisk();
+	const memoryOpen = getDb()
+		.select()
+		.from(healthCheckAlerts)
+		.all()
+		.filter((alert) => alert.checkType === 'memory' && alert.resolvedAt === null);
+	assert(memoryOpen.length === 1, 'F: a healthy disk check leaves another check type alone');
+}
+
+async function undeliveredRetries(): Promise<void> {
+	resetDisk();
 	getConfig().alerting.inApp.enabled = false;
-	createAlertAndNotify({ checkType: 'undelivered-check', status: 'degraded' });
+	setDisk('degraded');
+	runDisk('degraded');
+	await Bun.sleep(300);
 	assert(
-		(await notifiedAtFor('undelivered-check')) === null,
-		'6: an alert no channel delivered must leave notifiedAt null',
+		openDisk()[0]?.notifiedAt === null,
+		'G: a send no channel delivered leaves notifiedAt null',
 	);
 	getConfig().alerting.inApp.enabled = true;
+	runDisk('degraded');
+	assert(await deliveredAfter(0), 'G: the next run retries the undelivered alert');
+	assert(openDisk().length === 1, 'G: the retry uses the same row');
 }
 
 initializeConfig();
@@ -185,12 +259,17 @@ config.alerting.webhook.enabled = false;
 const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-alert-cooldown-'));
 try {
 	const dbPath = join(tmpDir, 'test.db');
+	// The disk check measures the database's folder, so point it at this throwaway one.
+	config.database.url = dbPath;
 	runAutoMigrations(dbPath, join(repoRoot, 'backend', 'drizzle'));
 	initializeDatabase(dbPath);
 	await seedUsersIfEmpty(getDb(), getSeedUsersWithPasswords(false), 4);
-	cooldownCases();
-	await escalationCase();
-	await dispatchCases();
+	adminId = getDb().select({ id: users.id }).from(users).limit(1).get()?.id ?? 0;
+	await longDegraded();
+	await recoverAndRecur();
+	await escalateAndFallBack();
+	await overridesAndDuplicates();
+	await undeliveredRetries();
 } finally {
 	await closeDatabase();
 	// Statements cached on the closed handle keep the file open on Windows until collected.

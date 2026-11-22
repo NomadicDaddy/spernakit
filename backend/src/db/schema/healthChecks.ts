@@ -77,12 +77,13 @@ const healthCheckLogs = sqliteTable(
  * - critical: Unhealthy status, immediate attention required (e.g., database down)
  *
  * Lifecycle:
- * - Alert created when health check fails or degrades
+ * - One unresolved row per check type while the check is degraded or unhealthy; escalating to
+ *   unhealthy resolves the warning row and opens a critical one
  * - acknowledgedAt and acknowledgedBy set when admin marks alert as seen
- * - resolvedAt set when issue is manually resolved or auto-resolved
- * - notifiedAt set when at least one notification channel delivered the alert; the warning
- *   cooldown (alerting.cooldownMinutes) is measured from it, not from createdAt, because a new
- *   row is created every 15 minutes while a check stays degraded, whether or not it was sent
+ * - resolvedAt set when the check next reports healthy, or when an admin resolves the alert or
+ *   runs the bulk cleanup
+ * - notifiedAt set when at least one notification channel delivered the alert; a reminder is sent
+ *   from the open row once per alerting.cooldownMinutes, measured from it
  * - Unresolved alerts (resolvedAt IS NULL) are displayed in System Health UI
  * - Acknowledged but unresolved alerts are still shown with acknowledged status
  *
@@ -91,8 +92,7 @@ const healthCheckLogs = sqliteTable(
  * - idx_health_check_alerts_severity: Filtering by severity level
  * - idx_health_check_alerts_resolved_at: Finding unresolved alerts
  * - idx_health_check_alerts_resolved_created: Unresolved-alert listing ordered by creation time
- * - idx_health_check_alerts_check_resolved_created: Recent-alert deduplication, and the check-type
- *   and unresolved prefix of the cooldown check
+ * - idx_health_check_alerts_check_resolved_created: Finding a check type's open alert, newest first
  */
 const healthCheckAlerts = sqliteTable(
 	'health_check_alerts',

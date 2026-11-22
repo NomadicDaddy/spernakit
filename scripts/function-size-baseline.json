@@ -4,7 +4,7 @@
 		"threshold": 7
 	},
 	"lines": {
-		"over": 255,
+		"over": 253,
 		"threshold": 40
 	}
 }

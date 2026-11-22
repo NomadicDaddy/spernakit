@@ -376,7 +376,7 @@ Steps (in order):
 109. `bun run test:seed-announcement`
      - The production seed notice states the password-change requirement only when the toggle that sets it is on.
 110. `bun run test:alert-cooldown`
-     - The warning cooldown runs from the last delivered alert, so a check that stays degraded warns again once the window passes, while same-check warnings inside it, other checks, resolved alerts and critical alerts keep their own rules.
+     - A check that stays degraded or unhealthy keeps one open alert and reminds from it once per cooldown, escalation sends a critical at once, and a healthy check resolves its alert.
 111. `bun run test:workspace-deleted-hook`
      - Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged.
 112. `bun run test:worktree-hooks-path`

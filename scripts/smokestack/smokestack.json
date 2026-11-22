@@ -3346,7 +3346,7 @@
 						"package.json"
 					]
 				},
-				"description": "The warning cooldown runs from the last delivered alert, so a check that stays degraded warns again once the window passes, while same-check warnings inside it, other checks, resolved alerts and critical alerts keep their own rules",
+				"description": "A check that stays degraded or unhealthy keeps one open alert and reminds from it once per cooldown, escalation sends a critical at once, and a healthy check resolves its alert",
 				"name": "test:alert-cooldown",
 				"run": ["bun", "run", "test:alert-cooldown"]
 			},
