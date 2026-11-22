@@ -37,7 +37,6 @@ import {
 	notificationCount,
 	onlyOpenIs,
 	openDisk,
-	openStamp,
 	resetDisk,
 	runDisk,
 	secondStart,
@@ -55,23 +54,39 @@ function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
 }
 
+/** In-app notifications one send delivers (one per admin), measured by the first send. */
+let perSend = 0;
+
+/** In-app notifications delivered by `run`, once its sends have settled and notifiedAt is set. */
+async function sendsBy(run: () => void): Promise<number> {
+	const before = notificationCount();
+	run();
+	await deliveredAfter(0);
+	await Bun.sleep(300);
+	return (notificationCount() - before) / perSend;
+}
+
 async function longDegraded(): Promise<void> {
 	setDisk('degraded');
+	const before = notificationCount();
 	runDisk('degraded');
 	assert(await deliveredAfter(0), 'A: the first warning is sent at once');
-	const first = openStamp();
+	perSend = notificationCount() - before;
+	assert(perSend > 0, 'A: the first warning reaches the admins in-app');
 	// Each run is a check 20 minutes after the open row was created, past the old 15-minute dedup.
-	for (let run = 0; run < 6; run++) {
-		ageOpenRow(20, 'createdAt');
-		runDisk('degraded');
-	}
-	await Bun.sleep(300);
+	const inside = await sendsBy(() => {
+		for (let run = 0; run < 6; run++) {
+			ageOpenRow(20, 'createdAt');
+			runDisk('degraded');
+		}
+	});
 	assert(openDisk().length === 1, 'A: a long degraded spell keeps exactly one open alert');
-	assert(openStamp() === first, 'A: no reminder inside the cooldown');
+	assert(inside === 0, 'A: no reminder inside the cooldown');
 	ageOpenRow(COOLDOWN + 1);
-	const aged = Date.now() - (COOLDOWN + 1) * MINUTE;
-	runDisk('degraded');
-	assert(await deliveredAfter(aged + MINUTE), 'A: a reminder goes out once the cooldown passes');
+	assert(
+		(await sendsBy(() => runDisk('degraded'))) === 1,
+		'A: one reminder once the cooldown passes',
+	);
 	assert(openDisk().length === 1, 'A: the reminder comes from the same row');
 }
 
@@ -92,34 +107,37 @@ async function recoverAndRecur(): Promise<void> {
 	assert(await deliveredAfter(before), 'B: a recurrence opens and sends a new alert at once');
 }
 
-async function escalate(): Promise<number> {
+async function escalate(): Promise<void> {
 	resetDisk();
 	setDisk('degraded');
 	runDisk('degraded');
 	await deliveredAfter(0);
 	setDisk('unhealthy');
-	runDisk('unhealthy');
-	assert(await deliveredAfter(0), 'C: escalation sends a critical at once');
+	assert(
+		(await sendsBy(() => runDisk('unhealthy'))) === 1,
+		'C: escalation sends a critical at once',
+	);
 	assert(onlyOpenIs('critical'), 'C: one open critical row');
-	const critical = openStamp();
-	for (let run = 0; run < 4; run++) runDisk('unhealthy');
-	await Bun.sleep(300);
-	assert(openStamp() === critical, 'D: a lasting critical is not re-sent each run');
-	return critical;
+	const lasting = await sendsBy(() => {
+		for (let run = 0; run < 4; run++) runDisk('unhealthy');
+	});
+	assert(lasting === 0, 'D: a lasting critical is not re-sent each run');
+	ageOpenRow(COOLDOWN + 1);
+	assert(
+		(await sendsBy(() => runDisk('unhealthy'))) === 1,
+		'D: a lasting critical reminds once the cooldown passes',
+	);
 }
 
 async function escalateAndFallBack(): Promise<void> {
-	const critical = await escalate();
+	await escalate();
 	setDisk('degraded');
-	runDisk('degraded');
-	await Bun.sleep(300);
+	const fellBack = await sendsBy(() => runDisk('degraded'));
 	assert(onlyOpenIs('critical'), 'C: falling back keeps the critical row');
-	assert(openStamp() === critical, 'C: falling back sends no immediate notice');
+	assert(fellBack === 0, 'C: falling back sends no immediate notice');
 	ageOpenRow(COOLDOWN + 1);
-	const aged = Date.now() - (COOLDOWN + 1) * MINUTE;
-	runDisk('degraded');
 	assert(
-		await deliveredAfter(aged + MINUTE),
+		(await sendsBy(() => runDisk('degraded'))) === 1,
 		'C: the fallen-back row reminds once the cooldown passes',
 	);
 	assert(openDisk()[0]?.severity === 'critical', 'C: that reminder is at critical');
@@ -197,23 +215,14 @@ async function undeliveredRetries(): Promise<void> {
 	assert(openDisk().length === 1, 'G: the retry uses the same row');
 }
 
-/** Notifications from one degraded run, optionally with a second run while its send is pending. */
-async function sendsFromOpening(secondRunWhilePending: boolean): Promise<number> {
-	resetDisk();
-	const before = notificationCount();
-	setDisk('degraded');
-	runDisk('degraded');
-	if (secondRunWhilePending) runDisk('degraded');
-	await deliveredAfter(0);
-	await Bun.sleep(300);
-	return notificationCount() - before;
-}
-
 async function pendingSendAndThreshold(): Promise<void> {
-	const single = await sendsFromOpening(false);
-	const withSecond = await sendsFromOpening(true);
-	assert(single > 0, 'H: an opening sends notifications');
-	assert(withSecond === single, 'H: a run while the first send is pending does not send again');
+	resetDisk();
+	setDisk('degraded');
+	const pending = await sendsBy(() => {
+		runDisk('degraded');
+		runDisk('degraded');
+	});
+	assert(pending === 1, 'H: a run while the first send is pending does not send again');
 
 	resetDisk();
 	setAlertThreshold('unhealthy');
@@ -225,10 +234,10 @@ async function pendingSendAndThreshold(): Promise<void> {
 	await deliveredAfter(0);
 	setAlertThreshold('unhealthy');
 	ageOpenRow(COOLDOWN + 1);
-	const aged = openStamp();
-	runDisk('degraded');
-	await Bun.sleep(300);
-	assert(openStamp() === aged, 'I: a result below alertThreshold sends no reminder');
+	assert(
+		(await sendsBy(() => runDisk('degraded'))) === 0,
+		'I: a result below alertThreshold sends no reminder',
+	);
 	setAlertThreshold('degraded');
 }
 

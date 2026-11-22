@@ -140,16 +140,35 @@ function remindIfDue(current: AlertRow): void {
 	}
 }
 
-function openAlert(check: HealthCheckInput, severity: AlertSeverity): void {
-	const alert = getDb()
-		.insert(healthCheckAlerts)
-		.values({
-			checkType: check.checkType,
-			message: `${check.checkType} check ${check.status}: ${JSON.stringify(check.details)}`,
-			severity,
-		})
-		.returning()
-		.get();
+/**
+ * Record a new open alert and send it once the write has committed. When it replaces an open
+ * warning on escalation, resolving the warning and inserting the critical row are one transaction,
+ * so a failed insert leaves the warning open rather than no alert at all.
+ *
+ * @param check - The result the alert reports
+ * @param severity - The new alert's severity
+ * @param replacesId - The open warning this alert replaces, if any
+ */
+function openAlert(check: HealthCheckInput, severity: AlertSeverity, replacesId?: number): void {
+	const alert = getDb().transaction((tx) => {
+		if (replacesId !== undefined) {
+			tx.update(healthCheckAlerts)
+				.set({ resolvedAt: new Date() })
+				.where(
+					and(eq(healthCheckAlerts.id, replacesId), isNull(healthCheckAlerts.resolvedAt)),
+				)
+				.run();
+		}
+		return tx
+			.insert(healthCheckAlerts)
+			.values({
+				checkType: check.checkType,
+				message: `${check.checkType} check ${check.status}: ${JSON.stringify(check.details)}`,
+				severity,
+			})
+			.returning()
+			.get();
+	});
 	if (alert) void dispatchAlertNotifications(alert);
 }
 
@@ -195,8 +214,7 @@ function syncFailingCheck(check: HealthCheckInput): void {
 		return;
 	}
 	if (current.severity === 'warn' && severity === 'critical') {
-		resolveAlerts([current.id]);
-		openAlert(check, severity);
+		openAlert(check, severity, current.id);
 		return;
 	}
 	remindIfDue(current);

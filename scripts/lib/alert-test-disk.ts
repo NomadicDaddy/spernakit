@@ -56,7 +56,6 @@ function diskAlerts(): Alert[] {
 }
 
 const openDisk = (): Alert[] => diskAlerts().filter((alert) => alert.resolvedAt === null);
-const openStamp = (): number => openDisk()[0]?.notifiedAt?.getTime() ?? 0;
 const onlyOpenIs = (severity: 'critical' | 'warn'): boolean =>
 	openDisk().length === 1 && openDisk()[0]?.severity === severity;
 const notificationCount = (): number => getDb().select().from(notifications).all().length;
@@ -100,7 +99,6 @@ export {
 	notificationCount,
 	onlyOpenIs,
 	openDisk,
-	openStamp,
 	resetDisk,
 	runDisk,
 	secondStart,
