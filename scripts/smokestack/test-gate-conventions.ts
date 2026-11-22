@@ -16,17 +16,11 @@
  * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
  * smokestack; every repository that takes it holds a byte-identical copy.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join, resolve } from 'node:path';
+import { rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { exit } from 'node:process';
 
-import { CONFORMING, discovering, VIOLATING } from './lib/gate/fixtures.ts';
-
-interface RunResult {
-	exitCode: number;
-	output: string;
-	stdout: string;
-}
+import { CONFORMING, discovering, fixtureProject, VIOLATING } from './lib/gate/fixtures.ts';
 
 let checks = 0;
 
@@ -35,48 +29,9 @@ function assert(condition: boolean, message: string): void {
 	checks++;
 }
 
-/**
- * The repository this file is delivered into: the parent of the nearest `scripts` directory above
- * it. Not "one level up", so the answer holds whether the file sits in scripts/ or deeper. With no
- * such directory it refuses rather than answer the drive root, which would put the whole drive in
- * scope.
- */
-function repositoryRoot(dir: string): string {
-	let at = resolve(dir);
-	while (basename(at) !== 'scripts') {
-		if (dirname(at) === at) throw new Error(`no scripts directory above ${resolve(dir)}`);
-		at = dirname(at);
-	}
-	return dirname(at);
-}
-
-const repoRoot = repositoryRoot(import.meta.dir);
-const fixtureParent = join(repoRoot, 'tmp');
-mkdirSync(fixtureParent, { recursive: true });
-const fixtureRoot = mkdtempSync(join(fixtureParent, 'gate-conventions-'));
-
-function write(relativePath: string, content: string): void {
-	const target = join(fixtureRoot, relativePath);
-	mkdirSync(dirname(target), { recursive: true });
-	writeFileSync(target, content, 'utf8');
-}
-
-function runCheck(...extra: string[]): RunResult {
-	const result = Bun.spawnSync(
-		['bun', 'run', 'check:gate-conventions', '--', '--root', fixtureRoot, ...extra],
-		{ cwd: repoRoot, stderr: 'pipe', stdout: 'pipe' },
-	);
-	const stdout = result.stdout.toString();
-	return { exitCode: result.exitCode, output: `${stdout}${result.stderr.toString()}`, stdout };
-}
-
-function writeManifest(scripts: Record<string, string>): void {
-	write('package.json', `${JSON.stringify({ name: 'fixture', scripts }, null, '\t')}\n`);
-}
-
-function writeAllowlist(value: unknown): void {
-	write('scripts/gate-conventions-allowlist.json', `${JSON.stringify(value, null, '\t')}\n`);
-}
+const project = fixtureProject();
+const { runCheck, write, writeAllowlist, writeManifest } = project;
+const fixtureRoot = project.root;
 
 const ALL_RULES = ['GC1', 'GC2', 'GC3', 'GC4', 'GC6', 'GC8'] as const;
 
@@ -296,5 +251,5 @@ try {
 	console.error(`[FAIL] ${err instanceof Error ? err.message : String(err)}`);
 	exit(1);
 } finally {
-	rmSync(fixtureRoot, { force: true, recursive: true });
+	project.remove();
 }

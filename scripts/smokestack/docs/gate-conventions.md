@@ -339,7 +339,14 @@ the **same commit** as the change.
    Repositories still using the older smoke-cache classifier also update
    `scripts/lib/smoke-cache/steps-*.ts` where that runner consumes it.
 5. **Add the step to the active runner's step list.** For smokestack's runner, add it under
-   `qc.steps` in that same config, and to `fast.steps` if it belongs in the fast subset. In aidd
+   `qc.steps` in that same config, and to `fast.steps` if it belongs in the fast subset. A
+   delivered gate that smokestack's manifest marks `"fast": true` must be in the fast subset:
+   today `check:gate-conventions` and `check:destructive-confirmation`. The runner refuses a
+   config whose qc step runs one of them (`bun run <gate> ...`) while no fast step that runs in
+   that repository runs the same command, argument for argument. So a step missing from
+   `fast.steps` fails, and so does a `fast.replace` that runs something else or passes other
+   arguments, such as `--root` naming another tree. A qc step that `onlyIn` skips in that
+   repository is exempt. In aidd
    the equivalent is `scripts/lib/smoke-qc/steps.ts`, plus
    `FAST_QC_STEP_NAMES` in `fast-subset.ts` if the step belongs to the fast subset; the same
    `bun run smoke:docs` regenerates `scripts/smoke-qc.md` from it, and `check:smoke-docs` fails when

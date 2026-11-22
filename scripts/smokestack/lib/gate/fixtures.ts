@@ -1,14 +1,93 @@
 /**
- * Scratch gate sources for the gate-conventions regression test.
+ * The scratch project and scratch gate sources for the gate-conventions regression test.
  *
  * Kept out of `test-gate-conventions.ts` so the test file stays a list of cases rather than a list
- * of cases buried in the synthetic gates they run against. Every source here is written as an array
- * of lines joined at the end: the fixtures are gates, and a gate written as one long template
- * literal cannot carry the backticks and quote characters several of these cases exist to exercise.
+ * of cases buried in the project they run in and the synthetic gates they run against. Every source
+ * here is written as an array of lines joined at the end: the fixtures are gates, and a gate written
+ * as one long template literal cannot carry the backticks and quote characters several of these
+ * cases exist to exercise.
  *
  * smokestack owns this file and delivers it with `bun run shared-core:write`. Change it in
  * smokestack; every repository that takes it holds a byte-identical copy.
  */
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
+
+/** One run of the real `check:gate-conventions` command against the scratch project. */
+interface RunResult {
+	exitCode: number;
+	output: string;
+	stdout: string;
+}
+
+/** A scratch project under the repository's tmp/, with writers for the files a case needs. */
+interface FixtureProject {
+	/** Removes the project and everything in it. */
+	remove: () => void;
+	root: string;
+	runCheck: (...extra: string[]) => RunResult;
+	write: (relativePath: string, content: string) => void;
+	writeAllowlist: (value: unknown) => void;
+	writeManifest: (scripts: Record<string, string>) => void;
+}
+
+/**
+ * The repository this file is delivered into: the parent of the nearest `scripts` directory above
+ * it. Not "one level up", so the answer holds whether the file sits in scripts/ or deeper. With no
+ * such directory it refuses rather than answer the drive root, which would put the whole drive in
+ * scope.
+ */
+function repositoryRoot(dir: string): string {
+	let at = resolve(dir);
+	while (basename(at) !== 'scripts') {
+		if (dirname(at) === at) throw new Error(`no scripts directory above ${resolve(dir)}`);
+		at = dirname(at);
+	}
+	return dirname(at);
+}
+
+/** Creates the scratch project. The real package command runs from the repository against it. */
+export function fixtureProject(): FixtureProject {
+	const repoRoot = repositoryRoot(import.meta.dir);
+	const fixtureParent = join(repoRoot, 'tmp');
+	mkdirSync(fixtureParent, { recursive: true });
+	const root = mkdtempSync(join(fixtureParent, 'gate-conventions-'));
+
+	const write = (relativePath: string, content: string): void => {
+		const target = join(root, relativePath);
+		mkdirSync(dirname(target), { recursive: true });
+		writeFileSync(target, content, 'utf8');
+	};
+
+	return {
+		remove: () => {
+			rmSync(root, { force: true, recursive: true });
+		},
+		root,
+		runCheck: (...extra) => {
+			const result = Bun.spawnSync(
+				['bun', 'run', 'check:gate-conventions', '--', '--root', root, ...extra],
+				{ cwd: repoRoot, stderr: 'pipe', stdout: 'pipe' },
+			);
+			const stdout = result.stdout.toString();
+			return {
+				exitCode: result.exitCode,
+				output: `${stdout}${result.stderr.toString()}`,
+				stdout,
+			};
+		},
+		write,
+		writeAllowlist: (value) => {
+			write(
+				'scripts/gate-conventions-allowlist.json',
+				`${JSON.stringify(value, null, '\t')}\n`,
+			);
+		},
+		writeManifest: (scripts) => {
+			write('package.json', `${JSON.stringify({ name: 'fixture', scripts }, null, '\t')}\n`);
+		},
+	};
+}
 
 /** A scratch gate satisfying GC1, GC2, GC3, GC4, GC6 and GC8, over a population fixed in source. */
 export const CONFORMING = [
