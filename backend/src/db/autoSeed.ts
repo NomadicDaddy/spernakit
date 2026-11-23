@@ -48,7 +48,7 @@ async function runAutoSeed(config: AppConfig): Promise<void> {
 		// Credential plaintext never goes through the logger: log files are the exact place it
 		// must not live. The display is the TTY-gated direct write (the documented first-run
 		// console channel); a non-interactive environment sees the pointer line only.
-		// remediation-20261113-seed-credentials-logged-plaintext.
+		// demo-account-seeding criterion 16.
 		const consoleIsInteractive = process.stdout.isTTY === true;
 		if (consoleIsInteractive) {
 			printSeedCredentialsToConsole(credentials);

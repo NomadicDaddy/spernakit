@@ -2,7 +2,7 @@
 /**
  * Gate: the WebSocket revalidation timer always runs the full check, so a recent message-driven
  * check can't throttle a tick and push the next full check a whole period later
- * (`.aidd/features/audit-assertions-1790852982-assert-042-websocket-revalidation-gap-can-exceed-the-two-minute-ceiling`).
+ * (`.aidd/features/websocket-server`, criterion 13).
  *
  * The defect: the timer and the message path shared one throttle and one lastValidatedAt. With a
  * 119 s timer, a message at 91 s revalidated, the 119 s tick was throttled (28 s since the last

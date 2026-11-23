@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Gate: the production seed's notice agrees with the password-change flags it seeds
- * (`.aidd/features/remediation-20261108-production-seed-accounts-skip-password-change`).
+ * (`.aidd/features/seed-password-change-enforcement`, criterion 13).
  *
  * The defect: backend/src/db/seed.ts always announced "All accounts require password change on
  * first login", while seedUsersIfEmpty sets requiresPasswordChange from the auth-settings toggle,

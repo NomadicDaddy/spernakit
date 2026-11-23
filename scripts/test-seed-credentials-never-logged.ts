@@ -8,7 +8,7 @@
  * itself is exercised by asserting the formatter produces the username|password lines only when
  * explicitly called - never via logger.info/warn/error.
  *
- * remediation-20261113-seed-credentials-logged-plaintext (Phillip #45911 security exception).
+ * demo-account-seeding criterion 16 (Phillip #45911 security exception).
  */
 
 import { resolve } from 'node:path';

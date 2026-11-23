@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Gate: deploy:local-prod writes a config its own production validator accepts
- * (`.aidd/features/remediation-20261108-local-prod-config-fails-production-validator`).
+ * (`.aidd/features/docker-deployment-setup`, criterion 32).
  *
  * The defect: the deployer defaulted security.cookieSecure to false, which the production
  * validator rejects as an error, so a first-run local-prod deploy died at startup validation.

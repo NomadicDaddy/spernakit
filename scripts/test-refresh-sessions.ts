@@ -18,7 +18,7 @@
  *     whose last password sign-in was 30 days old, cutting off sessions kept alive by refresh
  *     (`.aidd/features/audit-logic-1790885878-token-cleanup-clears-the-refresh-hash-30-days-after-the-last-login-cutting-off-a`).
  *  6. A confirmed email change ends every sign-in the user has, as the confirm page says
- *     (`.aidd/features/audit-logic-1790885878-email-change-confirmation-claims-to-revoke-all-sessions-but-leaves-the-refresh-c`).
+ *     (`.aidd/features/user-profile-page`, criterion 29).
  */
 import { Database } from 'bun:sqlite';
 import { mkdtempSync, rmSync } from 'node:fs';

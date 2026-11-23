@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Gate: refresh and logout have rate-limit buckets of their own, apart from the per-IP login
- * bucket (`.aidd/features/audit-logic-1790885878-token-refresh-counts-against-the-10-per-15-minute-per-ip-brute-force-bucket-and-`).
+ * bucket (`.aidd/features/rate-limiting`, criteria 20 and 21).
  *
  * The defect: every non-GET /api/v1/auth/ request counted against one auth:<ip> bucket, ten per
  * fifteen minutes by default. A burst of failed logins from one address, or eleven people behind
