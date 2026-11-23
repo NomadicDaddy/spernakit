@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for the onboarding password step
- * (`.aidd/features/remediation-20260827-onboarding-affirms-an-unperformed-password-change`).
+ * (`.aidd/features/onboarding-system` PASSWORD STEP, `seed-password-change-enforcement` SIGNALS).
  *
  * The defect this gate was written for: the checklist's first step read "Sign in as administrator /
  * Log in with the default sysop account and change the default password" and was hard-coded

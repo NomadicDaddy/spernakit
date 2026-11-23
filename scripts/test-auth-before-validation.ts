@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for authorization running ahead of body validation
- * (`.aidd/features/remediation-20260827-validation-runs-before-the-auth-guard`).
+ * (`.aidd/features/elysia-app-bootstrap` 31, `five-tier-rbac-guard-system` 14 to 16).
  *
  * The defect this gate was written for: the `requireAuth` and `requireRoleFresh` guards ran from
  * `beforeHandle`, which Elysia reaches only after it has checked the request body against the

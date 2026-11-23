@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for one bug report being able to name the report that replaced it
- * (`.aidd/features/remediation-20260827-bug-report-supersede-link`).
+ * (`.aidd/features/bug-inbox-admin-ui` 15, `bug-report-status-transitions` 16 to 21).
  *
  * The defect this gate was written for: a submitted report cannot be amended. `PATCH` changes the
  * status and nothing else and requires ADMIN, so a reporter who got something wrong could only file

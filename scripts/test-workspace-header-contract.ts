@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for the workspace-header precondition
- * (`.aidd/features/remediation-20260827-workspace-header-precondition-contract`).
+ * (`.aidd/features/workspace-context-plugin`, `five-tier-rbac-guard-system` 17,
+ * `file-upload-system` 44).
  *
  * Two defects were reported together. The visible one was that a caller who left the header off was
  * told two different things depending on which route they hit, in two different spellings of the

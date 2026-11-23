@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for the bug intake rejecting a description that is empty once trimmed
- * (`.aidd/features/remediation-20260827-whitespace-only-bug-report-description`).
+ * (`.aidd/features/bug-inbox-admin-ui`, criterion 14).
  *
  * The defect this gate was written for: `POST /api/v1/bugs` checked `minLength: 1` against the
  * string exactly as submitted, and `bugReportService.submit` trimmed it afterwards. A description

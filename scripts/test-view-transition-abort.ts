@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for an interrupted view transition staying quiet
- * (`.aidd/features/remediation-20260827-interrupted-view-transition-raises-aborterror`).
+ * (`.aidd/features/vite-frontend-scaffold`, criterion 23).
  *
  * The defect this gate was written for: the template opted every application into browser-native
  * cross-document view transitions with a bare `@view-transition { navigation: auto }` rule, and

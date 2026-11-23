@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression test for several simultaneous sign-ins by one user
- * (`.aidd/features/audit-logic-1790885877-a-second-login-or-a-concurrent-refresh-from-another-tab-is-treated-as-refresh-to`).
+ * (`.aidd/features/session-management`, criteria 9, 10 and 10a).
  *
  * A user used to hold one refresh-token slot, overwritten by every login, and any token that was
  * not the stored one counted as theft. Signing in on a second browser therefore signed the first
@@ -16,7 +16,7 @@
  *  4. A password change ends every sign-in the user has.
  *  5. Token cleanup deletes only expired rows. It used to clear the refresh credential of anyone
  *     whose last password sign-in was 30 days old, cutting off sessions kept alive by refresh
- *     (`.aidd/features/audit-logic-1790885878-token-cleanup-clears-the-refresh-hash-30-days-after-the-last-login-cutting-off-a`).
+ *     (`.aidd/features/scheduled-task-runner`, criterion 2a).
  *  6. A confirmed email change ends every sign-in the user has, as the confirm page says
  *     (`.aidd/features/user-profile-page`, criterion 29).
  */

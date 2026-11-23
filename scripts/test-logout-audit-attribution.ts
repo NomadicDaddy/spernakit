@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for sign-out audit attribution
- * (`.aidd/features/remediation-20260926-logout-audit-attributed-to-system`).
+ * (`.aidd/features/loginlogout-api-endpoints`, its handleLogout publishing clause).
  *
  * Runs fully in-process against a throwaway temp-file SQLite DB via `app.handle()`:
  *  1. A signed-in user's `POST /auth/logout` is recorded by the audit plugin with that user as the

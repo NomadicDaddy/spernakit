@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for a deleted dashboard's not-found state
- * (`.aidd/features/remediation-20260827-deleted-dashboard-renders-an-empty-boundary`).
+ * (NOT-FOUND in `.aidd/features/custom-dashboard-page` and `error-boundaries-and-404-page`).
  *
  * The defect this gate was written for: opening `/dashboards/:id` for a dashboard that had been
  * deleted spent three retries with exponential backoff on a 404 that was already final, then threw

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for the set of routes an anonymous caller can reach
- * (`.aidd/features/remediation-20260827-validation-runs-before-the-auth-guard`).
+ * (`.aidd/features/elysia-app-bootstrap` 31, `five-tier-rbac-guard-system` 14 to 16).
  *
  * `scripts/test-auth-before-validation.ts` proves that a guard, where one exists, runs ahead of
  * validation. It cannot prove that a route has one. Authorization travels as a route option, so a

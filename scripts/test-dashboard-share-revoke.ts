@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Regression coverage for revoking a dashboard share link
- * (`.aidd/features/remediation-20260827-dashboard-share-link-cannot-be-revoked`).
+ * (REVOKE in `.aidd/features/custom-dashboard-page` and `shared-dashboard-view`).
  *
  * The defect this gate was written for: sharing a dashboard minted a token and nothing could ever
  * take it back. A link sent to the wrong person stayed live for its full 30 days, and re-sharing
