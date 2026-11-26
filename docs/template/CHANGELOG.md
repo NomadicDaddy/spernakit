@@ -3,6 +3,24 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.3] - 2026-11-26
+
+### Fixed
+
+- The image licence check (`check:image-licenses`, run by CI and `smoke:docker-prod`) works again
+  under Bun 1.4.5. Bun adds a `+<hash>` suffix to the store folder of a package installed once
+  per set of peers, and the check read that as part of the version, so every image since 3.52.1
+  failed attribution. Each package in the image is now identified by its own package.json, every
+  copy is checked for its licence in its own directory, and names read from the image reach the
+  shell only as quoted data. A new `test:image-store-listing` covers it without Docker.
+- `licenses/base-image-packages.md` lists `python3-ndbm` (PSF-2.0), which Alpine now installs
+  with python3, so the inventory matches the built image again.
+
+### Upgrade notes
+
+- Derived apps on 3.52.1 or 3.52.2 need this release for their CI image check to pass. Take it
+  at the next template upgrade.
+
 ## [3.52.2] - 2026-11-22
 
 ### Changed
