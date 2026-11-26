@@ -5,25 +5,17 @@ import { getDb } from '../../../db/index.ts';
 import { mfaSettings } from '../../../db/schema/mfaSettings.ts';
 import { decrypt, encrypt } from '../../../utils/encryption.ts';
 import { logAuth } from '../../../utils/logger.ts';
-import { verifyEnabledMfa } from '../mfaHelpers.ts';
+import { verifyAndConsumeMfaCode } from '../mfaHelpers.ts';
 
 /**
- * Verify a TOTP code during login (MFA challenge step).
+ * Verify a TOTP code during login (MFA challenge step). The code's time step is consumed, so a
+ * replayed code fails even while it is still valid; lastVerifiedAt is set by the same claim.
  * @param userId - The user's ID
  * @param code - The 6-digit TOTP code
- * @returns True if the code is valid
+ * @returns True if the code is valid and its time step had not been used
  */
 async function verifyCode(userId: number, code: string): Promise<boolean> {
-	const mfa = await verifyEnabledMfa(userId, code);
-	if (!mfa) return false;
-
-	const db = getDb();
-	db.update(mfaSettings)
-		.set({ lastVerifiedAt: new Date(), updatedAt: new Date() })
-		.where(eq(mfaSettings.userId, userId))
-		.run();
-
-	return true;
+	return (await verifyAndConsumeMfaCode(userId, code)) !== null;
 }
 
 /**

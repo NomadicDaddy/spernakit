@@ -601,6 +601,10 @@
 					"description": "An open WebSocket closes once the access token it was opened with is revoked on its own, as a logout does, while another browser keeps its socket"
 				},
 				{
+					"command": "bun run test:totp-replay",
+					"description": "An accepted TOTP code consumes its time step, so the same code can't be used again while it is still valid, at login or for the MFA lifecycle checks"
+				},
+				{
 					"command": "bun run test:workspace-deleted-hook",
 					"description": "Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged"
 				},

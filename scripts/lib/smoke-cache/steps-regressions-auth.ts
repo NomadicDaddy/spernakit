@@ -172,6 +172,13 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'shared/src/errorCodes.ts',
 		],
 	},
+	// Drives the real MFA setup, login-challenge and lifecycle services against a migrated temp
+	// database, computing codes itself, so its world is the migrations, the backend sources and
+	// the gate itself.
+	'test:totp-replay': {
+		excludes: COMMON_EXCLUDES,
+		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-totp-replay.ts'],
+	},
 	// Drives the real API key, user update, check-username and email-change routes against a
 	// migrated temp database, so its world is the migrations, the backend sources, the fixture
 	// that boots the API, and the gate itself.

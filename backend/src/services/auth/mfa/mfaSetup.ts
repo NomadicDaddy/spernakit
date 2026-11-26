@@ -13,8 +13,9 @@ import { logAuth } from '../../../utils/logger.ts';
 import {
 	formatRecoveryCode,
 	generateRecoveryCode,
+	matchTotpStep,
 	RECOVERY_CODE_COUNT,
-	validateTotpCode,
+	totpStepUnused,
 } from '../mfaHelpers.ts';
 
 /**
@@ -151,8 +152,8 @@ async function verifySetup(userId: number, code: string): Promise<MfaVerifySetup
 		decrypt(mfa.backupCodesEncrypted),
 	]);
 
-	const isValid = validateTotpCode(secretBase32, code);
-	if (!isValid) {
+	const step = matchTotpStep(secretBase32, code);
+	if (step === null) {
 		logAuth('debug', 'MFA verify setup failed: invalid code', { userId });
 		return null;
 	}
@@ -166,12 +167,20 @@ async function verifySetup(userId: number, code: string): Promise<MfaVerifySetup
 	}
 
 	// Compare-and-set: only flip enabled -> true if it is still false. Ensures
-	// backup codes are emitted at most once even under concurrent verify-setup.
+	// backup codes are emitted at most once even under concurrent verify-setup. The same
+	// update consumes the code's time step, so the code that enabled MFA can't then pass the
+	// login challenge or a lifecycle check.
 	const now = new Date();
 	const updated = db
 		.update(mfaSettings)
-		.set({ isEnabled: true, lastVerifiedAt: now, updatedAt: now })
-		.where(and(eq(mfaSettings.userId, userId), eq(mfaSettings.isEnabled, false)))
+		.set({ isEnabled: true, lastAcceptedTotpStep: step, lastVerifiedAt: now, updatedAt: now })
+		.where(
+			and(
+				eq(mfaSettings.userId, userId),
+				eq(mfaSettings.isEnabled, false),
+				totpStepUnused(step),
+			),
+		)
 		.returning({ id: mfaSettings.id })
 		.all();
 

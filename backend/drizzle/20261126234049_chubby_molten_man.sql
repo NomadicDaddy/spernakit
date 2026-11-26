@@ -1,0 +1,1 @@
+ALTER TABLE `mfa_settings` ADD `last_accepted_totp_step` integer;

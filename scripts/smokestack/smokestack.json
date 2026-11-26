@@ -3413,6 +3413,28 @@
 			},
 			{
 				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/test-totp-replay.ts"
+					]
+				},
+				"description": "An accepted TOTP code consumes its time step, so the same code can't be used again while it is still valid, at login or for the MFA lifecycle checks",
+				"name": "test:totp-replay",
+				"run": ["bun", "run", "test:totp-replay"]
+			},
+			{
+				"cache": {
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**/*.ts",

@@ -29,6 +29,11 @@ export const mfaSettings = sqliteTable(
 		id: integer('id').primaryKey({ autoIncrement: true }),
 		/** Whether MFA is fully active (true after initial verification) */
 		isEnabled: integer('is_enabled', { mode: 'boolean' }).notNull().default(false),
+		/**
+		 * The TOTP time step (30-second counter) of the last accepted code. A code is accepted only
+		 * for a later step, so each step's code works once, however long it stays valid.
+		 */
+		lastAcceptedTotpStep: integer('last_accepted_totp_step'),
 		/** Last successful MFA verification timestamp */
 		lastVerifiedAt: integer('last_verified_at', { mode: 'timestamp' }),
 		/** MFA method: totp, email, or sms */

@@ -29,6 +29,7 @@ const mfaSettings = pgTable(
 		createdAt: timestamp('created_at', { mode: 'date' }).notNull(),
 		id: serial('id').primaryKey(),
 		isEnabled: boolean('is_enabled').notNull().default(false),
+		lastAcceptedTotpStep: integer('last_accepted_totp_step'),
 		lastVerifiedAt: timestamp('last_verified_at', { mode: 'date' }),
 		method: text('method', { enum: MFA_METHODS }).notNull().default('totp'),
 		secretEncrypted: text('secret_encrypted').notNull(),

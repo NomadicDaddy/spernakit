@@ -178,6 +178,7 @@
 		"test:alert-cooldown": "bun scripts/test-alert-cooldown.ts",
 		"test:ws-revalidation-ceiling": "bun scripts/test-ws-revalidation-ceiling.ts",
 		"test:websocket-token-revocation": "bun scripts/test-websocket-token-revocation.ts",
+		"test:totp-replay": "bun scripts/test-totp-replay.ts",
 		"test:api-key-request-signing": "bun scripts/test-elysia-native-params.ts && bun scripts/test-api-key-request-signing.ts",
 		"test:audit-outcome-filter": "bun scripts/test-audit-outcome-filter.ts",
 		"test:audit-plugin-lifecycle": "bun scripts/test-audit-plugin-lifecycle.ts",

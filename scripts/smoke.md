@@ -383,81 +383,83 @@ Steps (in order):
      - The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the configured two-minute interval.
 113. `bun run test:websocket-token-revocation`
      - An open WebSocket closes once the access token it was opened with is revoked on its own, as a logout does, while another browser keeps its socket.
-114. `bun run test:workspace-deleted-hook`
+114. `bun run test:totp-replay`
+     - An accepted TOTP code consumes its time step, so the same code can't be used again while it is still valid, at login or for the MFA lifecycle checks.
+115. `bun run test:workspace-deleted-hook`
      - Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged.
-115. `bun run test:worktree-hooks-path`
+116. `bun run test:worktree-hooks-path`
      - Installing in an upgrade worktree with extensions.worktreeConfig on writes that worktree's own core.hooksPath, so the main checkout keeps running its own guards, and the template's hooks-path reader judges each checkout by the hooks git dispatches.
-116. `bun run test:domain-route-aggregator`
+117. `bun run test:domain-route-aggregator`
      - An app initialized from HEAD ships routes/domain.ts mounted once by create-api-app.ts with no route override, and with the documented app aggregator added, ReturnType<typeof createApiApp> keeps the template's and the app's routes fully typed.
-117. `bun run test:migration-runner-safety`
+118. `bun run test:migration-runner-safety`
      - The CLI and startup migration runners refuse unknown journal hashes and orphaned files, check foreign keys before COMMIT, record content hashes, and refuse startup when a failed migration cannot be restored.
-118. `bun run test:deploy-local-prod-config`
+119. `bun run test:deploy-local-prod-config`
      - deploy:local-prod writes a config the production validator accepts and refuses plain-HTTP non-loopback URLs.
-119. `bun run check:version-refs`
+120. `bun run check:version-refs`
      - Current-state version claims in docs match package.json.
-120. `bun run check:crawl-route-coverage`
+121. `bun run check:crawl-route-coverage`
      - Every page the router registers is one the crawl is required to visit, or is exempt with a reason.
-121. `bun run check:smoke-docs`
+122. `bun run check:smoke-docs`
      - Smoke runbook matches scripts/smoke.json.
-122. `bun run typecheck`
+123. `bun run typecheck`
      - Typecheck.
-123. `bun run lint`
+124. `bun run lint`
      - Lint.
-124. `bun run build`
+125. `bun run build`
      - Build.
-125. `bun run verify-minification`
+126. `bun run verify-minification`
      - Verify bundle minification and total size budget.
-126. `bun run regression:fingerprint`
+127. `bun run regression:fingerprint`
      - Record the browser, Bun and puppeteer the regression suite runs on.
-127. `bun run test:regression-suite`
+128. `bun run test:regression-suite`
      - The application's never-break flows in tests/regression-suite.md pass end to end in a browser.
-128. `bun run check:critical-path`
+129. `bun run check:critical-path`
      - Verify critical-path size, React runtime placement, and no preload waterfall.
-129. `bun run check:api-types`
+130. `bun run check:api-types`
      - API type contract validation.
-130. `bun run check:feature-integration`
+131. `bun run check:feature-integration`
      - Feature integration check.
-131. `bun run test:feature-integration`
+132. `bun run test:feature-integration`
      - Feature integration rejects unmounted flat route modules.
-132. `bun run check:schema-parity`
+133. `bun run check:schema-parity`
      - SQLite/PG schema parity check.
-133. `bun run test:backup-compression`
+134. `bun run test:backup-compression`
      - Backup decompression guard rejects high-ratio archives and cleans up.
-134. `bun run test:bundle-budget`
+135. `bun run test:bundle-budget`
      - Bundle budget stays app-owned and is only enforced with matching provenance.
-135. `bun run test:crawl-credentials`
+136. `bun run test:crawl-credentials`
      - Crawl login resolves from the seed account and never from a tracked config file.
-136. `bun run test:critical-path-budget`
+137. `bun run test:critical-path-budget`
      - Critical-path budget stays app-owned and regenerates both recorded limits.
-137. `bun run test:lost-lines`
+138. `bun run test:lost-lines`
      - Upgrade audit reports app-authored lines the template copy deleted.
-138. `bun run test:override-deltas`
+139. `bun run test:override-deltas`
      - Override report names the template content each .templateoverrides entry withholds.
-139. `bun run test:override-ahead-expiry`
+140. `bun run test:override-ahead-expiry`
      - An AHEAD .templateoverrides entry fails the upgrade check once the selected target reaches its expiry version or blob.
-140. `bun run test:regression-suite-parser`
+141. `bun run test:regression-suite-parser`
      - The regression-suite parser refuses commented-out, unfailable, gapped, off-origin and CSS-selector cases.
-141. `bun run test:smoke-steps`
+142. `bun run test:smoke-steps`
      - Smoke step comparison names a template step a derived app's runbook lost.
-142. `bun run test:reset-packages`
+143. `bun run test:reset-packages`
      - Package reset preserves dependencies when the frozen-install preflight fails.
-143. `bun run test:clear-logs`
+144. `bun run test:clear-logs`
      - Clearing logs removes this repository's own runtime and runbook output and nothing else.
-144. `bun run test:scaffolded-hooks`
+145. `bun run test:scaffolded-hooks`
      - Scaffolded pre-push hook replays refs through both release guards.
-145. `bun run test:gate-scripts`
+146. `bun run test:gate-scripts`
      - Sanctioned gate-command mapping holds: exact forms only, drift-equal.
-146. `bun run test:template-drift`
+147. `bun run test:template-drift`
      - Drift reports build-critical structural lines and files removed by the template.
-147. `bun run format:check`
+148. `bun run format:check`
      - Format check.
-148. `bun run test:aidd-format`
+149. `bun run test:aidd-format`
      - aidd metadata format gate self-test (synthetic fixtures).
-149. `bun run check:aidd-format`
+150. `bun run check:aidd-format`
      - Tracked .aidd metadata matches the repository Prettier shape.
-150. `bun run check-deps`
+151. `bun run check-deps`
      - Check dependency versions.
-151. `bun run check:dead-code`
+152. `bun run check:dead-code`
      - Dead code detection (knip).
 
 ### 5. Docker Prod

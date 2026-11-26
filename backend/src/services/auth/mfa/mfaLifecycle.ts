@@ -12,7 +12,7 @@ import {
 	formatRecoveryCode,
 	generateRecoveryCode,
 	RECOVERY_CODE_COUNT,
-	verifyEnabledMfa,
+	verifyAndConsumeMfaCode,
 } from '../mfaHelpers.ts';
 
 /**
@@ -22,7 +22,7 @@ import {
  * @returns True if MFA was disabled, false if verification failed.
  */
 async function disableMfa(userId: number, code: string): Promise<boolean> {
-	const mfa = await verifyEnabledMfa(userId, code);
+	const mfa = await verifyAndConsumeMfaCode(userId, code);
 	if (!mfa) return false;
 
 	// Hard-delete the MFA record
@@ -40,7 +40,7 @@ async function disableMfa(userId: number, code: string): Promise<boolean> {
  * @returns Array of new recovery codes, or null if verification failed.
  */
 async function regenerateRecoveryCodes(userId: number, code: string): Promise<null | string[]> {
-	const mfa = await verifyEnabledMfa(userId, code);
+	const mfa = await verifyAndConsumeMfaCode(userId, code);
 	if (!mfa) return null;
 
 	const backupCodes: string[] = [];
