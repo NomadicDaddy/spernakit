@@ -3,6 +3,15 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.5] - 2026-11-26
+
+### Fixed
+
+- A forgot-password reset or an administrator's "Set new password" can no longer set the
+  password the account already has. The password-history check only looked at earlier
+  passwords, so the current one passed it, became a history entry and stayed the live password.
+  Both paths now refuse it with the "used recently" message whenever the history policy is on.
+
 ## [3.52.4] - 2026-11-26
 
 ### Fixed
