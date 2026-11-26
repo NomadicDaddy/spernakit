@@ -11,6 +11,9 @@ this release.
   failed-login counter used to stay at or above the limit after the lock ran out, so one typo
   re-locked the account at once. The first failure after a lock expires now counts as the first
   of a fresh run. An account that is still locked behaves as before.
+- A wrong password that arrives while another attempt is locking the same account no longer
+  counts against it or pushes the lock's end later. Each failure is now judged against the
+  account as it stands, not as it was when the sign-in began.
 
 ## [3.52.3] - 2026-11-26
 
