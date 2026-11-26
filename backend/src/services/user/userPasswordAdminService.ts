@@ -67,7 +67,7 @@ async function adminResetUserPassword(
 			return { error: strengthError, success: false };
 		}
 
-		if (await isPasswordInHistory(targetUserId, options.password)) {
+		if (await isPasswordInHistory(targetUserId, options.password, targetUser.passwordHash)) {
 			return {
 				error: 'This password was used recently. Please choose a different password.',
 				success: false,

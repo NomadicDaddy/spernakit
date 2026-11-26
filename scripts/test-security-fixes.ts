@@ -141,7 +141,12 @@ try {
 		.insert(users)
 		.values({
 			email: 'race@fixture.invalid',
-			passwordHash: 'not-a-real-hash',
+			// A real hash: resetPassword's reuse check verifies against the current hash, and
+			// Bun.password.verify throws on a string that is no hash.
+			passwordHash: await Bun.password.hash('RaceOriginal1!fixture', {
+				algorithm: 'bcrypt',
+				cost: 4,
+			}),
 			resetToken: raceTokenHash,
 			resetTokenExpiresAt: new Date(Date.now() + 60_000),
 			role: 'OPERATOR',

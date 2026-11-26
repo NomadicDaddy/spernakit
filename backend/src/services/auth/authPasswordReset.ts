@@ -103,7 +103,7 @@ async function resetPassword(
 		return { success: false };
 	}
 
-	if (await isPasswordInHistory(user.id, newPassword)) {
+	if (await isPasswordInHistory(user.id, newPassword, user.passwordHash)) {
 		logAuth('debug', 'Password reset failed: password in history', { userId: user.id });
 		return { reason: SERVICE_ERRORS.PASSWORD_HISTORY, success: false };
 	}

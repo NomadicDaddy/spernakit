@@ -11,6 +11,10 @@
  * unmarked; a failed send does the same; and a target with no verified address is refused before
  * anything is sent.
  *
+ * It also covers the "Set new password" mode's reuse check: setting the password the account
+ * already has is refused under the history policy, because password_history holds only
+ * superseded hashes, and leaves the hash and history untouched. A different password still sets.
+ *
  * Runs in-process against a throwaway temp-file SQLite database, like
  * scripts/test-oauth-secret-update.ts.
  */
@@ -23,7 +27,8 @@ import type { SendEmailResult } from '../backend/src/services/email/emailTypes.t
 
 import { initializeConfig } from '../backend/src/config/configLoader.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
-import { closeDatabase, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { closeDatabase, eq, getDb, initializeDatabase } from '../backend/src/db/index.ts';
+import { passwordHistory } from '../backend/src/db/schema/passwordHistory.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 
@@ -113,6 +118,31 @@ async function checkRefusals(): Promise<void> {
 	check(!flagged(5), 'A refused reset must not mark the account');
 }
 
+async function checkSetToCurrentPassword(): Promise<void> {
+	const current = 'Current1!password';
+	const hash = await Bun.password.hash(current, { algorithm: 'bcrypt', cost: 4 });
+	seedUser(6, true);
+	getDb().update(users).set({ passwordHash: hash }).where(eq(users.id, 6)).run();
+	const history = () =>
+		getDb().select().from(passwordHistory).where(eq(passwordHistory.userId, 6)).all().length;
+
+	const reuse = await adminResetUserPassword(ADMIN_ID, 6, { mode: 'set', password: current });
+	check(!reuse.success, 'Setting the password the account already has must be refused');
+	check(/used recently/i.test(reuse.error ?? ''), `The refusal must name reuse: ${reuse.error}`);
+	const kept = getDb().select().from(users).where(eq(users.id, 6)).get();
+	check(kept?.passwordHash === hash, 'A refused set must leave the password hash unchanged');
+	check(history() === 0, 'A refused set must add no password history entry');
+
+	const fresh = await adminResetUserPassword(ADMIN_ID, 6, {
+		mode: 'set',
+		password: 'Another2!password',
+	});
+	check(fresh.success, `Control: a different password must set: ${fresh.error ?? 'no error'}`);
+	const changed = getDb().select().from(users).where(eq(users.id, 6)).get();
+	check(changed?.passwordHash !== hash, 'Control: a successful set must write a new hash');
+	check(history() === 1, 'Control: a successful set must record the old hash in history');
+}
+
 async function run(): Promise<void> {
 	initializeConfig();
 	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-admin-reset-'));
@@ -125,6 +155,7 @@ async function run(): Promise<void> {
 		seedUser(ADMIN_ID, true);
 		await checkSuccessfulSend();
 		await checkRefusals();
+		await checkSetToCurrentPassword();
 	} finally {
 		await closeDatabase();
 		try {

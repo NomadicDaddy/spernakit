@@ -33,13 +33,23 @@ async function verifyPassword(password: string, hash: string): Promise<boolean> 
 }
 
 /**
- * Check whether a new password matches any of the user's recent password hashes.
+ * Check whether a new password matches the account's current password or one of its recent
+ * password hashes.
+ *
+ * password_history holds only superseded hashes: the live hash is appended when it is replaced.
+ * The current hash is therefore a required argument, so no caller can re-apply the password the
+ * account already has by checking history alone.
  *
  * @param userId - ID of the user
- * @param newPassword - Plaintext password to check against history
- * @returns True if the password was recently used
+ * @param newPassword - Plaintext password to check
+ * @param currentHash - The account's live password hash, from the row the caller read
+ * @returns True if the password is the current one or was recently used
  */
-async function isPasswordInHistory(userId: number, newPassword: string): Promise<boolean> {
+async function isPasswordInHistory(
+	userId: number,
+	newPassword: string,
+	currentHash: string,
+): Promise<boolean> {
 	const { passwordHistoryDepth } = getAuthSettings();
 	if (passwordHistoryDepth <= 0) {
 		return false;
@@ -54,9 +64,8 @@ async function isPasswordInHistory(userId: number, newPassword: string): Promise
 		.limit(passwordHistoryDepth)
 		.all();
 
-	const matches = await Promise.all(
-		recentHashes.map((entry) => verifyPassword(newPassword, entry.passwordHash)),
-	);
+	const hashes = [currentHash, ...recentHashes.map((entry) => entry.passwordHash)];
+	const matches = await Promise.all(hashes.map((hash) => verifyPassword(newPassword, hash)));
 	return matches.some(Boolean);
 }
 
@@ -153,7 +162,7 @@ async function changeUserPassword(
 		return { error: strengthError, success: false };
 	}
 
-	if (await isPasswordInHistory(userId, newPassword)) {
+	if (await isPasswordInHistory(userId, newPassword, user.passwordHash)) {
 		return {
 			error: 'This password was used recently. Please choose a different password.',
 			success: false,

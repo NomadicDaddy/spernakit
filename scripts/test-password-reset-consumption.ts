@@ -15,6 +15,8 @@
  *   - the token is replaced by a newer reset.
  * Positive control: an untouched reset succeeds, writes the new hash and clears the token.
  * Concurrent use of one token: exactly one of two simultaneous resets succeeds.
+ * Current-password reuse: resetting to the password the account already has is refused under
+ * the history policy (password_history holds only superseded hashes), and the token survives.
  *
  * Run: bun scripts/test-password-reset-consumption.ts
  */
@@ -25,6 +27,7 @@ import { join } from 'node:path';
 import { exit } from 'node:process';
 
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
+import { SERVICE_ERRORS } from '../backend/src/constants/serviceResults.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 // eq comes through the DB surface module: this script resolves dependencies from the root
 // manifest, which does not carry drizzle-orm.
@@ -40,7 +43,12 @@ type UserChange = Partial<
 
 const repoRoot = join(import.meta.dir, '..');
 const failures: string[] = [];
-const ORIGINAL_HASH = 'not-a-real-hash';
+// A real hash: the reuse check verifies the new password against the account's current hash, and
+// Bun.password.verify throws on a string that is no hash. Cost 4 keeps the fixture fast.
+const ORIGINAL_HASH = await Bun.password.hash('Original1!fixture', {
+	algorithm: 'bcrypt',
+	cost: 4,
+});
 let seq = 0;
 
 /** Insert a user holding a live reset token; returns its id and the plaintext token. */
@@ -131,6 +139,18 @@ try {
 		failures.push(`concurrent use of one token: expected 1 success, got ${String(winners)}`);
 	if (readUser(raceId).resetToken !== null)
 		failures.push('concurrent use of one token: the winner must clear the token');
+
+	const { id: reuseId, token: reuseToken } = seedUser();
+	const reuse = await resetPassword(reuseToken, 'Original1!fixture');
+	if (reuse.success || reuse.reason !== SERVICE_ERRORS.PASSWORD_HISTORY)
+		failures.push(
+			`current-password reuse: expected the history refusal, got ${JSON.stringify(reuse)}`,
+		);
+	const reuseRow = readUser(reuseId);
+	if (reuseRow.passwordHash !== ORIGINAL_HASH)
+		failures.push('current-password reuse: the refused reset must leave the hash unchanged');
+	if (reuseRow.resetToken === null)
+		failures.push('current-password reuse: the refused reset must not consume the token');
 } finally {
 	closeDatabase();
 	try {
@@ -147,5 +167,5 @@ if (failures.length > 0) {
 	exit(1);
 }
 console.log(
-	'[OK] password-reset consumption: 6 cases (control, expiry, deletion, password change, token replacement, concurrent use)',
+	'[OK] password-reset consumption: 7 cases (control, expiry, deletion, password change, token replacement, concurrent use, current-password reuse)',
 );
