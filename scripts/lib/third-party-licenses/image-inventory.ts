@@ -78,26 +78,41 @@ export async function collectBasePackages(image: string): Promise<string[]> {
 }
 
 /**
- * Every npm package directory present in the image, read from bun's store directory names.
- * This is the exact installed runtime set. The conservative closure remains broader because it
- * also covers frontend bundle inputs without package directories in the final image.
+ * Bun's peer-variant marker. From Bun 1.4.5 a release installed once per distinct set of peers gets
+ * a store directory `<name>@<version>+<16 hex digits>`, and the hash names the peer set, not the
+ * release, so it is no part of the attribution identity. Only a trailing group of exactly 16 hex
+ * digits is taken, which leaves a semver build-metadata version such as `1.0.0+build.5` alone.
  */
-export async function collectImagePackages(image: string): Promise<string[]> {
-	const output = await runInImage(image, 'ls /app/node_modules/.bun 2>/dev/null || true');
-	return (
-		output
-			.split('\n')
-			.map((line) => line.trim())
-			.filter((line) => line.includes('@') && !line.startsWith('.'))
-			// bun encodes scoped names as @scope+name@version; normalise to @scope/name@version.
-			.map((entry) => entry.replace('+', '/'))
-			.sort()
-	);
+const PEER_VARIANT_SUFFIX = /\+[0-9a-f]{16}$/;
+
+/**
+ * Bun's store directory names, keyed by the `<name>@<version>` identity the attribution uses and
+ * sorted by it. A scoped name is stored as `@scope+name@version`, and every peer variant of one
+ * release shares an identity, so they are kept together under it. Pure, so the parsing can be
+ * tested without a docker daemon.
+ */
+export function parseStoreListing(listing: string): Map<string, string[]> {
+	const packages = new Map<string, string[]>();
+	for (const line of listing.split('\n')) {
+		const dir = line.trim();
+		if (!dir.includes('@') || dir.startsWith('.')) continue;
+		const named = dir.startsWith('@') ? dir.replace('+', '/') : dir;
+		const identity = named.replace(PEER_VARIANT_SUFFIX, '');
+		packages.set(identity, [...(packages.get(identity) ?? []), dir]);
+	}
+	const identities = [...packages.keys()].sort();
+	return new Map(identities.map((identity) => [identity, packages.get(identity) ?? []]));
 }
 
-/** Bun's store directory name for a package: `@scope/name@version` becomes `@scope+name@version`. */
-export function storeDirName(entry: string): string {
-	return entry.replace('/', '+');
+/**
+ * Every npm package in the image, read from bun's store directory names, with the directories each
+ * one was read from. This is the exact installed runtime set. The conservative closure remains
+ * broader because it also covers frontend bundle inputs without package directories in the image.
+ */
+export async function collectImagePackages(image: string): Promise<Map<string, string[]>> {
+	return parseStoreListing(
+		await runInImage(image, 'ls /app/node_modules/.bun 2>/dev/null || true'),
+	);
 }
 
 /**

@@ -361,6 +361,10 @@
 					"description": "The licence collector reports the version installed for the declaring workspace and falls back to the root copy"
 				},
 				{
+					"command": "bun run test:image-store-listing",
+					"description": "The image licence check reads Bun store names, peer-variant suffixes included, as <name>@<version>"
+				},
+				{
 					"command": "bun run test:nginx-security",
 					"description": "Nginx security policy regression catches missing COOP or CORP and forced COEP"
 				},

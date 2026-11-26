@@ -1182,6 +1182,27 @@
 						".claude/**"
 					],
 					"inputs": [
+						"scripts/lib/third-party-licenses/image-inventory.ts",
+						"scripts/test-image-store-listing.ts"
+					]
+				},
+				"description": "The image licence check reads Bun store names, peer-variant suffixes included, as <name>@<version>",
+				"name": "test:image-store-listing",
+				"run": ["bun", "run", "test:image-store-listing"]
+			},
+			{
+				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
 						"docker/nginx.conf",
 						"scripts/lib/nginx-security.ts",
 						"scripts/test-nginx-security.ts"

@@ -83,7 +83,8 @@ async function defaultImageTag(root: string): Promise<string> {
  * that the attribution appendix does not include.
  */
 async function verifyNoticesCoverImage(root: string, image: string): Promise<boolean> {
-	const inImage = await collectImagePackages(image);
+	const storeDirs = await collectImagePackages(image);
+	const inImage = [...storeDirs.keys()];
 	if (inImage.length === 0) {
 		console.log('[SKIP] No bun store found in the image; skipping closure comparison.');
 		return true;
@@ -121,7 +122,7 @@ async function verifyNoticesCoverImage(root: string, image: string): Promise<boo
 	}
 
 	if (fromOtherPlatform.length > 0) {
-		if (!(await verifyImageCarriesLicenses(image, fromOtherPlatform))) return false;
+		if (!(await verifyImageCarriesLicenses(image, fromOtherPlatform, storeDirs))) return false;
 		console.log(
 			`[OK] ${image}: ${fromOtherPlatform.length} platform-gated package(s) verified against ` +
 				'the image:',

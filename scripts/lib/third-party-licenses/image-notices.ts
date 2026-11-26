@@ -6,7 +6,21 @@
  * each verification prints its own report and returns whether it passed, so the gate keeps sole
  * ownership of the exit code.
  */
-import { runInImage, storeDirName } from './image-inventory.ts';
+import { runInImage } from './image-inventory.ts';
+
+/** Store directory names per `<name>@<version>`, as collectImagePackages reads them. */
+export type StoreDirs = ReadonlyMap<string, readonly string[]>;
+
+/**
+ * The store directory to open for an entry. Peer variants of one release are the same package
+ * linked against different peers, so its manifest and license files are the same in each, and the
+ * first serves for all.
+ */
+function storeDirOf(entry: string, storeDirs: StoreDirs): string {
+	const dir = storeDirs.get(entry)?.[0];
+	if (dir === undefined) throw new Error(`no store directory was read for ${entry}`);
+	return dir;
+}
 
 export const REQUIRED_IN_IMAGE = [
 	'/app/LICENSE',
@@ -66,10 +80,11 @@ function licenseTextPath(spdx: string): string {
 async function readDeclaredLicenses(
 	image: string,
 	entries: string[],
+	storeDirs: StoreDirs,
 ): Promise<Map<string, string>> {
 	const script = entries
 		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirName(entry)}/node_modules`;
+			const dir = `/app/node_modules/.bun/${storeDirOf(entry, storeDirs)}/node_modules`;
 			const manifest = `${dir}/${packageNameOf(entry)}/package.json`;
 			const read = `sed -n 's/.*"license": *"\\([^"]*\\)".*/\\1/p' ${manifest} 2>/dev/null | head -1`;
 			return `echo "DECLARED ${entry} $(${read})"`;
@@ -88,7 +103,8 @@ async function readDeclaredLicenses(
 
 /**
  * For a package the generating machine cannot install, the attribution has to be verified where it
- * actually ships. Bun lays each package out at `.bun/<name>@<version>/node_modules/<name>/`, so the
+ * actually ships. Bun lays each package out at `.bun/<store dir>/node_modules/<name>/`, where the
+ * store dir is `<name>@<version>` with a `+<hash>` peer-variant suffix on some releases, so the
  * package's own LICENSE travels with the binary; this confirms it arrived.
  *
  * Shipping no license file is not by itself a gap. sharp's prebuilt libvips binaries publish `lib`,
@@ -102,10 +118,11 @@ async function readDeclaredLicenses(
 export async function verifyImageCarriesLicenses(
 	image: string,
 	entries: string[],
+	storeDirs: StoreDirs,
 ): Promise<boolean> {
 	const script = entries
 		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirName(entry)}/node_modules`;
+			const dir = `/app/node_modules/.bun/${storeDirOf(entry, storeDirs)}/node_modules`;
 			const find = `find ${dir} -maxdepth 3 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
 			return `[ -n "$(${find})" ] || echo "MISSING ${entry}"`;
 		})
@@ -118,7 +135,7 @@ export async function verifyImageCarriesLicenses(
 
 	if (missing.length === 0) return true;
 
-	const declared = await readDeclaredLicenses(image, missing);
+	const declared = await readDeclaredLicenses(image, missing, storeDirs);
 	const uncovered = missing.filter((entry) => {
 		const spdx = declared.get(entry);
 		return spdx === undefined || !REQUIRED_IN_IMAGE.includes(licenseTextPath(spdx));
