@@ -20,6 +20,8 @@ const WS_REVALIDATION_INTERVAL_MS = 120_000;
 const WS_REVALIDATION_JITTER_MS = 30_000;
 
 interface WsContext {
+	/** SHA-256 of the access token the socket was opened with; never the raw token, never logged. */
+	accessTokenHash?: string;
 	clientIp?: string;
 	connId?: string;
 	lastValidatedAt?: number;

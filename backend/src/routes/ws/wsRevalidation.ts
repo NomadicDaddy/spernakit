@@ -3,7 +3,11 @@ import jwt from 'jsonwebtoken';
 import { getConfig } from '../../config/configLoader.ts';
 import { parseCookies } from '../../plugins/auth.ts';
 import { getUserAccountStatus } from '../../services/userService.ts';
-import { isUserTokensRevokedAfter } from '../../utils/auth/tokenBlacklist.ts';
+import {
+	hashToken,
+	isTokenHashRevoked,
+	isUserTokensRevokedAfter,
+} from '../../utils/auth/tokenBlacklist.ts';
 import { logger } from '../../utils/logger.ts';
 import {
 	WS_REVALIDATION_INTERVAL_MS,
@@ -11,22 +15,36 @@ import {
 	type WsContext,
 } from './wsAuth.ts';
 
-function extractTokenTimestamps(cookieHeader: null | string): {
+interface TokenState {
+	accessTokenHash: string | undefined;
 	tokenExpiresAt: number | undefined;
 	tokenIssuedAt: Date | undefined;
-} {
-	if (!cookieHeader) return { tokenExpiresAt: undefined, tokenIssuedAt: undefined };
+}
+
+const NO_TOKEN: TokenState = {
+	accessTokenHash: undefined,
+	tokenExpiresAt: undefined,
+	tokenIssuedAt: undefined,
+};
+
+/**
+ * What revalidation needs to remember about the access token a socket was opened with: its
+ * expiry and issue time, for the expiry and blanket-revocation checks, and its hash, for the
+ * individual-revocation check. The raw token itself is not kept.
+ */
+function extractTokenState(cookieHeader: null | string): TokenState {
+	if (!cookieHeader) return NO_TOKEN;
 
 	const config = getConfig();
 	const cookies = parseCookies(cookieHeader);
 	const accessToken = cookies[config.security.authCookieName];
-	if (!accessToken) return { tokenExpiresAt: undefined, tokenIssuedAt: undefined };
+	if (!accessToken) return NO_TOKEN;
 
 	const decoded = jwt.decode(accessToken) as { exp?: number; iat?: number } | null;
 	const tokenIssuedAt = decoded?.iat ? new Date(decoded.iat * 1000) : undefined;
 	const tokenExpiresAt = decoded?.exp ? decoded.exp * 1000 : undefined;
 
-	return { tokenExpiresAt, tokenIssuedAt };
+	return { accessTokenHash: hashToken(accessToken), tokenExpiresAt, tokenIssuedAt };
 }
 
 /**
@@ -43,7 +61,8 @@ function recentlyValidated(ctx: WsContext, now: number): boolean {
 }
 
 /**
- * Revalidate JWT expiry, account status, and blanket token revocation.
+ * Revalidate JWT expiry, account status, blanket token revocation, and revocation of the
+ * individual token the socket was opened with.
  *
  * @param ws - The socket to close when the connection is no longer valid
  * @param ctx - The connection's context
@@ -101,7 +120,18 @@ function revalidateConnection(
 		return false;
 	}
 
+	// The token this socket was opened with, revoked on its own (a logout in the browser that
+	// holds it). Without this, a copied token's socket outlived the logout until token expiry.
+	if (ctx.accessTokenHash && isTokenHashRevoked(ctx.accessTokenHash)) {
+		logger.debug(
+			{ connId: ctx.connId, userId: ctx.userId },
+			'WebSocket: access token revoked, closing',
+		);
+		ws.close(1008, 'Token revoked');
+		return false;
+	}
+
 	return true;
 }
 
-export { extractTokenTimestamps, revalidateConnection };
+export { extractTokenState, revalidateConnection };

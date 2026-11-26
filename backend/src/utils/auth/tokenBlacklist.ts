@@ -46,6 +46,26 @@ function revokeAccessToken(token: string, expiresAt: number, userId?: number): v
 }
 
 /**
+ * Check if the token with this SHA-256 hash has been revoked (blacklisted).
+ * Only considers entries that haven't expired yet (expiresAt > now). An established WebSocket
+ * keeps only its token's hash, so its revalidation checks the hash it was opened with.
+ *
+ * @param tokenHash - The token's hash, from {@link hashToken}
+ * @returns true if the token is blacklisted and the entry hasn't expired
+ */
+function isTokenHashRevoked(tokenHash: string): boolean {
+	const db = getDb();
+	const now = new Date();
+	const entry = db
+		.select({ id: tokenBlacklist.id })
+		.from(tokenBlacklist)
+		.where(and(eq(tokenBlacklist.tokenHash, tokenHash), gt(tokenBlacklist.expiresAt, now)))
+		.limit(1)
+		.all();
+	return entry.length > 0;
+}
+
+/**
  * Check if a token has been revoked (blacklisted).
  * Only considers entries that haven't expired yet (expiresAt > now).
  *
@@ -53,16 +73,7 @@ function revokeAccessToken(token: string, expiresAt: number, userId?: number): v
  * @returns true if the token is blacklisted and the entry hasn't expired
  */
 function isTokenRevoked(token: string): boolean {
-	const hash = hashToken(token);
-	const db = getDb();
-	const now = new Date();
-	const entry = db
-		.select({ id: tokenBlacklist.id })
-		.from(tokenBlacklist)
-		.where(and(eq(tokenBlacklist.tokenHash, hash), gt(tokenBlacklist.expiresAt, now)))
-		.limit(1)
-		.all();
-	return entry.length > 0;
+	return isTokenHashRevoked(hashToken(token));
 }
 
 /**
@@ -152,6 +163,8 @@ function cleanupExpiredBlacklistEntries(): { batches: number; cleaned: number } 
 
 export {
 	cleanupExpiredBlacklistEntries,
+	hashToken,
+	isTokenHashRevoked,
 	isTokenRevoked,
 	isUserTokensRevokedAfter,
 	revokeAccessToken,

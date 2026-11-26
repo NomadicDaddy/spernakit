@@ -217,6 +217,19 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 			'shared/src/usernamePolicy.ts',
 		],
 	},
+	// Drives the real upgrade handler, logout route and revalidation against a migrated temp
+	// database with ephemeral keys, so its world is the migrations, the backend sources, the key
+	// fixture and the gate itself.
+	'test:websocket-token-revocation': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/crypto-keys.ts',
+			'scripts/lib/test-auth-keys.ts',
+			'scripts/test-websocket-token-revocation.ts',
+		],
+	},
 	// Drives the real WebSocket revalidation with a fake clock and reads the handlers' timer call,
 	// so its world is the backend sources, their config defaults and the gate itself.
 	'test:ws-revalidation-ceiling': {

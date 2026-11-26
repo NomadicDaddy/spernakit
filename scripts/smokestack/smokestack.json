@@ -3389,6 +3389,30 @@
 			},
 			{
 				"cache": {
+					"excludes": [
+						"**/node_modules/**",
+						"**/dist/**",
+						".git/**",
+						"logs/**",
+						"backups/**",
+						"artifacts/**",
+						".aidd/**",
+						".claude/**"
+					],
+					"inputs": [
+						"backend/drizzle/**",
+						"backend/src/**",
+						"scripts/lib/crypto-keys.ts",
+						"scripts/lib/test-auth-keys.ts",
+						"scripts/test-websocket-token-revocation.ts"
+					]
+				},
+				"description": "An open WebSocket closes once the access token it was opened with is revoked on its own, as a logout does, while another browser keeps its socket",
+				"name": "test:websocket-token-revocation",
+				"run": ["bun", "run", "test:websocket-token-revocation"]
+			},
+			{
+				"cache": {
 					"inputs": [
 						"backend/drizzle/**",
 						"backend/src/**/*.ts",

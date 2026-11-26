@@ -21,7 +21,7 @@ import {
 	WS_REVALIDATION_INTERVAL_MS,
 	WS_REVALIDATION_JITTER_MS,
 } from './wsAuth.ts';
-import { extractTokenTimestamps, revalidateConnection } from './wsRevalidation.ts';
+import { extractTokenState, revalidateConnection } from './wsRevalidation.ts';
 
 /** Handle WebSocket connection close: clean up tracking. */
 function handleClose(ws: { data: unknown }): void {
@@ -183,10 +183,13 @@ function handleUpgrade({
 	const limitError = checkConnectionLimits(clientIp, user.id, config, set);
 	if (limitError) return limitError;
 
-	// Extract token iat/exp for re-validation and blanket-revocation checks.
-	const { tokenExpiresAt, tokenIssuedAt } = extractTokenTimestamps(request.headers.get('cookie'));
+	// Keep the token's iat/exp and hash for the expiry, blanket- and individual-revocation checks.
+	const { accessTokenHash, tokenExpiresAt, tokenIssuedAt } = extractTokenState(
+		request.headers.get('cookie'),
+	);
 
 	return {
+		accessTokenHash,
 		clientIp,
 		lastValidatedAt: Date.now(),
 		tokenExpiresAt,

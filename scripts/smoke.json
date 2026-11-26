@@ -597,6 +597,10 @@
 					"description": "The WebSocket revalidation timer always runs the full check, so a recent message-driven check cannot push the next one past the configured two-minute interval"
 				},
 				{
+					"command": "bun run test:websocket-token-revocation",
+					"description": "An open WebSocket closes once the access token it was opened with is revoked on its own, as a logout does, while another browser keeps its socket"
+				},
+				{
 					"command": "bun run test:workspace-deleted-hook",
 					"description": "Workspace deletion runs the handlers registered with onWorkspaceDeleted in order inside its own transaction, so a failing handler rolls the delete back and is named, and with none registered deletion is unchanged"
 				},
