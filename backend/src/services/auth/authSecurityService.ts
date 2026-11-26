@@ -48,9 +48,11 @@ const DEFAULT_AUTH_SECURITY_SETTINGS: AuthSecuritySettings = {
 	enableAccountLocking: true,
 	lockoutDurationMinutes: 15,
 	// Derived as AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1 so the lockout threshold sits
-	// strictly ABOVE the per-account login rate limit. A known-username attacker is absorbed
-	// by the rate limit (HTTP 429) before they can accumulate enough failed attempts to trip
-	// the lock and terminate a victim's active session.
+	// strictly ABOVE the per-account login rate limit. Within one rate-limit window a
+	// known-username attacker is refused (HTTP 429) before reaching the threshold. The failure
+	// counter has no window of its own, though: it is cleared only by a successful login or
+	// by the next failure after a lock expires, so failures spread across windows can still
+	// trip the lock.
 	maxLoginAttempts: AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1,
 	minPasswordAgeDays: 1,
 	passwordExpiryDays: 0,

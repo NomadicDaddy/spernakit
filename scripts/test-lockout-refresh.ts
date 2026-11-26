@@ -10,7 +10,10 @@
  *  5. An atomic-rotation collision uses the same non-retryable family compromise boundary.
  *  6. The lockout threshold sits strictly above the per-account login rate
  *     limit (maxLoginAttempts === AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS + 1), so
- *     the rate limit absorbs a bad-password flood before the lock can trip.
+ *     one rate-limit window of bad passwords cannot trip the lock.
+ *  7. A failure during an active lock leaves the counter alone, and once the lock
+ *     has expired one further failure counts as 1 (no re-lock), then the right
+ *     password signs in.
  *
  * Runs fully in-process against a throwaway temp-file SQLite DB via
  * app.handle(). It needs no live server and is unaffected by the committed dev DB's
@@ -22,7 +25,9 @@ import { fileURLToPath } from 'node:url';
 import { getConfig, initializeConfig } from '../backend/src/config/configLoader.ts';
 import { AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS } from '../backend/src/constants/rateLimit.ts';
 import { createApiApp } from '../backend/src/create-api-app.ts';
-import { getDb } from '../backend/src/db/index.ts';
+// eq comes through the DB surface module: this script resolves dependencies from the root
+// manifest, which does not carry drizzle-orm.
+import { eq, getDb } from '../backend/src/db/index.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { handleRotationCollision } from '../backend/src/routes/auth/refresh.ts';
 import { startSignIn } from '../backend/src/routes/auth/session-helpers.ts';
@@ -200,6 +205,33 @@ async function run(): Promise<void> {
 	assert(
 		settings.maxLoginAttempts > AUTH_ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
 		'Lockout threshold must be strictly above the per-account rate limit',
+	);
+
+	// --- Criterion 7: an expired lock restarts the count instead of re-locking at once ---
+	const victimRow = () => db.select().from(users).where(eq(users.id, VICTIM_ID)).get();
+	await login(VICTIM_USERNAME, 'wrong-password', '127.0.0.1');
+	assert(
+		victimRow()?.failedLoginAttempts === 99,
+		'a failure during an active lock must not change the counter',
+	);
+	db.update(users)
+		.set({ failedLoginAttempts: 99, lockedUntil: new Date(Date.now() - 60 * 1000) })
+		.where(eq(users.id, VICTIM_ID))
+		.run();
+	const afterExpiry = await login(VICTIM_USERNAME, 'wrong-password', '127.0.0.1');
+	assert(
+		'reason' in afterExpiry && afterExpiry.reason === 'invalid',
+		`one failure after the lock expired must be 'invalid', got ${JSON.stringify(afterExpiry)}`,
+	);
+	const expiredRow = victimRow();
+	assert(
+		expiredRow?.failedLoginAttempts === 1 && expiredRow.lockedUntil === null,
+		`after an expired lock the counter must restart at 1 with no lock, got ${JSON.stringify({ attempts: expiredRow?.failedLoginAttempts, lockedUntil: expiredRow?.lockedUntil })}`,
+	);
+	const recovered = await login(VICTIM_USERNAME, VICTIM_PASSWORD, '127.0.0.1');
+	assert(
+		!('reason' in recovered),
+		`the right password after one post-expiry failure must sign in, got ${JSON.stringify(recovered)}`,
 	);
 
 	await dispose();

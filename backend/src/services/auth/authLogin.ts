@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, lte, sql } from 'drizzle-orm';
 
 import type { users as usersSchema } from '../../db/schema/users.ts';
 import type { AuthPayload } from '../../plugins/auth.ts';
@@ -84,29 +84,35 @@ function validateLoginEligibility(user: UserRow): EligibilityResult {
 }
 
 /**
- * Record a failed login attempt and apply account lockout if threshold is reached.
- * Uses atomic SQL increment to prevent race conditions with concurrent attempts.
- * Skips accumulation if account is already locked to prevent indefinite lockout DoS.
+ * Count one failed attempt for a user who is not currently locked, and lock the account
+ * when the count reaches the threshold. A lock that has already expired ends that lockout:
+ * the counter restarts, so this failure counts as the first of a new run rather than
+ * re-locking the account at once.
+ *
+ * The expired-lock reset, the atomic increment and the conditional lockout run in a single
+ * transaction so a concurrent attempt cannot observe the post-increment attempt count before
+ * the lockout takes effect (which would otherwise allow one extra attempt past the configured
+ * threshold).
  *
  * @param user - User row from database
- * @returns Login failure with appropriate reason (invalid or locked)
+ * @returns The new attempt count and whether this attempt locked the account
  */
-function recordFailedLogin(user: UserRow): LoginFailure {
-	// If account is already locked, do not accumulate further failed attempts
-	// or reset the lock timer — this prevents indefinite lockout DoS
-	if (user.lockedUntil && user.lockedUntil > new Date()) {
-		logAuth('debug', 'Login failed: account locked', { username: user.username });
-		return { email: user.email, reason: 'locked' };
-	}
-
-	const db = getDb();
+function countFailedAttempt(user: UserRow): { newAttempts: number; shouldLock: boolean } {
 	const authSettings = getAuthSettings();
+	return getDb().transaction((tx) => {
+		// An expired lock still leaves the counter at or above the threshold. Clear both in
+		// this transaction so the increment below starts a fresh count at 1.
+		tx.update(users)
+			.set({ failedLoginAttempts: 0, lockedUntil: null })
+			.where(
+				and(
+					eq(users.id, user.id),
+					isNotNull(users.lockedUntil),
+					lte(users.lockedUntil, new Date()),
+				),
+			)
+			.run();
 
-	// Wrap the atomic increment and the conditional lockout in a single transaction
-	// so a concurrent attempt cannot observe the post-increment attempt count before
-	// the lockout takes effect (which would otherwise allow one extra attempt past
-	// the configured threshold).
-	const { newAttempts, shouldLock } = db.transaction((tx) => {
 		const updated = tx
 			.update(users)
 			.set({
@@ -129,6 +135,25 @@ function recordFailedLogin(user: UserRow): LoginFailure {
 
 		return { newAttempts: attempts, shouldLock: lock };
 	});
+}
+
+/**
+ * Record a failed login attempt and apply account lockout if threshold is reached.
+ * Uses atomic SQL increment to prevent race conditions with concurrent attempts.
+ * Skips accumulation if account is already locked to prevent indefinite lockout DoS.
+ *
+ * @param user - User row from database
+ * @returns Login failure with appropriate reason (invalid or locked)
+ */
+function recordFailedLogin(user: UserRow): LoginFailure {
+	// If account is already locked, do not accumulate further failed attempts
+	// or reset the lock timer — this prevents indefinite lockout DoS
+	if (user.lockedUntil && user.lockedUntil > new Date()) {
+		logAuth('debug', 'Login failed: account locked', { username: user.username });
+		return { email: user.email, reason: 'locked' };
+	}
+
+	const { newAttempts, shouldLock } = countFailedAttempt(user);
 
 	logAuth('debug', 'Login failed: wrong password', {
 		attempts: newAttempts,
