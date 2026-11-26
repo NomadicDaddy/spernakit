@@ -3,6 +3,15 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.6] - 2026-11-26
+
+### Security
+
+- Signing out now also closes any live-update connection that was opened with the same sign-in.
+  Before, a connection opened with a copy of that sign-in kept receiving the user's
+  notifications after the sign-out, until the sign-in would have expired. Other browsers the
+  user is signed in on keep their connections.
+
 ## [3.52.5] - 2026-11-26
 
 ### Fixed
