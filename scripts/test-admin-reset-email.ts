@@ -14,6 +14,9 @@
  * It also covers the "Set new password" mode's reuse check: setting the password the account
  * already has is refused under the history policy, because password_history holds only
  * superseded hashes, and leaves the hash and history untouched. A different password still sets.
+ * A set whose row changes while it awaits the check and hashing (a password changed elsewhere,
+ * or the account deleted) loses: the concurrent state stays, with no history row and no session
+ * ended.
  *
  * Runs in-process against a throwaway temp-file SQLite database, like
  * scripts/test-oauth-secret-update.ts.
@@ -29,6 +32,7 @@ import { initializeConfig } from '../backend/src/config/configLoader.ts';
 import { runAutoMigrations } from '../backend/src/db/autoMigrate.ts';
 import { closeDatabase, eq, getDb, initializeDatabase } from '../backend/src/db/index.ts';
 import { passwordHistory } from '../backend/src/db/schema/passwordHistory.ts';
+import { refreshSessions } from '../backend/src/db/schema/refreshSessions.ts';
 import { users } from '../backend/src/db/schema/users.ts';
 import { adminResetUserPassword } from '../backend/src/services/userService.ts';
 
@@ -143,6 +147,53 @@ async function checkSetToCurrentPassword(): Promise<void> {
 	check(history() === 1, 'Control: a successful set must record the old hash in history');
 }
 
+/**
+ * Start a set, apply `change` to the row while the set is inside its awaited reuse check and
+ * hashing (the row is read before the first await), then settle it. The set must lose: the
+ * concurrent change stays, and no history row is added or session ended.
+ */
+async function checkSetLosesRace(
+	id: number,
+	label: string,
+	change: Partial<typeof users.$inferInsert>,
+): Promise<void> {
+	const original = await Bun.password.hash('Racer1!password', { algorithm: 'bcrypt', cost: 4 });
+	seedUser(id, true);
+	getDb().update(users).set({ passwordHash: original }).where(eq(users.id, id)).run();
+	getDb()
+		.insert(refreshSessions)
+		.values({
+			expiresAt: new Date(Date.now() + 60_000),
+			familyId: `family${String(id)}`,
+			tokenHash: `session${String(id)}`,
+			userId: id,
+		})
+		.run();
+
+	const pending = adminResetUserPassword(ADMIN_ID, id, {
+		mode: 'set',
+		password: 'Winner3!password',
+	});
+	getDb().update(users).set(change).where(eq(users.id, id)).run();
+	const result = await pending;
+
+	const row = getDb().select().from(users).where(eq(users.id, id)).get();
+	const history = getDb().select().from(passwordHistory).where(eq(passwordHistory.userId, id));
+	const sessions = getDb().select().from(refreshSessions).where(eq(refreshSessions.userId, id));
+	check(!result.success, `${label}: the set must lose the race, not overwrite`);
+	check(
+		/changed while/i.test(result.error ?? ''),
+		`${label}: the refusal must say why: ${result.error}`,
+	);
+	check(
+		row?.passwordHash === (change.passwordHash ?? original),
+		`${label}: the row must keep the concurrent state, not the set's hash`,
+	);
+	check(row?.requiresPasswordChange === false, `${label}: a lost set must not mark the account`);
+	check(history.all().length === 0, `${label}: a lost set must record no history row`);
+	check(sessions.all().length === 1, `${label}: a lost set must leave the sessions alone`);
+}
+
 async function run(): Promise<void> {
 	initializeConfig();
 	const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-admin-reset-'));
@@ -156,6 +207,10 @@ async function run(): Promise<void> {
 		await checkSuccessfulSend();
 		await checkRefusals();
 		await checkSetToCurrentPassword();
+		await checkSetLosesRace(7, 'Password changed during the set', {
+			passwordHash: 'changed-elsewhere-hash',
+		});
+		await checkSetLosesRace(8, 'Account deleted during the set', { isDeleted: true });
 	} finally {
 		await closeDatabase();
 		try {

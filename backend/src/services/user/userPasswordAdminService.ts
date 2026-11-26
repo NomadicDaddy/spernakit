@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import type { SendEmailResult } from '../email/emailTypes.ts';
 
@@ -76,9 +76,13 @@ async function adminResetUserPassword(
 
 		const newHash = await hashPassword(options.password);
 
-		db.transaction((tx) => {
-			recordPasswordHistory(targetUserId, targetUser.passwordHash, tx);
-			tx.update(users)
+		// The reuse check and hashing are awaited after the row was read. The write claims the
+		// row only if it is still active and still holds the hash that was checked, so a password
+		// changed (or an account deleted) in that window is neither overwritten nor recorded as
+		// history, and its sessions are left alone.
+		const claimed = db.transaction((tx) => {
+			const updated = tx
+				.update(users)
 				.set({
 					csrfToken: null,
 					failedLoginAttempts: 0,
@@ -88,10 +92,27 @@ async function adminResetUserPassword(
 					...(isSelfReset ? {} : { requiresPasswordChange: true }),
 					updatedAt: new Date(),
 				})
-				.where(eq(users.id, targetUserId))
-				.run();
+				.where(
+					and(
+						eq(users.id, targetUserId),
+						eq(users.isDeleted, false),
+						eq(users.passwordHash, targetUser.passwordHash),
+					),
+				)
+				.returning({ id: users.id })
+				.all();
+			if (updated.length !== 1) return false;
+			recordPasswordHistory(targetUserId, targetUser.passwordHash, tx);
 			endAllRefreshSessions(targetUserId, tx);
+			return true;
 		});
+
+		if (!claimed) {
+			return {
+				error: 'The password was changed while this request ran. Please try again.',
+				success: false,
+			};
+		}
 
 		invalidateUserProfileCache(targetUserId);
 		return { success: true };
