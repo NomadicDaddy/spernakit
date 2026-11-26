@@ -11,6 +11,10 @@ this release.
   password the account already has. The password-history check only looked at earlier
   passwords, so the current one passed it, became a history entry and stayed the live password.
   Both paths now refuse it with the "used recently" message whenever the history policy is on.
+- An administrator's "Set new password" no longer overwrites a password changed, or an account
+  deleted, while the request was running. It used to write over the newer password, record the
+  stale one in the password history and end the user's sessions. Now it changes nothing and asks
+  the administrator to try again.
 
 ## [3.52.4] - 2026-11-26
 
