@@ -3,6 +3,15 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.4] - 2026-11-26
+
+### Fixed
+
+- An account whose lock has expired no longer locks again on the next wrong password. The
+  failed-login counter used to stay at or above the limit after the lock ran out, so one typo
+  re-locked the account at once. The first failure after a lock expires now counts as the first
+  of a fresh run. An account that is still locked behaves as before.
+
 ## [3.52.3] - 2026-11-26
 
 ### Fixed
