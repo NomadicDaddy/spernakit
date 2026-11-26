@@ -1,5 +1,5 @@
 {
-	"commit": "7a76ea3fbca13e4161d36be2be13917d06ae608a",
+	"commit": "406cf933b2e398bd30028b0ab0bec71543edc7aa",
 	"groups": {
 		"gate-conventions": {
 			"files": {
@@ -53,11 +53,11 @@
 			"files": {
 				"scripts/smokestack/hooks/leak-guard-decode.sh": {
 					"mode": "100644",
-					"sha256": "6b28d8fe5355f03c9b551051ed01ae75ed8e9819c68911b58963765c4c208467"
+					"sha256": "f1e2478de867c811a6275b8ba6a57095d8a75bef12981e4cfa7b56cafd067d18"
 				},
 				"scripts/smokestack/hooks/leak-guard-private.sh": {
 					"mode": "100644",
-					"sha256": "6a9e46ff3f0d60f6e8b81a0b5dcfbc0515b0dfbc521b2136ddb4bad4d3d60a18"
+					"sha256": "7b5ca3abbb226963e6098e4f94ad19237c3221a8d9d05c9fee080c215734ce16"
 				},
 				"scripts/smokestack/hooks/leak-guard-setup.sh": {
 					"mode": "100644",
@@ -65,7 +65,7 @@
 				},
 				"scripts/smokestack/hooks/leak-guard.sh": {
 					"mode": "100644",
-					"sha256": "1a1ffd91ca25ee92dbd4ca03da0809f8926b8bf79a2efdd35f3083ede495e58f"
+					"sha256": "e434c3b46a590823b91f4e0de2f1b37cede23441a2af9df7edec217b7673c324"
 				},
 				"scripts/smokestack/hooks/post-checkout": {
 					"mode": "100755",
@@ -93,7 +93,7 @@
 				},
 				"scripts/smokestack/check-leak-guard-cases.sh": {
 					"mode": "100644",
-					"sha256": "ee54327de1a3c5b2115a63f590be97fcbad948ccfc065528659dbb62fc1b00e8"
+					"sha256": "e288c4a5c02cbb148b07ee5e26e0deda2cc765e585e7e7a110270d082cbed0ab"
 				},
 				"scripts/smokestack/check-leak-guard-setup.sh": {
 					"mode": "100644",
@@ -519,5 +519,5 @@
 		}
 	},
 	"owner": "smokestack",
-	"version": "1.0.6"
+	"version": "1.0.7"
 }

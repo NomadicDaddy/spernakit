@@ -69,44 +69,57 @@ else
 	# a failure, and it is checked here because -r above is not reliable against Windows ACLs.
 	grep_status=0
 	active="$(grep -vE '^[[:space:]]*(#|$)' "$patterns_file")" || grep_status=$?
-	[ "$grep_status" -gt 1 ] && tier2_off 'local pattern file could not be read'
-	# A file with no active line is a tier that is off, as surely as a missing file, and it used to
-	# skip the private tier without a word. Patterns this repository's own name or its publishes
-	# list clear are another matter: those are legitimate, and only announced below.
-	[ -z "$active" ] && tier2_off 'local pattern file holds no pattern'
-	# The filter runs in this shell, on a here-string, and keeps each pattern as a grep -e argument, so
-	# no failed printf or subshell can drop one; only a match (status 0) clears a pattern. One grep of
-	# all settles the usual case, none cleared (exit 1); any other answer walks them one at a time.
-	read_patterns="$active" active='' pattern_args=() cleared=0
-	while IFS= read -r pattern; do
-		if [ -n "$pattern" ]; then active="$active$pattern"$'\n' && pattern_args+=(-e "$pattern"); fi
-	done <<<"$read_patterns"
-	grep -qEi "${pattern_args[@]}" <<<"$self_name" 2>/dev/null || cleared=$?
-	if [ "$cleared" = 1 ] && [ -n "$publishes" ]; then cleared=0; grep -qxEi "${pattern_args[@]}" <<<"$publishes" 2>/dev/null || cleared=$?; fi
-	[ "$cleared" = 1 ] || { active='' pattern_args=(); while IFS= read -r pattern; do
-		[ -z "$pattern" ] && continue
-		cleared=0; grep -qEi -e "$pattern" <<<"$self_name" 2>/dev/null || cleared=$?
-		[ "$cleared" = 0 ] && continue
-		cleared=0; [ -n "$publishes" ] && grep -qxEi -e "$pattern" <<<"$publishes" 2>/dev/null || cleared=$?
-		[ "$cleared" = 0 ] && echo "leak-guard: a private pattern is cleared for this repo by its leak-guard-publishes" >&2 && continue
-		active="$active$pattern"$'\n' && pattern_args+=(-e "$pattern")
-	done <<<"$read_patterns"; }
-	[ -z "$read_patterns" ] || [ -n "$active" ] || echo "leak-guard: every private pattern is cleared for this repository (its own name or its leak-guard-publishes)" >&2
-	if [ -n "$active" ]; then
-		# grep exits 1 for no match and 2 when it cannot use a pattern; a pattern it cannot compile is
-		# kept above so that it stops the commit here, rather than the private tier going silently off.
-		# The staged text without its diff markers, the text private_lines numbers too, so a
-		# line-anchored pattern selects the same lines in both passes (Roger #63408). Done in this
-		# shell: a + after each newline goes, then the newline put in front to find the first one.
-		nl=$'\n'
-		# shellcheck disable=SC2154 # added is set by leak-guard.sh before it sources this file
-		added_text="$nl$added" && added_text="${added_text//"$nl+"/$nl}" && added_text="${added_text#"$nl"}"
-		grep_status=0
-		local_hits="$(grep -nEi "${pattern_args[@]}" <<<"$added_text")" || grep_status=$?
-		if [ "$grep_status" -gt 1 ]; then
-			# shellcheck disable=SC2034 # local_hits is read by leak-guard.sh after this file returns
-			local_hits=''
-			tier2_off 'a private pattern is not a valid expression, so none could be applied'
+	# Each way the tier turns off ends here. tier2_off returns when the commit may go on without it
+	# (a scaffolded project, or LEAK_GUARD_ALLOW_NO_PRIVATE=1), and then no pattern work runs at all:
+	# it used to fall through to the greps below with no pattern, which bash 3.2 (macOS) stops on as
+	# an unbound array under set -u (leak-guard-bash-3-2-empty-pattern-array, starsync CI).
+	if [ "$grep_status" -gt 1 ]; then
+		tier2_off 'local pattern file could not be read'
+	elif [ -z "$active" ]; then
+		# A file with no active line is a tier that is off, as surely as a missing file, and it used to
+		# skip the private tier without a word. Patterns this repository's own name or its publishes
+		# list clear are another matter: those are legitimate, and only announced below.
+		tier2_off 'local pattern file holds no pattern'
+	else
+		# The filter runs in this shell, on a here-string, and keeps each pattern as a grep -e argument,
+		# so no failed printf or subshell can drop one; only a match (status 0) clears a pattern. One
+		# grep of all settles the usual case, none cleared (exit 1); any other answer walks them one at
+		# a time.
+		read_patterns="$active" active='' pattern_args=() cleared=0
+		while IFS= read -r pattern; do
+			if [ -n "$pattern" ]; then active="$active$pattern"$'\n' && pattern_args+=(-e "$pattern"); fi
+		done <<<"$read_patterns"
+		# nonempty: read_patterns holds at least one active line here, so pattern_args has its -e pair.
+		grep -qEi "${pattern_args[@]}" <<<"$self_name" 2>/dev/null || cleared=$?
+		# nonempty: the same pattern_args as the line above.
+		if [ "$cleared" = 1 ] && [ -n "$publishes" ]; then cleared=0; grep -qxEi "${pattern_args[@]}" <<<"$publishes" 2>/dev/null || cleared=$?; fi
+		[ "$cleared" = 1 ] || { active='' pattern_args=(); while IFS= read -r pattern; do
+			[ -z "$pattern" ] && continue
+			cleared=0; grep -qEi -e "$pattern" <<<"$self_name" 2>/dev/null || cleared=$?
+			[ "$cleared" = 0 ] && continue
+			cleared=0; [ -n "$publishes" ] && grep -qxEi -e "$pattern" <<<"$publishes" 2>/dev/null || cleared=$?
+			[ "$cleared" = 0 ] && echo "leak-guard: a private pattern is cleared for this repo by its leak-guard-publishes" >&2 && continue
+			active="$active$pattern"$'\n' && pattern_args+=(-e "$pattern")
+		done <<<"$read_patterns"; }
+		[ -n "$active" ] || echo "leak-guard: every private pattern is cleared for this repository (its own name or its leak-guard-publishes)" >&2
+		if [ -n "$active" ]; then
+			# grep exits 1 for no match and 2 when it cannot use a pattern; a pattern it cannot compile
+			# is kept above so that it stops the commit here, rather than the private tier going
+			# silently off. The staged text without its diff markers, the text private_lines numbers
+			# too, so a line-anchored pattern selects the same lines in both passes (Roger #63408).
+			# Done in this shell: a + after each newline goes, then the newline put in front to find
+			# the first one.
+			nl=$'\n'
+			# shellcheck disable=SC2154 # added is set by leak-guard.sh before it sources this file
+			added_text="$nl$added" && added_text="${added_text//"$nl+"/$nl}" && added_text="${added_text#"$nl"}"
+			grep_status=0
+			# nonempty: active is non-empty here, and each of its lines added its -e pair alongside.
+			local_hits="$(grep -nEi "${pattern_args[@]}" <<<"$added_text")" || grep_status=$?
+			if [ "$grep_status" -gt 1 ]; then
+				# shellcheck disable=SC2034 # local_hits is read by leak-guard.sh after this file returns
+				local_hits=''
+				tier2_off 'a private pattern is not a valid expression, so none could be applied'
+			fi
 		fi
 	fi
 fi
@@ -126,6 +139,7 @@ private_hits() {
 	local rows="$1" text matched row wanted=' ' index=0 status=0 tab=$'\t' rest
 	[ -n "$rows" ] || return 0
 	text="$(cut -f3- <<<"$rows")" || exit 1
+	# nonempty: private_hits runs only from warn_private, which runs only when local_hits matched.
 	matched="$(grep -nEi "${pattern_args[@]}" <<<"$text" 2>/dev/null)" || status=$?
 	[ "$status" -le 1 ] || { echo "x leak-guard: a private pattern could not be applied, so the staged content was not checked." >&2; exit 1; }
 	[ -n "$matched" ] || return 0
@@ -152,7 +166,7 @@ warn_private() {
 	rows="$(printf '%s\n' "$patch" | numbered_additions)" || exit 1
 	hits="$(private_hits "$rows")" || exit 1
 	sections="$(printf '%s\n' "$patch" | awk '/^diff --git /{ s++ } END { print s + 0 }')" || exit 1
-	# shellcheck disable=SC2154 # scanned is set by leak-guard.sh before it sources this file
+	# shellcheck disable=SC2154 # scanned is set by leak-guard.sh, nonempty: it starts as (.)
 	git diff --cached --name-status -z -- "${scanned[@]}" | {
 		local status name first last section=0 dir own safe numbers sec line total=0 expected=0 hit
 		while IFS= read -r hit; do [ -n "$hit" ] && expected=$((expected + 1)); done <<<"$local_hits"

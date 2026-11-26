@@ -245,3 +245,28 @@ code=0
 passed_warning "$code" new.txt:4 || fail 'a renamed file was not warned on at the line it added'
 grep -q '^leak-guard warning: 1 internal reference(s)$' "$tmp/stderr" || fail 'a rename was warned on for a line it did not change'
 git -C "$guard_repo" -c user.email=t@test -c user.name=t commit -q -m 'rename'
+
+# 52. bash 3.2, which macOS ships, stops on an empty array expanded bare under set -u, where bash 4.4
+# and later expand it to nothing, so no run on this machine can show it. Every "${name[@]}" in the
+# guard's hooks and in these self-test scripts is either written ${name[@]+"${name[@]}"} or carries
+# a `nonempty:` reason on its line or the line above, and this reads the files and refuses any other
+# one (leak-guard-bash-3-2-empty-pattern-array). Comment lines are not code and are skipped.
+bare_expansions() {
+	awk '{ line = $0; gsub(/\$\{[A-Za-z_][A-Za-z0-9_]*\[@\]\+"\$\{[A-Za-z_][A-Za-z0-9_]*\[@\]\}"\}/, "", line) }
+		$0 !~ /^[[:space:]]*#/ && line ~ /"\$\{[A-Za-z_][A-Za-z0-9_]*\[@\]\}"/ && $0 !~ /nonempty:/ && prev !~ /nonempty:/ { print NR }
+		{ prev = $0 }' "$1"
+}
+# The control: the scan finds a bare expansion, and passes the marked and the +-form ones.
+# shellcheck disable=SC2016 # the fixture lines are written literally, unexpanded
+# nonempty: the fixture below is single-quoted text written to a file, never expanded here.
+printf '%s\n' 'x=()' 'grep "${x[@]}"' '# nonempty: set above' 'grep "${x[@]}"' 'grep ${x[@]+"${x[@]}"}' >"$tmp/expansions"
+[ "$(bare_expansions "$tmp/expansions")" = 2 ] || fail 'the bare-expansion scan did not find exactly the one unmarked expansion'
+# The guard's hooks, and the four self-test scripts beside this one (Roger #65488, Morticia #65482).
+# shellcheck disable=SC2154 # hook and self_dir are set by check-leak-guard-setup.sh
+for scanned_file in "${hook%/*}/leak-guard.sh" "${hook%/*}/leak-guard-private.sh" "${hook%/*}/leak-guard-decode.sh" \
+	"${hook%/*}/leak-guard-setup.sh" "$self_dir/check-leak-guard.sh" "$self_dir/check-leak-guard-setup.sh" \
+	"$self_dir/check-leak-guard-cases.sh" "$self_dir/check-leak-guard-binary-cases.sh"; do
+	[ -f "$scanned_file" ] || { fail "${scanned_file##*/} is missing, so it was not scanned for bare array expansions"; continue; }
+	unmarked="$(bare_expansions "$scanned_file")" || fail "${scanned_file##*/} could not be scanned for bare array expansions"
+	[ -z "$unmarked" ] || fail "${scanned_file##*/} expands an array bare with no nonempty: reason, at line(s) ${unmarked//$'\n'/ }"
+done

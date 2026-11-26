@@ -51,6 +51,10 @@ self_path="$(git ls-files --full-name -- "$0" 2>/dev/null || true)"
 self_path="${self_path%%$'\n'*}"
 scanned=(.)
 [ -n "$self_path" ] && scanned+=(":(exclude)$self_path")
+# Every "${name[@]}" in the guard's files either carries a `nonempty:` reason on its line or the line
+# above, as scanned's do (it starts as (.) and is only appended to), or is written ${name[@]+...}.
+# bash 3.2, which macOS ships, stops on an empty array expanded bare under set -u; the self-test
+# refuses an expansion with neither (leak-guard-bash-3-2-empty-pattern-array).
 
 # Tier 1c: key files by name. A binary or encrypted key (DER .key, PKCS#12/#8, PuTTY, a keystore, a
 # wrapped PEM) has no header for the content scan. A bare .gpg or .pgp is refused, since nothing in
@@ -64,6 +68,7 @@ key_named_files() {
 	# A pipeline, not < <(…): under pipefail a failed listing fails this function, and its caller. The
 	# loop cannot tell an unlistable index from an empty one, so the listing itself refuses.
 	{
+		# nonempty: scanned starts as (.).
 		git diff --cached --name-only -z --diff-filter=ACMRT -- "${scanned[@]}" ||
 			{ echo "x leak-guard: git could not list the staged files, so key file names were not checked." >&2; exit 1; }
 	} | while IFS= read -r -d '' file; do
@@ -74,6 +79,7 @@ key_hits="$(key_named_files | tr '\0' '\n')" || exit 1
 
 # The staged patch is read whole and its exit checked: piped, a failed one left the tiers nothing.
 staged_patch() {
+	# nonempty: scanned starts as (.).
 	if ! git diff --cached --unified="$1" --no-color --no-textconv -- "${scanned[@]}"; then
 		echo "x leak-guard: git could not produce the staged changes, so their content was not checked." >&2
 		exit 1
@@ -85,6 +91,7 @@ hunks() { awk '/^diff --git /{h=1} h&&/^@@/{h=0} !h' || exit 1; }
 patch="$(staged_patch 1)" || exit 1
 added="$(printf '%s\n' "$patch" | hunks | pick -E '^\+')" || exit 1
 # A file git calls binary adds no lines here: leak-guard-decode.sh, beside this one, reads it instead.
+# nonempty: scanned starts as (.).
 numstat="$(git diff --cached --numstat -- "${scanned[@]}")" || exit 1
 decoded_pem=''
 case $'\n'"$numstat" in *$'\n-\t-\t'*)
@@ -190,6 +197,7 @@ report_class() {
 		if [ "${count:-0}" -gt 0 ]; then
 			printf '  %s: %s %s, %s\n' "$file" "$count" "$unit" "$label" >&2
 		fi
+		# nonempty: scanned starts as (.).
 	done < <(git diff --cached --name-only -z --diff-filter=ACMR -- "${scanned[@]}")
 }
 
