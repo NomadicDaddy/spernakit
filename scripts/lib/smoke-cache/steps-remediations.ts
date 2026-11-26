@@ -41,6 +41,15 @@ export const REMEDIATION_STEP_DEPENDENCIES: Record<string, StepDependencies> = {
 			'scripts/test-field-encryption-rotation.ts',
 		],
 	},
+	'test:image-store-listing': {
+		excludes: COMMON_EXCLUDES,
+		globs: [
+			'scripts/lib/third-party-licenses/image-inventory.ts',
+			'scripts/lib/third-party-licenses/image-notices.ts',
+			'scripts/lib/third-party-licenses/image-store.ts',
+			'scripts/test-image-store-listing.ts',
+		],
+	},
 	'test:license-collect-workspace': {
 		excludes: COMMON_EXCLUDES,
 		globs: [

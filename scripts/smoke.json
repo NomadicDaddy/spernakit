@@ -362,7 +362,7 @@
 				},
 				{
 					"command": "bun run test:image-store-listing",
-					"description": "The image licence check reads Bun store names, peer-variant suffixes included, as <name>@<version>"
+					"description": "The image licence check keys each Bun store package by its own manifest, probes every copy's own directory, and treats image metadata as data"
 				},
 				{
 					"command": "bun run test:nginx-security",

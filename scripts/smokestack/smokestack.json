@@ -1188,7 +1188,7 @@
 						"scripts/test-image-store-listing.ts"
 					]
 				},
-				"description": "The image licence check reads Bun store names, peer-variant suffixes included, as <name>@<version>",
+				"description": "The image licence check keys each Bun store package by its own manifest, probes every copy's own directory, and treats image metadata as data",
 				"name": "test:image-store-listing",
 				"run": ["bun", "run", "test:image-store-listing"]
 			},
