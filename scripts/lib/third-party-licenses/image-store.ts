@@ -42,20 +42,36 @@ export function packageDir(dir: string, name: string): string {
 	return `${STORE}/${dir}/node_modules/${name}`;
 }
 
+/** A store directory's package.json, which must be a JSON object. */
+function parseManifest(dir: string, text: string): Record<string, unknown> {
+	let value: unknown;
+	try {
+		value = JSON.parse(text);
+	} catch {
+		throw new Error(`${dir} has no readable package.json`);
+	}
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+		throw new Error(`${dir}'s package.json is not an object`);
+	}
+	return value as Record<string, unknown>;
+}
+
 /**
  * Groups `<store dir>\t<package.json on one line>` records into releases keyed `<name>@<version>`
  * from each manifest. Peer variants of one release collapse into one entry with all their
  * directories; two releases whose directory names differ only by a 16-hex build tag stay apart. A
- * manifest naming a different package than its directory, or variants of one release declaring
- * different licenses, fail loudly rather than being attributed on a guess.
+ * manifest naming a different package than its directory, variants of one release declaring
+ * different licenses, or a line that isn't a directory, a tab and a JSON object (a name holding a
+ * line break, or a missing package.json) fail loudly rather than being attributed on a guess.
  */
 export function groupStoreManifests(records: string): Map<string, StorePackage> {
 	const packages = new Map<string, StorePackage>();
 	for (const line of records.split('\n')) {
+		if (line.trim() === '') continue;
 		const tab = line.indexOf('\t');
-		if (tab <= 0) continue;
+		if (tab <= 0) throw new Error(`unexpected store record: ${JSON.stringify(line)}`);
 		const dir = line.slice(0, tab).trim();
-		const manifest = JSON.parse(line.slice(tab + 1)) as Record<string, unknown>;
+		const manifest = parseManifest(dir, line.slice(tab + 1));
 		const expected = storeDirPackageName(dir);
 		if (expected === undefined) throw new Error(`not a package store directory: ${dir}`);
 		if (manifest.name !== expected || typeof manifest.version !== 'string') {

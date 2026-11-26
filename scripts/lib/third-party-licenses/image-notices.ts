@@ -54,26 +54,68 @@ function licenseTextPath(spdx: string): string {
 	return `/app/licenses/${spdx.replace(/-(?:only|or-later)$/, '')}.txt`;
 }
 
+/** One license probe: a release, and one store directory holding a copy of it. */
+export interface LicenseProbe {
+	dir: string;
+	entry: string;
+	path: string;
+}
+
 /**
- * The shell probe for license files: one test per store directory of each entry, inside the
- * package's own directory (`.bun/<store dir>/node_modules/<name>`), never the `node_modules` above
- * it, where the dependencies linked beside the package would lend it their LICENSE. Each line it
- * prints names an entry and the directory that lacked one. Pure, so its paths can be tested.
+ * A value as one literal POSIX shell word. Directory names and versions come from the image, so
+ * they reach the shell only this way, as data: inside single quotes nothing is expanded, and a
+ * single quote in the value closes, escapes and reopens the quoting.
  */
-export function licenseProbeScript(
+export function shellQuote(value: string): string {
+	return `'${value.replaceAll("'", "'\\''")}'`;
+}
+
+/**
+ * One probe per store directory of each entry, aimed at the package's own directory
+ * (`.bun/<store dir>/node_modules/<name>`), never the `node_modules` above it, where the
+ * dependencies linked beside the package would lend it their LICENSE.
+ */
+export function licenseProbes(
 	entries: readonly string[],
 	packages: ReadonlyMap<string, StorePackage>,
-): string {
-	return entries
-		.flatMap((entry) => {
-			const pkg = packages.get(entry);
-			if (pkg === undefined) throw new Error(`no store directory was read for ${entry}`);
-			return pkg.dirs.map((dir) => {
-				const find = `find ${packageDir(dir, pkg.name)} -maxdepth 2 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
-				return `[ -n "$(${find})" ] || echo "MISSING ${entry} ${dir}"`;
-			});
+): LicenseProbe[] {
+	return entries.flatMap((entry) => {
+		const pkg = packages.get(entry);
+		if (pkg === undefined) throw new Error(`no store directory was read for ${entry}`);
+		return pkg.dirs.map((dir) => ({ dir, entry, path: packageDir(dir, pkg.name) }));
+	});
+}
+
+/**
+ * The shell for the probes. Each path is quoted as data, and a probe that finds no license file
+ * prints only `MISSING <its index>`, so nothing read from the image travels back to be parsed.
+ */
+export function licenseProbeScript(probes: readonly LicenseProbe[]): string {
+	return probes
+		.map((probe, index) => {
+			const find = `find ${shellQuote(probe.path)} -maxdepth 2 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
+			return `[ -n "$(${find})" ] || echo MISSING ${index}`;
 		})
 		.join('; ');
+}
+
+/**
+ * The entries whose probes found no license file. Any line other than `MISSING <index of a probe>`
+ * fails, so unexpected output is refused rather than read as a result.
+ */
+export function parseProbeOutput(output: string, probes: readonly LicenseProbe[]): string[] {
+	const missing = new Set<string>();
+	for (const line of output.split('\n')) {
+		const text = line.trim();
+		if (text === '') continue;
+		const match = /^MISSING (\d+)$/.exec(text);
+		const probe = match === null ? undefined : probes[Number(match[1])];
+		if (probe === undefined) {
+			throw new Error(`unexpected license probe output: ${JSON.stringify(text)}`);
+		}
+		missing.add(probe.entry);
+	}
+	return [...missing];
 }
 
 /**
@@ -95,14 +137,8 @@ export async function verifyImageCarriesLicenses(
 	entries: string[],
 	packages: ReadonlyMap<string, StorePackage>,
 ): Promise<boolean> {
-	const lines = (await runInImage(image, licenseProbeScript(entries, packages))).split('\n');
-	const missing = [
-		...new Set(
-			lines
-				.filter((line) => line.startsWith('MISSING '))
-				.map((line) => line.split(' ')[1] ?? ''),
-		),
-	].filter(Boolean);
+	const probes = licenseProbes(entries, packages);
+	const missing = parseProbeOutput(await runInImage(image, licenseProbeScript(probes)), probes);
 
 	if (missing.length === 0) return true;
 

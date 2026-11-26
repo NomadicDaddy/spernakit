@@ -12,7 +12,13 @@
  */
 import { exit } from 'node:process';
 
-import { licenseProbeScript } from './lib/third-party-licenses/image-notices.ts';
+import {
+	type LicenseProbe,
+	licenseProbes,
+	licenseProbeScript,
+	parseProbeOutput,
+	shellQuote,
+} from './lib/third-party-licenses/image-notices.ts';
 import {
 	groupStoreManifests,
 	storeDirPackageName,
@@ -91,17 +97,46 @@ expectThrows('variants of one release disagree on the license', () =>
 	),
 );
 
+expectThrows('a record line with no tab', () => groupStoreManifests('zod@4.6.7 {"name":"zod"}'));
+expectThrows('a directory with no readable package.json', () => groupStoreManifests('zod@4.6.7\t'));
+
 // The license probe opens every variant's own package directory, never the node_modules above it.
-const probe = licenseProbeScript(['@radix-ui/react-dialog@1.3.1'], packages);
+const probe = licenseProbeScript(licenseProbes(['@radix-ui/react-dialog@1.3.1'], packages));
 for (const dir of [
 	'@radix-ui+react-dialog@1.3.1+ab9c01e4ccdf52df',
 	'@radix-ui+react-dialog@1.3.1+0441d6f8f57aca1e',
 ]) {
-	const own = `find /app/node_modules/.bun/${dir}/node_modules/@radix-ui/react-dialog -maxdepth 2 `;
+	const own = `find '/app/node_modules/.bun/${dir}/node_modules/@radix-ui/react-dialog' -maxdepth 2 `;
 	if (!probe.includes(own)) failures.push(`license probe skips ${dir}'s own package directory`);
 }
-if (/\/node_modules -maxdepth/.test(probe)) {
+if (/\/node_modules'? -maxdepth/.test(probe)) {
 	failures.push('license probe searches a whole node_modules, where sibling packages live');
+}
+
+// Metadata read from the image is data. A hostile path reaches the shell only inside one quoted
+// word, so with that word removed none of it is left, and only an index comes back out.
+const hostile: LicenseProbe = {
+	dir: "x'$(touch pwned)';y@1.0.0",
+	entry: "x'$(touch pwned)';y@1.0.0",
+	path: "/app/node_modules/.bun/x'$(touch pwned)';y@1.0.0/node_modules/x`id`",
+};
+const hostileScript = licenseProbeScript([hostile]);
+expect('a single quote closes, escapes and reopens', shellQuote("a'b"), `'a'\\''b'`);
+if (!hostileScript.includes(shellQuote(hostile.path))) {
+	failures.push('license probe does not quote the path as one word');
+}
+if (/touch|`id`|;y@/.test(hostileScript.replace(shellQuote(hostile.path), ''))) {
+	failures.push('license probe lets image metadata into shell source');
+}
+expect(
+	'probe output names entries by index',
+	parseProbeOutput('MISSING 0\nMISSING 0\n', [hostile]),
+	[hostile.entry],
+);
+for (const output of ['MISSING 1', 'MISSING 0; rm -rf /', 'MISSING x', 'something else']) {
+	expectThrows(`probe output ${JSON.stringify(output)}`, () =>
+		parseProbeOutput(output, [hostile]),
+	);
 }
 
 if (failures.length > 0) {
