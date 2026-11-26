@@ -3,6 +3,15 @@
 This changelog defines the public Spernakit baseline. Future entries will describe changes from
 this release.
 
+## [3.52.7] - 2026-11-26
+
+### Security
+
+- An authenticator code now works only once. Before, the same code could be used again for
+  as long as it stayed valid, so a captured code could open more sessions or confirm turning
+  two-factor sign-in off. Each code is now spent when it is accepted, including the one that
+  turns two-factor sign-in on. The database gains one column, applied by the usual migration.
+
 ## [3.52.6] - 2026-11-26
 
 ### Security
