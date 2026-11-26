@@ -28,7 +28,6 @@ import { collectRuntimeClosure } from './lib/third-party-licenses/closure.ts';
 import { workspaceNames } from './lib/third-party-licenses/collect.ts';
 import {
 	collectBasePackages,
-	collectImagePackages,
 	IMAGE_VERSIONS,
 	renderInventory,
 	runInImage,
@@ -38,6 +37,7 @@ import {
 	verifyImageCarriesLicenses,
 	verifyNoticesPresent,
 } from './lib/third-party-licenses/image-notices.ts';
+import { collectImagePackages } from './lib/third-party-licenses/image-store.ts';
 import { formatMarkdown } from './lib/third-party-licenses/render.ts';
 
 const INVENTORY = join('licenses', 'base-image-packages.md');
@@ -83,8 +83,8 @@ async function defaultImageTag(root: string): Promise<string> {
  * that the attribution appendix does not include.
  */
 async function verifyNoticesCoverImage(root: string, image: string): Promise<boolean> {
-	const storeDirs = await collectImagePackages(image);
-	const inImage = [...storeDirs.keys()];
+	const packages = await collectImagePackages(image);
+	const inImage = [...packages.keys()];
 	if (inImage.length === 0) {
 		console.log('[SKIP] No bun store found in the image; skipping closure comparison.');
 		return true;
@@ -122,7 +122,7 @@ async function verifyNoticesCoverImage(root: string, image: string): Promise<boo
 	}
 
 	if (fromOtherPlatform.length > 0) {
-		if (!(await verifyImageCarriesLicenses(image, fromOtherPlatform, storeDirs))) return false;
+		if (!(await verifyImageCarriesLicenses(image, fromOtherPlatform, packages))) return false;
 		console.log(
 			`[OK] ${image}: ${fromOtherPlatform.length} platform-gated package(s) verified against ` +
 				'the image:',

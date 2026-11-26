@@ -1183,6 +1183,8 @@
 					],
 					"inputs": [
 						"scripts/lib/third-party-licenses/image-inventory.ts",
+						"scripts/lib/third-party-licenses/image-notices.ts",
+						"scripts/lib/third-party-licenses/image-store.ts",
 						"scripts/test-image-store-listing.ts"
 					]
 				},

@@ -7,20 +7,7 @@
  * ownership of the exit code.
  */
 import { runInImage } from './image-inventory.ts';
-
-/** Store directory names per `<name>@<version>`, as collectImagePackages reads them. */
-export type StoreDirs = ReadonlyMap<string, readonly string[]>;
-
-/**
- * The store directory to open for an entry. Peer variants of one release are the same package
- * linked against different peers, so its manifest and license files are the same in each, and the
- * first serves for all.
- */
-function storeDirOf(entry: string, storeDirs: StoreDirs): string {
-	const dir = storeDirs.get(entry)?.[0];
-	if (dir === undefined) throw new Error(`no store directory was read for ${entry}`);
-	return dir;
-}
+import { packageDir, type StorePackage } from './image-store.ts';
 
 export const REQUIRED_IN_IMAGE = [
 	'/app/LICENSE',
@@ -59,11 +46,6 @@ export async function verifyNoticesPresent(image: string): Promise<boolean> {
 	return true;
 }
 
-/** The name half of the `<name>@<version>` identity the attribution uses throughout. */
-function packageNameOf(entry: string): string {
-	return entry.slice(0, entry.lastIndexOf('@'));
-}
-
 /**
  * The file under `/app/licenses` that carries this SPDX identifier's text. `-only` and `-or-later`
  * choose which versions of the licence may be applied; both point at the same document.
@@ -73,39 +55,32 @@ function licenseTextPath(spdx: string): string {
 }
 
 /**
- * Reads the `license` field each package declares in the image. Deliberately takes the whole
- * remainder of the line rather than the first word, so a compound SPDX expression stays intact and
- * fails the coverage test below instead of silently matching on one of its halves.
+ * The shell probe for license files: one test per store directory of each entry, inside the
+ * package's own directory (`.bun/<store dir>/node_modules/<name>`), never the `node_modules` above
+ * it, where the dependencies linked beside the package would lend it their LICENSE. Each line it
+ * prints names an entry and the directory that lacked one. Pure, so its paths can be tested.
  */
-async function readDeclaredLicenses(
-	image: string,
-	entries: string[],
-	storeDirs: StoreDirs,
-): Promise<Map<string, string>> {
-	const script = entries
-		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirOf(entry, storeDirs)}/node_modules`;
-			const manifest = `${dir}/${packageNameOf(entry)}/package.json`;
-			const read = `sed -n 's/.*"license": *"\\([^"]*\\)".*/\\1/p' ${manifest} 2>/dev/null | head -1`;
-			return `echo "DECLARED ${entry} $(${read})"`;
+export function licenseProbeScript(
+	entries: readonly string[],
+	packages: ReadonlyMap<string, StorePackage>,
+): string {
+	return entries
+		.flatMap((entry) => {
+			const pkg = packages.get(entry);
+			if (pkg === undefined) throw new Error(`no store directory was read for ${entry}`);
+			return pkg.dirs.map((dir) => {
+				const find = `find ${packageDir(dir, pkg.name)} -maxdepth 2 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
+				return `[ -n "$(${find})" ] || echo "MISSING ${entry} ${dir}"`;
+			});
 		})
 		.join('; ');
-
-	const declared = new Map<string, string>();
-	for (const line of (await runInImage(image, script)).split('\n')) {
-		if (!line.startsWith('DECLARED ')) continue;
-		const rest = line.slice('DECLARED '.length).trim();
-		const separator = rest.indexOf(' ');
-		if (separator > 0) declared.set(rest.slice(0, separator), rest.slice(separator + 1).trim());
-	}
-	return declared;
 }
 
 /**
  * For a package the generating machine cannot install, the attribution has to be verified where it
- * actually ships. Bun lays each package out at `.bun/<store dir>/node_modules/<name>/`, where the
- * store dir is `<name>@<version>` with a `+<hash>` peer-variant suffix on some releases, so the
- * package's own LICENSE travels with the binary; this confirms it arrived.
+ * actually ships. Bun lays each package out at `.bun/<store dir>/node_modules/<name>/`, so the
+ * package's own LICENSE travels with the binary; this confirms it arrived in every store directory
+ * holding the release, since each peer variant is a separate copy.
  *
  * Shipping no license file is not by itself a gap. sharp's prebuilt libvips binaries publish `lib`,
  * `versions.json` and a README carrying the third-party table, and name their terms only in the
@@ -118,24 +93,26 @@ async function readDeclaredLicenses(
 export async function verifyImageCarriesLicenses(
 	image: string,
 	entries: string[],
-	storeDirs: StoreDirs,
+	packages: ReadonlyMap<string, StorePackage>,
 ): Promise<boolean> {
-	const script = entries
-		.map((entry) => {
-			const dir = `/app/node_modules/.bun/${storeDirOf(entry, storeDirs)}/node_modules`;
-			const find = `find ${dir} -maxdepth 3 -iname 'licen[cs]e*' -print -quit 2>/dev/null`;
-			return `[ -n "$(${find})" ] || echo "MISSING ${entry}"`;
-		})
-		.join('; ');
-
-	const missing = (await runInImage(image, script))
-		.split('\n')
-		.filter((line) => line.startsWith('MISSING'))
-		.map((line) => line.replace('MISSING ', '').trim());
+	const lines = (await runInImage(image, licenseProbeScript(entries, packages))).split('\n');
+	const missing = [
+		...new Set(
+			lines
+				.filter((line) => line.startsWith('MISSING '))
+				.map((line) => line.split(' ')[1] ?? ''),
+		),
+	].filter(Boolean);
 
 	if (missing.length === 0) return true;
 
-	const declared = await readDeclaredLicenses(image, missing, storeDirs);
+	// The `license` field each manifest declares, read whole when the store was collected, so a
+	// compound SPDX expression stays intact and fails coverage instead of matching on one half.
+	const declared = new Map<string, string>();
+	for (const entry of missing) {
+		const license = packages.get(entry)?.license;
+		if (license !== undefined && license !== '') declared.set(entry, license);
+	}
 	const uncovered = missing.filter((entry) => {
 		const spdx = declared.get(entry);
 		return spdx === undefined || !REQUIRED_IN_IMAGE.includes(licenseTextPath(spdx));
