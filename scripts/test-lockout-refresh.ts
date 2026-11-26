@@ -14,6 +14,8 @@
  *  7. A failure during an active lock leaves the counter alone, and once the lock
  *     has expired one further failure counts as 1 (no re-lock), then the right
  *     password signs in.
+ *  8. A lock set between login's row read and its failure count (as a concurrent
+ *     attempt would) is reported as 'locked', with its count and end time unchanged.
  *
  * Runs fully in-process against a throwaway temp-file SQLite DB via
  * app.handle(). It needs no live server and is unaffected by the committed dev DB's
@@ -232,6 +234,27 @@ async function run(): Promise<void> {
 	assert(
 		!('reason' in recovered),
 		`the right password after one post-expiry failure must sign in, got ${JSON.stringify(recovered)}`,
+	);
+
+	// --- Criterion 8: a lock set while the password is checked is neither counted nor extended ---
+	// login() reads the row before awaiting the password check, so a lock written here lands in
+	// that gap, as a concurrent attempt's lock would.
+	const concurrentLock = new Date(Date.now() + 30 * 60 * 1000);
+	const pending = login(VICTIM_USERNAME, 'wrong-password', '127.0.0.1');
+	db.update(users)
+		.set({ failedLoginAttempts: 50, lockedUntil: concurrentLock })
+		.where(eq(users.id, VICTIM_ID))
+		.run();
+	const racing = await pending;
+	const racedRow = victimRow();
+	assert(
+		'reason' in racing && racing.reason === 'locked',
+		`a failure that meets a newly set lock must report 'locked', got ${JSON.stringify(racing)}`,
+	);
+	assert(
+		racedRow?.failedLoginAttempts === 50 &&
+			racedRow.lockedUntil?.getTime() === Math.floor(concurrentLock.getTime() / 1000) * 1000,
+		`a concurrently set lock must keep its count and end time, got ${JSON.stringify({ attempts: racedRow?.failedLoginAttempts, lockedUntil: racedRow?.lockedUntil })}`,
 	);
 
 	await dispose();

@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, lte, sql } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, lte, sql } from 'drizzle-orm';
 
 import type { users as usersSchema } from '../../db/schema/users.ts';
 import type { AuthPayload } from '../../plugins/auth.ts';
@@ -83,25 +83,36 @@ function validateLoginEligibility(user: UserRow): EligibilityResult {
 	return { eligible: true };
 }
 
+/** The outcome of counting one failed attempt against the account's current row. */
+type FailedAttempt = { locked: false; newAttempts: number; shouldLock: boolean } | { locked: true };
+
 /**
- * Count one failed attempt for a user who is not currently locked, and lock the account
- * when the count reaches the threshold. A lock that has already expired ends that lockout:
- * the counter restarts, so this failure counts as the first of a new run rather than
- * re-locking the account at once.
+ * When an attempt count reaches the configured threshold, the time its lock ends; otherwise null.
  *
- * The expired-lock reset, the atomic increment and the conditional lockout run in a single
- * transaction so a concurrent attempt cannot observe the post-increment attempt count before
- * the lockout takes effect (which would otherwise allow one extra attempt past the configured
- * threshold).
+ * @param attempts - The account's failed-attempt count after this attempt
+ * @returns The lock's end, or null when this attempt does not lock the account
+ */
+function lockoutFor(attempts: number): Date | null {
+	const settings = getAuthSettings();
+	if (!settings.enableAccountLocking || attempts < settings.maxLoginAttempts) return null;
+	return new Date(Date.now() + settings.lockoutDurationMinutes * MS_PER_MINUTE);
+}
+
+/**
+ * Count one failed attempt, judged on the account's current row rather than the row read
+ * before the password check, and lock the account when the count reaches the threshold.
+ *
+ * In one transaction: a lock that has already expired is cleared (counter 0, no lock), so this
+ * failure counts as the first of a new run instead of re-locking at once. The increment then
+ * applies only while no lock is set, so a lock that a concurrent attempt set after this
+ * request read the row is neither counted against nor extended. The conditional lockout follows,
+ * so no concurrent attempt observes the new count before the lock takes effect.
  *
  * @param user - User row from database
- * @returns The new attempt count and whether this attempt locked the account
+ * @returns Whether the account is locked now, else the new count and whether this attempt locked it
  */
-function countFailedAttempt(user: UserRow): { newAttempts: number; shouldLock: boolean } {
-	const authSettings = getAuthSettings();
-	return getDb().transaction((tx) => {
-		// An expired lock still leaves the counter at or above the threshold. Clear both in
-		// this transaction so the increment below starts a fresh count at 1.
+function countFailedAttempt(user: UserRow): FailedAttempt {
+	return getDb().transaction((tx): FailedAttempt => {
 		tx.update(users)
 			.set({ failedLoginAttempts: 0, lockedUntil: null })
 			.where(
@@ -119,21 +130,20 @@ function countFailedAttempt(user: UserRow): { newAttempts: number; shouldLock: b
 				failedLoginAttempts: sql`${users.failedLoginAttempts} + 1`,
 				updatedAt: new Date(),
 			})
-			.where(eq(users.id, user.id))
+			.where(and(eq(users.id, user.id), isNull(users.lockedUntil)))
 			.returning({ failedLoginAttempts: users.failedLoginAttempts })
 			.get();
+		if (!updated) return { locked: true };
 
-		const attempts = updated?.failedLoginAttempts ?? user.failedLoginAttempts + 1;
-		const lock = authSettings.enableAccountLocking && attempts >= authSettings.maxLoginAttempts;
-
-		if (lock) {
-			const lockout = new Date(
-				Date.now() + authSettings.lockoutDurationMinutes * MS_PER_MINUTE,
-			);
+		const lockout = lockoutFor(updated.failedLoginAttempts);
+		if (lockout) {
 			tx.update(users).set({ lockedUntil: lockout }).where(eq(users.id, user.id)).run();
 		}
-
-		return { newAttempts: attempts, shouldLock: lock };
+		return {
+			locked: false,
+			newAttempts: updated.failedLoginAttempts,
+			shouldLock: lockout !== null,
+		};
 	});
 }
 
@@ -147,13 +157,19 @@ function countFailedAttempt(user: UserRow): { newAttempts: number; shouldLock: b
  */
 function recordFailedLogin(user: UserRow): LoginFailure {
 	// If account is already locked, do not accumulate further failed attempts
-	// or reset the lock timer — this prevents indefinite lockout DoS
+	// or reset the lock timer — this prevents indefinite lockout DoS. This early check reads the
+	// row loaded before the password check; countFailedAttempt repeats it on the current row.
 	if (user.lockedUntil && user.lockedUntil > new Date()) {
 		logAuth('debug', 'Login failed: account locked', { username: user.username });
 		return { email: user.email, reason: 'locked' };
 	}
 
-	const { newAttempts, shouldLock } = countFailedAttempt(user);
+	const attempt = countFailedAttempt(user);
+	if (attempt.locked) {
+		logAuth('debug', 'Login failed: account locked', { username: user.username });
+		return { email: user.email, reason: 'locked' };
+	}
+	const { newAttempts, shouldLock } = attempt;
 
 	logAuth('debug', 'Login failed: wrong password', {
 		attempts: newAttempts,
