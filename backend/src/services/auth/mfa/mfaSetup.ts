@@ -11,6 +11,7 @@ import { decrypt, encrypt } from '../../../utils/encryption.ts';
 import { MfaAlreadyEnabledError, NotFoundError } from '../../../utils/errorResponse.ts';
 import { logAuth } from '../../../utils/logger.ts';
 import {
+	enrollmentIs,
 	formatRecoveryCode,
 	generateRecoveryCode,
 	matchTotpStep,
@@ -84,17 +85,26 @@ async function setupMfa(userId: number): Promise<MfaSetupResult> {
 	const now = new Date();
 
 	if (existing) {
-		// Update existing unenabled MFA record
-		db.update(mfaSettings)
+		// Replace the unenabled enrollment, and only while it is still unenabled: the secret was
+		// encrypted after the read, and verifySetup may have enabled it meanwhile. The new secret
+		// is a fresh enrollment, so its step counter starts empty.
+		const replaced = db
+			.update(mfaSettings)
 			.set({
 				backupCodesEncrypted,
 				isEnabled: false,
+				lastAcceptedTotpStep: null,
+				lastVerifiedAt: null,
 				method: 'totp',
 				secretEncrypted,
 				updatedAt: now,
 			})
-			.where(eq(mfaSettings.id, existing.id))
-			.run();
+			.where(and(eq(mfaSettings.id, existing.id), eq(mfaSettings.isEnabled, false)))
+			.returning({ id: mfaSettings.id })
+			.all();
+		// The unenabled row stops matching only when verifySetup enables it: disabling needs an
+		// enabled row, and deleting the user removes the user this setup is for.
+		if (replaced.length !== 1) throw new MfaAlreadyEnabledError();
 	} else {
 		// Create new MFA record
 		db.insert(mfaSettings)
@@ -166,17 +176,20 @@ async function verifySetup(userId: number, code: string): Promise<MfaVerifySetup
 		return null;
 	}
 
-	// Compare-and-set: only flip enabled -> true if it is still false. Ensures
-	// backup codes are emitted at most once even under concurrent verify-setup. The same
-	// update consumes the code's time step, so the code that enabled MFA can't then pass the
-	// login challenge or a lifecycle check.
+	// Compare-and-set: only flip enabled -> true if it is still false, on the exact enrollment
+	// that was decrypted (the same row, secret and backup codes). Ensures backup codes are emitted
+	// at most once even under concurrent verify-setup, and that a re-setup that replaced the
+	// secret while this one decrypted is not enabled with the old code or its old codes. The same
+	// update consumes the code's time step, so the code that enabled MFA can't then pass the login
+	// challenge or a lifecycle check.
 	const now = new Date();
 	const updated = db
 		.update(mfaSettings)
 		.set({ isEnabled: true, lastAcceptedTotpStep: step, lastVerifiedAt: now, updatedAt: now })
 		.where(
 			and(
-				eq(mfaSettings.userId, userId),
+				enrollmentIs(mfa),
+				eq(mfaSettings.backupCodesEncrypted, mfa.backupCodesEncrypted),
 				eq(mfaSettings.isEnabled, false),
 				totpStepUnused(step),
 			),
@@ -185,7 +198,9 @@ async function verifySetup(userId: number, code: string): Promise<MfaVerifySetup
 		.all();
 
 	if (updated.length === 0) {
-		logAuth('debug', 'MFA verify setup race lost: another caller already enabled', { userId });
+		logAuth('debug', 'MFA verify setup race lost: enrollment enabled or replaced meanwhile', {
+			userId,
+		});
 		return null;
 	}
 

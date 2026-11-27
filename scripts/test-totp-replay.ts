@@ -9,16 +9,17 @@
  *
  * Runs in-process against a throwaway temp-file SQLite database through the real service
  * functions (setupMfa, verifySetup, verifyCode, regenerateRecoveryCodes, disableMfa). Codes come
- * from otpauth for chosen timestamps. It checks:
+ * from an independent RFC 6238 implementation (scripts/lib/totp-replay-races.ts). It checks:
  *  1. the code that enables MFA can't then pass the login challenge;
  *  2. a later step's code is accepted once, and its replay is refused;
  *  3. two concurrent requests with one code: exactly one is accepted;
  *  4. a code inside the accepted skew window (the next step) works once;
  *  5. a code of an earlier step than the last accepted one is refused;
  *  6. the lifecycle checks (regenerate recovery codes, disable MFA) refuse a used code and accept
- *     a fresh one, and a refused disable leaves MFA enabled.
+ *     a fresh one, and a refused disable leaves MFA enabled;
+ *  7. the enrollment state-transition fixtures in scripts/lib/totp-replay-races.ts: each check
+ *     and write applies only to the exact enrollment it read, and a lost write is a refusal.
  */
-import { createHmac } from 'node:crypto';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -36,42 +37,18 @@ import {
 	verifyCode,
 	verifySetup,
 } from '../backend/src/services/auth/mfaService.ts';
+import {
+	base32Decode,
+	checkEnrollmentRaces,
+	PERIOD_MS,
+	totpCode,
+} from './lib/totp-replay-races.ts';
 
 const repoRoot = resolve(import.meta.dir, '..');
 const USER_ID = 7;
-const PERIOD_MS = 30_000;
 const failures: string[] = [];
 function assert(condition: boolean, message: string): void {
 	if (!condition) failures.push(message);
-}
-
-/** RFC 4648 base32, as authenticator apps read the setup secret. */
-function base32Decode(text: string): Buffer {
-	const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-	let bits = '';
-	for (const char of text.replace(/=+$/, '').toUpperCase()) {
-		const value = alphabet.indexOf(char);
-		if (value < 0) throw new Error(`not base32: ${char}`);
-		bits += value.toString(2).padStart(5, '0');
-	}
-	const bytes: number[] = [];
-	for (let i = 0; i + 8 <= bits.length; i += 8)
-		bytes.push(Number.parseInt(bits.slice(i, i + 8), 2));
-	return Buffer.from(bytes);
-}
-
-/**
- * The 6-digit code for one 30-second time step (RFC 6238 over RFC 4226, HMAC-SHA1). Computed here
- * rather than with the backend's otpauth package, which the root manifest doesn't carry; it also
- * cross-checks the backend's matching against an independent implementation.
- */
-function totpCode(key: Buffer, step: number): string {
-	const counter = Buffer.alloc(8);
-	counter.writeBigUInt64BE(BigInt(step));
-	const hmac = createHmac('sha1', key).update(counter).digest();
-	const offset = (hmac.at(-1) ?? 0) & 0x0f;
-	const binary = hmac.readUInt32BE(offset) & 0x7fffffff;
-	return String(binary % 1_000_000).padStart(6, '0');
 }
 
 // A throwaway config from defaults, with the app's environment overrides dropped, so the
@@ -89,9 +66,10 @@ try {
 // A fixed test key for the encrypted secret; never a real one.
 getConfig().security.encryptionKey = '10'.repeat(32);
 
-// Start well inside a time step, so the steps the checks name can't move under them.
+// Start well inside a time step, so the steps the checks name can't move under them: every
+// check, the enrollment fixtures included, runs in well under the 20 s left.
 const intoStep = Date.now() % PERIOD_MS;
-if (intoStep > PERIOD_MS - 8_000) await Bun.sleep(PERIOD_MS - intoStep + 200);
+if (intoStep > PERIOD_MS - 20_000) await Bun.sleep(PERIOD_MS - intoStep + 200);
 const now = Date.now();
 
 const tmpDir = mkdtempSync(join(tmpdir(), 'spernakit-totp-replay-'));
@@ -166,6 +144,9 @@ try {
 		'a fresh code regenerates recovery codes',
 	);
 	assert(await disableMfa(USER_ID, codeAt(1)), 'a fresh code disables MFA');
+
+	// 7. Enrollment state transitions between each check's read and its write.
+	await checkEnrollmentRaces(assert, now);
 } catch (err) {
 	// Report it with the failures already collected, rather than losing them to the throw.
 	failures.push(`unexpected error: ${err instanceof Error ? err.message : String(err)}`);

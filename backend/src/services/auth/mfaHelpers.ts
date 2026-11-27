@@ -88,13 +88,38 @@ export function totpStepUnused(step: number): SQL {
 }
 
 /**
+ * The SQL condition that a row is still the exact enrollment that was read: the same row, for the
+ * same user, holding the same secret ciphertext. Writes made after an awaited check use it, so a
+ * re-enrollment (a new secret) or a replaced row is never written with the old check's outcome.
+ * @param mfa The enrollment as read before the check
+ * @param mfa.id The enrollment's row id
+ * @param mfa.secretEncrypted The secret ciphertext the check decrypted
+ * @param mfa.userId The enrollment's user
+ * @returns The condition for a conditional update or delete on mfa_settings
+ */
+export function enrollmentIs(mfa: {
+	id: number;
+	secretEncrypted: string;
+	userId: number;
+}): SQL | undefined {
+	return and(
+		eq(mfaSettings.id, mfa.id),
+		eq(mfaSettings.userId, mfa.userId),
+		eq(mfaSettings.secretEncrypted, mfa.secretEncrypted),
+	);
+}
+
+/**
  * Verify a TOTP code for a user with MFA enabled, and consume its time step.
  *
  * Load the enabled MFA record, decrypt the secret and match the code's step, then claim that step
- * with one conditional update on the enabled row whose lastAcceptedTotpStep is still earlier. A
- * replayed code, or a second request racing the first with the same code, finds the step taken
- * and fails. Used by every TOTP check on an enabled account: the login challenge, disabling MFA
- * and regenerating recovery codes.
+ * with one conditional update. The claim names the exact enrollment that was checked (its id and
+ * the secret ciphertext that was decrypted), requires it still enabled, and requires its
+ * lastAcceptedTotpStep still earlier. A replayed code, a second request racing the first with the
+ * same code, or an enrollment replaced or re-secreted while the secret was being decrypted, all
+ * fail. Used by every TOTP check on an enabled account: the login challenge, disabling MFA and
+ * regenerating recovery codes. A caller that writes afterwards must bind its write to the same
+ * enrollment (see enrollmentIs) and treat a write that matches nothing as a refusal.
  *
  * @param userId The user's ID
  * @param code The 6-digit TOTP code
@@ -116,13 +141,7 @@ export async function verifyAndConsumeMfaCode(
 	const claimed = db
 		.update(mfaSettings)
 		.set({ lastAcceptedTotpStep: step, lastVerifiedAt: now, updatedAt: now })
-		.where(
-			and(
-				eq(mfaSettings.userId, userId),
-				eq(mfaSettings.isEnabled, true),
-				totpStepUnused(step),
-			),
-		)
+		.where(and(enrollmentIs(mfa), eq(mfaSettings.isEnabled, true), totpStepUnused(step)))
 		.returning({ id: mfaSettings.id })
 		.all();
 	return claimed.length === 1 ? mfa : null;

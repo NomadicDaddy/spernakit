@@ -177,7 +177,12 @@ export const AUTH_REGRESSION_STEP_DEPENDENCIES: Record<string, StepDependencies>
 	// the gate itself.
 	'test:totp-replay': {
 		excludes: COMMON_EXCLUDES,
-		globs: ['backend/drizzle/**', 'backend/src/**', 'scripts/test-totp-replay.ts'],
+		globs: [
+			'backend/drizzle/**',
+			'backend/src/**',
+			'scripts/lib/totp-replay-races.ts',
+			'scripts/test-totp-replay.ts',
+		],
 	},
 	// Drives the real API key, user update, check-username and email-change routes against a
 	// migrated temp database, so its world is the migrations, the backend sources, the fixture

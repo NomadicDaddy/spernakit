@@ -1,6 +1,6 @@
 import type { MfaMethod } from 'spernakit-shared';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 
 import type { MfaStatus } from './mfaTypes.ts';
 
@@ -9,6 +9,7 @@ import { mfaSettings } from '../../../db/schema/mfaSettings.ts';
 import { encrypt } from '../../../utils/encryption.ts';
 import { logAuth } from '../../../utils/logger.ts';
 import {
+	enrollmentIs,
 	formatRecoveryCode,
 	generateRecoveryCode,
 	RECOVERY_CODE_COUNT,
@@ -25,9 +26,20 @@ async function disableMfa(userId: number, code: string): Promise<boolean> {
 	const mfa = await verifyAndConsumeMfaCode(userId, code);
 	if (!mfa) return false;
 
-	// Hard-delete the MFA record
+	// Hard-delete the enrollment whose claim succeeded, and only while it is still that enabled
+	// enrollment. If it was replaced in between, nothing is deleted and the disable is refused.
 	const db = getDb();
-	db.delete(mfaSettings).where(eq(mfaSettings.userId, userId)).run();
+	const deleted = db
+		.delete(mfaSettings)
+		.where(and(enrollmentIs(mfa), eq(mfaSettings.isEnabled, true)))
+		.returning({ id: mfaSettings.id })
+		.all();
+	if (deleted.length !== 1) {
+		logAuth('debug', 'MFA disable lost: enrollment changed after the code was checked', {
+			userId,
+		});
+		return false;
+	}
 
 	logAuth('info', 'MFA disabled for user', { userId });
 	return true;
@@ -50,11 +62,29 @@ async function regenerateRecoveryCodes(userId: number, code: string): Promise<nu
 
 	const backupCodesEncrypted = await encrypt(JSON.stringify(backupCodes));
 
+	// Replace the codes of the enrollment whose claim succeeded, and only while it still holds the
+	// codes that were read. A concurrent regenerate, a recovery-code login or a re-enrollment in
+	// between makes this match nothing, and the caller is refused rather than handed codes that a
+	// later write has already replaced.
 	const db = getDb();
-	db.update(mfaSettings)
+	const updated = db
+		.update(mfaSettings)
 		.set({ backupCodesEncrypted, updatedAt: new Date() })
-		.where(eq(mfaSettings.userId, userId))
-		.run();
+		.where(
+			and(
+				enrollmentIs(mfa),
+				eq(mfaSettings.isEnabled, true),
+				mfa.backupCodesEncrypted === null
+					? isNull(mfaSettings.backupCodesEncrypted)
+					: eq(mfaSettings.backupCodesEncrypted, mfa.backupCodesEncrypted),
+			),
+		)
+		.returning({ id: mfaSettings.id })
+		.all();
+	if (updated.length !== 1) {
+		logAuth('debug', 'Recovery code regeneration lost: enrollment changed', { userId });
+		return null;
+	}
 
 	logAuth('info', 'Recovery codes regenerated', { userId });
 	return backupCodes;
